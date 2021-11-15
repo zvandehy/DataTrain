@@ -1,0 +1,97 @@
+scalar Date
+scalar Time
+scalar Season
+
+type Player {
+  id: ID!
+  first_name: String!
+  last_name: String!
+  team: Team!
+  games: [PlayerGame!]!
+}
+
+type Team {
+  id: ID!
+  abbreviation: String!
+  city: String!
+  name: String!
+  games: [TeamGame!]!
+}
+
+type PlayerGame {
+  date: Date!
+  opponent: Team!
+  season: Season!
+  minutes: Time!
+  points: Int!
+  field_goals_made: Int!
+  field_goals_attempted: Int!
+  field_goal_percentage: Float!
+  assists: Int!
+  assist_percentage: Float!
+  turnovers: Int!
+  defensive_rebounds: Int!
+  defensive_rebound_percentage: Float!
+  offensive_rebounds: Int!
+  offensive_rebound_percentage: Float!
+  total_rebounds: Int!
+  free_throws_made: Int!
+  free_throws_attempted: Int!
+  personal_fouls: Int!
+  personal_fouls_drawn: Int!
+  three_pointers_made: Int!
+  three_pointers_attempted: Int!
+  three_point_percentage: Float!
+  usage: Float!
+  effective_field_goal_percentage: Float!
+  true_shooting_percentage: Float!
+}
+
+type TeamGame {
+  date: Date!
+  game: String!
+  opponent: Team!
+  season: Season!
+  field_goals_attempted: Int!
+  field_goals_made: Int!
+  field_goal_percentage: Float!
+  pace: Float!
+  defensive_rating: Float!
+  defensive_rebound_percentage: Float!
+  offensive_rebound_percentage: Float!
+  personal_fouls: Int!
+  personal_fouls_drawn: Int!
+  opponent_points: Int!
+  opponent_effective_field_goal_percentage: Float!
+  opponent_assists: Int!
+  opponent_rebounds: Int!
+  opponent_three_pointers_made: Int!
+  opponent_three_pointers_attempted: Int!
+  opponent_field_goals_attempted: Int!
+  opponent_three_point_frequency: Float!
+  opponent_free_throws_attempted: Int!
+}
+
+query GetPlayers {
+  players {
+    id
+    first_name
+    last_name
+    team
+  }
+}
+
+query GetTeams {
+  teams {
+    id
+    abbreviation
+    city
+    name
+  }
+}
+
+type Query {
+  games(id: ID): [PlayerGame]!
+  lastNGames(id: ID, n: Int): [PlayerGame]!
+  teamGames(id: ID): [TeamGame]!
+}

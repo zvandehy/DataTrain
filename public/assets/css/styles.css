@@ -1,0 +1,55 @@
+.search-container {
+  height: 114px;
+  margin-left: 10px;
+}
+
+.selectize-control, .selectize-input {
+  width: 100%;
+  min-width: 114px;
+  max-width: 190px;
+  max-height: 38px;
+  word-wrap: break-word;
+  color:rgb(44,63,81);
+  margin:0 auto;
+}
+
+.selectize-input {
+  padding-right: 25px;
+}
+
+.selectize-dropdown [data-selectable] {
+  border-bottom: 1px solid #ccc;
+}
+
+td, th {
+  text-align: center;
+}
+
+@media (min-width: 992px) {
+  .player-chart-col {
+    width: 50%;
+  }
+  #distribution-heading {
+    display: none;
+  }
+
+  .search-container {
+    margin: 0 5px;
+  }
+
+}
+
+@media (max-width: 600px) {
+  .selectors {
+    flex-direction: column !important;
+  }
+}
+
+body {
+  overflow-x: hidden;
+  word-wrap: break-word;
+}
+#stats-content {
+  display: block;
+}
+
