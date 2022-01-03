@@ -1,43 +1,42 @@
-body {
-  margin: 0;
-  padding: 0;
-  font-family: Verdana, Geneva, sans-serif;
+table {
+  border:2px solid black;
+  margin:auto;
+  padding:.5em;
 }
 
-input {
-  max-width: 500px;
+thead {
+  font-size:1.5rem
 }
 
-.gray {
-  color: #828282;
+thead * {
+  padding:1rem;
 }
 
-.orange {
-  background-color: #ff6600;
+.player {
+  background-color:gainsboro;
 }
 
-.background-gray {
-  background-color: rgb(246, 246, 239);
+.player:hover {
+  background-color:rgb(170, 170, 170);
 }
 
-.f11 {
-  font-size: 11px;
+.player th {
+  font-weight: 700;
+  font-size:1.5rem;
+  color:black;
+  padding:.725em;
 }
 
-.w85 {
-  width: 85%;
+.player td {
+  font-weight: 400;
+  font-size: 1.25rem;
+  color:black;
+  padding:.125em;
+  text-align:center;
 }
 
-.button {
-  font-family: monospace;
-  font-size: 10pt;
-  color: black;
-  background-color: buttonface;
-  text-align: center;
-  padding: 2px 6px 3px;
-  border-width: 2px;
-  border-style: outset;
-  border-color: buttonface;
-  cursor: pointer;
-  max-width: 250px;
+.team {
+  font-size:1.25rem;
+  font-weight: 400;
+  color:coral;
 }

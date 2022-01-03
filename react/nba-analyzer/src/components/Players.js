@@ -1,18 +1,7 @@
 import React from 'react'
-import Player  from './Player'
-
-import { useQuery, gql } from '@apollo/client';
-
-const PLAYERS_QUERY = gql`
-{
-  players {
-    playerID
-    first_name
-    last_name
-    seasons
-    teamABR
-  }
-}`
+import PlayerPreview  from './PlayerPreview'
+import {PLAYERS_QUERY} from '../utils.js'
+import { useQuery } from '@apollo/client';
 
 const Players = () => {
     const { loading, error, data } = useQuery(PLAYERS_QUERY);
@@ -26,8 +15,7 @@ const Players = () => {
                     <tr><th>Player</th><th>Assists</th><th>Points</th><th>Rebounds</th></tr>
                 </thead>
                 <tbody>
-                <Player player={data.players[0]}/>
-                    {/* {data.players.map((player) => (<Player player={player}/>))} */}
+                    {data.players.slice(0,10).map((player) => (<PlayerPreview player={player} key={player.playerID}/>))}
                 </tbody>
             </table>
         </div>
