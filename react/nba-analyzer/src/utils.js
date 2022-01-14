@@ -1,6 +1,12 @@
 import {gql} from '@apollo/client';
 
 export function average(stat, data) {
+    if (!data || data.length <=0) {
+        return 0
+    }
+    console.group(`average: ${stat}`)
+    console.log(data)
+    console.groupEnd()
     const sum = data.reduce((a,b) => a + b[stat], data[0][stat]);
     const avg = sum / data.length;
     return  Math.round((avg + Number.EPSILON) * 100) / 100
