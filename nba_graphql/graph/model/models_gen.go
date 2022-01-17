@@ -44,6 +44,13 @@ type PlayerGame struct {
 	Usage                        float64 `json:"usage" bson:"usage"`
 }
 
+type PlayerProp struct {
+	PlayerName string  `json:"playerName" bson:"playerName"`
+	Target     float64 `json:"target" bson:"target"`
+	Opponent   string  `json:"opponent" bson:"opponent"`
+	Type       string  `json:"type" bson:"type"`
+}
+
 type Team struct {
 	ID           string      `json:"id" bson:"_id"`
 	TeamID       int         `json:"teamID" bson:"teamID"`

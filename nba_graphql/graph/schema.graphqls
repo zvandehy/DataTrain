@@ -81,10 +81,18 @@ type TeamGame {
 	win_or_loss: String!
 }
 
+type PlayerProp{
+	playerName: String!
+	target: Float!
+	opponent: String!
+	type: String!
+}
+
 type Query {
 	games(playerID: Int!): [PlayerGame]!
 	lastNGames(playerID: Int!, n: Int!): [PlayerGame]!
 	teamGames(playerID: Int!): [TeamGame]!
 	teams: [Team]!
 	players: [Player]!
+	prizepicks: [PlayerProp]!
 }

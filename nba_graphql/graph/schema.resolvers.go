@@ -5,7 +5,11 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"strconv"
 
 	"github.com/zvandehy/nba_graphql/database"
 	"github.com/zvandehy/nba_graphql/graph/generated"
@@ -52,6 +56,50 @@ func (r *queryResolver) TeamGames(ctx context.Context, playerID int) ([]*model.T
 
 func (r *queryResolver) Teams(ctx context.Context) ([]*model.Team, error) {
 	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Prizepicks(ctx context.Context) ([]*model.PlayerProp, error) {
+	url := "https://partner-api.prizepicks.com/projections?single_stat=True&per_page=1000&league_id=7"
+	res, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	var prizepicks model.PrizePicks
+	if err := json.Unmarshal(bytes, &prizepicks); err != nil {
+		return nil, err
+	}
+	playerProps := make([]*model.PlayerProp, len(prizepicks.Data))
+	for i, prop := range prizepicks.Data {
+		var playerName string
+		var statType string
+		for _, p := range prizepicks.Included {
+			if p.ID == prop.Relationships.Player.Data.ID {
+				playerName = p.Attributes.Name
+			}
+			if p.ID == prop.Relationships.StatType.Data.ID {
+				statType = p.Attributes.Name
+			}
+			if statType != "" && playerName != "" {
+				break
+			}
+		}
+		if playerName == "" {
+			return nil, fmt.Errorf("error retrieving prizepick player name")
+		}
+		if statType == "" {
+			return nil, fmt.Errorf("error retrieving prizepick stat type")
+		}
+		target, err := strconv.ParseFloat(prop.Attributes.Line_score, 64)
+		if err != nil {
+			return nil, err
+		}
+		playerProps[i] = &model.PlayerProp{Target: target, Type: statType, Opponent: prop.Attributes.Description, PlayerName: playerName}
+	}
+	return playerProps, nil
 }
 
 func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
