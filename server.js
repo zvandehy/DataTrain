@@ -7,7 +7,7 @@ const port = process.env.PORT || 3000
 
 app.use(express.static("public"));
 
-app.use(cors({ origin: 'http://localhost:3000' }))
+app.use(cors())
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
 })

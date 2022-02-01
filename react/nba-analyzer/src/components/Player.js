@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {useParams} from 'react-router-dom';
+import {useParams, useLocation} from 'react-router-dom';
 import { useQuery } from '@apollo/client';
 import {average, PLAYERGAMES_QUERY} from '../utils.js'
 import { ResponsiveLine } from '@nivo/line'
@@ -9,41 +9,39 @@ import NormalDistribution from 'normal-distribution'
 
 //TODO: see Apexcharts 
 //https://apexcharts.com/react-chart-demos/mixed-charts/multiple-yaxis/
-const Player = () => {
-    const [target, setTarget] = useState(10);
+const Player = (props) => {
     const {id} = useParams();
-    console.log(id)
-    const {loading, error, data} = useQuery(PLAYERGAMES_QUERY, {variables: {playerID: id}});
-    if (loading) return <p>Loading..</p>;
-    if (error || data.players.length === 0) return <p>Error! {error.message}. {loading}. {data}</p>;
-    const player = data.players.filter((player) => player.playerID === parseInt(id))[0]
-    console.log(player)
-    let sortedGames = data.games.slice().filter((game) => game.season==="2021-22").sort(function(a, b) {
+    let location = useLocation()
+    const {playerProp} = location.state
+    let target = playerProp.target
+    let propType = playerProp.type.toLowerCase();
+    let player=playerProp.player
+    let seasonData=playerProp.playerGames.filter((game) => game.season === "2021-22")
+    let sortedGames = seasonData.sort(function(a, b) {
         var c = new Date(a.date);
         var d = new Date(b.date);
         return c-d;
     });
-    const avgPoints = average("points", data.games.filter((game) => game.season === "2021-22"))
-    let chartData = [{id:"points", data: []}, {id:"minutes", data: []}];
+    const avgPoints = average(propType, sortedGames.filter((game) => game.season === "2021-22"));
+    let chartData = [{id:propType, data: []}, {id:"minutes", data: []}];
     let pointsArr = []
     let countMap = {}
-    //points data
     let max = 0
     let min = -1;
     sortedGames.forEach((game) => {
-        chartData.filter(series => series.id === "points")[0].data.push({y:game.points,x:game.date})
+        chartData.filter(series => series.id === propType)[0].data.push({y:game[propType],x:game.date})
         chartData.filter(series => series.id === "minutes")[0].data.push({y:parseInt(game.minutes.split(":")[0])/10,x:game.date})
-        if (countMap[game.points]) {
-            countMap[game.points]++
+        if (countMap[game[propType]]) {
+            countMap[game[propType]]++
         } else {
-            countMap[game.points]=1
+            countMap[game[propType]]=1
         }
-        pointsArr.push(game.points)
-        if (game.points > max) {
-            max = game.points
+        pointsArr.push(game[propType])
+        if (game[propType] > max) {
+            max = game[propType]
         }
-        if (game.points < min || min === -1) {
-            min = game.points
+        if (game[propType] < min || min === -1) {
+            min = game[propType]
         }
     });
     let less = 0;
@@ -58,20 +56,11 @@ const Player = () => {
             more+=countMap[i]
         }
     }
-    let countData = [{id:"points", data: []}, {id:"normal", data: []}];
+    let countData = [{id:propType, data: []}, {id:"normal", data: []}];
     let stddev = std(pointsArr)
     let m = mean(pointsArr)
     let lambda = variance(pointsArr)
     const normDist = new NormalDistribution(m, stddev);
-    // console.log(m)
-    // console.log(stddev)
-    // console.log(normDist.pdf(m))
-    // console.log(normDist.zScore(5))
-    // console.log(normDist.zScore(8))
-    // console.log(normDist.zScore(10))
-    // console.log(normDist.zScore(15))
-    // console.log(normDist.zScore(20))
-    // console.log(normDist.zScore(25))
 
     let scale = 10
    for(let i = 0; i< 3*stddev+m;i++) {
@@ -85,14 +74,12 @@ const Player = () => {
    
     return (
         <div>
-             <input type="text" id="search" className="search" onChange={e => {
-                setTarget(e.target.value)
-            }}></input>
             <div className="player-card">
                 <h1>{player.first_name} {player.last_name}</h1>
             </div>
-            <p>Points: {avgPoints}</p>
+            <p>Avergage {propType}: {avgPoints}</p>
             <p>Variance: {lambda}</p>
+            <p>Target: {target}</p>
             <p>Over: {more}</p>
             <p>Under: {less}</p>
             <div className="line-chart" style={{height:"500px"}}>
@@ -143,15 +130,15 @@ const Player = () => {
                                     border: '1px solid #ccc',
                                 }}
                             >
-                                <div>Date: {slice.points.filter((point) => point.serieId === "points")[0].data.x}</div>
-                                <div>GameID: {sortedGames[slice.points.filter((point) => point.serieId === "points")[0].index].gameID}</div>
-                                <div>Opponent: {sortedGames[slice.points.filter((point) => point.serieId === "points")[0].index].opponent}</div>
-                                <div>Season: {sortedGames[slice.points.filter((point) => point.serieId === "points")[0].index].season}</div>
+                                <div>Date: {slice.points.filter((point) => point.serieId === propType)[0].data.x}</div>
+                                <div>GameID: {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].gameID}</div>
+                                <div>Opponent: {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].opponent}</div>
+                                <div>Season: {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].season}</div>
                                 <div style={{color: `${slice.points.filter((point) => {return point.serieId === "minutes"})[0].serieColor}`}}>
-                                    <strong>minutes</strong> {sortedGames[slice.points.filter((point) => point.serieId === "points")[0].index].minutes}
+                                    <strong>minutes</strong> {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].minutes}
                                 </div>
-                                <div style={{color: `${slice.points.filter((point) => {return point.serieId === "points"})[0].serieColor}`}}>
-                                    <strong>points</strong> {sortedGames[slice.points.filter((point) => point.serieId === "points")[0].index].points}
+                                <div style={{color: `${slice.points.filter((point) => {return point.serieId === propType})[0].serieColor}`}}>
+                                    <strong>{propType}</strong> {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index][propType]}
                                 </div>
                             </div>
                         )
@@ -180,10 +167,13 @@ const Player = () => {
                                     border: '1px solid #ccc',
                                 }}
                             >
-                                <div style={{color: `${slice.points.filter((point) => {return point.serieId === "normal"})[0].serieColor}`}}>
+                                <div style={{color:'grey'}}>
                                     <strong>zscore</strong> {normDist.zScore(slice.points.filter((point) => point.serieId === "normal")[0].data.x)}
                                 </div>
                                 <div style={{color: `${slice.points.filter((point) => {return point.serieId === "normal"})[0].serieColor}`}}>
+                                    <strong>cdf</strong> {normDist.cdf(slice.points.filter((point) => point.serieId === "normal")[0].data.x)}
+                                </div>
+                                <div style={{color: `${slice.points.filter((point) => {return point.serieId === propType})[0].serieColor}`}}>
                                     <strong># games</strong> {countMap[slice.points.filter((point) => point.serieId === "normal")[0].data.x]?? 0}
                                 </div>
                             </div>

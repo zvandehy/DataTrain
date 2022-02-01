@@ -40,3 +40,7 @@ thead * {
   font-weight: 400;
   color:coral;
 }
+
+.opponent {
+  color:rgb(194, 62, 62);
+}

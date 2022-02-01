@@ -4,26 +4,53 @@ export function average(stat, data) {
     if (!data || data.length <=0) {
         return 0
     }
-    console.group(`average: ${stat}`)
-    console.log(data)
-    console.groupEnd()
+    // console.group(`average: ${stat}`)
+    // console.log(data)
+    // console.groupEnd()
     const sum = data.reduce((a,b) => a + b[stat], data[0][stat]);
     const avg = sum / data.length;
     return  Math.round((avg + Number.EPSILON) * 100) / 100
+}
+
+export function showPlayerPreview(player, props, type) {
+    // console.log(player)
+    // console.log(type)
+    let ret = props.find((prop) => player.first_name + " " + player.last_name === prop.playerName && prop.type === type)
+    // console.log(ret)
+    return ret
 }
 
 
 
 // GRAPHQL Queries
 
-export const PLAYERS_QUERY = gql`
+export const HOME_QUERY = gql`
 {
-  players {
-    playerID
-    first_name
-    last_name
-    seasons
-    teamABR
+  prizepicks {
+    player {
+        playerID
+        first_name
+        last_name
+        seasons
+        teamABR
+    }
+    playerGames {
+        points
+        assists
+        total_rebounds
+        defensive_rebounds
+        offensive_rebounds
+        season
+        minutes
+        date
+    }
+    type
+    target
+    opponent
+  }
+  teams {
+      abbreviation
+      teamID
   }
 }`
 

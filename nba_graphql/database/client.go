@@ -19,7 +19,8 @@ type NBADatabaseClient struct {
 func ConnectDB(ctx context.Context) (*NBADatabaseClient, error) {
 	var connErr error
 	once.Do(func() {
-		instance = &NBADatabaseClient{conn: "mongodb+srv://datatrain:nbawinners@datatrain.i5rgk.mongodb.net/nba?retryWrites=true&w=majority"}
+		//TODO: Create config file for mongoDB access
+		instance = &NBADatabaseClient{conn: ""}
 		client, connErr := mongo.NewClient(options.Client().ApplyURI(instance.conn))
 		if connErr != nil {
 			return

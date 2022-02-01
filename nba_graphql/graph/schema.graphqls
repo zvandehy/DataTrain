@@ -44,6 +44,8 @@ type PlayerGame {
 	personal_fouls_drawn: Int!
 	personal_fouls: Int!
 	points: Int!
+	#playerID
+	player: Int!
 	season: String!
 	three_point_percentage: Float!
 	three_pointers_attempted: Int!
@@ -82,14 +84,15 @@ type TeamGame {
 }
 
 type PlayerProp{
-	playerName: String!
+	player: Player
+	playerGames: [PlayerGame!]
 	target: Float!
 	opponent: String!
 	type: String!
 }
 
 type Query {
-	games(playerID: Int!): [PlayerGame]!
+	games(playerID: [Int!]!): [PlayerGame]!
 	lastNGames(playerID: Int!, n: Int!): [PlayerGame]!
 	teamGames(playerID: Int!): [TeamGame]!
 	teams: [Team]!

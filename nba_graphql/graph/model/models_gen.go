@@ -34,6 +34,7 @@ type PlayerGame struct {
 	PersonalFoulsDrawn           int     `json:"personal_fouls_drawn" bson:"personal_fouls_drawn"`
 	PersonalFouls                int     `json:"personal_fouls" bson:"personal_fouls"`
 	Points                       int     `json:"points" bson:"points"`
+	Player                       int     `json:"player" bson:"player"`
 	Season                       string  `json:"season" bson:"season"`
 	ThreePointPercentage         float64 `json:"three_point_percentage" bson:"three_point_percentage"`
 	ThreePointersAttempted       int     `json:"three_pointers_attempted" bson:"three_pointers_attempted"`
@@ -45,10 +46,11 @@ type PlayerGame struct {
 }
 
 type PlayerProp struct {
-	PlayerName string  `json:"playerName" bson:"playerName"`
-	Target     float64 `json:"target" bson:"target"`
-	Opponent   string  `json:"opponent" bson:"opponent"`
-	Type       string  `json:"type" bson:"type"`
+	Player      *Player       `json:"player" bson:"player"`
+	PlayerGames []*PlayerGame `json:"playerGames" bson:"playerGames"`
+	Target      float64       `json:"target" bson:"target"`
+	Opponent    string        `json:"opponent" bson:"opponent"`
+	Type        string        `json:"type" bson:"type"`
 }
 
 type Team struct {
