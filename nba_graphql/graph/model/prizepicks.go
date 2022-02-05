@@ -52,3 +52,9 @@ type PrizePicksIncluded struct {
 		Name string `json:"name" bson:"name"`
 	} `json:"attributes" bson:"attributes"`
 }
+
+type ByFirstName []*Player
+
+func (a ByFirstName) Len() int           { return len(a) }
+func (a ByFirstName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByFirstName) Less(i, j int) bool { return a[i].FirstName < a[j].FirstName }
