@@ -81,7 +81,7 @@ const Players = () => {
         </div>
             <table>
                 <thead>
-                    <tr><th>Player</th><th>Target</th><th>Mean</th><th>Std Dev</th><th>Median</th><th>MAD</th></tr>
+                    <tr><th>Player</th><th>Target</th><th>Mean</th><th>Over</th><th>Under</th><th>Median</th><th>MAD</th></tr>
                 </thead>
                 <tbody>
                     {showPlayers.length > 0 ? showPlayers.map((item) => {return (<PlayerPreview playerProp={item} key={item.player.playerID}/>)}) : <tr><td>No Players to Show</td></tr>}

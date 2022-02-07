@@ -14,6 +14,8 @@ const PlayerPreview = (props) => {
     if (seasonData && seasonData.length > 0) {
         statData = seasonData.map((game) => game[propType]);
     }
+    let over = statData.filter(val => val > playerProp.target).length;
+    let under = statData.length-over;
     // console.log(statData)
     // console.groupEnd()
     return (
@@ -23,7 +25,8 @@ const PlayerPreview = (props) => {
         <td>{average("total_rebounds", data.games.filter((game) => game.season === "2021-22"))}</td> */}
          <td>{playerProp.target}</td>
         <td>{round(mean(statData),2)}</td>
-        <td>{round(std(statData),2)}</td>
+        <td>{round(over,2)}</td>
+        <td>{round(under,2)}</td>
         <td>{round(median(statData),2)}</td>
         <td>{round(mad(statData),2)}</td>
     </tr></>
