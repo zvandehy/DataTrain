@@ -7,6 +7,7 @@ Front End of Web App
 
 Requires React and local libraries
 - ```cd react/nba-analyzer```
+- ```npm i -g react react-scripts typescripts ajv``` 
 - ```npm i```
 - ```npm start```
 
