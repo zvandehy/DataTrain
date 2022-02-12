@@ -1,8 +1,7 @@
 import React from 'react'
 import {Link} from 'react-router-dom';
-import { useQuery } from '@apollo/client';
-import {average, PLAYER_PREVIEW_QUERY} from '../utils.js'
-import {mean, variance, mad, median, round, std} from'mathjs'
+import {mean, mad, median, round} from'mathjs'
+import {GetPropScore} from "../utils"
 
 const PlayerPreview = (props) => {
     const {playerProp} = props;
@@ -12,7 +11,7 @@ const PlayerPreview = (props) => {
     // let seasonData = data.games.filter((game) => game.season === "2021-22");
     let statData = [0];
     if (seasonData && seasonData.length > 0) {
-        statData = seasonData.map((game) => game[propType]);
+        statData = seasonData.map((game) => GetPropScore(game, propType));
     }
     let over = statData.filter(val => val > playerProp.target).length;
     let under = statData.length-over;

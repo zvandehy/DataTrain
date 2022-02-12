@@ -1,15 +1,14 @@
 import {gql} from '@apollo/client';
 
-export function average(stat, data) {
-    if (!data || data.length <=0) {
-        return 0
+export function GetPropScore(game, propType) {
+    switch (propType.toLowerCase()) {
+        case "pts+rebs+asts":
+            return game["points"] + game["total_rebounds"] + game["assists"]
+        case "rebounds":
+            return game["total_rebounds"]
+        default:
+            return game[propType]
     }
-    // console.group(`average: ${stat}`)
-    // console.log(data)
-    // console.groupEnd()
-    const sum = data.reduce((a,b) => a + b[stat], data[0][stat]);
-    const avg = sum / data.length;
-    return  Math.round((avg + Number.EPSILON) * 100) / 100
 }
 
 export function showPlayerPreview(player, props, type) {
@@ -37,9 +36,14 @@ export const HOME_QUERY = gql`
     playerGames {
         points
         assists
+        assist_percentage
         total_rebounds
         defensive_rebounds
         offensive_rebounds
+        three_pointers_attempted
+        three_pointers_made
+        free_throws_attempted
+        free_throws_made
         season
         minutes
         date
