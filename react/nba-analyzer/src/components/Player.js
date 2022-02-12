@@ -1,16 +1,14 @@
-import React, {useState} from 'react'
-import {useParams, useLocation} from 'react-router-dom';
-import { useQuery } from '@apollo/client';
-import {average, PLAYERGAMES_QUERY} from '../utils.js'
+import React from 'react'
+import {useLocation} from 'react-router-dom';
+import {GetPropScore} from '../utils.js'
 import { ResponsiveLine } from '@nivo/line'
-import {ScatterPlot} from '@nivo/scatterplot'
-import {std, mean, round, variance, mad} from 'mathjs'
+import {std, mean} from 'mathjs'
 import NormalDistribution from 'normal-distribution'
 
 //TODO: see Apexcharts 
 //https://apexcharts.com/react-chart-demos/mixed-charts/multiple-yaxis/
 const Player = (props) => {
-    const {id} = useParams();
+    // const {id} = useParams();
     let location = useLocation()
     const {playerProp} = location.state
     let target = playerProp.target
@@ -22,26 +20,26 @@ const Player = (props) => {
         var d = new Date(b.date);
         return c-d;
     });
-    const avgPoints = average(propType, sortedGames.filter((game) => game.season === "2021-22"));
     let chartData = [{id:propType, data: []}, {id:"minutes", data: []}];
-    let pointsArr = []
+    let propScoreArr = []
     let countMap = {}
     let max = 0
     let min = -1;
     sortedGames.forEach((game) => {
-        chartData.filter(series => series.id === propType)[0].data.push({y:game[propType],x:game.date})
+        const propScore = GetPropScore(game,propType)
+        chartData.filter(series => series.id === propType)[0].data.push({y:propScore,x:game.date})
         chartData.filter(series => series.id === "minutes")[0].data.push({y:parseInt(game.minutes.split(":")[0])/10,x:game.date})
-        if (countMap[game[propType]]) {
-            countMap[game[propType]]++
+        if (countMap[propScore]) {
+            countMap[propScore]++
         } else {
-            countMap[game[propType]]=1
+            countMap[propScore]=1
         }
-        pointsArr.push(game[propType])
-        if (game[propType] > max) {
-            max = game[propType]
+        propScoreArr.push(propScore)
+        if (propScore > max) {
+            max = propScore
         }
-        if (game[propType] < min || min === -1) {
-            min = game[propType]
+        if (propScore < min || min === -1) {
+            min = propScore
         }
     });
     let less = 0;
@@ -57,12 +55,10 @@ const Player = (props) => {
         }
     }
     let countData = [{id:propType, data: []}, {id:"normal", data: []}];
-    let stddev = std(pointsArr)
-    let m = mean(pointsArr)
-    let lambda = variance(pointsArr)
+    let stddev = std(propScoreArr)
+    let m = mean(propScoreArr)
     const normDist = new NormalDistribution(m, stddev);
 
-    let scale = 10
    for(let i = 0; i< 3*stddev+m;i++) {
        let xval = i
        let yval = normDist.pdf(xval);
@@ -77,8 +73,8 @@ const Player = (props) => {
             <div className="player-card">
                 <h1>{player.first_name} {player.last_name}</h1>
             </div>
-            <p>Avergage {propType}: {avgPoints}</p>
-            <p>Variance: {lambda}</p>
+            <p>Avergage {propType}: {m}</p>
+            <p>Std Dev: {stddev}</p>
             <p>Target: {target}</p>
             <p>Over: {more}</p>
             <p>Under: {less}</p>
@@ -90,7 +86,7 @@ const Player = (props) => {
                     axisBottom={{tickRotation:-90, tickSize:5, tickPadding: 0, format: function(value) {return `${new Date(value).getMonth()+1}/${new Date(value).getDate()+1}`}}}
                     yScale={{ type: 'linear', min: 0, max: 'auto', stacked: false, reverse: false }}
                     yFormat=" >-.2f"
-                    markers={[{axis:"y", value: avgPoints, legend: "average"}, {axis:"y", value: target, legend: "target"}]}
+                    markers={[{axis:"y", value: m, legend: "average"}, {axis:"y", value: target, legend: "target"}]}
                     legends={[
                         {
                             anchor: 'bottom-right',
@@ -138,7 +134,7 @@ const Player = (props) => {
                                     <strong>minutes</strong> {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].minutes}
                                 </div>
                                 <div style={{color: `${slice.points.filter((point) => {return point.serieId === propType})[0].serieColor}`}}>
-                                    <strong>{propType}</strong> {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index][propType]}
+                                    <strong>{propType}</strong> {GetPropScore(sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index],propType)}
                                 </div>
                             </div>
                         )

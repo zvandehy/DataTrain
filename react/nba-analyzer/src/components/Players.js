@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useCallback} from 'react'
 import PlayerPreview  from './PlayerPreview'
 import DataListInput from "react-datalist-input";
-import {HOME_QUERY, showPlayerPreview} from '../utils.js'
+import {HOME_QUERY} from '../utils.js'
 import { useQuery } from '@apollo/client';
 
 //TODO: Current performance of the page is really bad....
@@ -74,7 +74,7 @@ const Players = () => {
             />
              <DataListInput
                 placeholder="Select a propType"
-                items={[{label:"Points", key:"Points"}, {label: "Assists", key: "Assists"}]}
+                items={[{label:"Points", key:"Points"}, {label: "Assists", key: "Assists"},  {label: "Pts+Rebs+Asts", key: "Pts+Rebs+Asts"}, {label: "Rebounds", key: "Rebounds"}]}
                 onSelect={onSelectProp}
                 clearInputOnClick={true}
             />
