@@ -1,14 +1,14 @@
-module github.com/zvandehy/DataTrain/nba_graphql
+module github.com/zvandehy/nba_graphql
 
 go 1.17
 
 require (
 	github.com/99designs/gqlgen v0.14.0
+	github.com/go-chi/chi v1.5.4
+	github.com/rs/cors v1.8.2
 	github.com/vektah/gqlparser/v2 v2.2.0
-	go.mongodb.org/mongo-driver v1.8.3
+	go.mongodb.org/mongo-driver v1.8.1
 )
-
-require golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f // indirect
 
 require (
 	github.com/agnivade/levenshtein v1.1.0 // indirect
@@ -23,7 +23,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli/v2 v2.1.1 // indirect
 	github.com/vektah/dataloaden v0.2.1-0.20190515034641-a19b9a6e7c9e // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
