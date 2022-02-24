@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/sirupsen/logrus"
+	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,11 +16,7 @@ import (
 
 func (r *playerResolver) CurrentTeam(ctx context.Context, player *model.Player) (*model.Team, error) {
 	logrus.Printf("Get TEAM for player %v", player)
-	team, err := r.Query().Team(ctx, model.TeamFilter{Abbreviation: &player.CurrentTeam})
-	if err != nil {
-		return nil, err
-	}
-	return team, nil
+	return dataloader.For(ctx).TeamByAbr.Load(player.CurrentTeam)
 }
 
 func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {

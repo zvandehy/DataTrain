@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -30,6 +31,7 @@ func ConnectDB(ctx context.Context) (*NBADatabaseClient, error) {
 		if connErr != nil {
 			return
 		}
+		//TODO: Should the initialized client be Database("nba")?
 		instance.Client = client
 	})
 	if connErr != nil {
@@ -37,4 +39,14 @@ func ConnectDB(ctx context.Context) (*NBADatabaseClient, error) {
 	}
 	logrus.Println("Connected to DB")
 	return instance, nil
+}
+
+func (c *NBADatabaseClient) GetTeamsByAbr(ctx context.Context, abbreviations []string) (*mongo.Cursor, error) {
+	logrus.Printf("Get Teams By Abbreviations: %v\n", abbreviations)
+	teamsDB := c.Database("nba").Collection("teams")
+	filter := bson.M{
+		"abbreviation": bson.M{"$in": abbreviations},
+	}
+	cur, err := teamsDB.Find(ctx, filter)
+	return cur, err
 }
