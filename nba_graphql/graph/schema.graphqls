@@ -22,6 +22,32 @@ type Team {
   numLoss: Int! #TODO
 }
 
+type TeamGame {
+	date: String!
+	defensive_rating: Float!
+	defensive_rebound_percentage: Float!
+	field_goal_percentage: Float!
+	field_goals_attempted: Int!
+	gameID: String! #should be Int
+	home_or_away: String!
+	offensive_rebound_percentage: Float!
+	opponent: Team!
+	opponent_assists: Int!
+	opponent_effective_field_goal_percentage: Float!
+	opponent_field_goals_attempted: Int!
+	opponent_free_throws_attempted: Int!
+	opponent_points: Int!
+	opponent_rebounds: Int!
+	opponent_three_pointers_attempted: Int!
+	opponent_three_pointers_made: Int!
+	plus_minus_per_hundred: Float!
+	possessions: Int!
+	personal_fouls: Int!
+	personal_fouls_drawn: Int!
+	season: String!
+	win_or_loss: String!
+}
+
 type Query {
   players: [Player!]!
   filterPlayers(input: PlayerFilter!): [Player!]!
@@ -29,6 +55,7 @@ type Query {
   teams: [Team!]!
   filterTeams(input: TeamFilter!): [Team!]!
   team(input: TeamFilter!): Team!
+  teamGames(input: GameFilter!): [TeamGame!]!
 }
 
 input PlayerFilter {
@@ -43,4 +70,10 @@ input TeamFilter {
   name: String
   teamID: Int
   abbreviation: String
+}
+
+input GameFilter {
+  teamID: Int
+  playerID: Int
+  season: String
 }

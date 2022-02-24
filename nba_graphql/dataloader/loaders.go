@@ -15,6 +15,7 @@ const loadersKey LoadersKey = "dataloaders"
 
 type Loaders struct {
 	TeamByAbr TeamLoaderABR
+	TeamByID  TeamLoaderID
 }
 
 func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handler {
@@ -50,7 +51,40 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 						}
 						return teams, errs
 					},
-				}),
+				},
+			),
+			TeamByID: *NewTeamLoaderID(
+				TeamLoaderIDConfig{
+					MaxBatch: 5,
+					Wait:     1 * time.Millisecond,
+					Fetch: func(keys []int) ([]*model.Team, []error) {
+						teams := make([]*model.Team, len(keys))
+						teamsById := make(map[int]*model.Team, len(keys))
+						errs := make([]error, len(keys))
+						cur, err := conn.GetTeamsById(r.Context(), keys)
+						if err != nil {
+							return nil, []error{err}
+						}
+						defer cur.Close(r.Context())
+
+						for cur.Next(r.Context()) {
+							team := &model.Team{}
+							err := cur.Decode(&team)
+							if err != nil {
+								return nil, []error{err}
+							}
+							teamsById[team.TeamID] = team
+						}
+						if err := cur.Err(); err != nil {
+							return nil, []error{err}
+						}
+						for i, team := range keys {
+							teams[i] = teamsById[team]
+						}
+						return teams, errs
+					},
+				},
+			),
 		})
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)

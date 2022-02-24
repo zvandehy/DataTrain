@@ -14,9 +14,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (r *playerResolver) CurrentTeam(ctx context.Context, player *model.Player) (*model.Team, error) {
-	logrus.Printf("Get TEAM for player %v", player)
-	return dataloader.For(ctx).TeamByAbr.Load(player.CurrentTeam)
+func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*model.Team, error) {
+	logrus.Printf("Get TEAM for player %v", obj)
+	return dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
 }
 
 func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
@@ -166,11 +166,42 @@ func (r *queryResolver) Team(ctx context.Context, input model.TeamFilter) (*mode
 	return team, nil
 }
 
+func (r *queryResolver) TeamGames(ctx context.Context, input model.GameFilter) ([]*model.TeamGame, error) {
+	logrus.Printf("Get TeamGames with teamID %#v\n", input)
+	cur, err := r.Db.GetTeamGames(ctx, []model.GameFilter{input})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	games := make([]*model.TeamGame, 0, 10)
+	for cur.Next(ctx) {
+		teamGame := &model.TeamGame{}
+		err := cur.Decode(&teamGame)
+		if err != nil {
+			return nil, err
+		}
+		games = append(games, teamGame)
+	}
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+	return games, nil
+}
+
+func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {
+	logrus.Printf("Get Team Games for opponent %v", obj)
+	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+}
+
 // Player returns generated.PlayerResolver implementation.
 func (r *Resolver) Player() generated.PlayerResolver { return &playerResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// TeamGame returns generated.TeamGameResolver implementation.
+func (r *Resolver) TeamGame() generated.TeamGameResolver { return &teamGameResolver{r} }
+
 type playerResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type teamGameResolver struct{ *Resolver }

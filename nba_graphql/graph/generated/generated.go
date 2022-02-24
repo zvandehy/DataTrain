@@ -37,6 +37,7 @@ type Config struct {
 type ResolverRoot interface {
 	Player() PlayerResolver
 	Query() QueryResolver
+	TeamGame() TeamGameResolver
 }
 
 type DirectiveRoot struct {
@@ -57,6 +58,7 @@ type ComplexityRoot struct {
 		Player        func(childComplexity int, input model.PlayerFilter) int
 		Players       func(childComplexity int) int
 		Team          func(childComplexity int, input model.TeamFilter) int
+		TeamGames     func(childComplexity int, input model.GameFilter) int
 		Teams         func(childComplexity int) int
 	}
 
@@ -67,6 +69,32 @@ type ComplexityRoot struct {
 		NumLoss      func(childComplexity int) int
 		NumWins      func(childComplexity int) int
 		TeamID       func(childComplexity int) int
+	}
+
+	TeamGame struct {
+		Date                                 func(childComplexity int) int
+		DefensiveRating                      func(childComplexity int) int
+		DefensiveReboundPercentage           func(childComplexity int) int
+		FieldGoalPercentage                  func(childComplexity int) int
+		FieldGoalsAttempted                  func(childComplexity int) int
+		GameID                               func(childComplexity int) int
+		HomeOrAway                           func(childComplexity int) int
+		OffensiveReboundPercentage           func(childComplexity int) int
+		Opponent                             func(childComplexity int) int
+		OpponentAssists                      func(childComplexity int) int
+		OpponentEffectiveFieldGoalPercentage func(childComplexity int) int
+		OpponentFieldGoalsAttempted          func(childComplexity int) int
+		OpponentFreeThrowsAttempted          func(childComplexity int) int
+		OpponentPoints                       func(childComplexity int) int
+		OpponentRebounds                     func(childComplexity int) int
+		OpponentThreePointersAttempted       func(childComplexity int) int
+		OpponentThreePointersMade            func(childComplexity int) int
+		PersonalFouls                        func(childComplexity int) int
+		PersonalFoulsDrawn                   func(childComplexity int) int
+		PlusMinusPerHundred                  func(childComplexity int) int
+		Possessions                          func(childComplexity int) int
+		Season                               func(childComplexity int) int
+		WinOrLoss                            func(childComplexity int) int
 	}
 }
 
@@ -80,6 +108,10 @@ type QueryResolver interface {
 	Teams(ctx context.Context) ([]*model.Team, error)
 	FilterTeams(ctx context.Context, input model.TeamFilter) ([]*model.Team, error)
 	Team(ctx context.Context, input model.TeamFilter) (*model.Team, error)
+	TeamGames(ctx context.Context, input model.GameFilter) ([]*model.TeamGame, error)
+}
+type TeamGameResolver interface {
+	Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error)
 }
 
 type executableSchema struct {
@@ -187,6 +219,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Team(childComplexity, args["input"].(model.TeamFilter)), true
 
+	case "Query.teamGames":
+		if e.complexity.Query.TeamGames == nil {
+			break
+		}
+
+		args, err := ec.field_Query_teamGames_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TeamGames(childComplexity, args["input"].(model.GameFilter)), true
+
 	case "Query.teams":
 		if e.complexity.Query.Teams == nil {
 			break
@@ -235,6 +279,167 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Team.TeamID(childComplexity), true
+
+	case "TeamGame.date":
+		if e.complexity.TeamGame.Date == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.Date(childComplexity), true
+
+	case "TeamGame.defensive_rating":
+		if e.complexity.TeamGame.DefensiveRating == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.DefensiveRating(childComplexity), true
+
+	case "TeamGame.defensive_rebound_percentage":
+		if e.complexity.TeamGame.DefensiveReboundPercentage == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.DefensiveReboundPercentage(childComplexity), true
+
+	case "TeamGame.field_goal_percentage":
+		if e.complexity.TeamGame.FieldGoalPercentage == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.FieldGoalPercentage(childComplexity), true
+
+	case "TeamGame.field_goals_attempted":
+		if e.complexity.TeamGame.FieldGoalsAttempted == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.FieldGoalsAttempted(childComplexity), true
+
+	case "TeamGame.gameID":
+		if e.complexity.TeamGame.GameID == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.GameID(childComplexity), true
+
+	case "TeamGame.home_or_away":
+		if e.complexity.TeamGame.HomeOrAway == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.HomeOrAway(childComplexity), true
+
+	case "TeamGame.offensive_rebound_percentage":
+		if e.complexity.TeamGame.OffensiveReboundPercentage == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.OffensiveReboundPercentage(childComplexity), true
+
+	case "TeamGame.opponent":
+		if e.complexity.TeamGame.Opponent == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.Opponent(childComplexity), true
+
+	case "TeamGame.opponent_assists":
+		if e.complexity.TeamGame.OpponentAssists == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.OpponentAssists(childComplexity), true
+
+	case "TeamGame.opponent_effective_field_goal_percentage":
+		if e.complexity.TeamGame.OpponentEffectiveFieldGoalPercentage == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.OpponentEffectiveFieldGoalPercentage(childComplexity), true
+
+	case "TeamGame.opponent_field_goals_attempted":
+		if e.complexity.TeamGame.OpponentFieldGoalsAttempted == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.OpponentFieldGoalsAttempted(childComplexity), true
+
+	case "TeamGame.opponent_free_throws_attempted":
+		if e.complexity.TeamGame.OpponentFreeThrowsAttempted == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.OpponentFreeThrowsAttempted(childComplexity), true
+
+	case "TeamGame.opponent_points":
+		if e.complexity.TeamGame.OpponentPoints == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.OpponentPoints(childComplexity), true
+
+	case "TeamGame.opponent_rebounds":
+		if e.complexity.TeamGame.OpponentRebounds == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.OpponentRebounds(childComplexity), true
+
+	case "TeamGame.opponent_three_pointers_attempted":
+		if e.complexity.TeamGame.OpponentThreePointersAttempted == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.OpponentThreePointersAttempted(childComplexity), true
+
+	case "TeamGame.opponent_three_pointers_made":
+		if e.complexity.TeamGame.OpponentThreePointersMade == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.OpponentThreePointersMade(childComplexity), true
+
+	case "TeamGame.personal_fouls":
+		if e.complexity.TeamGame.PersonalFouls == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.PersonalFouls(childComplexity), true
+
+	case "TeamGame.personal_fouls_drawn":
+		if e.complexity.TeamGame.PersonalFoulsDrawn == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.PersonalFoulsDrawn(childComplexity), true
+
+	case "TeamGame.plus_minus_per_hundred":
+		if e.complexity.TeamGame.PlusMinusPerHundred == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.PlusMinusPerHundred(childComplexity), true
+
+	case "TeamGame.possessions":
+		if e.complexity.TeamGame.Possessions == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.Possessions(childComplexity), true
+
+	case "TeamGame.season":
+		if e.complexity.TeamGame.Season == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.Season(childComplexity), true
+
+	case "TeamGame.win_or_loss":
+		if e.complexity.TeamGame.WinOrLoss == nil {
+			break
+		}
+
+		return e.complexity.TeamGame.WinOrLoss(childComplexity), true
 
 	}
 	return 0, false
@@ -310,6 +515,32 @@ type Team {
   numLoss: Int! #TODO
 }
 
+type TeamGame {
+	date: String!
+	defensive_rating: Float!
+	defensive_rebound_percentage: Float!
+	field_goal_percentage: Float!
+	field_goals_attempted: Int!
+	gameID: String! #should be Int
+	home_or_away: String!
+	offensive_rebound_percentage: Float!
+	opponent: Team!
+	opponent_assists: Int!
+	opponent_effective_field_goal_percentage: Float!
+	opponent_field_goals_attempted: Int!
+	opponent_free_throws_attempted: Int!
+	opponent_points: Int!
+	opponent_rebounds: Int!
+	opponent_three_pointers_attempted: Int!
+	opponent_three_pointers_made: Int!
+	plus_minus_per_hundred: Float!
+	possessions: Int!
+	personal_fouls: Int!
+	personal_fouls_drawn: Int!
+	season: String!
+	win_or_loss: String!
+}
+
 type Query {
   players: [Player!]!
   filterPlayers(input: PlayerFilter!): [Player!]!
@@ -317,6 +548,7 @@ type Query {
   teams: [Team!]!
   filterTeams(input: TeamFilter!): [Team!]!
   team(input: TeamFilter!): Team!
+  teamGames(input: GameFilter!): [TeamGame!]!
 }
 
 input PlayerFilter {
@@ -324,12 +556,19 @@ input PlayerFilter {
   playerID: Int
   season: String
   position: String
+  teamABR: String
 }
 
 input TeamFilter {
   name: String
   teamID: Int
   abbreviation: String
+}
+
+input GameFilter {
+  teamID: Int
+  playerID: Int
+  season: String
 }
 `, BuiltIn: false},
 }
@@ -391,6 +630,21 @@ func (ec *executionContext) field_Query_player_args(ctx context.Context, rawArgs
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNPlayerFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_teamGames_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.GameFilter
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNGameFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐGameFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -865,6 +1119,48 @@ func (ec *executionContext) _Query_team(ctx context.Context, field graphql.Colle
 	return ec.marshalNTeam2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeam(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_teamGames(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_teamGames_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TeamGames(rctx, args["input"].(model.GameFilter))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TeamGame)
+	fc.Result = res
+	return ec.marshalNTeamGame2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamGameᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1144,6 +1440,811 @@ func (ec *executionContext) _Team_numLoss(ctx context.Context, field graphql.Col
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_date(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Date, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_defensive_rating(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DefensiveRating, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_defensive_rebound_percentage(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DefensiveReboundPercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_field_goal_percentage(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FieldGoalPercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_field_goals_attempted(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FieldGoalsAttempted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_gameID(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GameID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_home_or_away(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HomeOrAway, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_offensive_rebound_percentage(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OffensiveReboundPercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_opponent(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.TeamGame().Opponent(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Team)
+	fc.Result = res
+	return ec.marshalNTeam2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeam(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_opponent_assists(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OpponentAssists, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_opponent_effective_field_goal_percentage(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OpponentEffectiveFieldGoalPercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_opponent_field_goals_attempted(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OpponentFieldGoalsAttempted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_opponent_free_throws_attempted(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OpponentFreeThrowsAttempted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_opponent_points(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OpponentPoints, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_opponent_rebounds(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OpponentRebounds, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_opponent_three_pointers_attempted(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OpponentThreePointersAttempted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_opponent_three_pointers_made(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OpponentThreePointersMade, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_plus_minus_per_hundred(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PlusMinusPerHundred, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_possessions(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Possessions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_personal_fouls(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PersonalFouls, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_personal_fouls_drawn(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PersonalFoulsDrawn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_season(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Season, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TeamGame_win_or_loss(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TeamGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WinOrLoss, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2268,6 +3369,45 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputGameFilter(ctx context.Context, obj interface{}) (model.GameFilter, error) {
+	var it model.GameFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "teamID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamID"))
+			it.TeamID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "playerID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("playerID"))
+			it.PlayerID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "season":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("season"))
+			it.Season, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPlayerFilter(ctx context.Context, obj interface{}) (model.PlayerFilter, error) {
 	var it model.PlayerFilter
 	asMap := map[string]interface{}{}
@@ -2306,6 +3446,14 @@ func (ec *executionContext) unmarshalInputPlayerFilter(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("position"))
 			it.Position, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "teamABR":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamABR"))
+			it.TeamAbr, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2517,6 +3665,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "teamGames":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_teamGames(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -2572,6 +3734,152 @@ func (ec *executionContext) _Team(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._Team_numLoss(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var teamGameImplementors = []string{"TeamGame"}
+
+func (ec *executionContext) _TeamGame(ctx context.Context, sel ast.SelectionSet, obj *model.TeamGame) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, teamGameImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TeamGame")
+		case "date":
+			out.Values[i] = ec._TeamGame_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "defensive_rating":
+			out.Values[i] = ec._TeamGame_defensive_rating(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "defensive_rebound_percentage":
+			out.Values[i] = ec._TeamGame_defensive_rebound_percentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "field_goal_percentage":
+			out.Values[i] = ec._TeamGame_field_goal_percentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "field_goals_attempted":
+			out.Values[i] = ec._TeamGame_field_goals_attempted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "gameID":
+			out.Values[i] = ec._TeamGame_gameID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "home_or_away":
+			out.Values[i] = ec._TeamGame_home_or_away(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "offensive_rebound_percentage":
+			out.Values[i] = ec._TeamGame_offensive_rebound_percentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "opponent":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._TeamGame_opponent(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "opponent_assists":
+			out.Values[i] = ec._TeamGame_opponent_assists(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "opponent_effective_field_goal_percentage":
+			out.Values[i] = ec._TeamGame_opponent_effective_field_goal_percentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "opponent_field_goals_attempted":
+			out.Values[i] = ec._TeamGame_opponent_field_goals_attempted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "opponent_free_throws_attempted":
+			out.Values[i] = ec._TeamGame_opponent_free_throws_attempted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "opponent_points":
+			out.Values[i] = ec._TeamGame_opponent_points(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "opponent_rebounds":
+			out.Values[i] = ec._TeamGame_opponent_rebounds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "opponent_three_pointers_attempted":
+			out.Values[i] = ec._TeamGame_opponent_three_pointers_attempted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "opponent_three_pointers_made":
+			out.Values[i] = ec._TeamGame_opponent_three_pointers_made(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "plus_minus_per_hundred":
+			out.Values[i] = ec._TeamGame_plus_minus_per_hundred(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "possessions":
+			out.Values[i] = ec._TeamGame_possessions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "personal_fouls":
+			out.Values[i] = ec._TeamGame_personal_fouls(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "personal_fouls_drawn":
+			out.Values[i] = ec._TeamGame_personal_fouls_drawn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "season":
+			out.Values[i] = ec._TeamGame_season(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "win_or_loss":
+			out.Values[i] = ec._TeamGame_win_or_loss(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -2849,6 +4157,26 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	res, err := graphql.UnmarshalFloat(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloat(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNGameFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐGameFilter(ctx context.Context, v interface{}) (model.GameFilter, error) {
+	res, err := ec.unmarshalInputGameFilter(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3039,6 +4367,60 @@ func (ec *executionContext) marshalNTeam2ᚖgithubᚗcomᚋzvandehyᚋDataTrain�
 func (ec *executionContext) unmarshalNTeamFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamFilter(ctx context.Context, v interface{}) (model.TeamFilter, error) {
 	res, err := ec.unmarshalInputTeamFilter(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTeamGame2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamGameᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TeamGame) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTeamGame2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamGame(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTeamGame2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamGame(ctx context.Context, sel ast.SelectionSet, v *model.TeamGame) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TeamGame(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
