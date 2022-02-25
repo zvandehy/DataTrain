@@ -11,6 +11,7 @@ type Player {
   #G, F, or C
   position: String!
   currentTeam: Team!
+  games(input: GameFilter!): [PlayerGame!]!
 }
 
 type Team {
@@ -20,6 +21,8 @@ type Team {
   location: String!
   numWins: Int! #TODO
   numLoss: Int! #TODO
+  games(input: GameFilter!): [TeamGame!]!
+  players: [Player!]!
 }
 
 type TeamGame {
@@ -46,6 +49,46 @@ type TeamGame {
 	personal_fouls_drawn: Int!
 	season: String!
 	win_or_loss: String!
+  	playersInGame: PlayersInGame!
+}
+
+type PlayerGame {
+	assist_percentage: Float!
+	assists: Int!
+	date: String!
+	defensive_rebound_percentage: Float!
+	defensive_rebounds: Int!
+	effective_field_goal_percentage: Float!
+	field_goal_percentage: Float!
+	field_goals_attempted: Int!
+	field_goals_made: Int!
+	free_throws_attempted: Int!
+	free_throws_made: Int!
+	free_throws_percentage: Float!
+	gameID: String! #should be Int
+	home_or_away: String!
+	minutes: String!
+	offensive_rebound_percentage: Float!
+	offensive_rebounds: Int!
+	opponent: Team!
+	personal_fouls_drawn: Int!
+	personal_fouls: Int!
+	points: Int!
+	player: Player!
+	season: String!
+	three_point_percentage: Float!
+	three_pointers_attempted: Int!
+	three_pointers_made: Int!
+	total_rebounds: Int!
+	true_shooting_percentage: Float!
+	turnovers: Int!
+	usage: Float!
+  	playersInGame: PlayersInGame!
+}
+
+type PlayersInGame {
+  team: [Player!]!
+  opponent: [Player!]!
 }
 
 type Query {
@@ -56,6 +99,7 @@ type Query {
   filterTeams(input: TeamFilter!): [Team!]!
   team(input: TeamFilter!): Team!
   teamGames(input: GameFilter!): [TeamGame!]!
+  playerGames(input: GameFilter!): [PlayerGame!]!
 }
 
 input PlayerFilter {
@@ -64,6 +108,7 @@ input PlayerFilter {
   season: String
   position: String
   teamABR: String
+  teamID: Int
 }
 
 input TeamFilter {
@@ -75,5 +120,6 @@ input TeamFilter {
 input GameFilter {
   teamID: Int
   playerID: Int
+  gameID: String #should be Int
   season: String
 }

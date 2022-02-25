@@ -5,24 +5,17 @@ package model
 type GameFilter struct {
 	TeamID   *int    `json:"teamID" bson:"teamID"`
 	PlayerID *int    `json:"playerID" bson:"playerID"`
+	GameID   *string `json:"gameID" bson:"gameID"`
 	Season   *string `json:"season" bson:"season"`
 }
 
 type PlayerFilter struct {
-	Name     *string `json:"name" bson:"first_name"`
+	Name     *string `json:"name" bson:"name"`
 	PlayerID *int    `json:"playerID" bson:"playerID"`
 	Season   *string `json:"season" bson:"season"`
 	Position *string `json:"position" bson:"position"`
 	TeamAbr  *string `json:"teamABR" bson:"teamABR"`
-}
-
-type Team struct {
-	Name         string `json:"name" bson:"name"`
-	TeamID       int    `json:"teamID" bson:"teamID"`
-	Abbreviation string `json:"abbreviation" bson:"abbreviation"`
-	Location     string `json:"location" bson:"city"`
-	NumWins      int    `json:"numWins" bson:"numWins"`
-	NumLoss      int    `json:"numLoss" bson:"numLoss"`
+	TeamID   *int    `json:"teamID" bson:"teamID"`
 }
 
 type TeamFilter struct {

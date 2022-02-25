@@ -14,8 +14,10 @@ type LoadersKey string
 const loadersKey LoadersKey = "dataloaders"
 
 type Loaders struct {
-	TeamByAbr TeamLoaderABR
-	TeamByID  TeamLoaderID
+	TeamByAbr          TeamLoaderABR
+	TeamByID           TeamLoaderID
+	PlayerByID         PlayerLoaderID
+	PlayerGameByFilter PlayerGameLoader
 }
 
 func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handler {
@@ -82,6 +84,74 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 							teams[i] = teamsById[team]
 						}
 						return teams, errs
+					},
+				},
+			),
+			PlayerByID: *NewPlayerLoaderID(
+				PlayerLoaderIDConfig{
+					MaxBatch: 5,
+					Wait:     1 * time.Millisecond,
+					Fetch: func(keys []int) ([]*model.Player, []error) {
+						players := make([]*model.Player, len(keys))
+						playersById := make(map[int]*model.Player, len(keys))
+						errs := make([]error, len(keys))
+						filters := make([]model.PlayerFilter, len(keys))
+						for i := range keys {
+							filters = append(filters, model.PlayerFilter{PlayerID: &keys[i]})
+						}
+						cur, err := conn.GetPlayers(r.Context(), filters)
+						if err != nil {
+							return nil, []error{err}
+						}
+						defer cur.Close(r.Context())
+
+						for cur.Next(r.Context()) {
+							player := &model.Player{}
+							err := cur.Decode(&player)
+							if err != nil {
+								return nil, []error{err}
+							}
+							playersById[player.PlayerID] = player
+						}
+						if err := cur.Err(); err != nil {
+							return nil, []error{err}
+						}
+						for i, player := range keys {
+							players[i] = playersById[player]
+						}
+						return players, errs
+					},
+				},
+			),
+			PlayerGameByFilter: *NewPlayerGameLoader(
+				PlayerGameLoaderConfig{
+					MaxBatch: 10,
+					Wait:     20 * time.Millisecond,
+					Fetch: func(keys []model.GameFilter) ([][]*model.PlayerGame, []error) {
+						games := make([][]*model.PlayerGame, len(keys))
+						errs := make([]error, len(keys))
+						gamesByPlayerID := make(map[int][]*model.PlayerGame, len(keys))
+						cur, err := conn.GetPlayerGames(r.Context(), keys)
+						if err != nil {
+							return nil, []error{err}
+						}
+						defer cur.Close(r.Context())
+
+						for cur.Next(r.Context()) {
+							game := &model.PlayerGame{}
+							err := cur.Decode(&game)
+							if err != nil {
+								return nil, []error{err}
+							}
+							gamesByPlayerID[game.PlayerID] = append(gamesByPlayerID[game.PlayerID], game)
+						}
+						if err := cur.Err(); err != nil {
+							return nil, []error{err}
+						}
+						for i, filter := range keys {
+							games[i] = gamesByPlayerID[*filter.PlayerID]
+						}
+						return games, errs
 					},
 				},
 			),

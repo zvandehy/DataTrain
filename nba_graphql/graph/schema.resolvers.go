@@ -19,6 +19,74 @@ func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*m
 	return dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
 }
 
+func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.PlayerGame, error) {
+	logrus.Printf("Get Games filtered by %v for Player %v", input, obj)
+	input.PlayerID = &obj.PlayerID
+	return dataloader.For(ctx).PlayerGameByFilter.Load(input)
+}
+
+func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
+	logrus.Printf("Get Opponent from PlayerGame %v", obj)
+	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+}
+
+func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error) {
+	logrus.Printf("Get Player from PlayerGame %v", obj)
+	return dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
+}
+
+func (r *playerGameResolver) PlayersInGame(ctx context.Context, obj *model.PlayerGame) (*model.PlayersInGame, error) {
+	logrus.Printf("Get PlayersInGame from PlayerGame %v", obj)
+	gameCur, err := r.Db.GetPlayerGames(ctx, []model.GameFilter{{GameID: &obj.GameID}})
+	if err != nil {
+		return nil, err
+	}
+	defer gameCur.Close(ctx)
+	var playerGames map[int]model.PlayerGame = make(map[int]model.PlayerGame)
+	var playerFilters []model.PlayerFilter
+	for gameCur.Next(ctx) {
+		playerGame := model.PlayerGame{}
+		err = gameCur.Decode(&playerGame)
+		if err != nil {
+			return nil, err
+		}
+		playerGames[playerGame.PlayerID] = playerGame
+		playerFilters = append(playerFilters, model.PlayerFilter{PlayerID: &playerGame.PlayerID})
+	}
+	playerCur, err := r.Db.GetPlayers(ctx, playerFilters)
+	if err != nil {
+		return nil, err
+	}
+	defer playerCur.Close(ctx)
+	var teamPlayers []*model.Player
+	var oppPlayers []*model.Player
+	for playerCur.Next(ctx) {
+		player := &model.Player{}
+		err := playerCur.Decode(&player)
+		if err != nil {
+			return nil, err
+		}
+		//team's opponent == player's opponent --> player is teammate
+		if playerGames[player.PlayerID].OpponentID == obj.OpponentID {
+			teamPlayers = append(teamPlayers, player)
+		} else {
+			oppPlayers = append(oppPlayers, player)
+		}
+	}
+	if err := playerCur.Err(); err != nil {
+		return nil, err
+	}
+	return &model.PlayersInGame{TeamPlayers: teamPlayers, OpponentPlayers: oppPlayers}, nil
+}
+
+func (r *playersInGameResolver) Team(ctx context.Context, obj *model.PlayersInGame) ([]*model.Player, error) {
+	return obj.TeamPlayers, nil
+}
+
+func (r *playersInGameResolver) Opponent(ctx context.Context, obj *model.PlayersInGame) ([]*model.Player, error) {
+	return obj.OpponentPlayers, nil
+}
+
 func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
 	logrus.Println("Get Players")
 	playersDB := r.Db.Database("nba").Collection("players")
@@ -46,13 +114,8 @@ func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
 }
 
 func (r *queryResolver) FilterPlayers(ctx context.Context, input model.PlayerFilter) ([]*model.Player, error) {
-	logrus.Printf("Get Players with filter  %#v", input)
-	playersDB := r.Db.Database("nba").Collection("players")
-	filter := bson.M{
-		"last_name": input.Name,
-	}
-	cur, err := playersDB.Find(ctx, filter)
-
+	logrus.Printf("Get Players with filter  %v", input)
+	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{input})
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +137,7 @@ func (r *queryResolver) FilterPlayers(ctx context.Context, input model.PlayerFil
 }
 
 func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*model.Player, error) {
-	logrus.Printf("Get Player with filter  %#v", input)
+	logrus.Printf("Get Player with filter  %v", input)
 	playersDB := r.Db.Database("nba").Collection("players")
 	filter := bson.M{
 		"playerID": input.PlayerID,
@@ -130,7 +193,6 @@ func (r *queryResolver) FilterTeams(ctx context.Context, input model.TeamFilter)
 		return nil, err
 	}
 	defer cur.Close(ctx)
-
 	teams := make([]*model.Team, 0, 10)
 	for cur.Next(ctx) {
 		team := &model.Team{}
@@ -188,20 +250,125 @@ func (r *queryResolver) TeamGames(ctx context.Context, input model.GameFilter) (
 	return games, nil
 }
 
+func (r *queryResolver) PlayerGames(ctx context.Context, input model.GameFilter) ([]*model.PlayerGame, error) {
+	logrus.Printf("Get Games filtered by %v", input)
+	cur, err := r.Db.GetPlayerGames(ctx, []model.GameFilter{input})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	var playerGames []*model.PlayerGame
+	for cur.Next(ctx) {
+		playerGame := model.PlayerGame{}
+		err = cur.Decode(&playerGame)
+		if err != nil {
+			return nil, err
+		}
+		playerGames = append(playerGames, &playerGame)
+	}
+	return playerGames, nil
+}
+
+func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error) {
+	logrus.Printf("Get Games from team %v filtered by %v", obj, input)
+	input.TeamID = &obj.TeamID
+	cur, err := r.Db.GetTeamGames(ctx, []model.GameFilter{input})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	games := make([]*model.TeamGame, 0, 10)
+	for cur.Next(ctx) {
+		teamGame := &model.TeamGame{}
+		err := cur.Decode(&teamGame)
+		if err != nil {
+			return nil, err
+		}
+		games = append(games, teamGame)
+	}
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+	return games, nil
+}
+
+func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.Player, error) {
+	logrus.Printf("Get Players from Team %v", obj)
+	input := model.PlayerFilter{TeamID: &obj.TeamID}
+	return r.Query().FilterPlayers(ctx, input)
+}
+
 func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {
-	logrus.Printf("Get Team Games for opponent %v", obj)
+	logrus.Printf("Get Opponent from TeamGame %v", obj)
 	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+}
+
+func (r *teamGameResolver) PlayersInGame(ctx context.Context, obj *model.TeamGame) (*model.PlayersInGame, error) {
+	logrus.Printf("Get Players from Game %v", obj)
+	//TODO: Abstract this with PlayerGamesResolver PlayersInGame()
+	gameCur, err := r.Db.GetPlayerGames(ctx, []model.GameFilter{{GameID: &obj.GameID}})
+	if err != nil {
+		return nil, err
+	}
+	defer gameCur.Close(ctx)
+	var playerGames map[int]model.PlayerGame = make(map[int]model.PlayerGame)
+	var playerFilters []model.PlayerFilter
+	for gameCur.Next(ctx) {
+		playerGame := model.PlayerGame{}
+		err = gameCur.Decode(&playerGame)
+		if err != nil {
+			return nil, err
+		}
+		playerGames[playerGame.PlayerID] = playerGame
+		playerFilters = append(playerFilters, model.PlayerFilter{PlayerID: &playerGame.PlayerID})
+	}
+	playerCur, err := r.Db.GetPlayers(ctx, playerFilters)
+	if err != nil {
+		return nil, err
+	}
+	defer playerCur.Close(ctx)
+	var teamPlayers []*model.Player
+	var oppPlayers []*model.Player
+	for playerCur.Next(ctx) {
+		player := &model.Player{}
+		err := playerCur.Decode(&player)
+		if err != nil {
+			return nil, err
+		}
+		//team's opponent == player's opponent --> player is teammate
+		if playerGames[player.PlayerID].OpponentID == obj.OpponentID {
+			teamPlayers = append(teamPlayers, player)
+		} else {
+			oppPlayers = append(oppPlayers, player)
+		}
+	}
+	if err := playerCur.Err(); err != nil {
+		return nil, err
+	}
+	return &model.PlayersInGame{TeamPlayers: teamPlayers, OpponentPlayers: oppPlayers}, nil
 }
 
 // Player returns generated.PlayerResolver implementation.
 func (r *Resolver) Player() generated.PlayerResolver { return &playerResolver{r} }
 
+// PlayerGame returns generated.PlayerGameResolver implementation.
+func (r *Resolver) PlayerGame() generated.PlayerGameResolver { return &playerGameResolver{r} }
+
+// PlayersInGame returns generated.PlayersInGameResolver implementation.
+func (r *Resolver) PlayersInGame() generated.PlayersInGameResolver { return &playersInGameResolver{r} }
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
+
+// Team returns generated.TeamResolver implementation.
+func (r *Resolver) Team() generated.TeamResolver { return &teamResolver{r} }
 
 // TeamGame returns generated.TeamGameResolver implementation.
 func (r *Resolver) TeamGame() generated.TeamGameResolver { return &teamGameResolver{r} }
 
 type playerResolver struct{ *Resolver }
+type playerGameResolver struct{ *Resolver }
+type playersInGameResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type teamResolver struct{ *Resolver }
 type teamGameResolver struct{ *Resolver }
