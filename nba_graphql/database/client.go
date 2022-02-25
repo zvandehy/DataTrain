@@ -24,7 +24,7 @@ func ConnectDB(ctx context.Context) (*NBADatabaseClient, error) {
 	var connErr error
 	once.Do(func() {
 		//TODO: Create config file for mongoDB access
-		instance = &NBADatabaseClient{conn: "mongodb+srv://datatrain:nbawinners@datatrain.i5rgk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"}
+		instance = &NBADatabaseClient{conn: ""}
 		client, connErr := mongo.NewClient(options.Client().ApplyURI(instance.conn))
 		if connErr != nil {
 			return
