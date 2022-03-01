@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -76,7 +76,6 @@ func (c *NBADatabaseClient) GetTeamGames(ctx context.Context, inputs []model.Gam
 			seasons = append(seasons, *in.Season)
 		}
 	}
-	fmt.Println(teamIDs, seasons)
 	//TODO: I think this isn't quite right
 	filter := bson.M{
 		"teamID": bson.M{"$in": teamIDs},
@@ -142,14 +141,37 @@ func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.G
 func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.PlayerFilter) (*mongo.Cursor, error) {
 	logrus.Printf("Query Players From: %v\n", inputs)
 	playersDB := c.Database("nba").Collection("players")
+	applyFilters := make(map[string]bson.M, 4)
 	var playerIDs []int
+	var first_names []string
+	var last_names []string
 	for _, in := range inputs {
 		if in.PlayerID != nil {
 			playerIDs = append(playerIDs, *in.PlayerID)
 		}
+		if in.Name != nil {
+			first_names = append(first_names, strings.SplitN(*in.Name, " ", 2)[0])
+			last_names = append(last_names, strings.SplitN(*in.Name, " ", 2)[1])
+		}
 	}
+	if len(playerIDs) == 0 {
+		applyFilters["playerID"] = bson.M{"$nin": []string{""}}
+	} else {
+		applyFilters["playerID"] = bson.M{"$in": playerIDs}
+	}
+	if len(first_names) == 0 {
+		applyFilters["first_name"] = bson.M{"$nin": []string{""}}
+		applyFilters["last_name"] = bson.M{"$nin": []string{""}}
+	} else {
+		applyFilters["first_name"] = bson.M{"$in": first_names}
+		applyFilters["last_name"] = bson.M{"$in": last_names}
+	}
+	//get all the players from this game
 	filter := bson.M{
-		"playerID": bson.M{"$in": playerIDs},
+		"player": applyFilters["playerID"],
+		"$and": bson.A{bson.M{"first_name": applyFilters["first_name"]},
+			bson.M{"last_name": applyFilters["last_name"]},
+		},
 	}
 	cur, err := playersDB.Find(ctx, filter)
 	return cur, err

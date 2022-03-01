@@ -5,7 +5,13 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
@@ -85,6 +91,16 @@ func (r *playersInGameResolver) Team(ctx context.Context, obj *model.PlayersInGa
 
 func (r *playersInGameResolver) Opponent(ctx context.Context, obj *model.PlayersInGame) ([]*model.Player, error) {
 	return obj.OpponentPlayers, nil
+}
+
+func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) (*model.Player, error) {
+	logrus.Printf("Get Player from Projection %v", obj)
+	playerFilter := model.PlayerFilter{Name: &obj.PlayerName}
+	return dataloader.For(ctx).PlayerByFilter.Load(playerFilter)
+}
+
+func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
@@ -269,6 +285,34 @@ func (r *queryResolver) PlayerGames(ctx context.Context, input model.GameFilter)
 	return playerGames, nil
 }
 
+func (r *queryResolver) Projections(ctx context.Context, sportsbook string) ([]*model.Projection, error) {
+	var projections []*model.Projection
+	if strings.ToLower(sportsbook) != "prizepicks" {
+		return nil, fmt.Errorf("unsupported Sportsbook: %s. Current support only exists for: %v", sportsbook, []string{"PrizePicks"})
+	}
+	url := "https://partner-api.prizepicks.com/projections?single_stat=True&per_page=1000&league_id=7"
+	res, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	var prizepicks model.PrizePicks
+	if err := json.Unmarshal(bytes, &prizepicks); err != nil {
+		return nil, err
+	}
+	for _, prop := range prizepicks.Data {
+		projection, err := model.ParsePrizePick(prop, prizepicks.Included)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse prizepick projection")
+		}
+		projections = append(projections, projection)
+	}
+	return projections, nil
+}
+
 func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error) {
 	logrus.Printf("Get Games from team %v filtered by %v", obj, input)
 	input.TeamID = &obj.TeamID
@@ -357,6 +401,9 @@ func (r *Resolver) PlayerGame() generated.PlayerGameResolver { return &playerGam
 // PlayersInGame returns generated.PlayersInGameResolver implementation.
 func (r *Resolver) PlayersInGame() generated.PlayersInGameResolver { return &playersInGameResolver{r} }
 
+// Projection returns generated.ProjectionResolver implementation.
+func (r *Resolver) Projection() generated.ProjectionResolver { return &projectionResolver{r} }
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -369,6 +416,7 @@ func (r *Resolver) TeamGame() generated.TeamGameResolver { return &teamGameResol
 type playerResolver struct{ *Resolver }
 type playerGameResolver struct{ *Resolver }
 type playersInGameResolver struct{ *Resolver }
+type projectionResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type teamGameResolver struct{ *Resolver }

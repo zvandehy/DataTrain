@@ -3,6 +3,7 @@ package dataloader
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
@@ -17,6 +18,7 @@ type Loaders struct {
 	TeamByAbr          TeamLoaderABR
 	TeamByID           TeamLoaderID
 	PlayerByID         PlayerLoaderID
+	PlayerByFilter     PlayerLoader
 	PlayerGameByFilter PlayerGameLoader
 }
 
@@ -87,6 +89,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 					},
 				},
 			),
+			//TODO: Replace this with PlayerByFilter
 			PlayerByID: *NewPlayerLoaderID(
 				PlayerLoaderIDConfig{
 					MaxBatch: 5,
@@ -118,6 +121,41 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 						}
 						for i, player := range keys {
 							players[i] = playersById[player]
+						}
+						return players, errs
+					},
+				},
+			),
+			//TODO: fix firstName to be full name
+			PlayerByFilter: *NewPlayerLoader(
+				PlayerLoaderConfig{
+					MaxBatch: 100,
+					Wait:     10 * time.Millisecond,
+					Fetch: func(keys []model.PlayerFilter) ([]*model.Player, []error) {
+						players := make([]*model.Player, len(keys))
+						playersByName := make(map[string]*model.Player, len(keys))
+						errs := make([]error, len(keys))
+						cur, err := conn.GetPlayers(r.Context(), keys)
+						if err != nil {
+							return nil, []error{err}
+						}
+						defer cur.Close(r.Context())
+
+						for cur.Next(r.Context()) {
+							player := &model.Player{}
+							err := cur.Decode(&player)
+							if err != nil {
+								return nil, []error{err}
+							}
+							firstName := strings.SplitN(player.Name, " ", 2)[0]
+							playersByName[firstName] = player
+						}
+						if err := cur.Err(); err != nil {
+							return nil, []error{err}
+						}
+						for i, player := range keys {
+							firstName := strings.SplitN(*player.Name, " ", 2)[0]
+							players[i] = playersByName[firstName]
 						}
 						return players, errs
 					},

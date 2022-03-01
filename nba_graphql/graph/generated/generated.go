@@ -38,6 +38,7 @@ type ResolverRoot interface {
 	Player() PlayerResolver
 	PlayerGame() PlayerGameResolver
 	PlayersInGame() PlayersInGameResolver
+	Projection() ProjectionResolver
 	Query() QueryResolver
 	Team() TeamResolver
 	TeamGame() TeamGameResolver
@@ -95,12 +96,21 @@ type ComplexityRoot struct {
 		Team     func(childComplexity int) int
 	}
 
+	Projection struct {
+		Opponent   func(childComplexity int) int
+		Player     func(childComplexity int) int
+		PropType   func(childComplexity int) int
+		Sportsbook func(childComplexity int) int
+		Target     func(childComplexity int) int
+	}
+
 	Query struct {
 		FilterPlayers func(childComplexity int, input model.PlayerFilter) int
 		FilterTeams   func(childComplexity int, input model.TeamFilter) int
 		Player        func(childComplexity int, input model.PlayerFilter) int
 		PlayerGames   func(childComplexity int, input model.GameFilter) int
 		Players       func(childComplexity int) int
+		Projections   func(childComplexity int, sportsbook string) int
 		Team          func(childComplexity int, input model.TeamFilter) int
 		TeamGames     func(childComplexity int, input model.GameFilter) int
 		Teams         func(childComplexity int) int
@@ -160,6 +170,11 @@ type PlayersInGameResolver interface {
 	Team(ctx context.Context, obj *model.PlayersInGame) ([]*model.Player, error)
 	Opponent(ctx context.Context, obj *model.PlayersInGame) ([]*model.Player, error)
 }
+type ProjectionResolver interface {
+	Player(ctx context.Context, obj *model.Projection) (*model.Player, error)
+
+	Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error)
+}
 type QueryResolver interface {
 	Players(ctx context.Context) ([]*model.Player, error)
 	FilterPlayers(ctx context.Context, input model.PlayerFilter) ([]*model.Player, error)
@@ -169,6 +184,7 @@ type QueryResolver interface {
 	Team(ctx context.Context, input model.TeamFilter) (*model.Team, error)
 	TeamGames(ctx context.Context, input model.GameFilter) ([]*model.TeamGame, error)
 	PlayerGames(ctx context.Context, input model.GameFilter) ([]*model.PlayerGame, error)
+	Projections(ctx context.Context, sportsbook string) ([]*model.Projection, error)
 }
 type TeamResolver interface {
 	Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error)
@@ -473,6 +489,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PlayersInGame.Team(childComplexity), true
 
+	case "Projection.opponent":
+		if e.complexity.Projection.Opponent == nil {
+			break
+		}
+
+		return e.complexity.Projection.Opponent(childComplexity), true
+
+	case "Projection.player":
+		if e.complexity.Projection.Player == nil {
+			break
+		}
+
+		return e.complexity.Projection.Player(childComplexity), true
+
+	case "Projection.propType":
+		if e.complexity.Projection.PropType == nil {
+			break
+		}
+
+		return e.complexity.Projection.PropType(childComplexity), true
+
+	case "Projection.sportsbook":
+		if e.complexity.Projection.Sportsbook == nil {
+			break
+		}
+
+		return e.complexity.Projection.Sportsbook(childComplexity), true
+
+	case "Projection.target":
+		if e.complexity.Projection.Target == nil {
+			break
+		}
+
+		return e.complexity.Projection.Target(childComplexity), true
+
 	case "Query.filterPlayers":
 		if e.complexity.Query.FilterPlayers == nil {
 			break
@@ -527,6 +578,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Players(childComplexity), true
+
+	case "Query.projections":
+		if e.complexity.Query.Projections == nil {
+			break
+		}
+
+		args, err := ec.field_Query_projections_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Projections(childComplexity, args["sportsbook"].(string)), true
 
 	case "Query.team":
 		if e.complexity.Query.Team == nil {
@@ -889,7 +952,7 @@ type TeamGame {
 	personal_fouls_drawn: Int!
 	season: String!
 	win_or_loss: String!
-  playersInGame: PlayersInGame!
+  	playersInGame: PlayersInGame!
 }
 
 type PlayerGame {
@@ -923,7 +986,15 @@ type PlayerGame {
 	true_shooting_percentage: Float!
 	turnovers: Int!
 	usage: Float!
-  playersInGame: PlayersInGame!
+  	playersInGame: PlayersInGame!
+}
+
+type Projection {
+	player: Player!
+	sportsbook: String!
+	opponent: Team!
+	propType: String!
+	target: Float!
 }
 
 type PlayersInGame {
@@ -940,6 +1011,7 @@ type Query {
   team(input: TeamFilter!): Team!
   teamGames(input: GameFilter!): [TeamGame!]!
   playerGames(input: GameFilter!): [PlayerGame!]!
+  projections(sportsbook: String!): [Projection!]!
 }
 
 input PlayerFilter {
@@ -1058,6 +1130,21 @@ func (ec *executionContext) field_Query_player_args(ctx context.Context, rawArgs
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_projections_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["sportsbook"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sportsbook"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sportsbook"] = arg0
 	return args, nil
 }
 
@@ -2516,6 +2603,181 @@ func (ec *executionContext) _PlayersInGame_opponent(ctx context.Context, field g
 	return ec.marshalNPlayer2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Projection_player(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Projection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Projection().Player(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Player)
+	fc.Result = res
+	return ec.marshalNPlayer2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Projection_sportsbook(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Projection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sportsbook, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Projection_opponent(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Projection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Projection().Opponent(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Team)
+	fc.Result = res
+	return ec.marshalNTeam2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeam(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Projection_propType(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Projection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PropType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Projection_target(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Projection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Target, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_players(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2836,6 +3098,48 @@ func (ec *executionContext) _Query_playerGames(ctx context.Context, field graphq
 	res := resTmp.([]*model.PlayerGame)
 	fc.Result = res
 	return ec.marshalNPlayerGame2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerGameᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_projections(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_projections_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Projections(rctx, args["sportsbook"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Projection)
+	fc.Result = res
+	return ec.marshalNProjection2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProjectionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5639,6 +5943,71 @@ func (ec *executionContext) _PlayersInGame(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var projectionImplementors = []string{"Projection"}
+
+func (ec *executionContext) _Projection(ctx context.Context, sel ast.SelectionSet, obj *model.Projection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, projectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Projection")
+		case "player":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Projection_player(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "sportsbook":
+			out.Values[i] = ec._Projection_sportsbook(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "opponent":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Projection_opponent(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "propType":
+			out.Values[i] = ec._Projection_propType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "target":
+			out.Values[i] = ec._Projection_target(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -5761,6 +6130,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_playerGames(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "projections":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_projections(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -6450,6 +6833,60 @@ func (ec *executionContext) marshalNPlayersInGame2ᚖgithubᚗcomᚋzvandehyᚋD
 		return graphql.Null
 	}
 	return ec._PlayersInGame(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNProjection2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProjectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Projection) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNProjection2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProjection(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNProjection2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProjection(ctx context.Context, sel ast.SelectionSet, v *model.Projection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Projection(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

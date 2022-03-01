@@ -86,6 +86,14 @@ type PlayerGame {
   	playersInGame: PlayersInGame!
 }
 
+type Projection {
+	player: Player!
+	sportsbook: String!
+	opponent: Team!
+	propType: String!
+	target: Float!
+}
+
 type PlayersInGame {
   team: [Player!]!
   opponent: [Player!]!
@@ -100,6 +108,7 @@ type Query {
   team(input: TeamFilter!): Team!
   teamGames(input: GameFilter!): [TeamGame!]!
   playerGames(input: GameFilter!): [PlayerGame!]!
+  projections(sportsbook: String!): [Projection!]!
 }
 
 input PlayerFilter {
