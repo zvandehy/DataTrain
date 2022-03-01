@@ -19,11 +19,11 @@ const Players = () => {
             setPropType(type)
             console.group("Data updated")
             console.log(data)
-            let filterCleaning = data.prizepicks.filter(item => item.player.playerID !== 0)
+            let filterCleaning = data.projections.filter(item => item.player.playerID !== 0)
             console.log(filterCleaning.length)
-            let filteredByTeam = lookup !== '' ? filterCleaning.filter(item => item.player.teamABR === lookup) : filterCleaning;
+            let filteredByTeam = lookup !== '' ? filterCleaning.filter(item => item.player.currentTeam.abbreviation === lookup) : filterCleaning;
             console.log(lookup, filteredByTeam)
-            let filteredByPropType = propType !== '' ? filteredByTeam.filter(item => item.type === propType) : filteredByTeam;
+            let filteredByPropType = propType !== '' ? filteredByTeam.filter(item => item.propType === propType) : filteredByTeam;
             // let p = filteredByPropType.map((prizepick) => {let prop = showPlayerPreview(prizepick.player, data.prizepicks, proptype); if (prop) return {player:player, prop:prop}}).filter((item) => item !== undefined);
             // p.sort((a, b) => a.prop.target > b.prop.target)
             filteredByPropType.sort((a, b) => a.target > b.target)
@@ -51,7 +51,9 @@ const Players = () => {
       }, [data]);
       
     if (loading) return 'Loading...';
-    if (error) return `Error! ${error.message}. ${loading}. ${data}`;
+    if (error) {
+        return `Error! ${error.message}. ${loading}. ${data}`;
+    }
     console.log(data)
     const selectTeams =
           data.teams.map((team) => ({

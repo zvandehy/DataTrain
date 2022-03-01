@@ -17,14 +17,15 @@ var instance *NBADatabaseClient
 
 type NBADatabaseClient struct {
 	*mongo.Client
-	conn string
+	conn    string
+	Queries int
 }
 
 func ConnectDB(ctx context.Context) (*NBADatabaseClient, error) {
 	var connErr error
 	once.Do(func() {
 		//TODO: Create config file for mongoDB access
-		instance = &NBADatabaseClient{conn: ""}
+		instance = &NBADatabaseClient{conn: "mongodb+srv://datatrain:nbawinners@datatrain.i5rgk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"}
 		client, connErr := mongo.NewClient(options.Client().ApplyURI(instance.conn))
 		if connErr != nil {
 			return
@@ -45,26 +46,31 @@ func ConnectDB(ctx context.Context) (*NBADatabaseClient, error) {
 
 func (c *NBADatabaseClient) GetTeamsByAbr(ctx context.Context, abbreviations []string) (*mongo.Cursor, error) {
 	logrus.Printf("Query Teams By Abbreviations: %v\n", abbreviations)
+	c.Queries++
 	teamsDB := c.Database("nba").Collection("teams")
 	filter := bson.M{
 		"abbreviation": bson.M{"$in": abbreviations},
 	}
 	cur, err := teamsDB.Find(ctx, filter)
+
 	return cur, err
 }
 
 func (c *NBADatabaseClient) GetTeamsById(ctx context.Context, teamIDs []int) (*mongo.Cursor, error) {
 	logrus.Printf("Query Teams By IDs: %v\n", teamIDs)
+	c.Queries++
 	teamsDB := c.Database("nba").Collection("teams")
 	filter := bson.M{
 		"teamID": bson.M{"$in": teamIDs},
 	}
 	cur, err := teamsDB.Find(ctx, filter)
+
 	return cur, err
 }
 
 func (c *NBADatabaseClient) GetTeamGames(ctx context.Context, inputs []model.GameFilter) (*mongo.Cursor, error) {
 	logrus.Printf("Query Team Games: %v\n", inputs)
+	c.Queries++
 	teamGamesDB := c.Database("nba").Collection("teamgames")
 	var teamIDs []int
 	var seasons []string
@@ -82,11 +88,13 @@ func (c *NBADatabaseClient) GetTeamGames(ctx context.Context, inputs []model.Gam
 		"season": bson.M{"$in": seasons},
 	}
 	cur, err := teamGamesDB.Find(ctx, filter)
+
 	return cur, err
 }
 
 func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.GameFilter) (*mongo.Cursor, error) {
 	logrus.Printf("Query PlayerGames From: %v\n", inputs)
+	c.Queries++
 	playerGamesDB := c.Database("nba").Collection("games")
 	applyFilters := make(map[string]bson.M, 4)
 	var gameIDs []string
@@ -135,11 +143,13 @@ func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.G
 		"season": applyFilters["season"],
 	}
 	cur, err := playerGamesDB.Find(ctx, filter)
+
 	return cur, err
 }
 
 func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.PlayerFilter) (*mongo.Cursor, error) {
 	logrus.Printf("Query Players From: %v\n", inputs)
+	c.Queries++
 	playersDB := c.Database("nba").Collection("players")
 	applyFilters := make(map[string]bson.M, 4)
 	var playerIDs []int
@@ -167,12 +177,13 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.Playe
 		applyFilters["last_name"] = bson.M{"$in": last_names}
 	}
 	//get all the players from this game
-	filter := bson.M{
-		"player": applyFilters["playerID"],
-		"$and": bson.A{bson.M{"first_name": applyFilters["first_name"]},
+	filter := bson.M{"$or": bson.A{
+		bson.M{"player": applyFilters["playerID"]},
+		bson.M{"$and": bson.A{bson.M{"first_name": applyFilters["first_name"]},
 			bson.M{"last_name": applyFilters["last_name"]},
-		},
-	}
+		}},
+	}}
 	cur, err := playersDB.Find(ctx, filter)
+
 	return cur, err
 }

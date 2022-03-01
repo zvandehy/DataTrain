@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
@@ -20,29 +19,43 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func (r *playerResolver) Name(ctx context.Context, obj *model.Player) (string, error) {
+	return obj.FirstName + " " + obj.LastName, nil
+}
+
 func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*model.Team, error) {
-	logrus.Printf("Get TEAM for player %v", obj)
-	return dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
+	//logrus.Printf("Get TEAM for player %v", obj)
+	t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
+	if err != nil {
+		return nil, err
+	}
+	if t == nil {
+		return &model.Team{}, nil
+	}
+	return t, err
 }
 
 func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.PlayerGame, error) {
-	logrus.Printf("Get Games filtered by %v for Player %v", input, obj)
+	//logrus.Printf("Get Games filtered by %v for Player %v", input, obj)
+	if obj.PlayerID == 0 {
+		return []*model.PlayerGame{}, nil
+	}
 	input.PlayerID = &obj.PlayerID
 	return dataloader.For(ctx).PlayerGameByFilter.Load(input)
 }
 
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
-	logrus.Printf("Get Opponent from PlayerGame %v", obj)
+	//logrus.Printf("Get Opponent from PlayerGame %v", obj)
 	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
 }
 
 func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error) {
-	logrus.Printf("Get Player from PlayerGame %v", obj)
+	//logrus.Printf("Get Player from PlayerGame %v", obj)
 	return dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
 }
 
 func (r *playerGameResolver) PlayersInGame(ctx context.Context, obj *model.PlayerGame) (*model.PlayersInGame, error) {
-	logrus.Printf("Get PlayersInGame from PlayerGame %v", obj)
+	//logrus.Printf("Get PlayersInGame from PlayerGame %v", obj)
 	gameCur, err := r.Db.GetPlayerGames(ctx, []model.GameFilter{{GameID: &obj.GameID}})
 	if err != nil {
 		return nil, err
@@ -94,17 +107,25 @@ func (r *playersInGameResolver) Opponent(ctx context.Context, obj *model.Players
 }
 
 func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) (*model.Player, error) {
-	logrus.Printf("Get Player from Projection %v", obj)
+	//logrus.Printf("Get Player from Projection %v", obj)
 	playerFilter := model.PlayerFilter{Name: &obj.PlayerName}
-	return dataloader.For(ctx).PlayerByFilter.Load(playerFilter)
+	p, err := dataloader.For(ctx).PlayerByFilter.Load(playerFilter)
+	if p == nil {
+		logrus.Warnf("Player %v is nil. Probably needs to be uploaded to the database.", *playerFilter.Name)
+		name := strings.SplitN(*playerFilter.Name, " ", 2)
+		return &model.Player{FirstName: name[0], LastName: name[1]}, nil
+	}
+	return p, err
+
 }
 
 func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error) {
-	panic(fmt.Errorf("not implemented"))
+	//logrus.Printf("Get TEAM for projection %v", obj)
+	return dataloader.For(ctx).TeamByAbr.Load(obj.OpponentAbr)
 }
 
 func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
-	logrus.Println("Get Players")
+	//logrus.Println("Get Players")
 	playersDB := r.Db.Database("nba").Collection("players")
 	filter := bson.M{}
 	cur, err := playersDB.Find(ctx, filter)
@@ -130,7 +151,7 @@ func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
 }
 
 func (r *queryResolver) FilterPlayers(ctx context.Context, input model.PlayerFilter) ([]*model.Player, error) {
-	logrus.Printf("Get Players with filter  %v", input)
+	//logrus.Printf("Get Players with filter  %v", input)
 	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{input})
 	if err != nil {
 		return nil, err
@@ -153,7 +174,7 @@ func (r *queryResolver) FilterPlayers(ctx context.Context, input model.PlayerFil
 }
 
 func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*model.Player, error) {
-	logrus.Printf("Get Player with filter  %v", input)
+	//logrus.Printf("Get Player with filter  %v", input)
 	playersDB := r.Db.Database("nba").Collection("players")
 	filter := bson.M{
 		"playerID": input.PlayerID,
@@ -168,7 +189,7 @@ func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*
 }
 
 func (r *queryResolver) Teams(ctx context.Context) ([]*model.Team, error) {
-	logrus.Println("Get Teams")
+	//logrus.Println("Get Teams")
 	teamsDB := r.Db.Database("nba").Collection("teams")
 	filter := bson.M{}
 	cur, err := teamsDB.Find(ctx, filter)
@@ -194,7 +215,7 @@ func (r *queryResolver) Teams(ctx context.Context) ([]*model.Team, error) {
 }
 
 func (r *queryResolver) FilterTeams(ctx context.Context, input model.TeamFilter) ([]*model.Team, error) {
-	logrus.Printf("Get Teams with filter %v\n", input)
+	//logrus.Printf("Get Teams with filter %v\n", input)
 	teamsDB := r.Db.Database("nba").Collection("teams")
 	filter := bson.M{
 		"teamID": input.TeamID,
@@ -225,7 +246,7 @@ func (r *queryResolver) FilterTeams(ctx context.Context, input model.TeamFilter)
 }
 
 func (r *queryResolver) Team(ctx context.Context, input model.TeamFilter) (*model.Team, error) {
-	logrus.Printf("Get Team with filter %#v\n", input)
+	//logrus.Printf("Get Team with filter %#v\n", input)
 	teamsDB := r.Db.Database("nba").Collection("teams")
 	filter := bson.M{
 		"abbreviation": input.Abbreviation,
@@ -245,7 +266,7 @@ func (r *queryResolver) Team(ctx context.Context, input model.TeamFilter) (*mode
 }
 
 func (r *queryResolver) TeamGames(ctx context.Context, input model.GameFilter) ([]*model.TeamGame, error) {
-	logrus.Printf("Get TeamGames with teamID %#v\n", input)
+	//logrus.Printf("Get TeamGames with teamID %#v\n", input)
 	cur, err := r.Db.GetTeamGames(ctx, []model.GameFilter{input})
 	if err != nil {
 		return nil, err
@@ -267,7 +288,7 @@ func (r *queryResolver) TeamGames(ctx context.Context, input model.GameFilter) (
 }
 
 func (r *queryResolver) PlayerGames(ctx context.Context, input model.GameFilter) ([]*model.PlayerGame, error) {
-	logrus.Printf("Get Games filtered by %v", input)
+	//logrus.Printf("Get Games filtered by %v", input)
 	cur, err := r.Db.GetPlayerGames(ctx, []model.GameFilter{input})
 	if err != nil {
 		return nil, err
@@ -306,7 +327,7 @@ func (r *queryResolver) Projections(ctx context.Context, sportsbook string) ([]*
 	for _, prop := range prizepicks.Data {
 		projection, err := model.ParsePrizePick(prop, prizepicks.Included)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse prizepick projection")
+			return nil, fmt.Errorf("failed to parse prizepick projection: %v", err)
 		}
 		projections = append(projections, projection)
 	}
@@ -314,7 +335,7 @@ func (r *queryResolver) Projections(ctx context.Context, sportsbook string) ([]*
 }
 
 func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error) {
-	logrus.Printf("Get Games from team %v filtered by %v", obj, input)
+	//logrus.Printf("Get Games from team %v filtered by %v", obj, input)
 	input.TeamID = &obj.TeamID
 	cur, err := r.Db.GetTeamGames(ctx, []model.GameFilter{input})
 	if err != nil {
@@ -337,18 +358,18 @@ func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.G
 }
 
 func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.Player, error) {
-	logrus.Printf("Get Players from Team %v", obj)
+	//logrus.Printf("Get Players from Team %v", obj)
 	input := model.PlayerFilter{TeamID: &obj.TeamID}
 	return r.Query().FilterPlayers(ctx, input)
 }
 
 func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {
-	logrus.Printf("Get Opponent from TeamGame %v", obj)
+	//logrus.Printf("Get Opponent from TeamGame %v", obj)
 	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
 }
 
 func (r *teamGameResolver) PlayersInGame(ctx context.Context, obj *model.TeamGame) (*model.PlayersInGame, error) {
-	logrus.Printf("Get Players from Game %v", obj)
+	//logrus.Printf("Get Players from Game %v", obj)
 	//TODO: Abstract this with PlayerGamesResolver PlayersInGame()
 	gameCur, err := r.Db.GetPlayerGames(ctx, []model.GameFilter{{GameID: &obj.GameID}})
 	if err != nil {

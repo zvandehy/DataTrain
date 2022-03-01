@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
@@ -13,6 +12,9 @@ import (
 type LoadersKey string
 
 const loadersKey LoadersKey = "dataloaders"
+
+const waitTime = 100 * time.Millisecond
+const maxBatch = 50
 
 type Loaders struct {
 	TeamByAbr          TeamLoaderABR
@@ -27,8 +29,8 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 		ctx := context.WithValue(r.Context(), loadersKey, &Loaders{
 			TeamByAbr: *NewTeamLoaderABR(
 				TeamLoaderABRConfig{
-					MaxBatch: 30,
-					Wait:     50 * time.Millisecond,
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
 					Fetch: func(keys []string) ([]*model.Team, []error) {
 						teams := make([]*model.Team, len(keys))
 						teamsByAbr := make(map[string]*model.Team, len(keys))
@@ -59,8 +61,8 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 			),
 			TeamByID: *NewTeamLoaderID(
 				TeamLoaderIDConfig{
-					MaxBatch: 5,
-					Wait:     1 * time.Millisecond,
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
 					Fetch: func(keys []int) ([]*model.Team, []error) {
 						teams := make([]*model.Team, len(keys))
 						teamsById := make(map[int]*model.Team, len(keys))
@@ -92,8 +94,8 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 			//TODO: Replace this with PlayerByFilter
 			PlayerByID: *NewPlayerLoaderID(
 				PlayerLoaderIDConfig{
-					MaxBatch: 5,
-					Wait:     1 * time.Millisecond,
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
 					Fetch: func(keys []int) ([]*model.Player, []error) {
 						players := make([]*model.Player, len(keys))
 						playersById := make(map[int]*model.Player, len(keys))
@@ -129,8 +131,8 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 			//TODO: fix firstName to be full name
 			PlayerByFilter: *NewPlayerLoader(
 				PlayerLoaderConfig{
-					MaxBatch: 100,
-					Wait:     10 * time.Millisecond,
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
 					Fetch: func(keys []model.PlayerFilter) ([]*model.Player, []error) {
 						players := make([]*model.Player, len(keys))
 						playersByName := make(map[string]*model.Player, len(keys))
@@ -147,15 +149,14 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 							if err != nil {
 								return nil, []error{err}
 							}
-							firstName := strings.SplitN(player.Name, " ", 2)[0]
-							playersByName[firstName] = player
+							name := player.FirstName + " " + player.LastName
+							playersByName[name] = player
 						}
 						if err := cur.Err(); err != nil {
 							return nil, []error{err}
 						}
 						for i, player := range keys {
-							firstName := strings.SplitN(*player.Name, " ", 2)[0]
-							players[i] = playersByName[firstName]
+							players[i] = playersByName[*player.Name]
 						}
 						return players, errs
 					},
@@ -163,8 +164,8 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 			),
 			PlayerGameByFilter: *NewPlayerGameLoader(
 				PlayerGameLoaderConfig{
-					MaxBatch: 10,
-					Wait:     20 * time.Millisecond,
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
 					Fetch: func(keys []model.GameFilter) ([][]*model.PlayerGame, []error) {
 						games := make([][]*model.PlayerGame, len(keys))
 						errs := make([]error, len(keys))
