@@ -128,7 +128,6 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 					},
 				},
 			),
-			//TODO: fix firstName to be full name
 			PlayerByFilter: *NewPlayerLoader(
 				PlayerLoaderConfig{
 					MaxBatch: maxBatch,
