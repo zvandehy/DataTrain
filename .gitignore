@@ -1,3 +1,5 @@
+app.env
+
 # Logs
 logs
 *.log

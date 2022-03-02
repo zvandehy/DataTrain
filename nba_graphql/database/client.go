@@ -7,6 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
+	"github.com/zvandehy/DataTrain/nba_graphql/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -24,8 +25,11 @@ type NBADatabaseClient struct {
 func ConnectDB(ctx context.Context) (*NBADatabaseClient, error) {
 	var connErr error
 	once.Do(func() {
-		//TODO: Create config file for mongoDB access
-		instance = &NBADatabaseClient{conn: "mongodb+srv://datatrain:nbawinners@datatrain.i5rgk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"}
+		config, err := util.LoadConfig(".")
+		if err != nil {
+			logrus.Fatal("cannot load configuration")
+		}
+		instance = &NBADatabaseClient{conn: config.DBSource}
 		client, connErr := mongo.NewClient(options.Client().ApplyURI(instance.conn))
 		if connErr != nil {
 			return
