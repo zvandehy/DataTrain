@@ -90,8 +90,12 @@ type Projection {
 	player: Player!
 	sportsbook: String!
 	opponent: Team!
-	propType: String!
+	targets: [Target!]!
+}
+
+type Target {
 	target: Float!
+	type: String!
 }
 
 type PlayersInGame {

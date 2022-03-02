@@ -116,7 +116,6 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 		return &model.Player{FirstName: name[0], LastName: name[1]}, nil
 	}
 	return p, err
-
 }
 
 func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error) {
@@ -325,11 +324,10 @@ func (r *queryResolver) Projections(ctx context.Context, sportsbook string) ([]*
 		return nil, err
 	}
 	for _, prop := range prizepicks.Data {
-		projection, err := model.ParsePrizePick(prop, prizepicks.Included)
+		projections, err = model.ParsePrizePick(prop, prizepicks.Included, projections)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse prizepick projection: %v", err)
 		}
-		projections = append(projections, projection)
 	}
 	return projections, nil
 }
@@ -441,3 +439,13 @@ type projectionResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type teamGameResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *projectionResolver) PropType(ctx context.Context, obj *model.Projection) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}

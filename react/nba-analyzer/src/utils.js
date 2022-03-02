@@ -7,7 +7,26 @@ export function GetPropScore(game, propType) {
         case "rebounds":
             return game["total_rebounds"]
         default:
-            return game[propType]
+            return game[propType.toLowerCase()] ?? 0
+    }
+}
+
+export function GetShortType(type) {
+    switch (type.toLowerCase()) {
+        case "points":
+            return "PTS"
+        case "rebounds":
+            return "REB"
+        case "assists":
+            return "AST"
+        case "fantasy score":
+            return "FAN"
+        case "pts+rebs+asts":
+            return "PRA"
+        case "free throws made":
+            return "FTM"
+        default:
+            return type
     }
 }
 
@@ -32,6 +51,7 @@ export const HOME_QUERY = gql`
     projections(sportsbook: "PrizePicks") {
         player {
             name
+            position
             playerID
             currentTeam {
                 abbreviation
@@ -61,8 +81,10 @@ export const HOME_QUERY = gql`
         opponent {
             abbreviation
         }
-        propType
-        target
+        targets {
+            target
+            type
+        }
     }
 }`
 

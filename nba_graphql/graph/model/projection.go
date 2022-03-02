@@ -8,11 +8,10 @@ import (
 )
 
 type Projection struct {
-	PlayerName  string  `json:"player"`
-	Sportsbook  string  `json:"sportsbook"`
-	OpponentAbr string  `json:"opponent"`
-	PropType    string  `json:"propType"`
-	Target      float64 `json:"target"`
+	PlayerName  string    `json:"player"`
+	Sportsbook  string    `json:"sportsbook"`
+	OpponentAbr string    `json:"opponent"`
+	Targets     []*Target `json:"targets"`
 }
 
 type PrizePicks struct {
@@ -68,7 +67,8 @@ type PrizePicksIncluded struct {
 	} `json:"attributes" bson:"attributes"`
 }
 
-func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded) (*Projection, error) {
+//ParsePrizePick creates a Projection and adds it to the projections slice or adds a Target to an existing projection
+func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projections []*Projection) ([]*Projection, error) {
 	var playerName string
 	var statType string
 	for _, p := range included {
@@ -92,5 +92,13 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded) (*Projec
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve prizepicks target")
 	}
-	return &Projection{Sportsbook: "PrizePicks", PropType: statType, PlayerName: playerName, Target: target, OpponentAbr: prop.Attributes.Description}, nil
+	for i, projection := range projections {
+		if projection.PlayerName == playerName {
+			projections[i].Targets = append(projections[i].Targets, &Target{Target: target, Type: statType})
+			return projections, nil
+		}
+	}
+
+	projections = append(projections, &Projection{Sportsbook: "PrizePicks", PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Targets: []*Target{{Target: target, Type: statType}}})
+	return projections, nil
 }
