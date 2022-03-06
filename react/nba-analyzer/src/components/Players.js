@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useCallback} from 'react'
 import PlayerPreview  from './PlayerPreview'
+import PlayerPreview2  from './PlayerPreview2'
 import DataListInput from "react-datalist-input";
 import {HOME_QUERY} from '../utils.js'
 import { useQuery } from '@apollo/client';
@@ -9,7 +10,7 @@ const Players = () => {
     const [lookup, setLookup] = useState('');
     const [showPlayers, setShowPlayers] = useState([]);
     const { loading, error, data } = useQuery(HOME_QUERY);
-
+    const [preview, togglePreview] = useState(true)
     useEffect(() => {
         let team = localStorage.getItem('lookup')
         if (data) { 
@@ -62,9 +63,10 @@ const Players = () => {
                 clearInputOnClick={true}
                 suppressReselect={false}
             />
+            <button onClick={(event) => togglePreview(!preview)}>Toggle Preview</button>
         </div>
         <ul>
-            {showPlayers.length > 0 ? showPlayers.map((item) => {return (<PlayerPreview playerProp={item} key={item.player.playerID}/>)}) : <li>No Players to Show</li>}
+            {showPlayers.length > 0 ? showPlayers.map((item) => {return (<>{preview ? <PlayerPreview playerProp={item} key={item.player.playerID}/> : <PlayerPreview2 playerProp={item} key={item.player.playerID}/>}</>)}) : <li>No Players to Show</li>}
         </ul>
         </div>
     )
