@@ -10,7 +10,7 @@ const Players = () => {
     const [lookup, setLookup] = useState('');
     const [showPlayers, setShowPlayers] = useState([]);
     const { loading, error, data } = useQuery(HOME_QUERY);
-    const [preview, togglePreview] = useState(true)
+    const [preview, togglePreview] = useState(false)
     useEffect(() => {
         let team = localStorage.getItem('lookup')
         if (data) { 

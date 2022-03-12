@@ -83,6 +83,8 @@ type PlayerGame {
 	true_shooting_percentage: Float!
 	turnovers: Int!
 	usage: Float!
+	blocks: Int!
+	steals: Int!
   	playersInGame: PlayersInGame!
 }
 
@@ -91,6 +93,8 @@ type Projection {
 	sportsbook: String!
 	opponent: Team!
 	targets: [Target!]!
+	startTime: String!
+	date: String!
 }
 
 type Target {

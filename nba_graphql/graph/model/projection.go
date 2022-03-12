@@ -3,15 +3,18 @@ package model
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 )
 
 type Projection struct {
-	PlayerName  string    `json:"player"`
-	Sportsbook  string    `json:"sportsbook"`
-	OpponentAbr string    `json:"opponent"`
-	Targets     []*Target `json:"targets"`
+	PlayerName  string    `json:"playername" bson:"playername"`
+	Sportsbook  string    `json:"sportsbook" bson:"sportsbook"`
+	OpponentAbr string    `json:"opponent" bson:"opponent"`
+	Targets     []*Target `json:"targets" bson:"targets"`
+	StartTime   string    `json:"startTime" bson:"startTime"`
+	Date        string    `json:"date" bson:"date"`
 }
 
 type PrizePicks struct {
@@ -92,6 +95,9 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve prizepicks target")
 	}
+
+	dateSlice := strings.SplitN(prop.Attributes.Start_time, "T", 2)
+	date := dateSlice[0]
 	for i, projection := range projections {
 		if projection.PlayerName == playerName {
 			projections[i].Targets = append(projections[i].Targets, &Target{Target: target, Type: statType})
@@ -99,6 +105,6 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 		}
 	}
 
-	projections = append(projections, &Projection{Sportsbook: "PrizePicks", PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Targets: []*Target{{Target: target, Type: statType}}})
+	projections = append(projections, &Projection{Sportsbook: "PrizePicks", PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Date: date, StartTime: prop.Attributes.Start_time, Targets: []*Target{{Target: target, Type: statType}}})
 	return projections, nil
 }

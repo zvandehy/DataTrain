@@ -60,6 +60,7 @@ type ComplexityRoot struct {
 	PlayerGame struct {
 		AssistPercentage             func(childComplexity int) int
 		Assists                      func(childComplexity int) int
+		Blocks                       func(childComplexity int) int
 		Date                         func(childComplexity int) int
 		DefensiveReboundPercentage   func(childComplexity int) int
 		DefensiveRebounds            func(childComplexity int) int
@@ -82,6 +83,7 @@ type ComplexityRoot struct {
 		PlayersInGame                func(childComplexity int) int
 		Points                       func(childComplexity int) int
 		Season                       func(childComplexity int) int
+		Steals                       func(childComplexity int) int
 		ThreePointPercentage         func(childComplexity int) int
 		ThreePointersAttempted       func(childComplexity int) int
 		ThreePointersMade            func(childComplexity int) int
@@ -97,9 +99,11 @@ type ComplexityRoot struct {
 	}
 
 	Projection struct {
+		Date       func(childComplexity int) int
 		Opponent   func(childComplexity int) int
 		Player     func(childComplexity int) int
 		Sportsbook func(childComplexity int) int
+		StartTime  func(childComplexity int) int
 		Targets    func(childComplexity int) int
 	}
 
@@ -278,6 +282,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PlayerGame.Assists(childComplexity), true
 
+	case "PlayerGame.blocks":
+		if e.complexity.PlayerGame.Blocks == nil {
+			break
+		}
+
+		return e.complexity.PlayerGame.Blocks(childComplexity), true
+
 	case "PlayerGame.date":
 		if e.complexity.PlayerGame.Date == nil {
 			break
@@ -432,6 +443,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PlayerGame.Season(childComplexity), true
 
+	case "PlayerGame.steals":
+		if e.complexity.PlayerGame.Steals == nil {
+			break
+		}
+
+		return e.complexity.PlayerGame.Steals(childComplexity), true
+
 	case "PlayerGame.three_point_percentage":
 		if e.complexity.PlayerGame.ThreePointPercentage == nil {
 			break
@@ -495,6 +513,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PlayersInGame.Team(childComplexity), true
 
+	case "Projection.date":
+		if e.complexity.Projection.Date == nil {
+			break
+		}
+
+		return e.complexity.Projection.Date(childComplexity), true
+
 	case "Projection.opponent":
 		if e.complexity.Projection.Opponent == nil {
 			break
@@ -515,6 +540,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Projection.Sportsbook(childComplexity), true
+
+	case "Projection.startTime":
+		if e.complexity.Projection.StartTime == nil {
+			break
+		}
+
+		return e.complexity.Projection.StartTime(childComplexity), true
 
 	case "Projection.targets":
 		if e.complexity.Projection.Targets == nil {
@@ -999,6 +1031,8 @@ type PlayerGame {
 	true_shooting_percentage: Float!
 	turnovers: Int!
 	usage: Float!
+	blocks: Int!
+	steals: Int!
   	playersInGame: PlayersInGame!
 }
 
@@ -1007,6 +1041,8 @@ type Projection {
 	sportsbook: String!
 	opponent: Team!
 	targets: [Target!]!
+	startTime: String!
+	date: String!
 }
 
 type Target {
@@ -2515,6 +2551,76 @@ func (ec *executionContext) _PlayerGame_usage(ctx context.Context, field graphql
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _PlayerGame_blocks(ctx context.Context, field graphql.CollectedField, obj *model.PlayerGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PlayerGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Blocks, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlayerGame_steals(ctx context.Context, field graphql.CollectedField, obj *model.PlayerGame) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PlayerGame",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Steals, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _PlayerGame_playersInGame(ctx context.Context, field graphql.CollectedField, obj *model.PlayerGame) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2758,6 +2864,76 @@ func (ec *executionContext) _Projection_targets(ctx context.Context, field graph
 	res := resTmp.([]*model.Target)
 	fc.Result = res
 	return ec.marshalNTarget2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTargetᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Projection_startTime(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Projection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Projection_date(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Projection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Date, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_players(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5929,6 +6105,16 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "blocks":
+			out.Values[i] = ec._PlayerGame_blocks(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "steals":
+			out.Values[i] = ec._PlayerGame_steals(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "playersInGame":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -6050,6 +6236,16 @@ func (ec *executionContext) _Projection(ctx context.Context, sel ast.SelectionSe
 			})
 		case "targets":
 			out.Values[i] = ec._Projection_targets(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "startTime":
+			out.Values[i] = ec._Projection_startTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "date":
+			out.Values[i] = ec._Projection_date(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}

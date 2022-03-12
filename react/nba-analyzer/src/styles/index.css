@@ -54,13 +54,33 @@ thead * {
 }
 
 .player-photo {
-  max-width: 10em;
+  max-width: 13.6842105263em;
   max-height: 10em;
 }
 
 .player-since {
   margin:0;
   padding:0;
+}
+
+.player-since button {
+  border:none;
+  border-radius:.2em;
+  padding:.1em;
+  margin:.2em;
+}
+
+.player-since button:hover {
+  cursor: pointer;
+}
+
+.unselected {
+  background-color:lightblue;
+}
+
+.selected {
+  font-weight: bold;
+  background-color:orange;
 }
 
 li {

@@ -49,7 +49,7 @@ require (
 
 require (
 	github.com/go-chi/chi v1.5.4
-	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.8.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/vektah/dataloaden v0.3.0 // indirect

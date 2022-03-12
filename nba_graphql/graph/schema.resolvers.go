@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
@@ -329,6 +330,22 @@ func (r *queryResolver) Projections(ctx context.Context, sportsbook string) ([]*
 			return nil, fmt.Errorf("failed to parse prizepick projection: %v", err)
 		}
 	}
+
+	go func() {
+		projectionsDB := r.Db.Database("nba").Collection("projections")
+		insertCtx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+		for _, projection := range projections {
+			res := projectionsDB.FindOne(insertCtx, bson.M{"playername": projection.PlayerName, "starttime": projection.StartTime})
+			if res.Err() != nil {
+				ins, err := projectionsDB.InsertOne(insertCtx, projection)
+				if err != nil {
+					logrus.Warn(err)
+				}
+				logrus.Printf("INSERT %v: %v", projection.PlayerName, ins)
+			}
+		}
+	}()
+
 	return projections, nil
 }
 

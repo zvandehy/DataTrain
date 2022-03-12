@@ -6,6 +6,14 @@ export function GetPropScore(game, propType) {
             return game["points"] + game["total_rebounds"] + game["assists"]
         case "rebounds":
             return game["total_rebounds"]
+        case "free throws made":
+            return game["free_throws_made"]
+        case "3-pt made":
+            return game["three_pointers_made"]
+        case "fantasy score":
+            return game["points"] + game["total_rebounds"]*1.2 + game["assists"]*1.5 + game["blocks"]*3 + game["steals"]*3 - game["turnovers"]
+        case "blks+stls":
+            return game["blocks"] + game["steals"]
         default:
             return game[propType.toLowerCase()] ?? 0
     }
@@ -76,6 +84,9 @@ export const HOME_QUERY = gql`
                 free_throws_attempted
                 free_throws_made
                 minutes
+                blocks
+                turnovers
+                steals
             }
         }
         opponent {
