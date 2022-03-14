@@ -3,23 +3,28 @@
 package model
 
 type GameFilter struct {
-	TeamID   *int    `json:"teamID" bson:"teamID"`
-	PlayerID *int    `json:"playerID" bson:"playerID"`
-	GameID   *string `json:"gameID" bson:"gameID"`
-	Season   *string `json:"season" bson:"season"`
+	TeamID   *int    `json:"teamID"`
+	PlayerID *int    `json:"playerID"`
+	GameID   *string `json:"gameID"`
+	Season   *string `json:"season"`
 }
 
 type PlayerFilter struct {
-	Name     *string `json:"name" bson:"name"`
-	PlayerID *int    `json:"playerID" bson:"playerID"`
-	Season   *string `json:"season" bson:"season"`
-	Position *string `json:"position" bson:"position"`
-	TeamAbr  *string `json:"teamABR" bson:"teamABR"`
-	TeamID   *int    `json:"teamID" bson:"teamID"`
+	Name     *string `json:"name"`
+	PlayerID *int    `json:"playerID"`
+	Season   *string `json:"season"`
+	Position *string `json:"position"`
+	TeamAbr  *string `json:"teamABR"`
+	TeamID   *int    `json:"teamID"`
+}
+
+type Target struct {
+	Target float64 `json:"target"`
+	Type   string  `json:"type"`
 }
 
 type TeamFilter struct {
-	Name         *string `json:"name" bson:"name"`
-	TeamID       *int    `json:"teamID" bson:"teamID"`
-	Abbreviation *string `json:"abbreviation" bson:"abbreviation"`
+	Name         *string `json:"name"`
+	TeamID       *int    `json:"teamID"`
+	Abbreviation *string `json:"abbreviation"`
 }

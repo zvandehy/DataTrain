@@ -6,8 +6,44 @@ export function GetPropScore(game, propType) {
             return game["points"] + game["total_rebounds"] + game["assists"]
         case "rebounds":
             return game["total_rebounds"]
+        case "free throws made":
+            return game["free_throws_made"]
+        case "3-pt made":
+            return game["three_pointers_made"]
+        case "fantasy score":
+            return game["points"] + game["total_rebounds"]*1.2 + game["assists"]*1.5 + game["blocks"]*3 + game["steals"]*3 - game["turnovers"]
+        case "blks+stls":
+            return game["blocks"] + game["steals"]
+        case "double-double":
+            let doubles = 0
+            if (game["points"] >= 10) doubles++
+            if (game["total_rebounds"] >= 10) doubles++
+            if (game["assists"] >= 10) doubles++
+            if (game["blocks"] >= 10) doubles++
+            if (game["steals"] >= 10) doubles++
+            if (doubles >= 2) return 1
+            return 0
         default:
-            return game[propType]
+            return game[propType.toLowerCase()] ?? 0
+    }
+}
+
+export function GetShortType(type) {
+    switch (type.toLowerCase()) {
+        case "points":
+            return "PTS"
+        case "rebounds":
+            return "REB"
+        case "assists":
+            return "AST"
+        case "fantasy score":
+            return "FAN"
+        case "pts+rebs+asts":
+            return "PRA"
+        case "free throws made":
+            return "FTM"
+        default:
+            return type
     }
 }
 
@@ -32,6 +68,7 @@ export const HOME_QUERY = gql`
     projections(sportsbook: "PrizePicks") {
         player {
             name
+            position
             playerID
             currentTeam {
                 abbreviation
@@ -56,13 +93,18 @@ export const HOME_QUERY = gql`
                 free_throws_attempted
                 free_throws_made
                 minutes
+                blocks
+                turnovers
+                steals
             }
         }
         opponent {
             abbreviation
         }
-        propType
-        target
+        targets {
+            target
+            type
+        }
     }
 }`
 

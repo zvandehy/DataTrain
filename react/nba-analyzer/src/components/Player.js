@@ -1,7 +1,8 @@
-import React from 'react'
+import React, {useState, useCallback} from 'react'
 import {useLocation} from 'react-router-dom';
 import {GetPropScore} from '../utils.js'
 import { ResponsiveLine } from '@nivo/line'
+import DataListInput from "react-datalist-input";
 import {std, mean} from 'mathjs'
 import NormalDistribution from 'normal-distribution'
 
@@ -10,9 +11,15 @@ import NormalDistribution from 'normal-distribution'
 const Player = (props) => {
     // const {id} = useParams();
     let location = useLocation()
+    const [propType, setPropType] = useState("points");
     const {playerProp} = location.state
-    let target = playerProp.target
-    let propType = playerProp.propType.toLowerCase();
+    let selectPropTypes = playerProp.targets.map(item => ({
+        // required: what to show to the user
+        label: item.type,
+        // required: key to identify the item within the array
+        key: item.type.toLowerCase(),
+      }));
+    let target = playerProp.targets.find(item => item.type === propType)?.target
     let player=playerProp.player
     let seasonData=playerProp.player.games.filter((game) => game.season === "2021-22")
     let sortedGames = seasonData.sort(function(a, b) {
@@ -67,12 +74,23 @@ const Player = (props) => {
         }
         countData[0].data.push({x:xval, y:countMap[xval]? countMap[xval] /100: 0})
    }
+
+//    const onSelectPropType = useCallback((selectedItem) => {
+    //     setPropType(selectedItem.label)
+    // });
    
     return (
         <div>
             <div className="player-card">
                 <h1>{player.name}</h1>
             </div>
+            <DataListInput
+                placeholder="Select a prop type"
+                items={selectPropTypes}
+                onSelect={(event) => setPropType(event.label)}
+                clearInputOnClick={true}
+                suppressReselect={false}
+            />
             <p>Avergage {propType}: {m}</p>
             <p>Std Dev: {stddev}</p>
             <p>Target: {target}</p>

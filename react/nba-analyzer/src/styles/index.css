@@ -44,3 +44,87 @@ thead * {
 .opponent {
   color:rgb(194, 62, 62);
 }
+
+.playercard {
+  border-radius: .5rem;
+  display: flex;
+  flex-wrap: wrap;
+  margin:1em;
+  background-color:lightgrey
+}
+
+.player-photo {
+  max-width: 13.6842105263em;
+  max-height: 10em;
+}
+
+.player-since {
+  margin:0;
+  padding:0;
+}
+
+.player-since button {
+  border:none;
+  border-radius:.2em;
+  padding:.1em;
+  margin:.2em;
+}
+
+.player-since button:hover {
+  cursor: pointer;
+}
+
+.unselected {
+  background-color:lightblue;
+}
+
+.selected {
+  font-weight: bold;
+  background-color:orange;
+}
+
+li {
+  margin:0;
+  padding:0;
+  list-style:none;
+  display:inline;
+}
+
+.player-ovr-und {
+  display:block;
+}
+
+.player-info {
+  padding-top:.5rem
+}
+.player-info > * {
+  margin:0;
+  padding:0;
+  padding:.05rem .5rem;
+}
+
+.player-ovr-pct {
+  padding:1px;
+  border-radius:5px;
+}
+
+.high {
+  background-color:rgb(91, 255, 165);
+}
+
+.med {
+  background-color:rgb(255, 253, 140);
+}
+
+.low {
+  background-color:rgb(248, 113, 113);
+}
+
+.player-stats td, th {
+  text-align:center;
+  padding:0 .5rem;
+}
+
+.player-stats {
+  margin:.5rem 0;
+}
