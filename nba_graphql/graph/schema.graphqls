@@ -1,24 +1,55 @@
-scalar Date
-scalar Time
-scalar Season
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
 
 type Player {
-	id: ID!
-	playerID: Int!
-	first_name: String!
-	last_name: String!
-	teamABR: String!
-	seasons: [String!]!
-	games: [PlayerGame!]!
+  #firstName lastName
+  name: String!
+  #playerID of NBA stats
+  playerID: Int! #TODO: make ID's consistently a string or int
+  seasons: [String!]!
+  #G, F, or C
+  position: String!
+  currentTeam: Team!
+  games(input: GameFilter!): [PlayerGame!]!
 }
 
 type Team {
-	id: ID!
-	teamID: Int!
-	abbreviation: String!
-	city: String!
-	name: String!
-	games: [TeamGame!]!
+  name: String!
+  teamID: Int!
+  abbreviation: String!
+  location: String!
+  numWins: Int! #TODO
+  numLoss: Int! #TODO
+  games(input: GameFilter!): [TeamGame!]!
+  players: [Player!]!
+}
+
+type TeamGame {
+	date: String!
+	defensive_rating: Float!
+	defensive_rebound_percentage: Float!
+	field_goal_percentage: Float!
+	field_goals_attempted: Int!
+	gameID: String! #should be Int
+	home_or_away: String!
+	offensive_rebound_percentage: Float!
+	opponent: Team!
+	opponent_assists: Int!
+	opponent_effective_field_goal_percentage: Float!
+	opponent_field_goals_attempted: Int!
+	opponent_free_throws_attempted: Int!
+	opponent_points: Int!
+	opponent_rebounds: Int!
+	opponent_three_pointers_attempted: Int!
+	opponent_three_pointers_made: Int!
+	plus_minus_per_hundred: Float!
+	possessions: Int!
+	personal_fouls: Int!
+	personal_fouls_drawn: Int!
+	season: String!
+	win_or_loss: String!
+  	playersInGame: PlayersInGame!
 }
 
 type PlayerGame {
@@ -34,18 +65,16 @@ type PlayerGame {
 	free_throws_attempted: Int!
 	free_throws_made: Int!
 	free_throws_percentage: Float!
-	# probably should change mongo data for gameID to Int
-	gameID: String! 
+	gameID: String! #should be Int
 	home_or_away: String!
 	minutes: String!
 	offensive_rebound_percentage: Float!
 	offensive_rebounds: Int!
-	opponent: Int!
+	opponent: Team!
 	personal_fouls_drawn: Int!
 	personal_fouls: Int!
 	points: Int!
-	#playerID
-	player: Int!
+	player: Player!
 	season: String!
 	three_point_percentage: Float!
 	three_pointers_attempted: Int!
@@ -54,48 +83,52 @@ type PlayerGame {
 	true_shooting_percentage: Float!
 	turnovers: Int!
 	usage: Float!
+  	playersInGame: PlayersInGame!
 }
 
-type TeamGame {
-	date: String!
-	defensive_rating: Float!
-	defensive_rebound_percentage: Float!
-	field_goal_percentage: Float!
-	field_goals_attempted: Int!
-	gameID: String!
-	home_or_away: String!
-	offensive_rebound_percentage: Float!
-	opponent: Int!
-	teamID: String!
-	opponent_assists: Int!
-	opponent_effective_field_goal_percentage: Float!
-	opponent_field_goals_attempted: Int!
-	opponent_free_throws_attempted: Int!
-	opponent_points: Int!
-	opponent_rebounds: Int!
-	opponent_three_pointers_attempted: Int!
-	opponent_three_pointers_made: Int!
-	plus_minus_per_hundred: Float!
-	possessions: Int!
-	personal_fouls: Int!
-	personal_fouls_drawn: Int!
-	season: String!
-	win_or_loss: String!
-}
-
-type PlayerProp{
-	player: Player
-	playerGames: [PlayerGame!]
+type Projection {
+	player: Player!
+	sportsbook: String!
+	opponent: Team!
+	propType: String!
 	target: Float!
-	opponent: String!
-	type: String!
+}
+
+type PlayersInGame {
+  team: [Player!]!
+  opponent: [Player!]!
 }
 
 type Query {
-	games(playerID: [Int!]!): [PlayerGame]!
-	lastNGames(playerID: Int!, n: Int!): [PlayerGame]!
-	teamGames(playerID: Int!): [TeamGame]!
-	teams: [Team]!
-	players: [Player]!
-	prizepicks: [PlayerProp]!
+  players: [Player!]!
+  filterPlayers(input: PlayerFilter!): [Player!]!
+  player(input: PlayerFilter!): Player!
+  teams: [Team!]!
+  filterTeams(input: TeamFilter!): [Team!]!
+  team(input: TeamFilter!): Team!
+  teamGames(input: GameFilter!): [TeamGame!]!
+  playerGames(input: GameFilter!): [PlayerGame!]!
+  projections(sportsbook: String!): [Projection!]!
+}
+
+input PlayerFilter {
+  name: String
+  playerID: Int
+  season: String
+  position: String
+  teamABR: String
+  teamID: Int
+}
+
+input TeamFilter {
+  name: String
+  teamID: Int
+  abbreviation: String
+}
+
+input GameFilter {
+  teamID: Int
+  playerID: Int
+  gameID: String #should be Int
+  season: String
 }

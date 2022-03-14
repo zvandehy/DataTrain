@@ -5,9 +5,9 @@ import {GetPropScore} from "../utils"
 
 const PlayerPreview = (props) => {
     const {playerProp} = props;
-    let propType = playerProp.type.toLowerCase();
+    let propType = playerProp.propType.toLowerCase();
     let player=playerProp.player
-    let seasonData=playerProp.playerGames.filter((game) => game.season === "2021-22")
+    let seasonData=playerProp.player.games.filter((game) => game.season === "2021-22")
     // let seasonData = data.games.filter((game) => game.season === "2021-22");
     let statData = [0];
     if (seasonData && seasonData.length > 0) {
@@ -18,7 +18,7 @@ const PlayerPreview = (props) => {
     // console.log(statData)
     // console.groupEnd()
     return (
-    <><tr className="player"><th><Link to={`/players/${player.playerID}`} state={{playerProp:playerProp}}>{player.first_name} {player.last_name} <span className="team">{player.teamABR}</span> vs. <span className="team opponent">{playerProp.opponent}</span></Link></th>
+    <><tr className="player"><th><Link to={`/players/${player.playerID}`} state={{playerProp:playerProp}}>{player.name} {player.last_name} <span className="team">{player.currentTeam.abbreviation}</span> vs. <span className="team opponent">{playerProp.opponent.abbreviation}</span></Link></th>
         {/* <td>{average("assists", data.games.filter((game) => game.season === "2021-22"))}</td>
         <td>{average("points", data.games.filter((game) => game.season === "2021-22"))}</td>
         <td>{average("total_rebounds", data.games.filter((game) => game.season === "2021-22"))}</td> */}

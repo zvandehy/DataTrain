@@ -4,6 +4,10 @@ package graph
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
-//go:generate go run github.com/99designs/gqlgen
+import (
+	"github.com/zvandehy/DataTrain/nba_graphql/database"
+)
 
-type Resolver struct{}
+type Resolver struct {
+	Db *database.NBADatabaseClient
+}

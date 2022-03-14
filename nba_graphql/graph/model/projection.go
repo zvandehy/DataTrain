@@ -1,5 +1,20 @@
 package model
 
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/pkg/errors"
+)
+
+type Projection struct {
+	PlayerName  string  `json:"player"`
+	Sportsbook  string  `json:"sportsbook"`
+	OpponentAbr string  `json:"opponent"`
+	PropType    string  `json:"propType"`
+	Target      float64 `json:"target"`
+}
+
 type PrizePicks struct {
 	Data     []PrizePicksData     `json:"data" bson:"data"`
 	Included []PrizePicksIncluded `json:"included" bson:"included"`
@@ -53,8 +68,29 @@ type PrizePicksIncluded struct {
 	} `json:"attributes" bson:"attributes"`
 }
 
-type ByFirstName []*Player
-
-func (a ByFirstName) Len() int           { return len(a) }
-func (a ByFirstName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByFirstName) Less(i, j int) bool { return a[i].FirstName < a[j].FirstName }
+func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded) (*Projection, error) {
+	var playerName string
+	var statType string
+	for _, p := range included {
+		if p.ID == prop.Relationships.Player.Data.ID {
+			playerName = p.Attributes.Name
+		}
+		if p.ID == prop.Relationships.StatType.Data.ID {
+			statType = p.Attributes.Name
+		}
+		if statType != "" && playerName != "" {
+			break
+		}
+	}
+	if playerName == "" {
+		return nil, fmt.Errorf("error retrieving prizepick player name")
+	}
+	if statType == "" {
+		return nil, fmt.Errorf("error retrieving prizepick stat type")
+	}
+	target, err := strconv.ParseFloat(prop.Attributes.Line_score, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve prizepicks target")
+	}
+	return &Projection{Sportsbook: "PrizePicks", PropType: statType, PlayerName: playerName, Target: target, OpponentAbr: prop.Attributes.Description}, nil
+}

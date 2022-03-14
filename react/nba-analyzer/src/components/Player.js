@@ -12,9 +12,9 @@ const Player = (props) => {
     let location = useLocation()
     const {playerProp} = location.state
     let target = playerProp.target
-    let propType = playerProp.type.toLowerCase();
+    let propType = playerProp.propType.toLowerCase();
     let player=playerProp.player
-    let seasonData=playerProp.playerGames.filter((game) => game.season === "2021-22")
+    let seasonData=playerProp.player.games.filter((game) => game.season === "2021-22")
     let sortedGames = seasonData.sort(function(a, b) {
         var c = new Date(a.date);
         var d = new Date(b.date);
@@ -71,7 +71,7 @@ const Player = (props) => {
     return (
         <div>
             <div className="player-card">
-                <h1>{player.first_name} {player.last_name}</h1>
+                <h1>{player.name}</h1>
             </div>
             <p>Avergage {propType}: {m}</p>
             <p>Std Dev: {stddev}</p>
@@ -128,7 +128,7 @@ const Player = (props) => {
                             >
                                 <div>Date: {slice.points.filter((point) => point.serieId === propType)[0].data.x}</div>
                                 <div>GameID: {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].gameID}</div>
-                                <div>Opponent: {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].opponent}</div>
+                                <div>Opponent: {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].opponent.abbreviation}</div>
                                 <div>Season: {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].season}</div>
                                 <div style={{color: `${slice.points.filter((point) => {return point.serieId === "minutes"})[0].serieColor}`}}>
                                     <strong>minutes</strong> {sortedGames[slice.points.filter((point) => point.serieId === propType)[0].index].minutes}

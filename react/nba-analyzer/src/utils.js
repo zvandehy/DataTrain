@@ -25,37 +25,45 @@ export function showPlayerPreview(player, props, type) {
 
 export const HOME_QUERY = gql`
 {
-  prizepicks {
-    player {
-        playerID
-        first_name
-        last_name
-        seasons
-        teamABR
+    teams {
+        teamID
+        abbreviation
     }
-    playerGames {
-        points
-        assists
-        assist_percentage
-        total_rebounds
-        defensive_rebounds
-        offensive_rebounds
-        three_pointers_attempted
-        three_pointers_made
-        free_throws_attempted
-        free_throws_made
-        season
-        minutes
-        date
+    projections(sportsbook: "PrizePicks") {
+        player {
+            name
+            playerID
+            currentTeam {
+                abbreviation
+                teamID
+            }
+            games(input: {season:"2021-22"}) {
+                season
+                date
+                gameID
+                opponent {
+                    name
+                    teamID
+                    abbreviation
+                }
+                points
+                assists
+                total_rebounds
+                defensive_rebounds
+                offensive_rebounds
+                three_pointers_attempted
+                three_pointers_made
+                free_throws_attempted
+                free_throws_made
+                minutes
+            }
+        }
+        opponent {
+            abbreviation
+        }
+        propType
+        target
     }
-    type
-    target
-    opponent
-  }
-  teams {
-      abbreviation
-      teamID
-  }
 }`
 
 //TODO: Add server support to query for single player
