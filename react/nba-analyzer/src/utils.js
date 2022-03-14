@@ -14,6 +14,15 @@ export function GetPropScore(game, propType) {
             return game["points"] + game["total_rebounds"]*1.2 + game["assists"]*1.5 + game["blocks"]*3 + game["steals"]*3 - game["turnovers"]
         case "blks+stls":
             return game["blocks"] + game["steals"]
+        case "double-double":
+            let doubles = 0
+            if (game["points"] >= 10) doubles++
+            if (game["total_rebounds"] >= 10) doubles++
+            if (game["assists"] >= 10) doubles++
+            if (game["blocks"] >= 10) doubles++
+            if (game["steals"] >= 10) doubles++
+            if (doubles >= 2) return 1
+            return 0
         default:
             return game[propType.toLowerCase()] ?? 0
     }
