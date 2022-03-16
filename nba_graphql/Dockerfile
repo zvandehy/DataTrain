@@ -4,6 +4,7 @@ FROM golang:alpine AS builder
 RUN apk add --no-cache git
 WORKDIR /go/src/app
 COPY . .
+COPY ./nba_graphql/app.env .
 RUN go get -d -v ./...
 RUN go build -o /go/bin/app -v server.go
 
