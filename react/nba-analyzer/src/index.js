@@ -15,7 +15,7 @@ import {
 
 // 2
 const httpLink = createHttpLink({
-  uri: 'http://localhost:8080/query'
+  uri: 'https://datatrain-nba-yxh2z.ondigitalocean.app/query'
 });
 
 // 3
