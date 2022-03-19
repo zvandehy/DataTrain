@@ -10,7 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-        cache: 'npm'
       - name: Build UI
         run: docker build -t datatrain-ui -f react/nba-analyzer/Dockerfile .
       - name: Run UI
