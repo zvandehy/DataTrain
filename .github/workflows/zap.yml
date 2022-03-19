@@ -1,0 +1,17 @@
+name: ZAP-TEST
+
+on: 
+  push:
+    branches: [ NBA-2 ]
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        cache: 'npm'
+      - name: Build UI
+        run: docker build -t datatrain-ui -f react/nba-analyzer/Dockerfile .
+      - name: Run UI
+        run: docker run -d -p 8080:8080 datatrain-ui
