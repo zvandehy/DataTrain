@@ -14,3 +14,10 @@ jobs:
         run: docker build -t datatrain-ui -f react/nba-analyzer/Dockerfile .
       - name: Run UI
         run: docker run -d -p 8080:8080 datatrain-ui
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          docker_name: 'owasp/zap2docker-stable'
+          target: 'http://localhost:8080'
+          cmd_options: '-a'
