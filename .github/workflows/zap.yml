@@ -5,7 +5,7 @@ on:
     branches: [ NBA-2 ]
 
 jobs:
-  build:
+  test-security:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -19,5 +19,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           docker_name: 'owasp/zap2docker-stable'
-          target: 'http://localhost:8080'
+          target: 'https://datatrain-mp34k.ondigitalocean.app/'
           cmd_options: '-a'
