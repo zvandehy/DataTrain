@@ -8,12 +8,12 @@ jobs:
   test-security:
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-      - name: Build UI
-        run: docker build -t datatrain-ui -f react/nba-analyzer/Dockerfile .
-      - name: Run UI
-        run: docker run -d -p 8080:8080 datatrain-ui
+      # - uses: actions/checkout@v2
+      # - uses: actions/setup-node@v2
+      # - name: Build UI
+      #   run: docker build -t datatrain-ui -f react/nba-analyzer/Dockerfile .
+      # - name: Run UI
+      #   run: docker run -d -p 8080:8080 datatrain-ui
       - name: ZAP Scan
         uses: zaproxy/action-full-scan@v0.3.0
         with:
