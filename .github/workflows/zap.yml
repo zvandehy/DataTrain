@@ -1,0 +1,22 @@
+name: ZAP-TEST
+
+on: 
+  pull_request:
+
+jobs:
+  zap-test:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - name: Build UI
+        run: docker build -t datatrain-ui -f Dockerfile.frontend .
+      - name: Run UI
+        run: docker run -d -p 3000:3000 datatrain-ui
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          docker_name: 'owasp/zap2docker-stable'
+          target: 'http://localhost:3000'
+          cmd_options: '-a'
