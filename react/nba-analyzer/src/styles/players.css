@@ -2,7 +2,7 @@
 /* PLAYERCARD */
 .playercard {
     display:grid;
-    grid-template-columns: max-content minmax(210px,25%) auto auto;
+    grid-template-columns: auto minmax(min-content,max-content) auto auto;
     grid-template-areas:
         "player-context stat-select prediction player-stats";
     padding-right: 1%;
@@ -100,7 +100,8 @@
     align-items: center;
     justify-content:center;
     grid-area: prediction;
-    font-size:min(2vw,10rem)
+    font-size:min(2vw,10rem);
+    margin-left:1rem;
   }
 
   .prediction input {
@@ -152,6 +153,15 @@
     padding:2px;
     background-color:var(--color-white);
     cursor: pointer;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    min-width: 60px;
+  }
+
+  .stat-select-btn > p {
+    text-overflow: ellipsis;
+    overflow:hidden;
+    white-space: nowrap;
   }
   
   .stat-select-btn:hover {

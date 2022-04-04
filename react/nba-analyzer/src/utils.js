@@ -113,6 +113,7 @@ export const HOME_QUERY = gql`
         }
         opponent {
             abbreviation
+            teamID
         }
         targets {
             target

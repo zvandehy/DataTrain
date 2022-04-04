@@ -13,7 +13,6 @@ const PlayerPreview2 = (props) => {
         return c-d;
     });
     
-
     const counts = [0, -30, -10, -5];
     const weights = [.40,.25,.2,.15]; //TODO: determine best weights to use
     
@@ -41,20 +40,20 @@ const PlayerPreview2 = (props) => {
       conf_u = round(conf_u,2)
       if (conf > conf_u) {
         confStr = "O"+conf
-        statData.get(projection.type).set("conf", conf)
+        statData.get(projection.type).set("conf", conf);
         if (conf > max) {
           maxType = projection.type;
           max = conf;
         }
       } else {
         confStr = "U"+conf_u
-        statData.get(projection.type).set("conf", conf_u)
+        statData.get(projection.type).set("conf", conf_u);
         if(conf_u > max) {
           maxType = projection.type;
           max = conf_u;
         }
       }
-      statData.get(projection.type).set("confStr", confStr)
+      statData.get(projection.type).set("confStr", confStr);
     });
 
     const [type, setType] = useState(maxType);
@@ -63,9 +62,9 @@ const PlayerPreview2 = (props) => {
     const displayConfStr = statData.get(type).get("confStr");
     
     if (!seasonData) {
-        return <li></li>
+        return <div></div>
     }
-    console.log(seasonData.filter((game) => game.opponent.abbreviation === playerProp.opponent.abbreviation))
+
     return (
     <>
     <div className="playercard">

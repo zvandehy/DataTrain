@@ -1,17 +1,16 @@
 import React from 'react'
 import LastNGames from './LastNGames'
 
-const PlayerStatsPreview = () => {
+const PlayerStatsPreview = (props) => {
+  const {playerCounts, matchupData, similarData} = props;
+  //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
   return (
     <div className="player-stats">
             <span></span>
             <span className="player-stat-header">AVG</span>
             <span className="player-stat-result-header">PCT</span>
 
-            <LastNGames count={70} over={25} under={40} avg={30} header={"PCT"}/>
-            <LastNGames count={30} over={20} under={10} avg={34} header={"PCT"}/>
-            <LastNGames count={10} over={5} under={4} avg={29} header={"PCT"}/>
-            <LastNGames count={5} over={1} under={4} avg={27} header={"PCT"}/>
+            {playerCounts.map(item => <LastNGames countObj={item} header={"PCT"}/>)}
             
             {/* VERSUS STATS */}
 
