@@ -21,9 +21,8 @@ const Prediction = (props) => {
 
 const PredictionIcon = (props) => {
   const {confidence, prediction} = props;
-
   return (<div className="prediction-icon">
-  <FontAwesomeIcon className={`arrow ${GetColor("pct", confidence)}`} icon={up}/>
+  <FontAwesomeIcon className={`arrow ${GetColor("pct", confidence)}`} icon={getIcon(confidence,prediction)}/>
   <p className={`bold tall prediction-result`}>{prediction}</p>
   <p className={`${GetColor("pct", confidence)}`}>{confidence}%</p>
 </div>)
@@ -31,12 +30,15 @@ const PredictionIcon = (props) => {
 
 const PredictionIconSmall = (props) => {
   const {confidence, prediction} = props;
-  const icon = confidence > 40 && confidence < 60 ? faEquals : prediction === "OVER" ? up : down;
   return (
   <div className="hide">
-      <FontAwesomeIcon className={GetColor("pct", confidence)} icon={icon}/>
+      <FontAwesomeIcon className={GetColor("pct", confidence)} icon={getIcon(confidence,prediction)}/>
       <p className={GetColor("pct", confidence)}>{confidence}%</p>
   </div>)
+}
+
+function getIcon(confidence, prediction) {
+  return confidence >= 50 && confidence < 60 ? faEquals : prediction === "OVER" ? up : down;
 }
 
 export {PredictionIcon, PredictionIconSmall}

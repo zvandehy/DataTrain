@@ -7,7 +7,7 @@ import PlayerStatsPreview from "./Playerstatspreview"
 const Playercard = (props) => {
   let {confidence, playerProp} = props;
   const {player} = playerProp;
-  //TODO: move to utils as function
+  //TODO: move to utils (or a filters.js) as function
   let seasonData = player.games.filter((game) => game.season === "2021-22").sort(function(a, b) {
       var c = new Date(a.date);
       var d = new Date(b.date);
@@ -23,7 +23,7 @@ const Playercard = (props) => {
     stat:item, 
     target:10.5,
     prediction:"OVER",
-    confidence:65.5, 
+    confidence:85.5, 
     //TODO: generate counts data using counts option & seasonData
     counts: [{n:70, avg:11, over:40, under:25},{n:30, avg:12, over:18, under:12},{n:10, avg:8, over:3, under:6},{n:5, avg:9, over:3, under:2}]
   }})
@@ -34,7 +34,7 @@ const Playercard = (props) => {
   useEffect(() => {
     const projection = projections.find(item => item.stat.toLowerCase() === stat.toLowerCase());
     setProjection(projection)
-  }, [stat, projections]
+  }, [stat] //TODO: projections in the dependencies causes a loop that crashes the site for too many re-renders
   );
 
   return (
