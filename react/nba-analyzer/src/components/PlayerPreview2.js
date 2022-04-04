@@ -65,7 +65,7 @@ const PlayerPreview2 = (props) => {
     if (!seasonData) {
         return <li></li>
     }
-
+    console.log(seasonData.filter((game) => game.opponent.abbreviation === playerProp.opponent.abbreviation))
     return (
     <>
     <div className="playercard">
@@ -80,31 +80,66 @@ const PlayerPreview2 = (props) => {
         <ul className="player-since">
           {playerProp.targets.map(projection => {return <li key={"select_"+playerProp.player.playerID+projection.type}><button className={projection.type === type ? "selected" : "unselected"} onClick={() => setType(projection.type)}>{GetShortType(projection.type)}</button></li>})}
         </ul>
+        <p>Target: {playerProp.targets.find(projection => projection.type === type).target}</p>
+        <div>
+          <p>Key Events:</p>
+          <ul className="events">
+            <li>BKN Playername traded</li>
+            <li>BKN Playername injured</li>
+            <li>CHI Playername returned</li>
+            <li>CHI Playername returns</li>
+          </ul>
+        </div>
       </div>
       <table  className="player-stats">
         <thead>
           <tr>
-            <th className={(displayConf > 60 ? "high" : displayConf >= 50 ? "med" : "low")}>{displayConfStr}</th>
+            <th colspan="2" className={(displayConf > 60 ? "high" : displayConf >= 50 ? "med" : "low")}>{displayConfStr}</th>
             <th>AVG</th>
-            <th>TAR</th>
             <th>OVR</th>
             <th>PCT</th>
           </tr>
         </thead>
         <tbody>
-        {counts.map((count) => {
+        {counts.map((count, i) => {
           const target = playerProp.targets.find(projection => projection.type === type).target;
             return (<>
             {<tr key={player.playerID + type + count}>
+                {i===0 ? <th rowspan={counts.length}>Last N Games</th> : <></>}
                 <th>{count ? count * -1 : seasonData.length}</th>
                 <td>{statData.get(type).get(count).mean}</td>
-                <td>{target}</td>
                 <td>{statData.get(type).get(count).over}</td>
                 <td className={"player-over-pct " + (target === "-" ? "" : statData.get(type).get(count).pct > 60 ? "high" : statData.get(type).get(count).pct >= 50 ? "med" : "low")}>{statData.get(type).get(count).pct + "%"}</td>
               </tr>}
             </>)
             })
         }
+        {seasonData.filter((game) => game.opponent.abbreviation === playerProp.opponent.abbreviation).map((game,i,arr) => {
+          const target = playerProp.targets.find(projection => projection.type === type).target;
+          const pct = round((arr.filter(game => GetPropScore(game, type) > target).length / arr.length) *100,2);
+          return (<>
+           {<tr key={player.playerID + type + game.date}>
+                {i===0 ? <th rowSpan={arr.length}>{playerProp.player.name.split(" ",2)[1]} vs {playerProp.opponent.abbreviation}</th> : <></>}
+                <th>{game.date}</th>
+                <td>{GetPropScore(game, type)}</td>
+                <td>{GetPropScore(game, type) > target ? "O" : "U"}</td>
+                <td className={"player-over-pct " + (pct  > 60 ? "high" : pct >= 50 ? "med" : "low")}>{ pct+ "%" }</td>
+              </tr>}
+            </>)
+            })
+        }
+        <tr>
+          <th colspan="2">Similar Players vs {playerProp.opponent.abbreviation}</th>
+          <td>xx</td>
+          <td>##/xx</td>
+          <td className={"player-over-pct high"}>{"xx.x%"}</td>
+        </tr>
+        <tr>
+          <th colspan="2">{playerProp.player.name.split(" ", 2)[1]} vs Similar Opp</th>
+          <td>xx</td>
+          <td>##/xx</td>
+          <td className={"player-over-pct low"}>{"xx.x%"}</td>
+        </tr>
         </tbody>
       </table>
     </div>

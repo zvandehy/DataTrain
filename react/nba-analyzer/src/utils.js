@@ -55,7 +55,20 @@ export function showPlayerPreview(player, props, type) {
     return ret
 }
 
-
+export function GetColor(type, num) {
+    if (type === "pct") {
+        if(num >= 60.0) {
+            return 'high';
+        } else if(num >= 50.0) {
+            return 'med';
+        }
+        return 'low';
+    }
+    if (type === "over" && num.ToLowerCase() === "over") {
+        return "high"
+    }
+    return 'low';
+}
 
 // GRAPHQL Queries
 
