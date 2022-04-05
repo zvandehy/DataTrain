@@ -9,6 +9,7 @@ export function GetPropScore(game, propType) {
         case "free throws made":
             return game["free_throws_made"]
         case "3-pt made":
+        case "3 pointers":
             return game["three_pointers_made"]
         case "fantasy score":
             return game["points"] + game["total_rebounds"]*1.2 + game["assists"]*1.5 + game["blocks"]*3 + game["steals"]*3 - game["turnovers"]
