@@ -1,7 +1,7 @@
 module.exports = {
     webpack: {
         headers: {
-            'X-Frame-Options': 'Deny'
+            'X-Frame-Options': 'DENY'
         }
     }
 }

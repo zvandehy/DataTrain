@@ -13,10 +13,27 @@ jobs:
         run: docker build -t datatrain-ui -f Dockerfile.frontend .
       - name: Run UI
         run: docker run -d -p 3000:3000 datatrain-ui
+      - name: ZAP Scan UI
+      uses: zaproxy/action-full-scan@v0.3.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        docker_name: 'owasp/zap2docker-stable'
+        target: 'http://localhost:3000'
+        cmd_options: '-a'
+        issue_title: "Pull Request ZAP Scan - UI"
       - name: ZAP Scan
         uses: zaproxy/action-full-scan@v0.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           docker_name: 'owasp/zap2docker-stable'
-          target: 'http://localhost:3000'
+          target: 'https://datatrain-nba-yxh2z.ondigitalocean.app/'
           cmd_options: '-a'
+          issue_title: "Production ZAP Scan - Backend"
+      - name: ZAP Scan Query
+        uses: zaproxy/action-full-scan@v0.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          docker_name: 'owasp/zap2docker-stable'
+          target: 'https://datatrain-mp34k.ondigitalocean.app/'
+          cmd_options: '-a'
+          issue_title: "Production ZAP Scan - UI"
