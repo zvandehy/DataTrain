@@ -33,9 +33,9 @@ func main() {
 		// AllowedOrigins:   []string{"http://localhost:8080", "http://localhost:3000"},
 		AllowCredentials: true,
 		Debug:            false,
-		AllowOriginFunc: func(origin string) bool {
-			return true
-		}, //overrides allowed origins
+		// AllowOriginFunc: func(origin string) bool {
+		// 	return true
+		// }, //overrides allowed origins
 	}).Handler)
 
 	mongoClient, err := database.ConnectDB(context.Background())
