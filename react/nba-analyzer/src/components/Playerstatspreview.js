@@ -1,8 +1,11 @@
 import React from 'react'
 import LastNGames from './LastNGames'
+import {GetPropScore} from '../utils'
 
 const PlayerStatsPreview = (props) => {
-  const {playerCounts, matchupData, similarData} = props;
+  const {projections, selected, matchups, similarData} = props;
+  const projection = projections.filter(item => item.stat.toLowerCase() === selected.toLowerCase())[0]
+  const playerCounts = projection.counts;
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
   return (
     <div className="player-stats">
@@ -14,11 +17,19 @@ const PlayerStatsPreview = (props) => {
             
             {/* VERSUS STATS */}
 
-            {/* Technically this could just be the average of all matchups with X opponent? */}
+            {/* TODO: Investigate if should be average or all matchups */}
 
-            <span className="header player-vs-opp-instance">vs BKN</span>
-            <span className="player-vs-opp-stat">28</span>
-            <span className="player-vs-opp-stat-result">Over</span>
+            {matchups.map(game => {
+              const score = GetPropScore(game, projection.stat);
+              const result = score > projection.target ? "OVER" : "UNDER";
+              // TODO: Make this its own component?
+              return <>
+              {/* TODO: make "vs."" dynamic between 'vs' (home) &  '@' (away) */}
+              <span className="header player-vs-opp-instance">vs {game.opponent.abbreviation}</span>
+              <span className="player-vs-opp-stat">{score}</span>
+              <span className="player-vs-opp-stat-result">{result}</span>
+            </>})}
+            
 
             {/* <span className="header player-vs-opp-instance">@ BKN</span>
             <span className="player-vs-opp-stat">28</span>
@@ -27,12 +38,12 @@ const PlayerStatsPreview = (props) => {
             {/* SIMILAR STATS */}
             
             <span className="header similar-players-header">Similar Players</span>
-            <span className="similar-players-stat">22.2</span>
-            <span className="similar-players-stat-result">25%</span>
+            <span className="similar-players-stat">xx.x</span>
+            <span className="similar-players-stat-result">XX%</span>
 
             <span className="header similar-opp-header">Similar Opp</span>
-            <span className="similar-opp-stat">25.5</span>
-            <span className="similar-opp-stat-result">50%</span>
+            <span className="similar-opp-stat">xx.x</span>
+            <span className="similar-opp-stat-result">XX%</span>
 
         </div>
   )

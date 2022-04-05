@@ -164,7 +164,7 @@
     white-space: nowrap;
   }
   
-  .stat-select-btn:hover {
+  .stat-select-btn:hover, .selected {
     background-color:var(--color-accent)
   }
 
@@ -173,7 +173,7 @@
   }
 
   .stat-select-btn .hide {
-      display:none;
+      /* display:none; */
   }
   
   .stat-select-btn > div > p {

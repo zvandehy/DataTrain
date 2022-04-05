@@ -4,7 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAngleDoubleUp as up, faAngleDoubleDown as down, faEquals} from '@fortawesome/free-solid-svg-icons'
 
 const Prediction = (props) => {
-  const {projection} = props
+  const {projections,selected} = props
+  const projection = projections.filter(item => item.stat.toLowerCase() === selected.toLowerCase())[0];
   //TODO: Use constant stat type mappings to get the selected projection
   const {prediction, confidence} = projection;
   const [target, setTarget] = useState(projection.target);
@@ -13,7 +14,8 @@ const Prediction = (props) => {
   }
   return (
     <div className="prediction">
-            <p>TARGET: <input type="number" disabled={true} min={0} max={100} step={0.5} value={target} onChange={onChange}/></p>
+      {/* TODO: Fix state of changing projection onChange={onChange}*/}
+            <p>TARGET: <input type="number" disabled={true} min={0} max={100} step={0.5} value={projection.target} /></p>
             <PredictionIcon confidence={confidence} prediction={prediction}/>
         </div>
   )

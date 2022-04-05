@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import PlayerContext from "./Playercontext"
 import StatSelectBtns from "./Statselectbtns"
 import Prediction from "./Prediction"
@@ -21,28 +21,36 @@ const Playercard = (props) => {
   //TODO: Get the targets (if it exists) and the prediction & confidence for each stat type
   let projections = stats.map(item => {return {
     stat:item, 
-    target:10.5,
+    target: getTarget(playerProp.targets, item),
     prediction:"OVER",
     confidence:85.5, 
     //TODO: generate counts data using counts option & seasonData
-    counts: [{n:70, avg:11, over:40, under:25},{n:30, avg:12, over:18, under:12},{n:10, avg:8, over:3, under:6},{n:5, avg:9, over:3, under:2}]
+    counts: [{n:70, avg:11, over:40, under:25},{n:30, avg:12, over:18, under:12},{n:10, avg:8, over:3, under:6},{n:5, avg:9, over:3, under:2}],
   }})
 
+  function getTarget(targets, stat) {
+    //TODO: Update this using the constnt list of types and score mappings to get all the types
+    const exists = targets.filter(item => item.type.toLowerCase() === stat.toLowerCase());
+    if (exists.length === 1) {
+      return exists[0].target
+    } 
+    return 0;
+  }
+
+  const matchups = seasonData.filter((game) => game.opponent.teamID === playerProp.opponent.teamID);
+
   //TODO: Get the type from the selected button (default to highest confidence or preference from filters)
-  const [stat, setStat] = useState("points");
-  const [selectedProjection, setProjection] = useState(projections.find(item => item.stat.toLowerCase() === stat.toLowerCase()));
-  useEffect(() => {
-    const projection = projections.find(item => item.stat.toLowerCase() === stat.toLowerCase());
-    setProjection(projection)
-  }, [stat] //TODO: projections in the dependencies causes a loop that crashes the site for too many re-renders
-  );
+  const [stat, setStat] = useState("Points");
+  function onStatSelect(stat) {
+    setStat(stat);
+  }
 
   return (
     <div className="playercard">
         <PlayerContext player={player} opponent={playerProp.opponent}></PlayerContext>
-        <StatSelectBtns projections={projections} playername={player.name}></StatSelectBtns>
-        <Prediction projection={selectedProjection}></Prediction>
-        <PlayerStatsPreview playerCounts={selectedProjection.counts} matchupData={""} similarData={""}></PlayerStatsPreview>
+        <StatSelectBtns projections={projections} playername={player.name} selected={stat} onStatSelect={onStatSelect}></StatSelectBtns>
+        <Prediction projections={projections} selected={stat}></Prediction>
+        <PlayerStatsPreview projections={projections} selected={stat} matchups={matchups} similarData={""}></PlayerStatsPreview>
     </div>
   )
 }

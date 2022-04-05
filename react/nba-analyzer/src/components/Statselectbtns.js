@@ -1,29 +1,31 @@
 import React from 'react'
-import StatSelectButton from './StatSelectButton'
+import {PredictionIconSmall} from './Prediction'
 
 
 const StatSelectBtns = (props) => {
-  const {projections,playername} = props;
-  // console.log(projections)
-  //targets = [{stat:"Points", target:20.5, prediction:"OVER", confidence=55%}]
-
+  const {projections,playername, onStatSelect, selected} = props;
   return (
     <div className="stat-select">
       {projections.map(item => {
-        return <StatSelectButton key={`${playername} ${item.stat}`} projection={item}/>
+        return <StatSelectButton key={`${playername} ${item.stat}`} projection={item} selected={item.stat === selected} onStatSelect={onStatSelect}/>
       })}
-{/* 
-      <StatSelectButton stat="assists" target={30.5} confidence={67.5}/>
-      <StatSelectButton stat="Fantasy" target={30.5} confidence={67.5}/>
-      <StatSelectButton stat="PTS + REB + AST" target={30.5} confidence={67.5}/>
-      <StatSelectButton stat="Free Throws" target={30.5} confidence={67.5}/>
-      <StatSelectButton stat="3 Pointers" target={30.5} confidence={67.5}/>
-      <StatSelectButton stat="Blocks + Steals" target={30.5} confidence={67.5}/>
-      <StatSelectButton stat="Double Double" target={30.5} confidence={67.5}/> */}
-      {/* <button className="stat-select-btn">
+{/* <button className="stat-select-btn">
           <p className="bold">Other</p>
       </button> */}
     </div>
+  )
+}
+const StatSelectButton = (props) => {
+  const {projection, onStatSelect, selected} = props;
+  const {stat, target, prediction, confidence} = projection;
+  return (
+    <button className={`stat-select-btn ${selected ? 'selected' : ''}`} onClick={() => onStatSelect(stat)}>
+        <p className="bold titlecase">{stat}</p>
+        {target && confidence ? <>
+          <p className="hide">T: {target}</p>
+          <PredictionIconSmall confidence={confidence} prediction={prediction}/>
+        </>: <></>}
+    </button>
   )
 }
 
