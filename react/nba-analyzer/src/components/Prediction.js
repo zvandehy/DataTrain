@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React from 'react'
 import {GetColor} from '../utils'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAngleDoubleUp as up, faAngleDoubleDown as down, faEquals} from '@fortawesome/free-solid-svg-icons'
@@ -8,10 +8,10 @@ const Prediction = (props) => {
   const projection = projections.filter(item => item.stat.toLowerCase() === selected.toLowerCase())[0];
   //TODO: Use constant stat type mappings to get the selected projection
   const {prediction, confidence} = projection;
-  const [target, setTarget] = useState(projection.target);
-  function onChange(e) {
-    setTarget(e.target.value)
-  }
+  // const [target, setTarget] = useState(projection.target);
+  // function onChange(e) {
+  //   setTarget(e.target.value)
+  // }
   return (
     <div className="prediction">
       {/* TODO: Fix state of changing projection onChange={onChange}*/}

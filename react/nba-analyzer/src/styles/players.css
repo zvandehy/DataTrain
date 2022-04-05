@@ -23,6 +23,12 @@
     flex-direction: column;
     grid-area:player-context;
   }
+
+  .player-context a {
+    text-decoration: none;
+    color:inherit;
+    padding-right:.5rem;
+  }
   
   .versus {
     margin-left:.5em;

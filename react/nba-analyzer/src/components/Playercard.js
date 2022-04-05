@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react'
+import React, {useState} from 'react'
 import PlayerContext from "./Playercontext"
 import StatSelectBtns from "./Statselectbtns"
 import Prediction from "./Prediction"
@@ -7,7 +7,7 @@ import { GetPropScore } from '../utils'
 import {round, mean} from "mathjs"
 
 const Playercard = (props) => {
-  let {confidence, playerProp} = props;
+  let {playerProp} = props;
   const {player} = playerProp;
   //TODO: move to utils (or a filters.js) as function
   let seasonData = player.games.filter((game) => game.season === "2021-22").sort(function(a, b) {
@@ -84,7 +84,7 @@ const Playercard = (props) => {
 
   return (
     <div className="playercard">
-        <PlayerContext player={player} opponent={playerProp.opponent}></PlayerContext>
+        <PlayerContext playerProp={playerProp} opponent={playerProp.opponent}></PlayerContext>
         <StatSelectBtns projections={projections} playername={player.name} selected={stat} onStatSelect={onStatSelect}></StatSelectBtns>
         <Prediction projections={projections} selected={stat}></Prediction>
         <PlayerStatsPreview projections={projections} selected={stat} matchups={matchups} similarData={""}></PlayerStatsPreview>

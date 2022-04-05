@@ -3,7 +3,7 @@ import LastNGames from './LastNGames'
 import {GetPropScore} from '../utils'
 
 const PlayerStatsPreview = (props) => {
-  const {projections, selected, matchups, similarData} = props;
+  const {projections, selected, matchups} = props;
   const projection = projections.filter(item => item.stat.toLowerCase() === selected.toLowerCase())[0]
   const playerCounts = projection.counts;
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
