@@ -26,6 +26,7 @@ func main() {
 	}
 	router := chi.NewRouter()
 
+	//add comment
 	// Add CORS middleware around every request
 	// See https://github.com/rs/cors for full option listing
 	// router.Use(cors.New(cors.Options{
