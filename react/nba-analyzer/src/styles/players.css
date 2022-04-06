@@ -153,6 +153,10 @@
     gap:var(--grid-gap);
     padding:var(--grid-gap);
   }
+
+  .stat-select-btn:not(.selected, :hover) .med {
+    color:var(--color-accent);
+  }
   
   .stat-select-btn {
     border-radius:0;

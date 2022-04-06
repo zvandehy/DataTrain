@@ -1,12 +1,12 @@
 import React from 'react'
 import EventItem from "./Eventitem"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
+import { faPersonCircleExclamation as injury } from '@fortawesome/free-solid-svg-icons'
 
 const EventsModal = () => {
   return (
     <button className="events-icon" href="#">
-        <FontAwesomeIcon icon={faExclamationCircle}/>
+        <FontAwesomeIcon icon={injury}/>
         <table className="events">
             <tbody>
                 <EventItem team="PHI" date="Mar 30" playername="playerName" updateMsg="Traded"/>

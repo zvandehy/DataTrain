@@ -57,7 +57,7 @@ export function showPlayerPreview(player, props, type) {
 }
 
 export function GetColor(type, num) {
-    if (type === "pct") {
+    if (type.toLowerCase() === "pct") {
         if(num >= 60.0) {
             return 'high';
         } else if(num >= 50.0) {
@@ -65,7 +65,7 @@ export function GetColor(type, num) {
         }
         return 'low';
     }
-    if (type === "over" && num.ToLowerCase() === "over") {
+    if (type.toLowerCase() === "over" && num.toLowerCase() === "over") {
         return "high"
     }
     return 'low';

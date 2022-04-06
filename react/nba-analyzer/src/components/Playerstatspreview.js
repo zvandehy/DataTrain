@@ -1,6 +1,6 @@
 import React from 'react'
 import LastNGames from './LastNGames'
-import {GetPropScore} from '../utils'
+import {GetPropScore, GetColor} from '../utils'
 
 const PlayerStatsPreview = (props) => {
   const {projections, selected, matchups} = props;
@@ -13,7 +13,7 @@ const PlayerStatsPreview = (props) => {
             <span className="player-stat-header">AVG</span>
             <span className="player-stat-result-header">PCT</span>
 
-            {playerCounts.map(item => <LastNGames countObj={item} header={"PCT"}/>)}
+            {playerCounts.map((item,i)=> <LastNGames key={item.n+" "+i} countObj={item} header={"PCT"}/>)}
             
             {/* VERSUS STATS */}
 
@@ -23,12 +23,12 @@ const PlayerStatsPreview = (props) => {
               const score = GetPropScore(game, projection.stat);
               const result = score > projection.target ? "OVER" : "UNDER";
               // TODO: Make this its own component?
-              return <>
+              return <React.Fragment key={game.gameID}>
               {/* TODO: make "vs."" dynamic between 'vs' (home) &  '@' (away) */}
               <span className="header player-vs-opp-instance">vs {game.opponent.abbreviation}</span>
               <span className="player-vs-opp-stat">{score}</span>
-              <span className="player-vs-opp-stat-result">{result}</span>
-            </>})}
+              <span className={`player-vs-opp-stat-result ${GetColor("over", result)}`}>{result}</span>
+            </React.Fragment>})}
             
 
             {/* <span className="header player-vs-opp-instance">@ BKN</span>
