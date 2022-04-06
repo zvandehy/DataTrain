@@ -1,0 +1,38 @@
+name: ZAP TEST PROD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  zap-test-ui-prod:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Wait / Sleep
+        uses: jakejarvis/wait-action@v0.1.1
+        with:
+          time: '180s'
+      - name: ZAP Scan PROD UI
+        uses: zaproxy/action-full-scan@v0.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          docker_name: 'owasp/zap2docker-stable'
+          target: 'https://datatrain-mp34k.ondigitalocean.app/'
+          cmd_options: '-a'
+          issue_title: "Production ZAP Scan - UI"
+  zap-test-backend-prod:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Wait / Sleep
+        uses: jakejarvis/wait-action@v0.1.1
+        with:
+          time: '180s'
+      - name: ZAP Scan PROD Backend
+        uses: zaproxy/action-full-scan@v0.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          docker_name: 'owasp/zap2docker-stable'
+          target: 'https://datatrain-nba-yxh2z.ondigitalocean.app/'
+          cmd_options: '-a'
+          issue_title: "Production ZAP Scan - Backend"

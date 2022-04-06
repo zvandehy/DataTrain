@@ -1,10 +1,10 @@
-name: ZAP-TEST
+name: ZAP TEST LOCAL
 
 on: 
   pull_request:
 
 jobs:
-  zap-test:
+  zap-test-ui-local:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -13,10 +13,11 @@ jobs:
         run: docker build -t datatrain-ui -f Dockerfile.frontend .
       - name: Run UI
         run: docker run -d -p 3000:3000 datatrain-ui
-      - name: ZAP Scan
+      - name: ZAP Scan UI
         uses: zaproxy/action-full-scan@v0.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           docker_name: 'owasp/zap2docker-stable'
           target: 'http://localhost:3000'
           cmd_options: '-a'
+          issue_title: "Local Pull Request ZAP Scan - UI"
