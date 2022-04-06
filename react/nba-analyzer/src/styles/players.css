@@ -201,6 +201,7 @@
     grid-area: player-stats;
     text-align:center;
     align-items:center;
+    padding-bottom:5px;
   }
   
   @media (max-width:885px) {
@@ -241,7 +242,7 @@
     }
   
     .prediction {
-      margin-left:3rem;
+      /* margin-left:3rem; */
       font-size:5vw !important;
     }
 
@@ -265,8 +266,7 @@
     }
 
     .player-stats {
-      margin-left:8vw !important;
-      margin-right:auto !important;
+      margin-inline:4vw !important;
       font-size:min(4vw,1.5rem) !important;
     }
   
