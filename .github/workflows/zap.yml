@@ -37,11 +37,3 @@ jobs:
           target: 'https://datatrain-nba-yxh2z.ondigitalocean.app/'
           cmd_options: '-a'
           issue_title: "Production ZAP Scan - Backend"
-      - name: ZAP Scan PROD Backend Query
-        uses: zaproxy/action-full-scan@v0.3.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          docker_name: 'owasp/zap2docker-stable'
-          target: 'https://datatrain-nba-yxh2z.ondigitalocean.app/query'
-          cmd_options: '-a'
-          issue_title: "Production ZAP Scan - Backend Query"
