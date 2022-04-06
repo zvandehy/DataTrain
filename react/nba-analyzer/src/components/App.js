@@ -2,6 +2,7 @@ import React from 'react';
 import {Routes, Route } from 'react-router-dom';
 import Players from './Players';
 import Player from './Player';
+import "../fonts/Oswald-Regular.ttf"
 
 const App = () => {
   return (

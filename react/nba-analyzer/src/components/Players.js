@@ -1,29 +1,20 @@
 import React, {useState, useEffect, useCallback} from 'react'
-import PlayerPreview  from './PlayerPreview'
-import PlayerPreview2  from './PlayerPreview2'
+import Playercard  from './Playercard'
 import DataListInput from "react-datalist-input";
 import {HOME_QUERY} from '../utils.js'
 import { useQuery } from '@apollo/client';
+import "../styles/players.css"
 
-//TODO: Current performance of the page is really bad....
 const Players = () => {
     const [lookup, setLookup] = useState('');
     const [showPlayers, setShowPlayers] = useState([]);
     const { loading, error, data } = useQuery(HOME_QUERY);
-    const [preview, togglePreview] = useState(false)
     useEffect(() => {
-        let team = localStorage.getItem('lookup')
+        let team = localStorage.getItem('lookup');
         if (data) { 
             setLookup(team)
-            console.group("Data updated")
-            console.log(data)
             let filterCleaning = data.projections.filter(item => item.player.playerID !== 0)
-            console.log(filterCleaning.length)
-            let filteredByTeam = lookup !== '' ? filterCleaning.filter(item => item.player.currentTeam.abbreviation === lookup) : filterCleaning;
-            console.log(lookup, filteredByTeam)
-            // let p = filteredByPropType.map((prizepick) => {let prop = showPlayerPreview(prizepick.player, data.prizepicks, proptype); if (prop) return {player:player, prop:prop}}).filter((item) => item !== undefined);
-            // p.sort((a, b) => a.prop.target > b.prop.target)
-            // filteredByTeam.sort((a, b) => a.target > b.target)
+            let filteredByTeam = lookup ? filterCleaning.filter(item => item.player.currentTeam.abbreviation === lookup) : filterCleaning;
             setShowPlayers(filteredByTeam)
             console.groupEnd()
         }
@@ -51,7 +42,6 @@ const Players = () => {
             // required: key to identify the item within the array
             key: team.teamID,
           }));
-
     
     return (
         <div className="players">
@@ -63,11 +53,13 @@ const Players = () => {
                 clearInputOnClick={true}
                 suppressReselect={false}
             />
-            <button onClick={(event) => togglePreview(!preview)}>Toggle Preview</button>
         </div>
-        <ul>
-            {showPlayers.length > 0 ? showPlayers.map((item) => {return (<>{preview ? <PlayerPreview playerProp={item} key={item.player.playerID}/> : <PlayerPreview2 playerProp={item} key={item.player.playerID}/>}</>)}) : <li>No Players to Show</li>}
-        </ul>
+            <ul className="players-list">
+                {
+                    showPlayers.length > 0 ? showPlayers.map((item) => <Playercard playerProp={item} key={item.player.playerID}/>) 
+                    : <li>No Players to Show</li>
+                }
+            </ul>
         </div>
     )
 }

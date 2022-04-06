@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react'
+import React, {useState} from 'react'
 import {useLocation} from 'react-router-dom';
 import {GetPropScore} from '../utils.js'
 import { ResponsiveLine } from '@nivo/line'
@@ -74,10 +74,6 @@ const Player = (props) => {
         }
         countData[0].data.push({x:xval, y:countMap[xval]? countMap[xval] /100: 0})
    }
-
-//    const onSelectPropType = useCallback((selectedItem) => {
-    //     setPropType(selectedItem.label)
-    // });
    
     return (
         <div>

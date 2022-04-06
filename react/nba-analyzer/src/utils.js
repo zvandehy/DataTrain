@@ -9,6 +9,7 @@ export function GetPropScore(game, propType) {
         case "free throws made":
             return game["free_throws_made"]
         case "3-pt made":
+        case "3 pointers":
             return game["three_pointers_made"]
         case "fantasy score":
             return game["points"] + game["total_rebounds"]*1.2 + game["assists"]*1.5 + game["blocks"]*3 + game["steals"]*3 - game["turnovers"]
@@ -55,7 +56,20 @@ export function showPlayerPreview(player, props, type) {
     return ret
 }
 
-
+export function GetColor(type, num) {
+    if (type.toLowerCase() === "pct") {
+        if(num >= 60.0) {
+            return 'high';
+        } else if(num >= 50.0) {
+            return 'med';
+        }
+        return 'low';
+    }
+    if (type.toLowerCase() === "over" && num.toLowerCase() === "over") {
+        return "high"
+    }
+    return 'low';
+}
 
 // GRAPHQL Queries
 
@@ -100,6 +114,7 @@ export const HOME_QUERY = gql`
         }
         opponent {
             abbreviation
+            teamID
         }
         targets {
             target

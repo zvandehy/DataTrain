@@ -1,0 +1,285 @@
+
+/* PLAYERCARD */
+.playercard {
+    display:grid;
+    grid-template-columns: auto minmax(min-content,max-content) auto auto;
+    grid-template-areas:
+        "player-context stat-select prediction player-stats";
+    padding-right: 1%;
+    color:var(--color-white);
+    background-color: var(--color-primary);
+    gap: 0 2vw;
+    margin-top:1rem;
+  }
+  
+  .playercard > * {
+    grid-row:1/1;
+  }
+  
+  /* PLAYER CONTEXT */
+  
+  .player-context {
+    display:flex;
+    flex-direction: column;
+    grid-area:player-context;
+  }
+
+  .player-context a {
+    text-decoration: none;
+    color:inherit;
+    padding-right:.5rem;
+  }
+  
+  .versus {
+    margin-left:.5em;
+  }
+  
+  .player-name {
+    font-size:min(2rem,3vw);
+  }
+  
+  .player-name, .player-matchup {
+    margin-left:1rem;
+  }
+  
+  .player-matchup, .player-matchup > span {
+    display:flex;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size:min(1.5rem,2vw);
+  }
+
+  .player-matchup {
+      background-color:var(--color-white);
+      color:var(--color-black);
+      width:max-content;
+      padding:0px 2px;
+  }
+  
+  .player-context .team-logo {
+    width:2rem;
+  }
+  
+  .player-photo {
+    margin:auto;
+    display:block;
+    width:100%;
+    margin-bottom:0;
+  }
+
+  .events-icon {
+    cursor: pointer;
+    border:0;
+    background-color:inherit;
+    margin-left:.75rem;
+    color:var(--color-warning);
+    position:relative;
+  }
+  
+  .events {
+    display:none;
+    position:absolute;
+    top:-3px;
+    left:24px;
+    z-index: 1;
+    background-color:var(--color-white);
+    color:var(--color-black);
+    border:1px solid var(--color-black);
+    padding:1rem;
+    width:max-content;
+  }
+  .events-icon:hover > .events, .events-icon:focus > .events {
+    display:block;
+  }
+
+  .events td {
+      width:max-content;
+      text-align:end;
+      padding:0px 4px;
+  }
+  
+  /* PREDICTION */
+  .prediction {
+    display:flex;
+    text-align:center;
+    flex-direction:column;
+    align-items: center;
+    justify-content:center;
+    grid-area: prediction;
+    font-size:min(2vw,10rem);
+    margin-left:1rem;
+  }
+
+  .prediction input {
+    display:inline;
+    background-color:inherit;
+    color:inherit;
+    border:2px solid var(--color-accent);
+    width:5ex;
+    text-align:center;
+    cursor:pointer;
+  }
+  
+  .prediction-icon {
+    display:grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+    "icon predict"
+    "icon confidence";
+    align-content:start;
+    gap:0 1vw;
+    margin-top:1rem;
+  }
+  
+  .prediction-icon svg {
+    grid-area:icon;
+  }
+
+  .prediction-result {
+    align-self: end;
+  }
+  
+  .arrow {
+    font-size:5rem;
+  }
+  
+  /* STAT SELECT */
+  .stat-select {
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-area: stat-select;
+    gap:var(--grid-gap);
+    padding:var(--grid-gap);
+  }
+
+  .stat-select-btn:not(.selected, :hover) .med {
+    color:var(--color-accent);
+  }
+  
+  .stat-select-btn {
+    border-radius:0;
+    padding:2px;
+    background-color:var(--color-white);
+    cursor: pointer;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    min-width: 60px;
+  }
+
+  .stat-select-btn > p {
+    text-overflow: ellipsis;
+    overflow:hidden;
+    white-space: nowrap;
+  }
+  
+  .stat-select-btn:hover, .selected {
+    background-color:var(--color-accent)
+  }
+
+  .stat-select-btn:hover .hide {
+    display:block;
+  }
+
+  .stat-select-btn .hide {
+      /* display:none; */
+  }
+  
+  .stat-select-btn > div > p {
+    display: inline;
+    padding-left:3px;
+  }
+  
+  /* PLAYER STATS */
+  
+  .player-stats {
+    display:grid;
+    grid-template-columns: minmax(auto, max-content) max-content max-content;
+    gap:0 4vw;
+    font-size:min(2vw,1.5rem);
+    grid-area: player-stats;
+    text-align:center;
+    align-items:center;
+  }
+  
+  @media (max-width:885px) {
+    .playercard {
+      grid-template-columns: 1fr 2fr !important;
+      grid-template-areas:
+      "player-context player-context"
+      "stat-select stat-select"
+      "prediction player-stats" !important;
+      padding:0px !important;
+      gap:0 .25rem;
+    }
+  
+    .player-photo {
+      width:20vw !important;
+      max-height:100% !important;
+    }
+
+    .player-info {
+      flex-grow:1;
+    }
+  
+    .player-name {
+      font-size:6vw !important;
+      margin-right:6px !important;
+    }
+
+    .player-matchup, .player-matchup > span {
+        display:flex;
+        align-items: center;
+        flex-wrap: wrap;
+        font-size:min(2rem,3.75vw);
+      }
+  
+    .player-context {
+      flex-direction:row-reverse !important;
+      flex-wrap:wrap !important;
+    }
+  
+    .prediction {
+      margin-left:3rem;
+      font-size:5vw !important;
+    }
+
+    .prediction-icon {
+      margin-top:.5rem !important;
+    }
+
+    .prediction-icon svg {
+      margin:auto;
+      padding-top:.5rem;
+      font-size:2em !important;
+    }
+  
+    .arrow {
+      font-size:2rem !important;
+    }
+  
+    .events {
+      top:2ch !important;
+      left:-25ch !important;
+    }
+
+    .player-stats {
+      margin-left:8vw !important;
+      margin-right:auto !important;
+      font-size:min(4vw,1.5rem) !important;
+    }
+  
+    .stat-select {
+      gap:.25em !important;
+      padding:.25em !important;
+    }
+    .stat-select-btn {
+      background-color:var(--color-black);
+      color:var(--color-white);
+    }
+    .stat-select-btn .hide, .stat-select-btn:hover .hide {
+        display:inline;
+        padding-left:2px;
+      }
+  }
