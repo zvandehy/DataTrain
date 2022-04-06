@@ -19,11 +19,58 @@ const Playercard = (props) => {
   const counts = [0, -30, -10, -5];
   const weights = [.30,.27,.25,.18]; //TODO: determine best weights to use
   //TODO: create a constant list of stat types, shorthand, and backend score mapping
-  const stats = ["Points","Assists","3 Pointers","Free Throws","PTS + REB + AST","Rebounds","Fantasy", "Double Double", "Blocks + Steals"];
+  const stats = [
+    {
+      label:"Points",
+      abbreviation:"PTS",
+      recognize:"points",
+    },
+    {
+      label:"Assists",
+      abbreviation:"AST",
+      recognize:"assists",
+    },
+    {
+      label:"3 Pointers",
+      abbreviation:"3PM",
+      recognize:"3-pt made",
+    },
+    {
+      label:"PTS + REB + AST",
+      abbreviation:"PRA",
+      recognize:"pts+rebs+asts",
+    },
+    {
+      label:"Rebounds",
+      abbreviation:"REB",
+      recognize:"rebounds",
+    },
+    {
+      label:"Free Throws",
+      abbreviation:"FTM",
+      recognize:"free throws made",
+    },
+    {
+      label:"Fantasy",
+      abbreviation:"FAN",
+      recognize:"fantasy score",
+    },
+    {
+      label:"Blocks + Steals",
+      abbreviation:"B+S",
+      recognize:"blks+stls",
+    },
+    {
+      label:"Double Double",
+      abbreviation:"DD",
+      recognize:"double-double",
+    },
+  ];
+  
   //TODO: Get the targets (if it exists) and the prediction & confidence for each stat type
   let projections = stats.map(item => {
-    const target = getTarget(playerProp.targets, item);
-    const playerStats = getStats(seasonData, counts, item, target);
+    const target = getTarget(playerProp.targets, item.recognize);
+    const playerStats = getStats(seasonData, counts, item.recognize, target);
     const predictionAndConfidence = getPredictionAndConfidence(playerStats, weights);
     return {
     stat:item, 

@@ -1,4 +1,5 @@
 import {gql} from '@apollo/client';
+import {round} from 'mathjs';
 
 export function GetPropScore(game, propType) {
     switch (propType.toLowerCase()) {
@@ -12,7 +13,7 @@ export function GetPropScore(game, propType) {
         case "3 pointers":
             return game["three_pointers_made"]
         case "fantasy score":
-            return game["points"] + game["total_rebounds"]*1.2 + game["assists"]*1.5 + game["blocks"]*3 + game["steals"]*3 - game["turnovers"]
+            return round(game["points"] + game["total_rebounds"]*1.2 + game["assists"]*1.5 + game["blocks"]*3 + game["steals"]*3 - game["turnovers"],2)
         case "blks+stls":
             return game["blocks"] + game["steals"]
         case "double-double":
