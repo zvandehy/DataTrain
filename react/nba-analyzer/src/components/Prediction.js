@@ -1,11 +1,11 @@
 import React from 'react'
 import {GetColor} from '../utils'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faForward as up, faForward as down, faArrowDownUpAcrossLine as neither} from '@fortawesome/free-solid-svg-icons'
+import { faForward as up, faForward as down, /*faArrowDownUpAcrossLine as neither*/} from '@fortawesome/free-solid-svg-icons'
 
 const Prediction = (props) => {
   const {projections,selected} = props
-  const projection = projections.filter(item => item.stat.toLowerCase() === selected.toLowerCase())[0];
+  const projection = projections.filter(item => item.stat.label.toLowerCase() === selected.toLowerCase())[0];
   //TODO: Use constant stat type mappings to get the selected projection
   const {prediction, confidence} = projection;
   // const [target, setTarget] = useState(projection.target);
@@ -39,12 +39,20 @@ const PredictionIconSmall = (props) => {
   </div>)
 }
 
-function getIcon(confidence, prediction) {
-  return confidence >= 50 && confidence < 60 ? neither : prediction === "OVER" ? up : down;
+// function getIcon(confidence, prediction) {
+//   return confidence >= 50 && confidence < 60 ? neither : prediction === "OVER" ? up : down;
+// }
+
+// function getRotation(confidence, prediction) {
+//   return confidence >= 50 && confidence < 60 ? 0 : prediction === "OVER" ? 270 : 90;
+// }
+
+function getIcon(prediction) {
+  return prediction === "OVER" ? up : down;
 }
 
-function getRotation(confidence, prediction) {
-  return confidence >= 50 && confidence < 60 ? 0 : prediction === "OVER" ? 270 : 90;
+function getRotation(prediction) {
+  return prediction === "OVER" ? 270 : 90;
 }
 
 export {PredictionIcon, PredictionIconSmall}
