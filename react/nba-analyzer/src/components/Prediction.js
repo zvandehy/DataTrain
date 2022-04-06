@@ -24,7 +24,7 @@ const Prediction = (props) => {
 const PredictionIcon = (props) => {
   const {confidence, prediction} = props;
   return (<div className="prediction-icon">
-  <FontAwesomeIcon className={`arrow ${GetColor("pct", confidence)}`} icon={getIcon(confidence,prediction)} rotation={getRotation(confidence, prediction)}/>
+  <FontAwesomeIcon className={`arrow ${GetColor("pct", confidence)}`} icon={getIcon(prediction)} rotation={getRotation(prediction)}/>
   <p className={`bold tall prediction-result`}>{prediction}</p>
   <p className={`${GetColor("pct", confidence)}`}>{confidence}%</p>
 </div>)
@@ -34,7 +34,7 @@ const PredictionIconSmall = (props) => {
   const {confidence, prediction} = props;
   return (
   <div className="hide">
-      <FontAwesomeIcon className={GetColor("pct", confidence)} icon={getIcon(confidence,prediction)} rotation={getRotation(confidence, prediction)}/>
+      <FontAwesomeIcon className={GetColor("pct", confidence)} icon={getIcon(prediction)} rotation={getRotation(prediction)}/>
       <p className={GetColor("pct", confidence)}>{confidence}%</p>
   </div>)
 }
