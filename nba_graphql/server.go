@@ -10,7 +10,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
-	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
 	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
@@ -29,14 +28,14 @@ func main() {
 
 	// Add CORS middleware around every request
 	// See https://github.com/rs/cors for full option listing
-	router.Use(cors.New(cors.Options{
-		// AllowedOrigins:   []string{"http://localhost:8080", "http://localhost:3000"},
-		AllowCredentials: true,
-		Debug:            false,
-		// AllowOriginFunc: func(origin string) bool {
-		// 	return true
-		// }, //overrides allowed origins
-	}).Handler)
+	// router.Use(cors.New(cors.Options{
+	// 	// AllowedOrigins:   []string{"http://localhost:8080", "http://localhost:3000"},
+	// 	AllowCredentials: true,
+	// 	Debug:            false,
+	// 	// AllowOriginFunc: func(origin string) bool {
+	// 	// 	return true
+	// 	// }, //overrides allowed origins
+	// }).Handler)
 
 	mongoClient, err := database.ConnectDB(context.Background())
 	if err != nil {
