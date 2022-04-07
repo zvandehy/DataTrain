@@ -1,0 +1,267 @@
+INJURIES AS OF 12:15 PM ON APR 7
+
+Atlanta Hawks 2022-04-06
+Lou Williams  Injured since  2022-04-05
+Timothe Luwawu-Cabarrot  Returning from injury since 2022-04-05
+John Collins  Injured since  2022-03-11
+-----
+Boston Celtics 2022-04-06
+Matt Ryan  Returning from injury since Never
+Nik Stauskas  Injured since  2022-03-23
+Robert Williams III  Injured since  2022-03-27
+-----
+Brooklyn Nets 2022-04-06
+Blake Griffin  Returning from injury since 2022-04-02
+David Duke Jr.  Returning from injury since 2022-02-28
+Goran Dragic  Injured since  2022-03-31
+Ben Simmons  Injured since  Never
+Joe Harris  Injured since  2021-11-14
+James Johnson  Injured since  2022-04-02
+Day'Ron Sharpe  Returning from injury since 2022-02-28
+-----
+Charlotte Hornets 2022-04-05
+Montrezl Harrell  Returning from injury since 2022-04-02
+Scottie Lewis  Returning from injury since 2021-12-15
+Gordon Hayward  Injured since  2022-04-02
+Kai Jones  Returning from injury since 2022-03-02
+Arnoldas Kulboka  Returning from injury since 2021-12-10
+-----
+Chicago Bulls 2022-04-06
+Lonzo Ball  Injured since  2022-01-14
+Alex Caruso  Injured since  2022-04-05
+Marko Simonovic  Returning from injury since 2022-01-17
+Matt Thomas  Injured since  2022-03-21
+Tyler Cook  Returning from injury since 2022-02-12
+-----
+Cleveland Cavaliers 2022-04-05
+Brandon Goodwin  Returning from injury since 2022-04-02
+Collin Sexton  Injured since  2021-11-07
+Evan Mobley  Injured since  2022-03-28
+RJ Nembhard Jr.  Returning from injury since 2022-03-30
+Dylan Windler  Returning from injury since 2022-04-02
+Ed Davis  Returning from injury since 2022-04-03
+Jarrett Allen  Injured since  2022-03-06
+Dean Wade  Injured since  2022-03-12
+-----
+Dallas Mavericks 2022-04-06
+Sterling Brown  Injured since  2022-03-23
+Moses Wright  Returning from injury since 2022-03-29
+Tim Hardaway Jr.  Injured since  2022-01-25
+Brandon Knight  Returning from injury since 2022-04-01
+Maxi Kleber  Injured since  2022-04-01
+Boban Marjanovic  Returning from injury since 2022-03-29
+-----
+Denver Nuggets 2022-04-05
+Markus Howard  Returning from injury since 2022-03-20
+Michael Porter Jr.  Injured since  2021-11-06
+Facundo Campazzo  Returning from injury since 2022-03-20
+Zeke Nnaji  Injured since  2022-03-09
+Jamal Murray  Injured since  Never
+Vlatko Cancar  Injured since  2022-01-03
+Jeff Green  Injured since  2022-04-01
+-----
+Detroit Pistons 2022-04-06
+Hamidou Diallo  Injured since  2022-03-09
+Jerami Grant  Injured since  2022-03-25
+Kelly Olynyk  Injured since  2022-04-03
+Rodney McGruder  Injured since  2022-04-03
+Cory Joseph  Injured since  2022-03-31
+Marvin Bagley III  Injured since  2022-03-31
+Luka Garza  Returning from injury since 2022-03-21
+-----
+Golden State Warriors 2022-04-03
+Chris Chiozza  Returning from injury since 2022-03-28
+Andre Iguodala  Returning from injury since 2022-04-02
+Klay Thompson  Returning from injury since 2022-04-02
+Stephen Curry  Injured since  2022-03-16
+Otto Porter Jr.  Injured since  2022-04-02
+James Wiseman  Injured since  Never
+-----
+Houston Rockets 2022-04-05
+John Wall  Injured since  Never
+David Nwaba  Returning from injury since 2022-03-20
+Eric Gordon  Injured since  2022-03-25
+Dennis Schroder  Injured since  2022-03-26
+Bruno Fernando  Returning from injury since 2022-04-01
+Trevelin Queen  Returning from injury since 2022-03-07
+Anthony Lamb  Returning from injury since Never
+Christian Wood  Injured since  2022-03-26
+-----
+Indiana Pacers 2022-04-05
+T.J. Warren  Injured since  Never
+Chris Duarte  Injured since  2022-03-15
+Malcolm Brogdon  Injured since  2022-03-18
+Keifer Sykes  Returning from injury since 2022-04-01
+Myles Turner  Injured since  2022-01-14
+Goga Bitadze  Injured since  2022-04-03
+Ricky Rubio  Injured since  Never
+-----
+LA Clippers 2022-04-06
+Jay Scrubb  Injured since  2022-01-30
+Kawhi Leonard  Injured since  Never
+Brandon Boston Jr.  Returning from injury since 2022-03-22
+Luke Kennard  Injured since  2022-04-03
+Jason Preston  Injured since  Never
+Rodney Hood  Returning from injury since 2022-04-03
+-----
+Los Angeles Lakers 2022-04-05
+Russell Westbrook  Start Injury
+Trevor Ariza  Returning from injury since 2022-03-31
+Wayne Ellington  Returning from injury since 2022-03-16
+Anthony Davis  Start Injury
+LeBron James  Injured since  2022-04-01
+Kent Bazemore  Returning from injury since 2022-03-29
+Kendrick Nunn  Injured since  Never
+Mason Jones  Returning from injury since 2021-12-23
+-----
+Memphis Grizzlies 2022-04-05
+Tyrell Terry  Injured since  2021-12-31
+Yves Pons  Returning from injury since 2022-03-26
+Santi Aldama  Returning from injury since 2022-04-01
+Ja Morant  Injured since  2022-03-18
+Jarrett Culver  Returning from injury since 2022-04-01
+Dillon Brooks  Injured since  2022-04-01
+Killian Tillie  Injured since  2022-03-15
+-----
+Miami Heat 2022-04-05
+Victor Oladipo  Returning from injury since 2022-04-03
+Kyle Lowry  Returning from injury since 2022-04-03
+Markieff Morris  Injured since  2022-04-03
+P.J. Tucker  Start Injury
+Dewayne Dedmon  Injured since  2022-04-02
+Udonis Haslem  Returning from injury since 2022-04-02
+-----
+Milwaukee Bucks 2022-04-05
+Luca Vildoza  Injured since  Never
+Grayson Allen  Start Injury
+Serge Ibaka  Returning from injury since 2022-04-01
+Lindell Wigginton  Returning from injury since 2022-04-01
+Giannis Antetokounmpo  Start Injury
+DeAndre' Bembry  Injured since  2022-03-12
+-----
+Minnesota Timberwolves 2022-04-05
+Jaden McDaniels  Start Injury
+Malik Beasley  Start Injury
+Leandro Bolmaro  Returning from injury since 2022-03-30
+Jake Layman  Returning from injury since 2022-03-30
+Nathan Knight  Returning from injury since 2022-03-27
+Patrick Beverley  Injured since  2022-04-01
+-----
+New Orleans Pelicans 2022-04-05
+Zion Williamson  Injured since  Never
+Jared Harper  Returning from injury since 2021-12-28
+Gary Clark  Returning from injury since 2022-04-03
+Kira Lewis Jr.  Injured since  2021-12-08
+Jonas Valanciunas  Injured since  2022-04-03
+Tony Snell  Returning from injury since 2022-04-03
+Garrett Temple  Returning from injury since 2022-03-04
+-----
+New York Knicks 2022-04-06
+Nerlens Noel  Injured since  2022-02-07
+Derrick Rose  Injured since  2021-12-16
+Quentin Grimes  Injured since  2022-04-03
+Kemba Walker  Injured since  2022-02-16
+Feron Hunt  Returning from injury since Never
+Cam Reddish  Injured since  2022-03-07
+Mitchell Robinson  Injured since  2022-04-03
+Julius Randle  Injured since  2022-03-30
+Ryan Arcidiacono  Returning from injury since 2022-04-03
+-----
+Oklahoma City Thunder 2022-04-06
+Shai Gilgeous-Alexander  Injured since  2022-03-21
+Josh Giddey  Injured since  2022-02-24
+Luguentz Dort  Injured since  2022-02-12
+Darius Bazley  Injured since  2022-03-26
+Theo Maledon  Returning from injury since 2022-04-03
+Derrick Favors  Injured since  2022-02-24
+Ty Jerome  Injured since  2022-02-14
+Aleksej Pokusevski  Returning from injury since 2022-04-03
+Aaron Wiggins  Returning from injury since 2022-04-03
+Tre Mann  Injured since  2022-03-26
+Mike Muscala  Injured since  2022-02-04
+Kenrich Williams  Injured since  2022-02-14
+-----
+Orlando Magic 2022-04-05
+Jonathan Isaac  Injured since  Never
+Bol Bol  Injured since  Never
+Gary Harris  Injured since  2022-03-22
+Franz Wagner  Start Injury
+Admiral Schofield  Injured since  2022-04-01
+Terrence Ross  Returning from injury since 2022-04-03
+Wendell Carter Jr.  Injured since  2022-03-28
+Cole Anthony  Injured since  2022-04-03
+-----
+Philadelphia 76ers 2022-04-05
+Myles Powell  Returning from injury since 2022-02-02
+Isaiah Joe  Returning from injury since 2022-04-02
+Paul Millsap  Returning from injury since 2022-03-29
+Jaden Springer  Returning from injury since 2021-12-26
+Charlie Brown Jr.  Returning from injury since 2022-03-31
+Matisse Thybulle  Start Injury
+Charles Bassey  Returning from injury since 2022-02-15
+Furkan Korkmaz  Returning from injury since 2022-04-03
+Paul Reed  Returning from injury since 2022-04-02
+-----
+Phoenix Suns 2022-04-06
+Devin Booker  Returning from injury since 2022-04-05
+Chris Paul  Returning from injury since 2022-04-05
+Frank Kaminsky  Injured since  2021-11-15
+Dario Saric  Injured since  Never
+Deandre Ayton  Returning from injury since 2022-04-05
+Jae Crowder  Injured since  2022-04-05
+-----
+Portland Trail Blazers 2022-04-05
+Damian Lillard  Injured since  2021-12-31
+Joe Ingles  Injured since  Never
+Anfernee Simons  Injured since  2022-03-05
+Trendon Watford  Injured since  2022-03-26
+Eric Bledsoe  Injured since  Never
+Brandon Williams  Injured since  2022-04-03
+Nassir Little  Injured since  2022-01-25
+Josh Hart  Injured since  2022-03-20
+Justise Winslow  Injured since  2022-03-23
+Jusuf Nurkic  Injured since  2022-02-16
+-----
+Sacramento Kings 2022-04-05
+Terence Davis  Injured since  2022-01-25
+De'Aaron Fox  Injured since  2022-03-16
+Maurice Harkless  Returning from injury since 2022-03-18
+Domantas Sabonis  Injured since  2022-03-20
+Richaun Holmes  Injured since  2022-03-16
+Alex Len  Injured since  2022-04-01
+-----
+San Antonio Spurs 2022-04-05
+Lonnie Walker IV  Start Injury
+Dejounte Murray  Injured since  2022-03-30
+Doug McDermott  Injured since  2022-03-12
+Devontae Cacok  Returning from injury since 2022-04-03
+DJ Stewart  Returning from injury since Never
+Devin Vassell  Start Injury
+Robert Woodard II  Returning from injury since Never
+Jock Landale  Injured since  2022-04-03
+Romeo Langford  Injured since  2022-04-03
+-----
+Toronto Raptors 2022-04-05
+Armoni Brooks  Returning from injury since 2022-04-03
+OG Anunoby  Injured since  2022-04-01
+Justin Champagnie  Returning from injury since 2022-03-04
+David Johnson  Returning from injury since 2021-12-05
+Svi Mykhailiuk  Returning from injury since 2022-03-30
+Isaac Bonga  Returning from injury since 2022-03-09
+Yuta Watanabe  Injured since  2022-03-30
+-----
+Utah Jazz 2022-04-06
+Trent Forrest  Start Injury
+Mike Conley  Injured since  2022-04-05
+Udoka Azubuike  Injured since  2022-03-09
+Royce O'Neale  Injured since  2022-04-05
+Donovan Mitchell  Returning from injury since 2022-04-05
+-----
+Washington Wizards 2022-04-06
+Bradley Beal  Injured since  2022-01-29
+Cassius Winston  Returning from injury since 2022-02-25
+Isaiah Todd  Returning from injury since 2022-02-16
+Jordan Schakel  Returning from injury since 2021-12-30
+Vernon Carey Jr.  Injured since  2022-02-12
+Kyle Kuzma  Injured since  2022-03-18
+-----
