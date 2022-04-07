@@ -7,7 +7,7 @@ const StatSelectBtns = (props) => {
   return (
     <div className="stat-select">
       {projections.map(item => {
-        return <StatSelectButton key={`${playername} ${item.stat}`} projection={item} selected={item.stat === selected} onStatSelect={onStatSelect}/>
+        return <StatSelectButton key={`${playername} ${item.stat.label}`} projection={item} selected={item.stat.label === selected} onStatSelect={onStatSelect}/>
       })}
 {/* <button className="stat-select-btn">
           <p className="bold">Other</p>
@@ -19,8 +19,8 @@ const StatSelectButton = (props) => {
   const {projection, onStatSelect, selected} = props;
   const {stat, target, prediction, confidence} = projection;
   return (
-    <button className={`stat-select-btn ${selected ? 'selected' : ''}`} onClick={() => onStatSelect(stat)}>
-        <p className="bold titlecase">{stat}</p>
+    <button className={`stat-select-btn ${selected ? 'selected' : ''}`} onClick={() => onStatSelect(stat.label)}>
+        <p className="bold titlecase">{stat.label}</p>
         {target && confidence ? <>
           <p className="hide">T: {target}</p>
           <PredictionIconSmall confidence={confidence} prediction={prediction}/>

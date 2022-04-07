@@ -4,7 +4,7 @@ import {GetPropScore, GetColor} from '../utils'
 
 const PlayerStatsPreview = (props) => {
   const {projections, selected, matchups} = props;
-  const projection = projections.filter(item => item.stat.toLowerCase() === selected.toLowerCase())[0]
+  const projection = projections.filter(item => item.stat.label.toLowerCase() === selected.toLowerCase())[0]
   const playerCounts = projection.counts;
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
   return (
@@ -20,7 +20,7 @@ const PlayerStatsPreview = (props) => {
             {/* TODO: Investigate if should be average or all matchups */}
 
             {matchups.map(game => {
-              const score = GetPropScore(game, projection.stat);
+              const score = GetPropScore(game, projection.stat.recognize);
               const result = score > projection.target ? "OVER" : "UNDER";
               // TODO: Make this its own component?
               return <React.Fragment key={game.gameID}>
