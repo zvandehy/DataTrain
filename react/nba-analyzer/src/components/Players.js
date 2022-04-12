@@ -8,7 +8,12 @@ import "../styles/players.css"
 const Players = () => {
     const [lookup, setLookup] = useState('');
     const [showPlayers, setShowPlayers] = useState([]);
-    const { loading, error, data } = useQuery(HOME_QUERY);
+    let today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    today = `${yyyy}-${mm}-${dd}`
+    const { loading, error, data } = useQuery(HOME_QUERY, {variables: {date: today}});
     useEffect(() => {
         let team = localStorage.getItem('lookup');
         if (data) { 

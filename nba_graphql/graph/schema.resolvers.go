@@ -129,6 +129,7 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 
 func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error) {
 	//logrus.Printf("Get TEAM for projection %v", obj)
+	logrus.Warnf("opponent: %v\t%v", obj.OpponentAbr, obj)
 	return dataloader.For(ctx).TeamByAbr.Load(obj.OpponentAbr)
 }
 
@@ -338,6 +339,10 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	//TODO: update a projection target instead of writing a new one
 	duplicates := make(map[string][]*model.Projection, len(allProjections)/2)
 	for _, projection := range allProjections {
+		//TODO: Potential bug with "Tacos" / discounted projections
+		if projection.OpponentAbr == "" {
+			continue
+		}
 		key := fmt.Sprintf("%s+%s", projection.PlayerName, projection.Date)
 		if _, ok := duplicates[key]; !ok {
 			duplicates[key] = []*model.Projection{projection}
@@ -360,26 +365,30 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		res, err := http.Get(url)
 		if err != nil {
 			logrus.Warnf("couldn't retrieve prizepicks projections for today: %v", err)
+			return
 		}
 		bytes, err := io.ReadAll(res.Body)
 		if err != nil {
 			logrus.Warnf("couldn't read prizepicks projections for today: %v", err)
+			return
 		}
 		var prizepicks model.PrizePicks
 		if err := json.Unmarshal(bytes, &prizepicks); err != nil {
 			logrus.Warnf("couldn't decode prizepicks projections for today: %v", err)
+			return
 		}
 		for _, prop := range prizepicks.Data {
 			projections, err = model.ParsePrizePick(prop, prizepicks.Included, projections)
 			if err != nil {
 				logrus.Warnf("couldn't parse prizepicks projections for today: %v", err)
+				return
 			}
 		}
 		projectionsDB := r.Db.Database("nba").Collection("projections")
 		insertCtx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 		for _, projection := range projections {
 			//TODO: implement upsert so duplicates are not created
-			res := projectionsDB.FindOne(insertCtx, bson.M{"playername": projection.PlayerName, "starttime": projection.StartTime})
+			res := projectionsDB.FindOne(insertCtx, bson.M{"playername": projection.PlayerName, "date": projection.Date})
 			if res.Err() != nil {
 				ins, err := projectionsDB.InsertOne(insertCtx, projection)
 				if err != nil {

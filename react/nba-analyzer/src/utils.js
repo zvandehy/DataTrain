@@ -75,12 +75,12 @@ export function GetColor(type, num) {
 // GRAPHQL Queries
 
 export const HOME_QUERY = gql`
-{
+query HOME($date: String!){
     teams {
         teamID
         abbreviation
     }
-    projections(sportsbook: "PrizePicks") {
+    projections(input: {sportsbook: "PrizePicks", startDate: $date, endDate: $date}) {
         player {
             name
             position
