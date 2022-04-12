@@ -5,7 +5,10 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -350,44 +353,45 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		}
 		uniqueProjections = append(uniqueProjections, best)
 	}
+
+	go func() {
+		var projections []*model.Projection
+		url := "https://partner-api.prizepicks.com/projections?single_stat=True&per_page=1000&league_id=7"
+		res, err := http.Get(url)
+		if err != nil {
+			logrus.Warnf("couldn't retrieve prizepicks projections for today: %v", err)
+		}
+		bytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			logrus.Warnf("couldn't read prizepicks projections for today: %v", err)
+		}
+		var prizepicks model.PrizePicks
+		if err := json.Unmarshal(bytes, &prizepicks); err != nil {
+			logrus.Warnf("couldn't decode prizepicks projections for today: %v", err)
+		}
+		for _, prop := range prizepicks.Data {
+			projections, err = model.ParsePrizePick(prop, prizepicks.Included, projections)
+			if err != nil {
+				logrus.Warnf("couldn't parse prizepicks projections for today: %v", err)
+			}
+		}
+		projectionsDB := r.Db.Database("nba").Collection("projections")
+		insertCtx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+		for _, projection := range projections {
+			//TODO: implement upsert so duplicates are not created
+			res := projectionsDB.FindOne(insertCtx, bson.M{"playername": projection.PlayerName, "starttime": projection.StartTime})
+			if res.Err() != nil {
+				ins, err := projectionsDB.InsertOne(insertCtx, projection)
+				if err != nil {
+					logrus.Warn(err)
+				}
+				logrus.Printf("INSERT %v: %v", projection.PlayerName, ins)
+			}
+		}
+		logrus.Printf("DONE retrieving prizepicks projections for today")
+	}()
+
 	return uniqueProjections, nil
-
-	// url := "https://partner-api.prizepicks.com/projections?single_stat=True&per_page=1000&league_id=7"
-	// res, err := http.Get(url)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// bytes, err := io.ReadAll(res.Body)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// var prizepicks model.PrizePicks
-	// if err := json.Unmarshal(bytes, &prizepicks); err != nil {
-	// 	return nil, err
-	// }
-	// for _, prop := range prizepicks.Data {
-	// 	projections, err = model.ParsePrizePick(prop, prizepicks.Included, projections)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to parse prizepick projection: %v", err)
-	// 	}
-	// }
-
-	// go func() {
-	// 	projectionsDB := r.Db.Database("nba").Collection("projections")
-	// 	insertCtx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	// 	for _, projection := range projections {
-	// 		res := projectionsDB.FindOne(insertCtx, bson.M{"playername": projection.PlayerName, "starttime": projection.StartTime})
-	// 		if res.Err() != nil {
-	// 			ins, err := projectionsDB.InsertOne(insertCtx, projection)
-	// 			if err != nil {
-	// 				logrus.Warn(err)
-	// 			}
-	// 			logrus.Printf("INSERT %v: %v", projection.PlayerName, ins)
-	// 		}
-	// 	}
-	// }()
-
-	// return projections, nil
 }
 
 func GetBestProjection(projections []*model.Projection) *model.Projection {
