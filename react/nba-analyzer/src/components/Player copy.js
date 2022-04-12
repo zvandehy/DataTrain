@@ -1,64 +1,89 @@
-import React, {useState, useEffect, useRef} from 'react'
+import React, {useState} from 'react'
 import {useLocation} from 'react-router-dom';
 import {GetPropScore} from '../utils.js'
 import PlayerStatsChart from './PlayerStatsChart'
+import { ResponsiveLine } from '@nivo/line'
 import DataListInput from "react-datalist-input";
 import {std, mean} from 'mathjs'
 import NormalDistribution from 'normal-distribution'
-import {gql, useQuery} from '@apollo/client';
-import Playercard from './Playercard.js';
-
 import "../styles/player.css"
 
-const Player = () => {
+
+//TODO: see Apexcharts 
+//https://apexcharts.com/react-chart-demos/mixed-charts/multiple-yaxis/
+const Player = (props) => {
+    // const {id} = useParams();
     let location = useLocation()
-    const playerID = parseInt(location.pathname.split("/")[location.pathname.split("/").length-1])
-    const query = gql` query Player($playerID: Int!) {
-        player(input:{playerID: $playerID}) {
-            name
-            games(input: {season:"2021-22"}) {
-                points
-                assists
-                minutes
-                date
-                field_goals_attempted
-                field_goal_percentage
-                field_goals_made
-            }
+    const [propType, setPropType] = useState("points");
+    const {playerProp} = location.state
+    let selectPropTypes = playerProp.targets.map(item => ({
+        // required: what to show to the user
+        label: item.type,
+        // required: key to identify the item within the array
+        key: item.type.toLowerCase(),
+      }));
+    let target = playerProp.targets.find(item => item.type === propType)?.target
+    let player=playerProp.player
+    let seasonData=playerProp.player.games.filter((game) => game.season === "2021-22")
+    let sortedGames = seasonData.sort(function(a, b) {
+        var c = new Date(a.date);
+        var d = new Date(b.date);
+        return c-d;
+    });
+    let chartData = [{id:propType, data: []}, {id:"minutes", data: []}];
+    let propScoreArr = []
+    let countMap = {}
+    let max = 0
+    let min = -1;
+    sortedGames.forEach((game) => {
+        const propScore = GetPropScore(game,propType)
+        chartData.filter(series => series.id === propType)[0].data.push({y:propScore,x:game.date})
+        chartData.filter(series => series.id === "minutes")[0].data.push({y:parseInt(game.minutes.split(":")[0])/10,x:game.date})
+        if (countMap[propScore]) {
+            countMap[propScore]++
+        } else {
+            countMap[propScore]=1
         }
-      }`;
-    const { loading, error, data } = useQuery(query, {variables: {playerID}});
-    // const [games, setGames] = useState([]);
-    // const [player, setPlayer] = useState('');
-
-    // useEffect(() => {
-    //     console.log(data.player.games)
-    //     if (data) { 
-    //         setPlayer(data.player)
-    //         setGames(player.games)
-    //         setGames(games.sort(function(a, b) {
-    //             var c = new Date(a.date);
-    //             var d = new Date(b.date);
-    //             return c-d;}));
-    //         console.log(games)
-    //     }
-    // },
-    // [data, games, player]
-    // );
-    
-    if (loading) return 'Loading...';
-    if (error) {
-        return `Error! ${error.message}. ${loading}. ${data}`;
+        propScoreArr.push(propScore)
+        if (propScore > max) {
+            max = propScore
+        }
+        if (propScore < min || min === -1) {
+            min = propScore
+        }
+    });
+    let less = 0;
+    let more = 0;
+    for (let i = 0; i < max; i++) {
+        if (!countMap[i]) {
+            countMap[i] = 0
+        }
+        if (i<target) {
+            less+=countMap[i]
+        } else {
+            more+=countMap[i]
+        }
     }
-    // console.log(games)
+    let countData = [{id:propType, data: []}, {id:"normal", data: []}];
+    let stddev = std(propScoreArr)
+    let m = mean(propScoreArr)
+    const normDist = new NormalDistribution(m, stddev);
 
+   for(let i = 0; i< 3*stddev+m;i++) {
+       let xval = i
+       let yval = normDist.pdf(xval);
+        if (xval >= 0 ) {
+            countData[1].data.push({x:xval, y:yval})
+        }
+        countData[0].data.push({x:xval, y:countMap[xval]? countMap[xval] /100: 0})
+   }
+   
     return (
         <div>
             <div className="player-card">
-                <h1>{data.player.name}</h1>
+                <h1>{player.name}</h1>
             </div>
-            {/* <Playercard playerProp={data} key={data.player.playerID}/> */}
-            {/* <DataListInput
+            <DataListInput
                 placeholder="Select a prop type"
                 items={selectPropTypes}
                 onSelect={(event) => setPropType(event.label)}
@@ -69,8 +94,8 @@ const Player = () => {
             <p>Std Dev: {stddev}</p>
             <p>Target: {target}</p>
             <p>Over: {more}</p>
-            <p>Under: {less}</p> */}
-            <PlayerStatsChart games={data.player.games}/>
+            <p>Under: {less}</p>
+            <PlayerStatsChart/>
             {/* <div className="line-chart" style={{height:"500px"}}>
                 <ResponsiveLine
                     data={chartData}
