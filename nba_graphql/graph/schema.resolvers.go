@@ -129,7 +129,6 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 
 func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error) {
 	//logrus.Printf("Get TEAM for projection %v", obj)
-	logrus.Warnf("opponent: %v\t%v", obj.OpponentAbr, obj)
 	return dataloader.For(ctx).TeamByAbr.Load(obj.OpponentAbr)
 }
 
