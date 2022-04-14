@@ -13,6 +13,7 @@ const Players = () => {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     today = `${yyyy}-${mm}-${dd}`
+    today = "2022-04-15"
     const { loading, error, data } = useQuery(HOME_QUERY, {variables: {date: today}});
     useEffect(() => {
         let team = localStorage.getItem('lookup');

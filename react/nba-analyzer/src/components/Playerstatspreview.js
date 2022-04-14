@@ -29,11 +29,6 @@ const PlayerStatsPreview = (props) => {
               <span className="player-vs-opp-stat">{score}</span>
               <span className={`player-vs-opp-stat-result ${GetColor("over", result)}`}>{result}</span>
             </React.Fragment>})}
-            
-
-            {/* <span className="header player-vs-opp-instance">@ BKN</span>
-            <span className="player-vs-opp-stat">28</span>
-            <span className="player-vs-opp-stat-result">Over</span> */}
 
             {/* SIMILAR STATS */}
             

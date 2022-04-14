@@ -1,7 +1,6 @@
-html {
-    background-color: white;
+.player-page {
+    background-color: var(--color-white);
 }
-
 #chart {
     display:flex;
     align-items: center;

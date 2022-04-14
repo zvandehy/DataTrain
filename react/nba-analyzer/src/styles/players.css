@@ -190,6 +190,10 @@
     display: inline;
     padding-left:3px;
   }
+
+  .span-3 {
+    grid-column: 1/4;
+  }
   
   /* PLAYER STATS */
   
