@@ -113,7 +113,7 @@ type ComplexityRoot struct {
 		Player        func(childComplexity int, input model.PlayerFilter) int
 		PlayerGames   func(childComplexity int, input model.GameFilter) int
 		Players       func(childComplexity int) int
-		Projections   func(childComplexity int, sportsbook string) int
+		Projections   func(childComplexity int, input model.ProjectionFilter) int
 		Team          func(childComplexity int, input model.TeamFilter) int
 		TeamGames     func(childComplexity int, input model.GameFilter) int
 		Teams         func(childComplexity int) int
@@ -194,7 +194,7 @@ type QueryResolver interface {
 	Team(ctx context.Context, input model.TeamFilter) (*model.Team, error)
 	TeamGames(ctx context.Context, input model.GameFilter) ([]*model.TeamGame, error)
 	PlayerGames(ctx context.Context, input model.GameFilter) ([]*model.PlayerGame, error)
-	Projections(ctx context.Context, sportsbook string) ([]*model.Projection, error)
+	Projections(ctx context.Context, input model.ProjectionFilter) ([]*model.Projection, error)
 }
 type TeamResolver interface {
 	Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error)
@@ -620,7 +620,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Projections(childComplexity, args["sportsbook"].(string)), true
+		return e.complexity.Query.Projections(childComplexity, args["input"].(model.ProjectionFilter)), true
 
 	case "Query.team":
 		if e.complexity.Query.Team == nil {
@@ -1064,7 +1064,17 @@ type Query {
   team(input: TeamFilter!): Team!
   teamGames(input: GameFilter!): [TeamGame!]!
   playerGames(input: GameFilter!): [PlayerGame!]!
-  projections(sportsbook: String!): [Projection!]!
+  projections(input: ProjectionFilter!): [Projection!]!
+}
+
+input ProjectionFilter {
+	sportsbook: String
+	playerName: String
+	playerID: Int
+	startDate: String
+	endDate: String
+	teamID: Int
+	opponentID: Int
 }
 
 input PlayerFilter {
@@ -1189,15 +1199,15 @@ func (ec *executionContext) field_Query_player_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_projections_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["sportsbook"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sportsbook"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 model.ProjectionFilter
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNProjectionFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProjectionFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["sportsbook"] = arg0
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -3283,7 +3293,7 @@ func (ec *executionContext) _Query_projections(ctx context.Context, field graphq
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Projections(rctx, args["sportsbook"].(string))
+		return ec.resolvers.Query().Projections(rctx, args["input"].(model.ProjectionFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5800,6 +5810,77 @@ func (ec *executionContext) unmarshalInputPlayerFilter(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputProjectionFilter(ctx context.Context, obj interface{}) (model.ProjectionFilter, error) {
+	var it model.ProjectionFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "sportsbook":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sportsbook"))
+			it.Sportsbook, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "playerName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("playerName"))
+			it.PlayerName, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "playerID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("playerID"))
+			it.PlayerID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "startDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
+			it.StartDate, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "endDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endDate"))
+			it.EndDate, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "teamID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamID"))
+			it.TeamID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "opponentID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opponentID"))
+			it.OpponentID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputTeamFilter(ctx context.Context, obj interface{}) (model.TeamFilter, error) {
 	var it model.TeamFilter
 	asMap := map[string]interface{}{}
@@ -7171,6 +7252,11 @@ func (ec *executionContext) marshalNProjection2ᚖgithubᚗcomᚋzvandehyᚋData
 		return graphql.Null
 	}
 	return ec._Projection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNProjectionFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProjectionFilter(ctx context.Context, v interface{}) (model.ProjectionFilter, error) {
+	res, err := ec.unmarshalInputProjectionFilter(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -152,7 +153,7 @@ func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.G
 }
 
 func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.PlayerFilter) (*mongo.Cursor, error) {
-	logrus.Printf("Query Players From: %v\n", inputs)
+	// logrus.Printf("Query Players From: %v\n", inputs)
 	c.Queries++
 	playersDB := c.Database("nba").Collection("players")
 	applyFilters := make(map[string]bson.M, 4)
@@ -164,6 +165,9 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.Playe
 			playerIDs = append(playerIDs, *in.PlayerID)
 		}
 		if in.Name != nil {
+			if len(strings.SplitN(*in.Name, " ", 2)) < 2 {
+				return nil, fmt.Errorf("invalid Player Name: %s", *in.Name)
+			}
 			first_names = append(first_names, strings.SplitN(*in.Name, " ", 2)[0])
 			last_names = append(last_names, strings.SplitN(*in.Name, " ", 2)[1])
 		}
@@ -188,6 +192,30 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.Playe
 		}},
 	}}
 	cur, err := playersDB.Find(ctx, filter)
+
+	return cur, err
+}
+
+func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.ProjectionFilter) (*mongo.Cursor, error) {
+	logrus.Printf("Query Projections with: %v\n", input)
+	c.Queries++
+	projectionDB := c.Database("nba").Collection("projections")
+	filter := bson.M{"sportsbook": "PrizePicks"}
+
+	if input.PlayerName != nil && *input.PlayerName != "" {
+		filter["playername"] = *input.PlayerName
+	}
+
+	//filter date between input.StartDate and input.EndDate if they are set
+	if input.StartDate != nil && input.EndDate != nil {
+		filter["date"] = bson.M{"$gte": *input.StartDate, "$lte": *input.EndDate}
+	} else if input.StartDate != nil {
+		filter["date"] = bson.M{"$gte": *input.StartDate}
+	} else if input.EndDate != nil {
+		filter["date"] = bson.M{"$lte": *input.EndDate}
+	}
+
+	cur, err := projectionDB.Find(ctx, filter)
 
 	return cur, err
 }

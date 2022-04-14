@@ -54,6 +54,11 @@ func main() {
 
 func timer(h http.Handler, db *database.NBADatabaseClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//skip heartbeat logs
+		if r.ContentLength == 1468 {
+			h.ServeHTTP(w, r)
+			return
+		}
 		db.Queries = 0
 		startTime := time.Now()
 		h.ServeHTTP(w, r)
