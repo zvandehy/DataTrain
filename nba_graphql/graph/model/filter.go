@@ -59,3 +59,7 @@ func (f PlayerFilter) String() string {
 func (f TeamFilter) String() string {
 	return Print(f)
 }
+
+func (f ProjectionFilter) String() string {
+	return Print(f)
+}

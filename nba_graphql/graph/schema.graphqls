@@ -116,7 +116,17 @@ type Query {
   team(input: TeamFilter!): Team!
   teamGames(input: GameFilter!): [TeamGame!]!
   playerGames(input: GameFilter!): [PlayerGame!]!
-  projections(sportsbook: String!): [Projection!]!
+  projections(input: ProjectionFilter!): [Projection!]!
+}
+
+input ProjectionFilter {
+	sportsbook: String
+	playerName: String
+	playerID: Int
+	startDate: String
+	endDate: String
+	teamID: Int
+	opponentID: Int
 }
 
 input PlayerFilter {
