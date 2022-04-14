@@ -1,0 +1,13 @@
+.player-page {
+    background-color: var(--color-white);
+}
+#chart {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+canvas {
+    max-width:1000px;
+    max-height:500px;
+}
