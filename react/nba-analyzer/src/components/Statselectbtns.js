@@ -9,9 +9,9 @@ const StatSelectBtns = (props) => {
       {projections.map(item => {
         return <StatSelectButton key={`${playername} ${item.stat.label}`} projection={item} selected={item.stat.label === selected} onStatSelect={onStatSelect}/>
       })}
-{/* <button className="stat-select-btn">
+      <button className="stat-select-btn span-3">
           <p className="bold">Other</p>
-      </button> */}
+      </button>
     </div>
   )
 }

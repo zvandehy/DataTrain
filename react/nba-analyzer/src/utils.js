@@ -25,6 +25,10 @@ export function GetPropScore(game, propType) {
             if (game["steals"] >= 10) doubles++
             if (doubles >= 2) return 1
             return 0
+        case "minutes":
+            return parseInt(game.minutes.split(":")[0])
+        case "field_goal_percentage":
+            return game["field_goal_percentage"]
         default:
             return game[propType.toLowerCase()] ?? 0
     }
