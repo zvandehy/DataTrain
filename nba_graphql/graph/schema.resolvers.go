@@ -386,8 +386,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		projectionsDB := r.Db.Database("nba").Collection("projections")
 		insertCtx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 		for _, projection := range projections {
-			//TODO: implement upsert so duplicates are not created
-			res, err := projectionsDB.UpdateOne(insertCtx, bson.M{"playername": projection.PlayerName, "date": projection.Date}, projection, options.Update().SetUpsert(true))
+			res, err := projectionsDB.UpdateOne(insertCtx, bson.M{"playername": projection.PlayerName, "date": projection.Date}, bson.M{"$set": projection}, options.Update().SetUpsert(true))
 			if err != nil {
 				if err != nil {
 					logrus.Warn(err)
