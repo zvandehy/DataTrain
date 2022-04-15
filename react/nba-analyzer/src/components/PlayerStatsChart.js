@@ -95,7 +95,6 @@ let datasets = Object.getOwnPropertyNames(games[0]).filter(item => item !== "__t
         //     const index = context.dataIndex;
         //     const value = context.dataset.data[index];
         //     if (type !== prop || true) {
-        //         console.log(type, context)
         //         return `rgba(${r}, ${g}, ${b}, 0.5)`
         //     }
         //     return value < target ? 'rgba(255,0,0,0.5)' :  // draw negative values in red
@@ -106,18 +105,14 @@ let datasets = Object.getOwnPropertyNames(games[0]).filter(item => item !== "__t
 
 let target = 20;
 // let propDataset = datasets[datasets.findIndex(item => item.id === prop)]
-// console.log(propDataset)
 // for (let i=0; i<datasets[datasets.findIndex(item => item.id === prop)].data.length; i++) {
 //     if (GetPropScore({points:datasets[datasets.findIndex(item => item.id === prop)].data[i]},prop) > target) {
 //         datasets[datasets.findIndex(item => item.id === prop)].pointBackgroundColors.push("rgba(0,255,0,0.5)")
 //     } else {
 //         datasets[datasets.findIndex(item => item.id === prop)].pointBackgroundColors.push("rgba(255,0,0,0.5)")
 //     }
-    // console.log(datasets[datasets.findIndex(item => item.id === prop)].pointBackgroundColor, datasets[datasets.findIndex(item => item.id === prop)].data[i], GetPropScore({points:datasets[datasets.findIndex(item => item.id === prop)].data[i]},prop))
     // datasets[datasets.findIndex(item => item.id === prop)].pointBackgroundColor = GetPropScore({points:datasets[datasets.findIndex(item => item.id === prop)].data[i]},prop) > 20 ? 'green' : 'red'
-    // console.log(datasets[datasets.findIndex(item => item.id === prop)].pointBackgroundColor)
 // }
-// console.log( datasets[datasets.findIndex(item => item.id === prop)])
   return (
         <div id="chart">
     <Chart

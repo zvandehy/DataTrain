@@ -1,6 +1,37 @@
 import {gql} from '@apollo/client';
 import {round} from 'mathjs';
 
+export function FormatDate(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    let ret = `${yyyy}-${mm}-${dd}`
+    return ret
+}
+
+export function ParseDate(date) {
+    return Date.parse(date.replace(/-/g, '\/').replace(/T.+/, ''));
+}
+
+//returns negative if 1 is less than 2
+export function CompareDates(date1, date2) {
+        var a = new Date(date1);
+        var b = new Date(date2);
+        return a-b;
+}
+
+export function GetSelectableTeams(teams) {
+    let ret  = teams.map((team) => ({
+        // required: what to show to the user
+        label: team.abbreviation,
+        // required: key to identify the item within the array
+        key: team.teamID,
+      }));
+    ret.push({label:"ANY", key:"ANY"});
+    ret.sort((a,b) => {return a.label > b.label ? 1 : -1});
+    return ret
+}
+
 export function GetPropScore(game, propType) {
     switch (propType.toLowerCase()) {
         case "pts+rebs+asts":
@@ -54,10 +85,7 @@ export function GetShortType(type) {
 }
 
 export function showPlayerPreview(player, props, type) {
-    // console.log(player)
-    // console.log(type)
     let ret = props.find((prop) => player.first_name + " " + player.last_name === prop.playerName && prop.type === type)
-    // console.log(ret)
     return ret
 }
 
