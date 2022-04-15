@@ -387,13 +387,18 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		insertCtx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 		for _, projection := range projections {
 			//TODO: implement upsert so duplicates are not created
-			res := projectionsDB.FindOne(insertCtx, bson.M{"playername": projection.PlayerName, "date": projection.Date})
-			if res.Err() != nil {
-				ins, err := projectionsDB.InsertOne(insertCtx, projection)
+			res, err := projectionsDB.UpdateOne(insertCtx, bson.M{"playername": projection.PlayerName, "date": projection.Date}, projection, options.Update().SetUpsert(true))
+			if err != nil {
 				if err != nil {
 					logrus.Warn(err)
 				}
-				logrus.Printf("INSERT %v: %v", projection.PlayerName, ins)
+				if res.UpsertedCount > 0 {
+					logrus.Printf("INSERTED %v", projection.PlayerName)
+				}
+				if res.ModifiedCount > 0 {
+					logrus.Printf("UPDATED %v", projection.PlayerName)
+				}
+
 			}
 		}
 		logrus.Printf("DONE retrieving prizepicks projections for today")
