@@ -32,7 +32,6 @@ const Player = () => {
     // const [player, setPlayer] = useState('');
 
     // useEffect(() => {
-    //     console.log(data.player.games)
     //     if (data) { 
     //         setPlayer(data.player)
     //         setGames(player.games)
@@ -40,7 +39,6 @@ const Player = () => {
     //             var c = new Date(a.date);
     //             var d = new Date(b.date);
     //             return c-d;}));
-    //         console.log(games)
     //     }
     // },
     // [data, games, player]
@@ -50,7 +48,6 @@ const Player = () => {
     if (error) {
         return `Error! ${error.message}. ${loading}. ${data}`;
     }
-    // console.log(games)
 
     return (
         <div className="player-page">

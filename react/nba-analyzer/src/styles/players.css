@@ -207,6 +207,10 @@
     align-items:center;
     padding-bottom:5px;
   }
+
+  .actual-result {
+    margin:.75em;
+  }
   
   @media (max-width:885px) {
     .playercard {

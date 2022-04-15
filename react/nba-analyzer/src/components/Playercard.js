@@ -3,18 +3,16 @@ import PlayerContext from "./Playercontext"
 import StatSelectBtns from "./Statselectbtns"
 import Prediction from "./Prediction"
 import PlayerStatsPreview from "./Playerstatspreview"
-import { GetPropScore } from '../utils'
+import { GetPropScore, ParseDate, CompareDates } from '../utils'
 import {round, mean} from "mathjs"
 
 const Playercard = (props) => {
-  let {playerProp} = props;
+  const {playerProp, date} = props;
   const {player} = playerProp;
   //TODO: move to utils (or a filters.js) as function
-  let seasonData = player.games.filter((game) => game.season === "2021-22").sort(function(a, b) {
-      var c = new Date(a.date);
-      var d = new Date(b.date);
-      return c-d;
-  });
+  let seasonData = player.games.filter((game) => game.season === "2021-22" && CompareDates(date, ParseDate(game.date)) > 1).sort(CompareDates);
+  
+  const game = player.games.find((game) => game.date === date);
   //TODO: add counts option to custom filters
   const counts = [0, -30, -10, -5];
   const weights = [.30,.27,.25,.18]; //TODO: determine best weights to use
@@ -81,6 +79,8 @@ const Playercard = (props) => {
     counts: playerStats,
   }});
 
+
+
   //TODO: Make this more sophisticated
   function getPredictionAndConfidence(stats, weights) {
     let conf_o = 0;
@@ -111,7 +111,7 @@ const Playercard = (props) => {
     counts.forEach(count => {
       //TODO: Apply game stat filters
       const data = scores.slice(count);
-      const avg = round(mean(data),2);
+      const avg = data.length ? round(mean(data),2) : 0;
       const over = data.filter(score => score > target).length;
       const under = data.filter(score => score < target).length;
       const pct_o = round((over / data.length)*100, 2);
@@ -133,7 +133,7 @@ const Playercard = (props) => {
     <div className="playercard">
         <PlayerContext playerProp={playerProp} opponent={playerProp.opponent}></PlayerContext>
         <StatSelectBtns projections={projections} playername={player.name} selected={stat} onStatSelect={onStatSelect}></StatSelectBtns>
-        <Prediction projections={projections} selected={stat}></Prediction>
+        <Prediction projections={projections} selected={stat} game={game}></Prediction>
         <PlayerStatsPreview projections={projections} selected={stat} matchups={matchups} similarData={""}></PlayerStatsPreview>
     </div>
   )

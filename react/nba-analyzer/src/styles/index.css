@@ -47,6 +47,11 @@
 html {
   background-color: var(--color-black);
   font-family: "Oswald-Light";
+  color: var(--color-white);
+}
+
+.datalist-items {
+  color:var(--color-black);
 }
 
 .players {
