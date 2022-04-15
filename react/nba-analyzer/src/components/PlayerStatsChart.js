@@ -51,6 +51,7 @@ const PlayerStatsChart = (props) => {
             // zoom options and/or events
             wheel: {enabled:true, mode:"x"},
             drag: {enabled:true, mode:"x", modifierKey: "shift"},
+            pinch: {enabled:true, mode:"x"},
             mode:"x",
           }
         },
