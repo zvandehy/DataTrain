@@ -13,6 +13,7 @@ COPY react/nba-analyzer/package-lock.json ./
 RUN npm install --silent
 RUN npm install react-scripts@3.4.1 -g --silent
 RUN npm i -g serve --silent
+RUN npm install --save chart.js react-chartjs-2
 
 # add app
 COPY react/nba-analyzer/ ./
