@@ -62,8 +62,6 @@ const PlayerStatsChart = (props) => {
         tooltip: {
           enabled: true,
           mode:"index",
-          xAlign:"left",
-          yAlign:"center"
           // callbacks: {
           //     title: () => "Title",
           //     label: (context) => {},
