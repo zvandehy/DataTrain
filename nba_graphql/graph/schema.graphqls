@@ -12,6 +12,7 @@ type Player {
   position: String!
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
+  projections(input: ProjectionFilter!): [Projection!]!
 }
 
 type Team {

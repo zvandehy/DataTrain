@@ -45,6 +45,57 @@ func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input mod
 	return dataloader.For(ctx).PlayerGameByFilter.Load(input)
 }
 
+func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error) {
+	start := time.Now()
+	var allProjections []*model.Projection
+	if strings.ToLower(*input.Sportsbook) != "prizepicks" {
+		return nil, fmt.Errorf("unsupported Sportsbook: %s. Current support only exists for: %v", *input.Sportsbook, []string{"PrizePicks"})
+	}
+
+	if input.StartDate == nil && input.EndDate == nil {
+		today := time.Now().Format("2006-01-02")
+		input.StartDate = &today
+	}
+	name := fmt.Sprintf("%s %s", obj.FirstName, obj.LastName)
+	input.PlayerName = &name
+
+	cur, err := r.Db.GetProjections(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get player projections: %v", err)
+	}
+	defer cur.Close(ctx)
+	err = cur.All(ctx, &allProjections)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get player projections: %v", err)
+	}
+	if time.Since(start) > (time.Second * 5) {
+		logrus.Warnf("Received %d player projections after %v", len(allProjections), time.Since(start))
+	}
+
+	duplicates := make(map[string][]*model.Projection, len(allProjections)/2)
+	for _, projection := range allProjections {
+		//TODO: Potential bug with "Tacos" / discounted projections
+		if projection.OpponentAbr == "" {
+			continue
+		}
+		key := fmt.Sprintf("%s+%s", projection.PlayerName, projection.Date)
+		if _, ok := duplicates[key]; !ok {
+			duplicates[key] = []*model.Projection{projection}
+		} else {
+			duplicates[key] = append(duplicates[key], projection)
+		}
+	}
+	var uniqueProjections []*model.Projection
+	for _, projections := range duplicates {
+		best := model.GetBestProjection(projections)
+		if best.PlayerName == "" {
+			logrus.Fatalf("projection has BLANK playername: %#v", best)
+		}
+		uniqueProjections = append(uniqueProjections, best)
+	}
+	return uniqueProjections, nil
+}
+
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from PlayerGame %v", obj)
 	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
@@ -179,16 +230,20 @@ func (r *queryResolver) FilterPlayers(ctx context.Context, input model.PlayerFil
 
 func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*model.Player, error) {
 	//logrus.Printf("Get Player with filter  %v", input)
-	playersDB := r.Db.Database("nba").Collection("players")
-	filter := bson.M{
-		"playerID": input.PlayerID,
-	}
-	opts := options.FindOne().SetSort(bson.D{{"playerID", 1}})
-	var player *model.Player
-	err := playersDB.FindOne(ctx, filter, opts).Decode(&player)
+
+	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{input})
+	defer cur.Close(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting player: %v", err)
 	}
+	var player *model.Player
+	cur.Next(ctx)
+	//get first result
+	err = cur.Decode(&player)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding player: %v", err)
+	}
+
 	return player, nil
 }
 
@@ -335,7 +390,6 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		logrus.Warnf("Received %d projections after %v", len(allProjections), time.Since(start))
 	}
 
-	//TODO: update a projection target instead of writing a new one
 	duplicates := make(map[string][]*model.Projection, len(allProjections)/2)
 	for _, projection := range allProjections {
 		//TODO: Potential bug with "Tacos" / discounted projections
@@ -351,7 +405,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	}
 	var uniqueProjections []*model.Projection
 	for _, projections := range duplicates {
-		best := GetBestProjection(projections)
+		best := model.GetBestProjection(projections)
 		if best.PlayerName == "" {
 			logrus.Fatalf("projection has BLANK playername: %#v", best)
 		}
@@ -404,20 +458,6 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	}()
 
 	return uniqueProjections, nil
-}
-
-func GetBestProjection(projections []*model.Projection) *model.Projection {
-	maxTargets := 0
-	var bestProjections []*model.Projection
-	for _, projection := range projections {
-		if len(projection.Targets) > maxTargets {
-			maxTargets = len(projection.Targets)
-			bestProjections = []*model.Projection{projection}
-		} else if len(projection.Targets) == maxTargets {
-			bestProjections = append(bestProjections, projection)
-		}
-	}
-	return bestProjections[len(bestProjections)-1]
 }
 
 func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error) {

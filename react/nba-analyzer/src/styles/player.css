@@ -1,5 +1,6 @@
 .player-page {
     background-color: var(--color-white);
+    color: var(--color-black);
 }
 #chart {
     display:flex;
@@ -9,5 +10,5 @@
 
 canvas {
     max-width:1000px;
-    max-height:500px;
+    max-height:700px;
 }

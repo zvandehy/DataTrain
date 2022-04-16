@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useRef} from 'react'
 import {useLocation} from 'react-router-dom';
-import {GetPropScore} from '../utils.js'
+import {FormatDate} from '../utils.js'
 import PlayerStatsChart from './PlayerStatsChart'
 import DataListInput from "react-datalist-input";
 import {std, mean} from 'mathjs'
@@ -12,22 +12,45 @@ import "../styles/player.css"
 
 const Player = () => {
     let location = useLocation()
+    const date = FormatDate(new Date())
+    console.log(date)
     const playerID = parseInt(location.pathname.split("/")[location.pathname.split("/").length-1])
-    const query = gql` query Player($playerID: Int!) {
+    const query = gql` query Player($playerID: Int!, $date:String!) {       
         player(input:{playerID: $playerID}) {
             name
+            projections(input:{sportsbook:"PrizePicks", startDate:$date}) {
+                date
+                opponent {
+                    abbreviation
+                }
+                targets {
+                    target
+                    type
+                }
+            }
             games(input: {season:"2021-22"}) {
                 points
                 assists
+                total_rebounds
+                offensive_rebounds
+                defensive_rebounds
+                steals
+                blocks
+                turnovers
+                # win_or_loss
+                opponent {
+                    abbreviation
+                }
                 minutes
                 date
                 field_goals_attempted
                 field_goal_percentage
                 field_goals_made
+               
             }
         }
       }`;
-    const { loading, error, data } = useQuery(query, {variables: {playerID}});
+    const { loading, error, data } = useQuery(query, {variables: {playerID:playerID, date:date}});
     // const [games, setGames] = useState([]);
     // const [player, setPlayer] = useState('');
 

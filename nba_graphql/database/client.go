@@ -156,7 +156,6 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.Playe
 	// logrus.Printf("Query Players From: %v\n", inputs)
 	c.Queries++
 	playersDB := c.Database("nba").Collection("players")
-	applyFilters := make(map[string]bson.M, 4)
 	var playerIDs []int
 	var first_names []string
 	var last_names []string
@@ -172,25 +171,32 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.Playe
 			last_names = append(last_names, strings.SplitN(*in.Name, " ", 2)[1])
 		}
 	}
+	var filter bson.M
 	if len(playerIDs) == 0 {
-		applyFilters["playerID"] = bson.M{"$nin": []string{""}}
+		if len(first_names) == 0 {
+			filter = bson.M{}
+		} else {
+			filter = bson.M{"$and": bson.A{
+				bson.M{"first_name": bson.M{"$in": first_names}},
+				bson.M{"last_name": bson.M{"$in": last_names}},
+			}}
+		}
 	} else {
-		applyFilters["playerID"] = bson.M{"$in": playerIDs}
+		if len(first_names) == 0 {
+			filter = bson.M{"playerID": bson.M{"$in": playerIDs}}
+		} else {
+			filter = bson.M{"$or": bson.A{
+				bson.M{"playerID": bson.M{"$in": playerIDs}},
+				bson.M{"$and": bson.A{
+					bson.M{"first_name": bson.M{"$in": first_names}},
+					bson.M{"last_name": bson.M{"$in": last_names}},
+				},
+				},
+			}}
+		}
 	}
-	if len(first_names) == 0 {
-		applyFilters["first_name"] = bson.M{"$nin": []string{""}}
-		applyFilters["last_name"] = bson.M{"$nin": []string{""}}
-	} else {
-		applyFilters["first_name"] = bson.M{"$in": first_names}
-		applyFilters["last_name"] = bson.M{"$in": last_names}
-	}
-	//get all the players from this game
-	filter := bson.M{"$or": bson.A{
-		bson.M{"player": applyFilters["playerID"]},
-		bson.M{"$and": bson.A{bson.M{"first_name": applyFilters["first_name"]},
-			bson.M{"last_name": applyFilters["last_name"]},
-		}},
-	}}
+
+	logrus.Warn(filter)
 	cur, err := playersDB.Find(ctx, filter)
 
 	return cur, err
@@ -214,7 +220,6 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 	} else if input.EndDate != nil {
 		filter["date"] = bson.M{"$lte": *input.EndDate}
 	}
-
 	cur, err := projectionDB.Find(ctx, filter)
 
 	return cur, err
