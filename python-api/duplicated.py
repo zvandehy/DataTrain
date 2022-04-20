@@ -5,6 +5,10 @@ from pymongo import MongoClient
 # Requires the PyMongo package.
 # https://api.mongodb.com/python/current
 url = ""
+with open("app.env") as file:
+    db_source = file.read()
+    url = db_source.split("DB_SOURCE=\"")[1][:-1]
+    
 client = MongoClient(url)
 running = True
 while running:
