@@ -55,6 +55,10 @@
       width:max-content;
       padding:0px 2px;
   }
+
+  .matchup-date {
+    display:block;
+  }
   
   .player-context .team-logo {
     width:2rem;

@@ -1,14 +1,61 @@
 .player-page {
-    background-color: var(--color-white);
+    background-color: var(--color-primary);
     color: var(--color-black);
+    display: grid;
+    grid-template-columns: auto 1fr;
 }
+
+.player-page > *{ 
+    grid-area: inherit;
+}
+
+.player-page .player-context {
+    grid-area:inherit;
+    flex-direction:row-reverse;
+    width: max-content;
+}
+
+.player-page .player-context .player-photo {
+    max-width: 250px;
+    max-height: 250px;
+}
+
+.player-page .player-name {
+font-size:4.5vw;
+margin-right:6px;
+}
+
+#profile-chart {
+    width:25vw;
+    max-width:250px;
+    margin:auto;
+}
+
+.player-page .player-position {
+    margin-left:10px;
+}
+
 #chart {
     display:flex;
     align-items: center;
     justify-content: center;
+    grid-column: 1/ 3;
+    max-height:500px;
+    margin-inline:50px;
 }
 
 canvas {
-    max-width:1000px;
-    max-height:700px;
+    max-width:100%;
+    max-height:500px;
+}
+
+.player-page .player-stats {
+    grid-column: 1/3;
+}
+
+table, tr, td, th {
+    border: 1px solid black;
+    padding:.5rem;
+    text-align: center;
+    border-collapse:collapse;
 }

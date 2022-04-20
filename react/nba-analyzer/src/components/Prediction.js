@@ -4,59 +4,45 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faForward as up, faForward as down, faPlay as uncertain} from '@fortawesome/free-solid-svg-icons'
 
 const Prediction = (props) => {
-  const {projections,selected, game} = props
-  const projection = projections.filter(item => item.stat.label.toLowerCase() === selected.toLowerCase())[0];
+  const {predictions,selected, game} = props
+  const projection = predictions.filter(item => item.stat.label.toLowerCase() === selected.toLowerCase())[0];
   const score = (game && projection.target) ? GetPropScore(game, projection.stat.recognize) : "";
   const actual = score !== "" ? score > projection.target ? "OVER" : "UNDER" : "";
-  //TODO: Use constant stat type mappings to get the selected projection
-  const {prediction, confidence} = projection;
-  // const [target, setTarget] = useState(projection.target);
-  // function onChange(e) {
-  //   setTarget(e.target.value)
-  // }
+  const {overUnder, confidence} = projection;
   return (
     <div className="prediction">
-      {/* TODO: Fix state of changing projection onChange={onChange}*/}
       <p>TARGET: <input type="number" disabled={true} min={0} max={100} step={0.5} value={projection.target} /></p>
       {game ? <p className={"actual-result"}>ACTUAL: <span className={score !== "" ? GetColor("OVER", actual) : ''}>{GetPropScore(game, projection.stat.recognize)}</span></p> : <></>}
-      <PredictionIcon confidence={confidence} prediction={prediction} actual={actual}/>
+      <PredictionIcon confidence={confidence} overUnder={overUnder} actual={actual}/>
     </div>
   )
 }
 
 const PredictionIcon = (props) => {
-  const {confidence, prediction, actual} = props;
+  const {confidence, overUnder, actual} = props;
   return (<div className="prediction-icon">
-  <FontAwesomeIcon className={`arrow ${GetColor("pct", confidence)}`} icon={getIcon(confidence, prediction)} rotation={getRotation(prediction)}/>
-  <p className={`bold tall prediction-result`}>{prediction}</p>
+  <FontAwesomeIcon className={`arrow ${GetColor("pct", confidence)}`} icon={getIcon(confidence, overUnder)} rotation={getRotation(overUnder)}/>
+  <p className={`bold tall prediction-result`}>{overUnder}</p>
   <div><p className={`${GetColor("pct", confidence)}`}>{confidence}%</p>
-  {actual ? <p className={actual === prediction ? 'high' : 'low'}>{actual === prediction ? "CORRECT" : "INCORRECT" }</p> : <></>}</div>
+  {actual ? <p className={actual === overUnder ? 'high' : 'low'}>{actual === overUnder ? "CORRECT" : "INCORRECT" }</p> : <></>}</div>
 </div>)
 }
 
 const PredictionIconSmall = (props) => {
-  const {confidence, prediction} = props;
+  const {confidence, overUnder} = props;
   return (
   <div className="hide">
-      <FontAwesomeIcon className={GetColor("pct", confidence)} icon={getIcon(confidence, prediction)} rotation={getRotation(prediction)}/>
+      <FontAwesomeIcon className={GetColor("pct", confidence)} icon={getIcon(confidence, overUnder)} rotation={getRotation(overUnder)}/>
       <p className={GetColor("pct", confidence)}>{confidence}%</p>
   </div>)
 }
 
-function getIcon(confidence, prediction) {
-  return confidence >= 50 && confidence < 60 ? uncertain : prediction === "OVER" ? up : down;
+function getIcon(confidence, overUnder) {
+  return confidence < 60 ? uncertain : overUnder === "OVER" ? up : down;
 }
 
-// function getRotation(confidence, prediction) {
-//   return confidence >= 50 && confidence < 60 ? 0 : prediction === "OVER" ? 270 : 90;
-// }
-
-// function getIcon(prediction) {
-//   return prediction === "OVER" ? up : down;
-// }
-
-function getRotation(prediction) {
-  return prediction === "OVER" ? 270 : 90;
+function getRotation(overUnder) {
+  return overUnder === "OVER" ? 270 : 90;
 }
 
 export {PredictionIcon, PredictionIconSmall}

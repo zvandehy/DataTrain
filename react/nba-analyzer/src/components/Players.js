@@ -8,21 +8,21 @@ import { useQuery } from '@apollo/client';
 import "../styles/players.css"
 
 const Players = () => {
-    const [lookup, setLookup] = useState('ANY');
+    const [teamLookup, setTeamLookup] = useState('ANY');
     const [showPlayers, setShowPlayers] = useState([]);
     const [date, setDate] = useState(FormatDate(new Date()));
     const { loading, error, data, refetch } = useQuery(HOME_QUERY, {variables: {date: date}});
     useEffect(() => {
         let team = localStorage.getItem('lookup');
         if (data) { 
-            setLookup(team)
+            setTeamLookup(team)
             let filterCleaning = data.projections.filter(item => item.player.playerID !== 0)
-            let filteredByTeam = lookup ? filterCleaning.filter(item => item.player.currentTeam.abbreviation === lookup) : filterCleaning;
+            let filteredByTeam = teamLookup ? filterCleaning.filter(item => item.player.currentTeam.abbreviation === teamLookup) : filterCleaning;
             setShowPlayers(filteredByTeam)
             console.groupEnd()
         }
     },
-    [data, lookup]
+    [data, teamLookup]
     );
 
     function changeDate(date) {
@@ -34,15 +34,15 @@ const Players = () => {
     const onSelectTeam = useCallback((selectedItem) => {
         if (data) {
             let selected = selectedItem.label;
-            if (selected === "ANY" || selected === lookup) {
+            if (selected === "ANY" || selected === teamLookup) {
                 selected = "";
-                setLookup("ANY");
+                setTeamLookup("ANY");
             } else {
-                setLookup(selected);
+                setTeamLookup(selected);
             }
             localStorage.setItem('lookup', selected);
         }
-      }, [data, lookup]);
+      }, [data, teamLookup]);
       
 
     if (loading) return 'Loading...';
@@ -59,16 +59,16 @@ const Players = () => {
              <DataListInput
                 placeholder="Select a team"
                 items={selectTeams}
-                onSelect={onSelectTeam}
+                onSelect={(onSelectTeam)}
                 clearInputOnClick={true}
                 suppressReselect={false}
-                value={lookup ?? "ANY"}
+                value={teamLookup ?? "ANY"}
             />
             <DatePicker selected={ParseDate(date)} onChange={(date) => changeDate(date)} />
         </div>
             <ul className="players-list">
                 {
-                    showPlayers.length > 0 ? showPlayers.map((item) => <Playercard playerProp={item} date={date}key={item.player.playerID}/>) 
+                    showPlayers.length > 0 ? showPlayers.map((item) => <Playercard projection={item} player={item.player} date={date} key={item.player.playerID}/>) 
                     : <li>No Players to Show</li>
                 }
             </ul>
