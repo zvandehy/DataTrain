@@ -47,7 +47,7 @@ type TeamGame {
   free_throws_attempted: Int!
   free_throws_made: Int!
   free_throws_percentage: Float!
-  gameID: Int!
+  gameID: String!
   home_or_away: String!
   offensive_rebound_percentage: Float!
   opponent: Team!
@@ -82,7 +82,7 @@ type PlayerGame {
   free_throws_attempted: Int!
   free_throws_made: Int!
   free_throws_percentage: Float!
-  gameID: Int!
+  gameID: String!
   home_or_away: String!
   win_or_loss: String!
   margin: Int!
@@ -167,6 +167,6 @@ input TeamFilter {
 input GameFilter {
   teamID: Int
   playerID: Int
-  gameID: Int
+  gameID: String
   season: String
 }

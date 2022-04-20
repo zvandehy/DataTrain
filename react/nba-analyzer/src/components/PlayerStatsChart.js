@@ -17,7 +17,6 @@ import {
 } from "chart.js";
 import { LineController } from "chart.js";
 import { BarController } from "chart.js";
-import { index } from "mathjs";
 
 ChartJS.register(
   CategoryScale,

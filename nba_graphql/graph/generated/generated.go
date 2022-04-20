@@ -1161,7 +1161,7 @@ type TeamGame {
   free_throws_attempted: Int!
   free_throws_made: Int!
   free_throws_percentage: Float!
-  gameID: Int!
+  gameID: String!
   home_or_away: String!
   offensive_rebound_percentage: Float!
   opponent: Team!
@@ -1196,7 +1196,7 @@ type PlayerGame {
   free_throws_attempted: Int!
   free_throws_made: Int!
   free_throws_percentage: Float!
-  gameID: Int!
+  gameID: String!
   home_or_away: String!
   win_or_loss: String!
   margin: Int!
@@ -1281,7 +1281,7 @@ input TeamFilter {
 input GameFilter {
   teamID: Int
   playerID: Int
-  gameID: Int
+  gameID: String
   season: String
 }
 `, BuiltIn: false},
@@ -2204,9 +2204,9 @@ func (ec *executionContext) _PlayerGame_gameID(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PlayerGame_home_or_away(ctx context.Context, field graphql.CollectedField, obj *model.PlayerGame) (ret graphql.Marshaler) {
@@ -4816,9 +4816,9 @@ func (ec *executionContext) _TeamGame_gameID(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TeamGame_home_or_away(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
@@ -6637,7 +6637,7 @@ func (ec *executionContext) unmarshalInputGameFilter(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gameID"))
-			it.GameID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			it.GameID, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
