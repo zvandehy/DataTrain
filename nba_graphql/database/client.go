@@ -196,7 +196,6 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.Playe
 		}
 	}
 
-	logrus.Warn(filter)
 	cur, err := playersDB.Find(ctx, filter)
 
 	return cur, err

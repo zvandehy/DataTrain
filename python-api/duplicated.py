@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 # Requires the PyMongo package.
 # https://api.mongodb.com/python/current
-url = "mongodb+srv://datatrain:Zd3O9S1zdmyakh1E@datatrain.i5rgk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+url = ""
 client = MongoClient(url)
 running = True
 while running:
