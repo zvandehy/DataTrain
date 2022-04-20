@@ -5,7 +5,7 @@ package model
 type GameFilter struct {
 	TeamID   *int    `json:"teamID" bson:"teamID"`
 	PlayerID *int    `json:"playerID" bson:"playerID"`
-	GameID   *string `json:"gameID" bson:"gameID"`
+	GameID   *int    `json:"gameID" bson:"gameID"`
 	Season   *string `json:"season" bson:"season"`
 }
 

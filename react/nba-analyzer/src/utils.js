@@ -1,6 +1,99 @@
 import { gql } from "@apollo/client";
 import { round, mean } from "mathjs";
 
+export const RelevantStats = {
+  Points: [
+    { recognize: "points", label: "PTS" },
+    { recognize: "field_goals_made", label: "FGM" },
+    { recognize: "field_goals_attempted", label: "FGA" },
+    { recognize: "field_goal_percentage", label: "FG%" },
+    { recognize: "three_pointers_made", label: "3PM" },
+    { recognize: "three_pointers_attempted", label: "3PA" },
+    { recognize: "three_point_percentage", label: "3P%" },
+    { recognize: "free_throws_made", label: "FTM" },
+    { recognize: "free_throws_attempted", label: "FTA" },
+    // {recognize:,label:"FT RT"},
+    { recognize: "effective_field_goal_percentage", label: "eFG%" },
+    { recognize: "usage", label: "USG%" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  Assists: [
+    { recognize: "assists", label: "AST" },
+    { recognize: "assist_percentage", label: "AST%" },
+    // { recognize: "potential_assists", label: "POT. AST" },
+    { recognize: "turnovers", label: "TOV" },
+    { recognize: "field_goals_attempted", label: "FGA" },
+    { recognize: "usage", label: "USG%" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  "3 Pointers": [
+    { recognize: "three_pointers_made", label: "3PM" },
+    { recognize: "three_pointers_attempted", label: "3PA" },
+    { recognize: "three_point_percentage", label: "3P%" },
+    { recognize: "field_goals_attempted", label: "FGA" },
+    { recognize: "percent_three_pointers", label: "%3P" },
+    { recognize: "usage", label: "USG%" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  "PTS + REB + AST": [
+    { recognize: "pts+rebs+asts", label: "PRA" },
+    { recognize: "points", label: "PTS" },
+    { recognize: "total_rebounds", label: "REB" },
+    { recognize: "assists", label: "AST" },
+    { recognize: "field_goals_attempted", label: "FGA" },
+    { recognize: "effective_field_goal_percentage", label: "eFG%" },
+    { recognize: "offensive_rebounds", label: "OREB" },
+    { recognize: "defensive_rebounds", label: "DREB" },
+    { recognize: "usage", label: "USG%" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  Rebounds: [
+    { recognize: "total_rebounds", label: "REB" },
+    { recognize: "offensive_rebounds", label: "OREB" },
+    { recognize: "defensive_rebounds", label: "DREB" },
+    { recognize: "offensive_rebound_percentage", label: "OREB%" },
+    { recognize: "defensive_rebound_percentage", label: "DREB%" },
+  ],
+  "Free Throws": [
+    { recognize: "free_throws_made", label: "FTM" },
+    { recognize: "free_throws_attempted", label: "FTA" },
+    { recognize: "free_throws_percentage", label: "FT%" },
+    // { recognize: "free_throw_rate", label: "FT RT" },
+    { recognize: "personal_fouls_drawn", label: "PFD" },
+  ],
+  Fantasy: [
+    { recognize: "fantasy score", label: "FAN" },
+    { recognize: "points", label: "PTS (1)" },
+    { recognize: "assists", label: "AST (1.5)" },
+    { recognize: "total_rebounds", label: "REB (1.2)" },
+    { recognize: "blocks", label: "BLK (3)" },
+    { recognize: "steals", label: "STL (3)" },
+    { recognize: "turnovers", label: "TOV (-1)" },
+  ],
+  "Blocks + Steals": [
+    { recognize: "blocks", label: "BLK" },
+    { recognize: "steals", label: "STL" },
+    { recognize: "personal_fouls", label: "PF" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  "Double Double": [
+    { recognize: "double-double", label: "DD" },
+    { recognize: "points", label: "PTS" },
+    { recognize: "assists", label: "AST" },
+    { recognize: "total_rebounds", label: "REB" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  Profile: [
+    { recognize: "fantasy score", label: "FAN" },
+    { recognize: "points", label: "PTS (1)" },
+    { recognize: "assists", label: "AST (1.5)" },
+    { recognize: "total_rebounds", label: "REB (1.2)" },
+    { recognize: "blocks", label: "BLK (3)" },
+    { recognize: "steals", label: "STL (3)" },
+    { recognize: "turnovers", label: "TOV (-1)" },
+  ],
+};
+
 export function FormatDate(date) {
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, "0");
