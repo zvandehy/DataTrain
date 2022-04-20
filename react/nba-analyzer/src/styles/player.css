@@ -60,7 +60,8 @@ canvas {
 
 .player-page .player-stats {
   grid-column: 1/-1;
-  font-size: min(3.1vw, 1.5rem);
+  font-size: min(3.5vw, 1.2em);
+  overflow: scroll;
 }
 
 table,
