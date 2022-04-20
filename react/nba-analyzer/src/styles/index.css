@@ -1,7 +1,7 @@
 * {
-  margin:0;
-  padding:0;
-  border:0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   /* border: 1px solid gold; */
 }
 @font-face {
@@ -21,27 +21,27 @@
 }
 
 :root {
-  --color-black:#181714;
-  --color-grey:#c2cecd;
-  --color-primary:#395c6b;
-  --color-accent:#f59a4b;
-  --color-white:#f8ffff;
-  --color-warning:rgb(199, 69, 69);
-  --color-high:rgb(91, 255, 165);
-  --color-med:rgb(255, 253, 140);
-  --color-low:rgb(248, 113, 113);
-  --grid-gap:1em;
+  --color-black: #181714;
+  --color-grey: #c2cecd;
+  --color-primary: #395c6b;
+  --color-accent: #f59a4b;
+  --color-white: #f8ffff;
+  --color-warning: rgb(199, 69, 69);
+  --color-high: rgb(91, 255, 165);
+  --color-med: rgb(255, 253, 140);
+  --color-low: rgb(248, 113, 113);
+  --grid-gap: 1em;
 }
 .high {
-  color:var(--color-high);
+  color: var(--color-high);
 }
 
 .med {
-  color:var(--color-med);
+  color: var(--color-med);
 }
 
 .low {
-  color:var(--color-low);
+  color: var(--color-low);
 }
 
 html {
@@ -51,19 +51,19 @@ html {
 }
 
 .datalist-items {
-  color:var(--color-black);
+  color: var(--color-black);
 }
 
 .players {
-  margin:1rem 1%;
+  margin: 1rem 1%;
 }
 
 .players-list {
-  margin:1rem;
+  margin: 1rem;
 }
 
 .header {
-  text-align:end;
+  text-align: end;
 }
 
 .bold {
@@ -75,7 +75,7 @@ html {
 }
 
 .tall {
-  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Chrome, Safari, Edge, Opera */
@@ -86,6 +86,6 @@ input::-webkit-inner-spin-button {
 }
 
 /* Firefox */
-input[type=number] {
+input[type="number"] {
   -moz-appearance: textfield;
 }

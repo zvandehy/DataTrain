@@ -27,6 +27,11 @@ const Player = () => {
         currentTeam {
           abbreviation
           teamID
+          games(input: { season: "2021-22" }) {
+            date
+            gameID
+            rebounds
+          }
         }
         projections(input: { sportsbook: "PrizePicks", startDate: $date }) {
           date
@@ -110,7 +115,7 @@ const Player = () => {
         opponent={data.player.projections[0].opponent}
         game={game}
       />
-      <PlayerProfileChart />
+      <PlayerProfileChart games={data.player.games} />
       <StatSelectBtns
         predictions={predictions}
         playername={data.player.name}
