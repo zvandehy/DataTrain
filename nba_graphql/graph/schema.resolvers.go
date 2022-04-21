@@ -96,6 +96,11 @@ func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, inp
 	return uniqueProjections, nil
 }
 
+func (r *playerResolver) SimilarPlayers(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.Player, error) {
+	input.PlayerID = &obj.PlayerID
+	return dataloader.For(ctx).SimilarPlayerLoader.Load(input)
+}
+
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from PlayerGame %v", obj)
 	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)

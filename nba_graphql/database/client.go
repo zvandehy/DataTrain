@@ -101,6 +101,12 @@ func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.G
 	logrus.Printf("Query PlayerGames From: %v\n", inputs)
 	c.Queries++
 	playerGamesDB := c.Database("nba").Collection("games")
+	filter := createGameFilter(inputs)
+	cur, err := playerGamesDB.Find(ctx, filter)
+	return cur, err
+}
+
+func createGameFilter(inputs []model.GameFilter) bson.M {
 	applyFilters := make(map[string]bson.M, 4)
 	var gameIDs []string
 	var teamIDs []int
@@ -147,9 +153,7 @@ func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.G
 		"teamID": applyFilters["teamID"],
 		"season": applyFilters["season"],
 	}
-	cur, err := playerGamesDB.Find(ctx, filter)
-
-	return cur, err
+	return filter
 }
 
 func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.PlayerFilter) (*mongo.Cursor, error) {
@@ -222,4 +226,42 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 	cur, err := projectionDB.Find(ctx, filter)
 
 	return cur, err
+}
+
+func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.GameFilter) (*[]model.PlayerAverage, error) {
+	logrus.Printf("Query Player Averages for Games that match: %v\n", inputs)
+	c.Queries++
+
+	filter := createGameFilter(inputs)
+
+	matchGames := bson.M{"$match": filter}
+	averageStats := bson.M{"$group": bson.M{"_id": "$player",
+		"games_played":             bson.M{"$count": bson.M{}},
+		"points":                   bson.M{"$avg": "$points"},
+		"assists":                  bson.M{"$avg": "$assists"},
+		"rebounds":                 bson.M{"$avg": "$total_rebounds"},
+		"steals":                   bson.M{"$avg": "$steals"},
+		"blocks":                   bson.M{"$avg": "$blocks"},
+		"turnovers":                bson.M{"$avg": "$turnovers"},
+		"minutes":                  bson.M{"$avg": "$minutes"},
+		"field_goals_made":         bson.M{"$avg": "$field_goals_made"},
+		"field_goals_attempted":    bson.M{"$avg": "$field_goals_attempted"},
+		"three_pointers_made":      bson.M{"$avg": "$three_pointers_made"},
+		"three_pointers_attempted": bson.M{"$avg": "$three_pointers_attempted"},
+		"free_throws_made":         bson.M{"$avg": "$free_throws_made"},
+		"free_throws_attempted":    bson.M{"$avg": "$free_throws_attempted"},
+	}}
+	lookupPlayer := bson.M{"$lookup": bson.M{"from": "players", "localField": "_id", "foreignField": "playerID", "as": "player"}}
+	unwindPlayer := bson.M{"$unwind": "$player"}
+
+	cur, err := c.Database("nba").Collection("games").Aggregate(ctx, bson.A{matchGames, averageStats, lookupPlayer, unwindPlayer})
+	if err != nil {
+		return nil, err
+	}
+	var averages []model.PlayerAverage
+	if err = cur.All(ctx, &averages); err != nil {
+		return nil, err
+	}
+	return &averages, nil
+
 }
