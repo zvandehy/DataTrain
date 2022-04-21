@@ -31,6 +31,7 @@ type TeamGame struct {
 	Margin                               int     `json:"margin" bson:"margin"`
 	OffensiveRebounds                    int     `json:"offensive_rebounds" bson:"offensive_rebounds"`
 	OffensiveReboundPercentage           float64 `json:"offensive_rebound_percentage" bson:"offensive_rebound_percentage"`
+	TeamID                               int     `json:"teamID" bson:"teamID"`
 	OpponentID                           int     `json:"opponent" bson:"opponent"`
 	OpponentAssists                      int     `json:"opponent_assists" bson:"opponent_assists"`
 	OpponentEffectiveFieldGoalPercentage float64 `json:"opponent_effective_field_goal_percentage" bson:"opponent_effective_field_goal_percentage"`

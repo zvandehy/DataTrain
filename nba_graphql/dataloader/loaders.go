@@ -2,11 +2,13 @@ package dataloader
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type LoadersKey string
@@ -17,11 +19,13 @@ const waitTime = 100 * time.Millisecond
 const maxBatch = 50
 
 type Loaders struct {
-	TeamByAbr          TeamLoaderABR
-	TeamByID           TeamLoaderID
-	PlayerByID         PlayerLoaderID
-	PlayerByFilter     PlayerLoader
-	PlayerGameByFilter PlayerGameLoader
+	TeamByAbr                TeamLoaderABR
+	TeamByID                 TeamLoaderID
+	PlayerByID               PlayerLoaderID
+	PlayerByFilter           PlayerLoader
+	PlayerGameByFilter       PlayerGameLoader
+	TeamGameByPlayerGame     TeamGameLoader
+	OpponentGameByPlayerGame TeamGameLoader
 }
 
 func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handler {
@@ -158,6 +162,86 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 							players[i] = playersByName[*player.Name]
 						}
 						return players, errs
+					},
+				},
+			),
+			TeamGameByPlayerGame: *NewTeamGameLoader(
+				TeamGameLoaderConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch: func(keys []model.PlayerGame) ([]*model.TeamGame, []error) {
+						opponentIDs := make([]int, len(keys))
+						gameIDs := make([]string, len(keys))
+						for i, key := range keys {
+							opponentIDs[i] = key.OpponentID
+							gameIDs[i] = key.GameID
+						}
+						teamGames := make([]*model.TeamGame, len(keys))
+						teamGamesByPlayerGame := make(map[string]*model.TeamGame, len(keys))
+						errs := make([]error, len(keys))
+						cur, err := conn.Database("nba").Collection("teamgames").Find(r.Context(), bson.M{"gameID": bson.M{"$in": gameIDs}, "opponent": bson.M{"$in": opponentIDs}})
+						if err != nil {
+							return nil, []error{err}
+						}
+						defer cur.Close(r.Context())
+
+						for cur.Next(r.Context()) {
+							game := &model.TeamGame{}
+							err := cur.Decode(&game)
+							if err != nil {
+								return nil, []error{err}
+							}
+							mapKey := fmt.Sprintf("%s:%d", game.GameID, game.TeamID)
+							teamGamesByPlayerGame[mapKey] = game
+						}
+						if err := cur.Err(); err != nil {
+							return nil, []error{err}
+						}
+						for i, game := range keys {
+							mapKey := fmt.Sprintf("%s:%d", game.GameID, game.TeamID)
+							teamGames[i] = teamGamesByPlayerGame[mapKey]
+						}
+						return teamGames, errs
+					},
+				},
+			),
+			OpponentGameByPlayerGame: *NewTeamGameLoader(
+				TeamGameLoaderConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch: func(keys []model.PlayerGame) ([]*model.TeamGame, []error) {
+						teamIDs := make([]int, len(keys))
+						gameIDs := make([]string, len(keys))
+						for i, key := range keys {
+							teamIDs[i] = key.TeamID
+							gameIDs[i] = key.GameID
+						}
+						teamGames := make([]*model.TeamGame, len(keys))
+						teamGamesByPlayerGame := make(map[string]*model.TeamGame, len(keys))
+						errs := make([]error, len(keys))
+						cur, err := conn.Database("nba").Collection("teamgames").Find(r.Context(), bson.M{"gameID": bson.M{"$in": gameIDs}, "opponent": bson.M{"$in": teamIDs}})
+						if err != nil {
+							return nil, []error{err}
+						}
+						defer cur.Close(r.Context())
+
+						for cur.Next(r.Context()) {
+							game := &model.TeamGame{}
+							err := cur.Decode(&game)
+							if err != nil {
+								return nil, []error{err}
+							}
+							mapKey := fmt.Sprintf("%s:%d", game.GameID, game.TeamID)
+							teamGamesByPlayerGame[mapKey] = game
+						}
+						if err := cur.Err(); err != nil {
+							return nil, []error{err}
+						}
+						for i, game := range keys {
+							mapKey := fmt.Sprintf("%s:%d", game.GameID, game.OpponentID)
+							teamGames[i] = teamGamesByPlayerGame[mapKey]
+						}
+						return teamGames, errs
 					},
 				},
 			),

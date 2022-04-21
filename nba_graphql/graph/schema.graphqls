@@ -13,6 +13,8 @@ type Player {
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
   projections(input: ProjectionFilter!): [Projection!]!
+  height: String!
+  weight: Int!
 }
 
 type Team {
@@ -90,6 +92,9 @@ type PlayerGame {
   offensive_rebound_percentage: Float!
   offensive_rebounds: Int!
   opponent: Team!
+  opponentStats: TeamGame!
+  team: Team!
+  teamStats: TeamGame!
   personal_fouls_drawn: Int!
   personal_fouls: Int!
   points: Int!
@@ -99,7 +104,7 @@ type PlayerGame {
   three_point_percentage: Float!
   three_pointers_attempted: Int!
   three_pointers_made: Int!
-  total_rebounds: Int!
+  rebounds: Int!
   true_shooting_percentage: Float!
   turnovers: Int!
   usage: Float!

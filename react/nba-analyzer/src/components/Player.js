@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { FormatDate } from "../utils.js";
+import { FormatDate, RelevantStats } from "../utils.js";
 import PlayerStatsChart from "./PlayerStatsChart";
 import { gql, useQuery } from "@apollo/client";
 import { PlayerPageContext } from "./Playercontext";
@@ -11,6 +11,7 @@ import StatSelectBtns from "./Statselectbtns.js";
 import Prediction from "./Prediction.js";
 import { PlayerStatsTable } from "./PlayerStats.js";
 import { CalculatePredictions } from "../predictions.js";
+import { round, mean } from "mathjs";
 
 const Player = () => {
   let location = useLocation();
@@ -27,11 +28,6 @@ const Player = () => {
         currentTeam {
           abbreviation
           teamID
-          games(input: { season: "2021-22" }) {
-            date
-            gameID
-            rebounds
-          }
         }
         projections(input: { sportsbook: "PrizePicks", startDate: $date }) {
           date
@@ -49,7 +45,7 @@ const Player = () => {
           season
           assists
           assist_percentage
-          total_rebounds
+          rebounds
           offensive_rebounds
           offensive_rebound_percentage
           defensive_rebounds
@@ -58,7 +54,14 @@ const Player = () => {
           steals
           blocks
           turnovers
-          # win_or_loss
+          teamStats {
+            points
+            assists
+            rebounds
+            three_pointers_attempted
+            blocks
+            steals
+          }
           opponent {
             abbreviation
             teamID
@@ -108,6 +111,20 @@ const Player = () => {
       game.opponent.teamID === data.player.projections[0].opponent.teamID
   );
 
+  const percentOfTeamStats = RelevantStats["Profile"].map((item) => {
+    const avg = mean(data.player.games.map((game) => game[item.recognize]));
+    const pct = round(
+      avg /
+        mean(data.player.games.map((game) => game.teamStats[item.recognize])),
+      2
+    );
+    return {
+      stat: item.label,
+      avg: avg,
+      pct: pct,
+    };
+  });
+
   return (
     <div className="player-page">
       <PlayerPageContext
@@ -115,7 +132,7 @@ const Player = () => {
         opponent={data.player.projections[0].opponent}
         game={game}
       />
-      <PlayerProfileChart games={data.player.games} />
+      <PlayerProfileChart stats={percentOfTeamStats} />
       <StatSelectBtns
         predictions={predictions}
         playername={data.player.name}

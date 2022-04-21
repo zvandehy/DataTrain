@@ -7,6 +7,8 @@ type Player struct {
 	Seasons     []string `json:"seasons" bson:"seasons"`
 	Position    string   `json:"position" bson:"position"`
 	CurrentTeam string   `json:"currentTeam" bson:"teamABR"`
+	Height      string   `json:"height" bson:"height"`
+	Weight      int      `json:"weight" bson:"weight"`
 }
 
 func (p Player) String() string {
@@ -32,6 +34,7 @@ type PlayerGame struct {
 	Minutes                      string  `json:"minutes" bson:"minutes"`
 	OffensiveReboundPercentage   float64 `json:"offensive_rebound_percentage" bson:"offensive_rebound_percentage"`
 	OffensiveRebounds            int     `json:"offensive_rebounds" bson:"offensive_rebounds"`
+	TeamID                       int     `json:"team" bson:"team"`
 	OpponentID                   int     `json:"opponent" bson:"opponent"`
 	PersonalFoulsDrawn           int     `json:"personal_fouls_drawn" bson:"personal_fouls_drawn"`
 	PersonalFouls                int     `json:"personal_fouls" bson:"personal_fouls"`
@@ -42,7 +45,7 @@ type PlayerGame struct {
 	ThreePointPercentage         float64 `json:"three_point_percentage" bson:"three_point_percentage"`
 	ThreePointersAttempted       int     `json:"three_pointers_attempted" bson:"three_pointers_attempted"`
 	ThreePointersMade            int     `json:"three_pointers_made" bson:"three_pointers_made"`
-	TotalRebounds                int     `json:"total_rebounds" bson:"total_rebounds"`
+	Rebounds                     int     `json:"total_rebounds" bson:"total_rebounds"`
 	TrueShootingPercentage       float64 `json:"true_shooting_percentage" bson:"true_shooting_percentage"`
 	Turnovers                    int     `json:"turnovers" bson:"turnovers"`
 	Blocks                       int     `json:"blocks" bson:"blocks"`
