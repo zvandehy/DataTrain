@@ -88,6 +88,7 @@ type ComplexityRoot struct {
 		PlayersInGame                func(childComplexity int) int
 		Playoffs                     func(childComplexity int) int
 		Points                       func(childComplexity int) int
+		Rebounds                     func(childComplexity int) int
 		Season                       func(childComplexity int) int
 		Steals                       func(childComplexity int) int
 		Team                         func(childComplexity int) int
@@ -95,7 +96,6 @@ type ComplexityRoot struct {
 		ThreePointPercentage         func(childComplexity int) int
 		ThreePointersAttempted       func(childComplexity int) int
 		ThreePointersMade            func(childComplexity int) int
-		TotalRebounds                func(childComplexity int) int
 		TrueShootingPercentage       func(childComplexity int) int
 		Turnovers                    func(childComplexity int) int
 		Usage                        func(childComplexity int) int
@@ -512,6 +512,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PlayerGame.Points(childComplexity), true
 
+	case "PlayerGame.rebounds":
+		if e.complexity.PlayerGame.Rebounds == nil {
+			break
+		}
+
+		return e.complexity.PlayerGame.Rebounds(childComplexity), true
+
 	case "PlayerGame.season":
 		if e.complexity.PlayerGame.Season == nil {
 			break
@@ -560,13 +567,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PlayerGame.ThreePointersMade(childComplexity), true
-
-	case "PlayerGame.total_rebounds":
-		if e.complexity.PlayerGame.TotalRebounds == nil {
-			break
-		}
-
-		return e.complexity.PlayerGame.TotalRebounds(childComplexity), true
 
 	case "PlayerGame.true_shooting_percentage":
 		if e.complexity.PlayerGame.TrueShootingPercentage == nil {
@@ -1261,7 +1261,7 @@ type PlayerGame {
   three_point_percentage: Float!
   three_pointers_attempted: Int!
   three_pointers_made: Int!
-  total_rebounds: Int!
+  rebounds: Int!
   true_shooting_percentage: Float!
   turnovers: Int!
   usage: Float!
@@ -2992,7 +2992,7 @@ func (ec *executionContext) _PlayerGame_three_pointers_made(ctx context.Context,
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PlayerGame_total_rebounds(ctx context.Context, field graphql.CollectedField, obj *model.PlayerGame) (ret graphql.Marshaler) {
+func (ec *executionContext) _PlayerGame_rebounds(ctx context.Context, field graphql.CollectedField, obj *model.PlayerGame) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3010,7 +3010,7 @@ func (ec *executionContext) _PlayerGame_total_rebounds(ctx context.Context, fiel
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TotalRebounds, nil
+		return obj.Rebounds, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7378,8 +7378,8 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "total_rebounds":
-			out.Values[i] = ec._PlayerGame_total_rebounds(ctx, field, obj)
+		case "rebounds":
+			out.Values[i] = ec._PlayerGame_rebounds(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}

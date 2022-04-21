@@ -104,7 +104,7 @@ type PlayerGame {
   three_point_percentage: Float!
   three_pointers_attempted: Int!
   three_pointers_made: Int!
-  total_rebounds: Int!
+  rebounds: Int!
   true_shooting_percentage: Float!
   turnovers: Int!
   usage: Float!

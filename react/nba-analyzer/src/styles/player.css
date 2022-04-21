@@ -12,6 +12,13 @@
   .player-page .player-stats {
     gap: 0;
   }
+
+  #profile-chart {
+    text-align: center;
+    margin: auto;
+    height: 150px !important;
+    width: 150px;
+  }
 }
 
 .player-page > * {
@@ -35,9 +42,9 @@
 }
 
 #profile-chart {
-  width: 25vw;
-  max-width: 250px;
-  margin: auto;
+  text-align: center;
+  margin: 0 auto;
+  height: 350px;
 }
 
 .player-page .player-position {
@@ -60,7 +67,7 @@ canvas {
 
 .player-page .player-stats {
   grid-column: 1/-1;
-  font-size: min(3.5vw, 1.2em);
+  font-size: min(3.5vw, 1.6em);
   overflow: scroll;
 }
 

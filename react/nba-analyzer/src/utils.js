@@ -38,7 +38,7 @@ export const RelevantStats = {
   "PTS + REB + AST": [
     { recognize: "pts+rebs+asts", label: "PRA" },
     { recognize: "points", label: "PTS" },
-    { recognize: "total_rebounds", label: "REB" },
+    { recognize: "rebounds", label: "REB" },
     { recognize: "assists", label: "AST" },
     { recognize: "field_goals_attempted", label: "FGA" },
     { recognize: "effective_field_goal_percentage", label: "eFG%" },
@@ -48,7 +48,7 @@ export const RelevantStats = {
     { recognize: "minutes", label: "MIN" },
   ],
   Rebounds: [
-    { recognize: "total_rebounds", label: "REB" },
+    { recognize: "rebounds", label: "REB" },
     { recognize: "offensive_rebounds", label: "OREB" },
     { recognize: "defensive_rebounds", label: "DREB" },
     { recognize: "offensive_rebound_percentage", label: "OREB%" },
@@ -65,7 +65,7 @@ export const RelevantStats = {
     { recognize: "fantasy score", label: "FAN" },
     { recognize: "points", label: "PTS (1)" },
     { recognize: "assists", label: "AST (1.5)" },
-    { recognize: "total_rebounds", label: "REB (1.2)" },
+    { recognize: "rebounds", label: "REB (1.2)" },
     { recognize: "blocks", label: "BLK (3)" },
     { recognize: "steals", label: "STL (3)" },
     { recognize: "turnovers", label: "TOV (-1)" },
@@ -81,17 +81,16 @@ export const RelevantStats = {
     { recognize: "double-double", label: "DD" },
     { recognize: "points", label: "PTS" },
     { recognize: "assists", label: "AST" },
-    { recognize: "total_rebounds", label: "REB" },
+    { recognize: "rebounds", label: "REB" },
     { recognize: "minutes", label: "MIN" },
   ],
   Profile: [
-    { recognize: "fantasy score", label: "FAN" },
-    { recognize: "points", label: "PTS (1)" },
-    { recognize: "assists", label: "AST (1.5)" },
-    { recognize: "total_rebounds", label: "REB (1.2)" },
-    { recognize: "blocks", label: "BLK (3)" },
-    { recognize: "steals", label: "STL (3)" },
-    { recognize: "turnovers", label: "TOV (-1)" },
+    { recognize: "points", label: "Points" },
+    { recognize: "assists", label: "Assists" },
+    { recognize: "three_pointers_attempted", label: "3PA" },
+    { recognize: "rebounds", label: "Rebounds" },
+    { recognize: "blocks", label: "Blocks" },
+    { recognize: "steals", label: "Steals" },
   ],
 };
 
@@ -166,9 +165,7 @@ export function AveragePropScore(games, stat) {
 export function GetPropScore(game, propType) {
   switch (propType.toLowerCase()) {
     case "pts+rebs+asts":
-      return game["points"] + game["total_rebounds"] + game["assists"];
-    case "rebounds":
-      return game["total_rebounds"];
+      return game["points"] + game["rebounds"] + game["assists"];
     case "free throws made":
       return game["free_throws_made"];
     case "3-pt made":
@@ -177,7 +174,7 @@ export function GetPropScore(game, propType) {
     case "fantasy score":
       return round(
         game["points"] +
-          game["total_rebounds"] * 1.2 +
+          game["rebounds"] * 1.2 +
           game["assists"] * 1.5 +
           game["blocks"] * 3 +
           game["steals"] * 3 -
@@ -189,7 +186,7 @@ export function GetPropScore(game, propType) {
     case "double-double":
       let doubles = 0;
       if (game["points"] >= 10) doubles++;
-      if (game["total_rebounds"] >= 10) doubles++;
+      if (game["rebounds"] >= 10) doubles++;
       if (game["assists"] >= 10) doubles++;
       if (game["blocks"] >= 10) doubles++;
       if (game["steals"] >= 10) doubles++;
@@ -280,7 +277,7 @@ export const HOME_QUERY = gql`
           }
           points
           assists
-          total_rebounds
+          rebounds
           defensive_rebounds
           offensive_rebounds
           three_pointers_attempted
@@ -311,7 +308,7 @@ export const PLAYER_PREVIEW_QUERY = gql`
     games(playerID: $playerID) {
       assists
       points
-      total_rebounds
+      rebounds
       season
     }
   }
@@ -345,7 +342,7 @@ export const PLAYERGAMES_QUERY = gql`
       three_point_percentage
       three_pointers_attempted
       three_pointers_made
-      total_rebounds
+      rebounds
       true_shooting_percentage
       turnovers
       usage

@@ -45,7 +45,7 @@ type PlayerGame struct {
 	ThreePointPercentage         float64 `json:"three_point_percentage" bson:"three_point_percentage"`
 	ThreePointersAttempted       int     `json:"three_pointers_attempted" bson:"three_pointers_attempted"`
 	ThreePointersMade            int     `json:"three_pointers_made" bson:"three_pointers_made"`
-	TotalRebounds                int     `json:"total_rebounds" bson:"total_rebounds"`
+	Rebounds                     int     `json:"total_rebounds" bson:"total_rebounds"`
 	TrueShootingPercentage       float64 `json:"true_shooting_percentage" bson:"true_shooting_percentage"`
 	Turnovers                    int     `json:"turnovers" bson:"turnovers"`
 	Blocks                       int     `json:"blocks" bson:"blocks"`
