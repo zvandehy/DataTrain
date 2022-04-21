@@ -12,6 +12,7 @@ type Player {
   position: String!
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
+  injury: Injury!
 }
 
 type Team {
@@ -23,6 +24,7 @@ type Team {
   numLoss: Int! #TODO
   games(input: GameFilter!): [TeamGame!]!
   players: [Player!]!
+  injuredPlayers: [Injury!]
 }
 
 type TeamGame {
@@ -95,6 +97,13 @@ type Projection {
 	targets: [Target!]!
 	startTime: String!
 	date: String!
+}
+
+type Injury {
+	injuryDate: String!
+	returnDate: String!
+	injury: String!
+	player: Player!
 }
 
 type Target {

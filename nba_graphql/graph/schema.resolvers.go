@@ -20,6 +20,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var injury = model.Injury{
+	Injury:     "ACL",
+	InjuryDate: "4/20/2022",
+	ReturnDate: "4/20/2022",
+	PlayerID:   203500,
+}
+
+func (r *injuryResolver) Player(ctx context.Context, obj *model.Injury) (*model.Player, error) {
+	playerData, err := dataloader.For(ctx).PlayerByID.Load(injury.PlayerID)
+	playerData.Injury = injury
+	return playerData, err
+	//panic(fmt.Errorf("not implemented"))
+}
+
 func (r *playerResolver) Name(ctx context.Context, obj *model.Player) (string, error) {
 	return obj.FirstName + " " + obj.LastName, nil
 }
@@ -378,6 +392,10 @@ func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.P
 	return r.Query().FilterPlayers(ctx, input)
 }
 
+func (r *teamResolver) InjuredPlayers(ctx context.Context, obj *model.Team) ([]*model.Injury, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from TeamGame %v", obj)
 	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
@@ -428,6 +446,9 @@ func (r *teamGameResolver) PlayersInGame(ctx context.Context, obj *model.TeamGam
 	return &model.PlayersInGame{TeamPlayers: teamPlayers, OpponentPlayers: oppPlayers}, nil
 }
 
+// Injury returns generated.InjuryResolver implementation.
+func (r *Resolver) Injury() generated.InjuryResolver { return &injuryResolver{r} }
+
 // Player returns generated.PlayerResolver implementation.
 func (r *Resolver) Player() generated.PlayerResolver { return &playerResolver{r} }
 
@@ -449,6 +470,7 @@ func (r *Resolver) Team() generated.TeamResolver { return &teamResolver{r} }
 // TeamGame returns generated.TeamGameResolver implementation.
 func (r *Resolver) TeamGame() generated.TeamGameResolver { return &teamGameResolver{r} }
 
+type injuryResolver struct{ *Resolver }
 type playerResolver struct{ *Resolver }
 type playerGameResolver struct{ *Resolver }
 type playersInGameResolver struct{ *Resolver }
@@ -463,6 +485,9 @@ type teamGameResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *playerResolver) Injury(ctx context.Context, obj *model.Player) (*model.Injury, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 func (r *projectionResolver) PropType(ctx context.Context, obj *model.Projection) (string, error) {
 	panic(fmt.Errorf("not implemented"))
 }

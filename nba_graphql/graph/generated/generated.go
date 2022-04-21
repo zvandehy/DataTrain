@@ -35,6 +35,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Injury() InjuryResolver
 	Player() PlayerResolver
 	PlayerGame() PlayerGameResolver
 	PlayersInGame() PlayersInGameResolver
@@ -48,9 +49,17 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Injury struct {
+		Injury     func(childComplexity int) int
+		InjuryDate func(childComplexity int) int
+		Player     func(childComplexity int) int
+		ReturnDate func(childComplexity int) int
+	}
+
 	Player struct {
 		CurrentTeam func(childComplexity int) int
 		Games       func(childComplexity int, input model.GameFilter) int
+		Injury      func(childComplexity int) int
 		Name        func(childComplexity int) int
 		PlayerID    func(childComplexity int) int
 		Position    func(childComplexity int) int
@@ -125,14 +134,15 @@ type ComplexityRoot struct {
 	}
 
 	Team struct {
-		Abbreviation func(childComplexity int) int
-		Games        func(childComplexity int, input model.GameFilter) int
-		Location     func(childComplexity int) int
-		Name         func(childComplexity int) int
-		NumLoss      func(childComplexity int) int
-		NumWins      func(childComplexity int) int
-		Players      func(childComplexity int) int
-		TeamID       func(childComplexity int) int
+		Abbreviation   func(childComplexity int) int
+		Games          func(childComplexity int, input model.GameFilter) int
+		InjuredPlayers func(childComplexity int) int
+		Location       func(childComplexity int) int
+		Name           func(childComplexity int) int
+		NumLoss        func(childComplexity int) int
+		NumWins        func(childComplexity int) int
+		Players        func(childComplexity int) int
+		TeamID         func(childComplexity int) int
 	}
 
 	TeamGame struct {
@@ -163,6 +173,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type InjuryResolver interface {
+	Player(ctx context.Context, obj *model.Injury) (*model.Player, error)
+}
 type PlayerResolver interface {
 	Name(ctx context.Context, obj *model.Player) (string, error)
 
@@ -199,6 +212,7 @@ type QueryResolver interface {
 type TeamResolver interface {
 	Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error)
 	Players(ctx context.Context, obj *model.Team) ([]*model.Player, error)
+	InjuredPlayers(ctx context.Context, obj *model.Team) ([]*model.Injury, error)
 }
 type TeamGameResolver interface {
 	Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error)
@@ -221,6 +235,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Injury.injury":
+		if e.complexity.Injury.Injury == nil {
+			break
+		}
+
+		return e.complexity.Injury.Injury(childComplexity), true
+
+	case "Injury.injuryDate":
+		if e.complexity.Injury.InjuryDate == nil {
+			break
+		}
+
+		return e.complexity.Injury.InjuryDate(childComplexity), true
+
+	case "Injury.player":
+		if e.complexity.Injury.Player == nil {
+			break
+		}
+
+		return e.complexity.Injury.Player(childComplexity), true
+
+	case "Injury.returnDate":
+		if e.complexity.Injury.ReturnDate == nil {
+			break
+		}
+
+		return e.complexity.Injury.ReturnDate(childComplexity), true
+
 	case "Player.currentTeam":
 		if e.complexity.Player.CurrentTeam == nil {
 			break
@@ -239,6 +281,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Player.Games(childComplexity, args["input"].(model.GameFilter)), true
+
+	case "Player.injury":
+		if e.complexity.Player.Injury == nil {
+			break
+		}
+
+		return e.complexity.Player.Injury(childComplexity), true
 
 	case "Player.name":
 		if e.complexity.Player.Name == nil {
@@ -686,6 +735,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Team.Games(childComplexity, args["input"].(model.GameFilter)), true
 
+	case "Team.injuredPlayers":
+		if e.complexity.Team.InjuredPlayers == nil {
+			break
+		}
+
+		return e.complexity.Team.InjuredPlayers(childComplexity), true
+
 	case "Team.location":
 		if e.complexity.Team.Location == nil {
 			break
@@ -960,6 +1016,7 @@ type Player {
   position: String!
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
+  injury: Injury!
 }
 
 type Team {
@@ -971,6 +1028,7 @@ type Team {
   numLoss: Int! #TODO
   games(input: GameFilter!): [TeamGame!]!
   players: [Player!]!
+  injuredPlayers: [Injury!]
 }
 
 type TeamGame {
@@ -1043,6 +1101,13 @@ type Projection {
 	targets: [Target!]!
 	startTime: String!
 	date: String!
+}
+
+type Injury {
+	injuryDate: String!
+	returnDate: String!
+	injury: String!
+	player: Player!
 }
 
 type Target {
@@ -1284,6 +1349,146 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Injury_injuryDate(ctx context.Context, field graphql.CollectedField, obj *model.Injury) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Injury",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InjuryDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Injury_returnDate(ctx context.Context, field graphql.CollectedField, obj *model.Injury) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Injury",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReturnDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Injury_injury(ctx context.Context, field graphql.CollectedField, obj *model.Injury) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Injury",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Injury, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Injury_player(ctx context.Context, field graphql.CollectedField, obj *model.Injury) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Injury",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Injury().Player(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Player)
+	fc.Result = res
+	return ec.marshalNPlayer2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayer(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Player_name(ctx context.Context, field graphql.CollectedField, obj *model.Player) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1499,6 +1704,41 @@ func (ec *executionContext) _Player_games(ctx context.Context, field graphql.Col
 	res := resTmp.([]*model.PlayerGame)
 	fc.Result = res
 	return ec.marshalNPlayerGame2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerGameᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Player_injury(ctx context.Context, field graphql.CollectedField, obj *model.Player) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Player",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Injury, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Injury)
+	fc.Result = res
+	return ec.marshalNInjury2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐInjury(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PlayerGame_assist_percentage(ctx context.Context, field graphql.CollectedField, obj *model.PlayerGame) (ret graphql.Marshaler) {
@@ -3728,6 +3968,38 @@ func (ec *executionContext) _Team_players(ctx context.Context, field graphql.Col
 	return ec.marshalNPlayer2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Team_injuredPlayers(ctx context.Context, field graphql.CollectedField, obj *model.Team) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Team",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Team().InjuredPlayers(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Injury)
+	fc.Result = res
+	return ec.marshalOInjury2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐInjuryᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _TeamGame_date(ctx context.Context, field graphql.CollectedField, obj *model.TeamGame) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5847,6 +6119,57 @@ func (ec *executionContext) unmarshalInputTeamFilter(ctx context.Context, obj in
 
 // region    **************************** object.gotpl ****************************
 
+var injuryImplementors = []string{"Injury"}
+
+func (ec *executionContext) _Injury(ctx context.Context, sel ast.SelectionSet, obj *model.Injury) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, injuryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Injury")
+		case "injuryDate":
+			out.Values[i] = ec._Injury_injuryDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "returnDate":
+			out.Values[i] = ec._Injury_returnDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "injury":
+			out.Values[i] = ec._Injury_injury(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "player":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Injury_player(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var playerImplementors = []string{"Player"}
 
 func (ec *executionContext) _Player(ctx context.Context, sel ast.SelectionSet, obj *model.Player) graphql.Marshaler {
@@ -5915,6 +6238,11 @@ func (ec *executionContext) _Player(ctx context.Context, sel ast.SelectionSet, o
 				}
 				return res
 			})
+		case "injury":
+			out.Values[i] = ec._Player_injury(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6517,6 +6845,17 @@ func (ec *executionContext) _Team(ctx context.Context, sel ast.SelectionSet, obj
 				}
 				return res
 			})
+		case "injuredPlayers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Team_injuredPlayers(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6971,6 +7310,20 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 func (ec *executionContext) unmarshalNGameFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐGameFilter(ctx context.Context, v interface{}) (model.GameFilter, error) {
 	res, err := ec.unmarshalInputGameFilter(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInjury2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐInjury(ctx context.Context, sel ast.SelectionSet, v model.Injury) graphql.Marshaler {
+	return ec._Injury(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNInjury2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐInjury(ctx context.Context, sel ast.SelectionSet, v *model.Injury) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Injury(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
@@ -7674,6 +8027,53 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) marshalOInjury2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐInjuryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Injury) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNInjury2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐInjury(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
