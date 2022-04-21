@@ -27,11 +27,6 @@ const Player = () => {
         currentTeam {
           abbreviation
           teamID
-          games(input: { season: "2021-22" }) {
-            date
-            gameID
-            rebounds
-          }
         }
         projections(input: { sportsbook: "PrizePicks", startDate: $date }) {
           date
@@ -107,6 +102,8 @@ const Player = () => {
     (game) =>
       game.opponent.teamID === data.player.projections[0].opponent.teamID
   );
+
+  const playerGamesOnTeam = data.player.games.filter();
 
   return (
     <div className="player-page">

@@ -13,6 +13,8 @@ type Player {
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
   projections(input: ProjectionFilter!): [Projection!]!
+  height: String!
+  weight: Int!
 }
 
 type Team {
@@ -90,6 +92,9 @@ type PlayerGame {
   offensive_rebound_percentage: Float!
   offensive_rebounds: Int!
   opponent: Team!
+  opponentStats: TeamGame!
+  team: Team!
+  teamStats: TeamGame!
   personal_fouls_drawn: Int!
   personal_fouls: Int!
   points: Int!

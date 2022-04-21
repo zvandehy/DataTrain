@@ -71,6 +71,7 @@ export const RelevantStats = {
     { recognize: "turnovers", label: "TOV (-1)" },
   ],
   "Blocks + Steals": [
+    { recognize: "blks+stls", label: "B+S" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
     { recognize: "personal_fouls", label: "PF" },

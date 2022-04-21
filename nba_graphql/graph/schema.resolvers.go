@@ -101,6 +101,18 @@ func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame
 	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
 }
 
+func (r *playerGameResolver) OpponentStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error) {
+	return dataloader.For(ctx).OpponentGameByPlayerGame.Load(*obj)
+}
+
+func (r *playerGameResolver) Team(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
+	return dataloader.For(ctx).TeamByID.Load(obj.TeamID)
+}
+
+func (r *playerGameResolver) TeamStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error) {
+	return dataloader.For(ctx).TeamGameByPlayerGame.Load(*obj)
+}
+
 func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error) {
 	//logrus.Printf("Get Player from PlayerGame %v", obj)
 	return dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
@@ -462,6 +474,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 
 func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error) {
 	//logrus.Printf("Get Games from team %v filtered by %v", obj, input)
+	//TODO: Add dataloader for situation where player.games.team.games is called
 	input.TeamID = &obj.TeamID
 	cur, err := r.Db.GetTeamGames(ctx, []model.GameFilter{input})
 	if err != nil {
