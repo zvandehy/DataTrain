@@ -2,13 +2,15 @@ import React from "react";
 import LastNGames from "./LastNGames";
 import { GetPropScore, AveragePropScore, GetColor } from "../utils";
 import { RelevantStats } from "../utils";
+import { SimilarPlayerRows, SimilarPlayersPreview } from "./SimilarPlayers";
 
 export const PlayerStatsPreview = (props) => {
-  const { predictions, selected, matchups } = props;
+  const { predictions, selected, matchups, opponent, similar } = props;
   const prediction = predictions.filter(
     (item) => item.stat.label.toLowerCase() === selected.toLowerCase()
   )[0];
   const playerCounts = prediction.counts;
+  console.log(prediction);
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
   return (
     <div className="player-stats">
@@ -47,11 +49,11 @@ export const PlayerStatsPreview = (props) => {
         );
       })}
 
-      {/* SIMILAR STATS */}
-
-      <span className="header similar-players-header">Similar Players</span>
-      <span className="similar-players-stat">xx.x</span>
-      <span className="similar-players-stat-result">XX%</span>
+      <SimilarPlayersPreview
+        similar={similar}
+        opponent={opponent}
+        prediction={prediction}
+      />
 
       <span className="header similar-opp-header">Similar Opp</span>
       <span className="similar-opp-stat">xx.x</span>
@@ -89,7 +91,6 @@ export const PlayerStatsTable = (props) => {
                   i === 0 && prediction.target
                     ? prediction.target
                     : AveragePropScore(games, stat.recognize);
-                console.log(stat, selected, cellTarget);
                 return (
                   <AverageStatCell
                     games={nGames}
@@ -134,6 +135,7 @@ export const PlayerStatsTable = (props) => {
           ) : (
             <></>
           )}
+          {/* <SimilarPlayerRows /> */}
         </tbody>
       </table>
     </div>

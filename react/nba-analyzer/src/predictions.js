@@ -76,12 +76,10 @@ function getPredictionAndConfidence(stats, weights) {
   let conf_o = 0;
   let conf_u = 0;
 
-  console.group();
   stats.forEach((item, i) => {
     conf_o += item.pct_o * weights[i];
     conf_u += item.pct_u * weights[i];
   });
-  console.groupEnd();
   conf_o = round(conf_o, 2);
   conf_u = round(conf_u, 2);
   if (conf_o > conf_u) {
