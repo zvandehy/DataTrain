@@ -80,6 +80,42 @@ const Player = () => {
           three_point_percentage
           effective_field_goal_percentage
         }
+        similarPlayers(input: { season: "2021-22" }) {
+          name
+          playerID
+          games(input: { season: "2021-22" }) {
+            points
+            season
+            assists
+            assist_percentage
+            rebounds
+            offensive_rebounds
+            offensive_rebound_percentage
+            defensive_rebounds
+            defensive_rebound_percentage
+            personal_fouls_drawn
+            steals
+            blocks
+            turnovers
+            opponent {
+              abbreviation
+              teamID
+            }
+            minutes
+            date
+            field_goals_attempted
+            field_goal_percentage
+            field_goals_made
+            three_pointers_attempted
+            three_pointers_made
+            free_throws_attempted
+            free_throws_made
+            free_throws_percentage
+            usage
+            three_point_percentage
+            effective_field_goal_percentage
+          }
+        }
       }
     }
   `;
@@ -145,7 +181,8 @@ const Player = () => {
         selected={stat}
         matchups={matchups}
         games={statData}
-        similarData={""}
+        similar={data.player.similarPlayers}
+        opponent={data.player.projections[0].opponent.teamID}
       />
       <PlayerStatsChart games={data.player.games} />
     </div>

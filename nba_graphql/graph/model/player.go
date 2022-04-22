@@ -1,5 +1,9 @@
 package model
 
+var PlayerNames map[int]string = map[int]string{
+	1630538: "Bones Hyland",
+}
+
 type Player struct {
 	FirstName   string   `json:"first_name" bson:"first_name"`
 	LastName    string   `json:"last_name" bson:"last_name"`

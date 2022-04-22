@@ -17,7 +17,7 @@ func SimilarPlayers(players []model.PlayerAverage, toPlayer model.PlayerAverage)
 			continue
 		}
 		if toPlayer.GamesPlayed >= 30 {
-			if player.GamesPlayed < 30 {
+			if player.GamesPlayed < 30 || player.Minutes < toPlayer.Minutes-5 {
 				continue
 			}
 		}

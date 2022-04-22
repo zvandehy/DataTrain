@@ -63,7 +63,7 @@ export const PlayerStatsPreview = (props) => {
 };
 
 export const PlayerStatsTable = (props) => {
-  const { predictions, selected, games, matchups } = props;
+  const { predictions, selected, games, matchups, opponent, similar } = props;
   const prediction = predictions.filter(
     (item) => item.stat.label.toLowerCase() === selected.toLowerCase()
   )[0];
@@ -135,7 +135,12 @@ export const PlayerStatsTable = (props) => {
           ) : (
             <></>
           )}
-          {/* <SimilarPlayerRows /> */}
+          <SimilarPlayerRows
+            similar={similar}
+            opponent={opponent}
+            prediction={prediction}
+            selected={selected}
+          />
         </tbody>
       </table>
     </div>
