@@ -63,12 +63,14 @@ export const RelevantStats = {
   ],
   Fantasy: [
     { recognize: "fantasy score", label: "FAN" },
+    { recognize: "fantasy per min", label: "FAN / MIN" },
     { recognize: "points", label: "PTS (1)" },
     { recognize: "assists", label: "AST (1.5)" },
     { recognize: "rebounds", label: "REB (1.2)" },
     { recognize: "blocks", label: "BLK (3)" },
     { recognize: "steals", label: "STL (3)" },
     { recognize: "turnovers", label: "TOV (-1)" },
+    { recognize: "minutes", label: "MIN" },
   ],
   "Blocks + Steals": [
     { recognize: "blks+stls", label: "B+S" },
@@ -136,11 +138,16 @@ export function AveragePropScore(games, stat) {
         mean(games.map((game) => GetPropScore(game, "field_goals_attempted")));
       break;
     case "three_point_percentage":
-      val =
-        mean(games.map((game) => GetPropScore(game, "three_pointers_made"))) /
-        mean(
-          games.map((game) => GetPropScore(game, "three_pointers_attempted"))
-        );
+      const attempts = mean(
+        games.map((game) => GetPropScore(game, "three_pointers_attempted"))
+      );
+      if (!attempts) {
+        val = 0;
+      } else {
+        val =
+          mean(games.map((game) => GetPropScore(game, "three_pointers_made"))) /
+          attempts;
+      }
       break;
     case "free_throw_percentage":
       val =
@@ -158,6 +165,9 @@ export function AveragePropScore(games, stat) {
       break;
     default:
       val = mean(games.map((game) => GetPropScore(game, stat))) ?? 0;
+  }
+  if (isNaN(val)) {
+    return 0;
   }
   return round(val, 2);
 }
@@ -179,6 +189,16 @@ export function GetPropScore(game, propType) {
           game["blocks"] * 3 +
           game["steals"] * 3 -
           game["turnovers"],
+        2
+      );
+    case "fantasy per min":
+      console.log(
+        GetPropScore(game, "fantasy score") / GetPropScore(game, "minutes"),
+        GetPropScore(game, "fantasy score"),
+        GetPropScore(game, "minutes")
+      );
+      return round(
+        GetPropScore(game, "fantasy score") / GetPropScore(game, "minutes"),
         2
       );
     case "blks+stls":

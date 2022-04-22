@@ -74,7 +74,7 @@ export const PlayerStatsTable = (props) => {
           <tr>
             <th># Games</th>
             {RelevantStats[selected].map((item) => (
-              <th>{item.label}</th>
+              <th key={item.label}>{item.label}</th>
             ))}
           </tr>
         </thead>
@@ -89,12 +89,12 @@ export const PlayerStatsTable = (props) => {
                   i === 0 && prediction.target
                     ? prediction.target
                     : AveragePropScore(games, stat.recognize);
-                console.log(stat, selected, cellTarget);
                 return (
                   <AverageStatCell
                     games={nGames}
                     stat={stat}
                     target={cellTarget}
+                    key={`${nGames.length} ${stat.label} ${i}`}
                   />
                 );
               })}
@@ -104,13 +104,13 @@ export const PlayerStatsTable = (props) => {
             <>
               <tr>
                 <th>Matchup</th>
-                {RelevantStats[selected].map((item) => (
-                  <th>{item.label}</th>
+                {RelevantStats[selected].map((item, i) => (
+                  <th key={item.label}>{item.label}</th>
                 ))}
               </tr>
-              {matchups.map((game) => {
+              {matchups.reverse().map((game) => {
                 return (
-                  <tr>
+                  <tr key={`'vs' ${game.opponent.abbreviation} ${game.date}`}>
                     <td>
                       vs {game.opponent.abbreviation} {game.date}
                     </td>
@@ -124,6 +124,7 @@ export const PlayerStatsTable = (props) => {
                           game={game}
                           stat={stat}
                           target={cellTarget}
+                          key={game.date + " " + stat.label}
                         />
                       );
                     })}
