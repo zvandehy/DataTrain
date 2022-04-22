@@ -6,7 +6,8 @@ import { RelevantStats } from "../utils";
 export const PlayerStatsPreview = (props) => {
   const { predictions, selected, matchups } = props;
   const prediction = predictions.filter(
-    (item) => item.stat.label.toLowerCase() === selected.toLowerCase()
+    (item) =>
+      item.stat.recognize.toLowerCase() === selected.recognize.toLowerCase()
   )[0];
   const playerCounts = prediction.counts;
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
@@ -63,8 +64,11 @@ export const PlayerStatsPreview = (props) => {
 export const PlayerStatsTable = (props) => {
   const { predictions, selected, games, matchups } = props;
   const prediction = predictions.filter(
-    (item) => item.stat.label.toLowerCase() === selected.toLowerCase()
+    (item) =>
+      item.stat.recognize.toLowerCase() === selected.recognize.toLowerCase()
   )[0];
+  console.log(RelevantStats, selected);
+  console.log(RelevantStats[selected.recognize]);
   const playerCounts = prediction.counts;
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
   return (
@@ -73,7 +77,7 @@ export const PlayerStatsTable = (props) => {
         <thead>
           <tr>
             <th># Games</th>
-            {RelevantStats[selected].map((item) => (
+            {RelevantStats[selected.recognize].map((item) => (
               <th key={item.label}>{item.label}</th>
             ))}
           </tr>
@@ -82,7 +86,7 @@ export const PlayerStatsTable = (props) => {
           {playerCounts.map((item, i) => (
             <tr key={item.n + " " + i}>
               <td>{item.n}</td>
-              {RelevantStats[selected].map((stat, i) => {
+              {RelevantStats[selected.recognize].map((stat, i) => {
                 const nGames = games.slice(item.n * -1);
 
                 const cellTarget =
@@ -104,7 +108,7 @@ export const PlayerStatsTable = (props) => {
             <>
               <tr>
                 <th>Matchup</th>
-                {RelevantStats[selected].map((item, i) => (
+                {RelevantStats[selected.recognize].map((item, i) => (
                   <th key={item.label}>{item.label}</th>
                 ))}
               </tr>
@@ -114,7 +118,7 @@ export const PlayerStatsTable = (props) => {
                     <td>
                       vs {game.opponent.abbreviation} {game.date}
                     </td>
-                    {RelevantStats[selected].map((stat, i) => {
+                    {RelevantStats[selected.recognize].map((stat, i) => {
                       const cellTarget =
                         i === 0 && prediction.target
                           ? prediction.target

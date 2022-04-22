@@ -9,12 +9,14 @@ import {
   ParseDate,
   GetSelectableTeams,
 } from "../utils.js";
+import { StatObjects } from "../predictions.js";
 import { useQuery } from "@apollo/client";
 import "../styles/players.css";
 
 const Players = () => {
   const [teamLookup, setTeamLookup] = useState("ANY");
   const [showPlayers, setShowPlayers] = useState([]);
+  const [statPreference, setStatPreference] = useState("");
   const [date, setDate] = useState(FormatDate(new Date()));
   const { loading, error, data, refetch } = useQuery(HOME_QUERY, {
     variables: { date: date },
@@ -31,9 +33,21 @@ const Players = () => {
             (item) => item.player.currentTeam.abbreviation === teamLookup
           )
         : filterCleaning;
-      setShowPlayers(filteredByTeam);
+      let filterByStat =
+        statPreference !== ""
+          ? filteredByTeam.filter(
+              (item) =>
+                item.targets.filter((target) => {
+                  return (
+                    target?.type.toLowerCase() === statPreference.recognize &&
+                    target?.target
+                  );
+                }).length > 0
+            )
+          : filteredByTeam;
+      setShowPlayers(filterByStat);
     }
-  }, [data, teamLookup]);
+  }, [data, teamLookup, statPreference]);
 
   function changeDate(date) {
     date = FormatDate(date);
@@ -57,6 +71,15 @@ const Players = () => {
     [data, teamLookup]
   );
 
+  function onSelectStatPreference(input) {
+    StatObjects.forEach((item) => {
+      if (item.recognize === input.recognize) {
+        setStatPreference(item);
+      }
+    });
+    setStatPreference(input.value);
+  }
+
   if (loading) return "Loading...";
   if (error) {
     return `Error! ${error.message}. ${loading}. ${data}`;
@@ -64,7 +87,12 @@ const Players = () => {
   console.log(data);
 
   const selectTeams = GetSelectableTeams(data.teams);
-
+  let selectableStats = StatObjects.map((item) => ({
+    key: item.label,
+    label: item.label,
+    value: item,
+  }));
+  selectableStats.unshift({ key: "ANY", label: "ANY", value: "" });
   return (
     <div className="players">
       <div className="teams-dropdown">
@@ -80,6 +108,21 @@ const Players = () => {
           selected={ParseDate(date)}
           onChange={(date) => changeDate(date)}
         />
+        <DataListInput
+          key="stat-preference"
+          placeholder="Select a stat"
+          items={selectableStats}
+          onSelect={onSelectStatPreference}
+          clearInputOnClick={true}
+          suppressReselect={false}
+          value={
+            statPreference !== ""
+              ? StatObjects.find(
+                  (item) => item.recognize === statPreference.recognize
+                ).label
+              : "ANY"
+          }
+        />
       </div>
       <ul className="players-list">
         {showPlayers.length > 0 ? (
@@ -89,6 +132,7 @@ const Players = () => {
               player={item.player}
               date={date}
               key={item.player.playerID}
+              statPreference={statPreference}
             />
           ))
         ) : (

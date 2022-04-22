@@ -10,7 +10,7 @@ import "../styles/player.css";
 import StatSelectBtns from "./Statselectbtns.js";
 import Prediction from "./Prediction.js";
 import { PlayerStatsTable } from "./PlayerStats.js";
-import { CalculatePredictions } from "../predictions.js";
+import { CalculatePredictions, StatObjects } from "../predictions.js";
 import { round, mean } from "mathjs";
 
 const Player = () => {
@@ -91,7 +91,9 @@ const Player = () => {
     variables: { playerID: playerID, date: date },
   });
 
-  const [stat, setStat] = useState("Points");
+  const [stat, setStat] = useState(
+    StatObjects.find((stat) => stat.label === "Points")
+  );
   function onStatSelect(stat) {
     setStat(stat);
   }

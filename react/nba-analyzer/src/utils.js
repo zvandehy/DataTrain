@@ -2,7 +2,7 @@ import { gql } from "@apollo/client";
 import { round, mean } from "mathjs";
 
 export const RelevantStats = {
-  Points: [
+  points: [
     { recognize: "points", label: "PTS" },
     { recognize: "field_goals_made", label: "FGM" },
     { recognize: "field_goals_attempted", label: "FGA" },
@@ -17,7 +17,7 @@ export const RelevantStats = {
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
   ],
-  Assists: [
+  assists: [
     { recognize: "assists", label: "AST" },
     { recognize: "assist_percentage", label: "AST%" },
     // { recognize: "potential_assists", label: "POT. AST" },
@@ -26,7 +26,7 @@ export const RelevantStats = {
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
   ],
-  "3 Pointers": [
+  "3-pt made": [
     { recognize: "three_pointers_made", label: "3PM" },
     { recognize: "three_pointers_attempted", label: "3PA" },
     { recognize: "three_point_percentage", label: "3P%" },
@@ -35,7 +35,7 @@ export const RelevantStats = {
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
   ],
-  "PTS + REB + AST": [
+  "pts+rebs+asts": [
     { recognize: "pts+rebs+asts", label: "PRA" },
     { recognize: "points", label: "PTS" },
     { recognize: "rebounds", label: "REB" },
@@ -47,21 +47,21 @@ export const RelevantStats = {
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
   ],
-  Rebounds: [
+  rebounds: [
     { recognize: "rebounds", label: "REB" },
     { recognize: "offensive_rebounds", label: "OREB" },
     { recognize: "defensive_rebounds", label: "DREB" },
     { recognize: "offensive_rebound_percentage", label: "OREB%" },
     { recognize: "defensive_rebound_percentage", label: "DREB%" },
   ],
-  "Free Throws": [
+  "free throws made": [
     { recognize: "free_throws_made", label: "FTM" },
     { recognize: "free_throws_attempted", label: "FTA" },
     { recognize: "free_throws_percentage", label: "FT%" },
     // { recognize: "free_throw_rate", label: "FT RT" },
     { recognize: "personal_fouls_drawn", label: "PFD" },
   ],
-  Fantasy: [
+  "fantasy score": [
     { recognize: "fantasy score", label: "FAN" },
     { recognize: "fantasy per min", label: "FAN / MIN" },
     { recognize: "points", label: "PTS (1)" },
@@ -72,14 +72,14 @@ export const RelevantStats = {
     { recognize: "turnovers", label: "TOV (-1)" },
     { recognize: "minutes", label: "MIN" },
   ],
-  "Blocks + Steals": [
+  "blks+stls": [
     { recognize: "blks+stls", label: "B+S" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
     { recognize: "personal_fouls", label: "PF" },
     { recognize: "minutes", label: "MIN" },
   ],
-  "Double Double": [
+  "double-double": [
     { recognize: "double-double", label: "DD" },
     { recognize: "points", label: "PTS" },
     { recognize: "assists", label: "AST" },
@@ -192,11 +192,6 @@ export function GetPropScore(game, propType) {
         2
       );
     case "fantasy per min":
-      console.log(
-        GetPropScore(game, "fantasy score") / GetPropScore(game, "minutes"),
-        GetPropScore(game, "fantasy score"),
-        GetPropScore(game, "minutes")
-      );
       return round(
         GetPropScore(game, "fantasy score") / GetPropScore(game, "minutes"),
         2
