@@ -10,7 +10,6 @@ export const PlayerStatsPreview = (props) => {
     (item) => item.stat.label.toLowerCase() === selected.toLowerCase()
   )[0];
   const playerCounts = prediction.counts;
-  console.log(prediction);
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
   return (
     <div className="player-stats">

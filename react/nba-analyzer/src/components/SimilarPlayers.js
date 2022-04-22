@@ -4,7 +4,6 @@ import { round } from "mathjs";
 
 export const SimilarPlayersPreview = (props) => {
   const { similar, opponent, prediction } = props;
-  console.log(prediction);
   let avg = 0;
   let avgVsOpp = 0;
   let gamesOver = 0;
@@ -140,7 +139,6 @@ export const SimilarPlayerRows = (props) => {
   avgDiff = round(avgDiff / similarPlayers.length, 2);
 
   const pctDiff = round((avgDiff / avg) * 100, 2);
-  console.log(avgDiff, avg, avgVsOpp, pctDiff);
   const pct = round((gamesOver / gamesPlayed) * 100, 2);
   simRows.push(
     <tr>
