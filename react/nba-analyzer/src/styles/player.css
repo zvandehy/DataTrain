@@ -5,6 +5,11 @@
   grid-template-columns: auto 1fr;
 }
 
+#games-dropdown {
+  margin-left: 1rem;
+  width: 250px;
+}
+
 @media (max-width: 555px) {
   .player-page {
     grid-template-columns: 1fr;

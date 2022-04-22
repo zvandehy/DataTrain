@@ -6,7 +6,8 @@ import { RelevantStats } from "../utils";
 export const PlayerStatsPreview = (props) => {
   const { predictions, selected, matchups } = props;
   const prediction = predictions.filter(
-    (item) => item.stat.label.toLowerCase() === selected.toLowerCase()
+    (item) =>
+      item.stat.recognize.toLowerCase() === selected.recognize.toLowerCase()
   )[0];
   const playerCounts = prediction.counts;
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
@@ -63,7 +64,8 @@ export const PlayerStatsPreview = (props) => {
 export const PlayerStatsTable = (props) => {
   const { predictions, selected, games, matchups } = props;
   const prediction = predictions.filter(
-    (item) => item.stat.label.toLowerCase() === selected.toLowerCase()
+    (item) =>
+      item.stat.recognize.toLowerCase() === selected.recognize.toLowerCase()
   )[0];
   const playerCounts = prediction.counts;
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
@@ -73,8 +75,8 @@ export const PlayerStatsTable = (props) => {
         <thead>
           <tr>
             <th># Games</th>
-            {RelevantStats[selected].map((item) => (
-              <th>{item.label}</th>
+            {RelevantStats[selected.recognize].map((item) => (
+              <th key={item.label}>{item.label}</th>
             ))}
           </tr>
         </thead>
@@ -82,19 +84,19 @@ export const PlayerStatsTable = (props) => {
           {playerCounts.map((item, i) => (
             <tr key={item.n + " " + i}>
               <td>{item.n}</td>
-              {RelevantStats[selected].map((stat, i) => {
+              {RelevantStats[selected.recognize].map((stat, i) => {
                 const nGames = games.slice(item.n * -1);
 
                 const cellTarget =
                   i === 0 && prediction.target
                     ? prediction.target
                     : AveragePropScore(games, stat.recognize);
-                console.log(stat, selected, cellTarget);
                 return (
                   <AverageStatCell
                     games={nGames}
                     stat={stat}
                     target={cellTarget}
+                    key={`${nGames.length} ${stat.label} ${i}`}
                   />
                 );
               })}
@@ -104,17 +106,17 @@ export const PlayerStatsTable = (props) => {
             <>
               <tr>
                 <th>Matchup</th>
-                {RelevantStats[selected].map((item) => (
-                  <th>{item.label}</th>
+                {RelevantStats[selected.recognize].map((item, i) => (
+                  <th key={item.label}>{item.label}</th>
                 ))}
               </tr>
-              {matchups.map((game) => {
+              {matchups.reverse().map((game) => {
                 return (
-                  <tr>
+                  <tr key={`'vs' ${game.opponent.abbreviation} ${game.date}`}>
                     <td>
                       vs {game.opponent.abbreviation} {game.date}
                     </td>
-                    {RelevantStats[selected].map((stat, i) => {
+                    {RelevantStats[selected.recognize].map((stat, i) => {
                       const cellTarget =
                         i === 0 && prediction.target
                           ? prediction.target
@@ -124,6 +126,7 @@ export const PlayerStatsTable = (props) => {
                           game={game}
                           stat={stat}
                           target={cellTarget}
+                          key={game.date + " " + stat.label}
                         />
                       );
                     })}
