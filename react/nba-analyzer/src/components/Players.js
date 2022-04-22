@@ -17,6 +17,7 @@ const Players = () => {
   const [teamLookup, setTeamLookup] = useState("ANY");
   const [showPlayers, setShowPlayers] = useState([]);
   const [statPreference, setStatPreference] = useState("");
+  const [positionLookup, setPositionLookup] = useState("");
   const [date, setDate] = useState(FormatDate(new Date()));
   const { loading, error, data, refetch } = useQuery(HOME_QUERY, {
     variables: { date: date },
@@ -45,9 +46,15 @@ const Players = () => {
                 }).length > 0
             )
           : filteredByTeam;
-      setShowPlayers(filterByStat);
+      let filterByPosition =
+        positionLookup !== "ANY" && positionLookup !== ""
+          ? filterByStat.filter(
+              (item) => item.player.position === positionLookup
+            )
+          : filterByStat;
+      setShowPlayers(filterByPosition);
     }
-  }, [data, teamLookup, statPreference]);
+  }, [data, teamLookup, statPreference, positionLookup]);
 
   function changeDate(date) {
     date = FormatDate(date);
@@ -80,6 +87,14 @@ const Players = () => {
     setStatPreference(input.value);
   }
 
+  function onSelectPosition(input) {
+    if (input.label === "ANY") {
+      setPositionLookup("");
+    } else {
+      setPositionLookup(input.value);
+    }
+  }
+
   if (loading) return "Loading...";
   if (error) {
     return `Error! ${error.message}. ${loading}. ${data}`;
@@ -97,7 +112,7 @@ const Players = () => {
     <div className="players">
       <div className="teams-dropdown">
         <DataListInput
-          placeholder="Select a team"
+          placeholder="Filter by team"
           items={selectTeams}
           onSelect={onSelectTeam}
           clearInputOnClick={true}
@@ -110,7 +125,7 @@ const Players = () => {
         />
         <DataListInput
           key="stat-preference"
-          placeholder="Select a stat"
+          placeholder="Filter by stat"
           items={selectableStats}
           onSelect={onSelectStatPreference}
           clearInputOnClick={true}
@@ -120,8 +135,21 @@ const Players = () => {
               ? StatObjects.find(
                   (item) => item.recognize === statPreference.recognize
                 ).label
-              : "ANY"
+              : ""
           }
+        />
+        <DataListInput
+          placeholder="Filter by position"
+          items={[
+            { key: "ANY", label: "ANY", value: "" },
+            { key: "G", label: "Guard", value: "G" },
+            { key: "F", label: "Forward", value: "F" },
+            { key: "C", label: "Center", value: "C" },
+          ]}
+          onSelect={onSelectPosition}
+          clearInputOnClick={true}
+          suppressReselect={false}
+          value={positionLookup}
         />
       </div>
       <ul className="players-list">

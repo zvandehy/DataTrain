@@ -67,8 +67,6 @@ export const PlayerStatsTable = (props) => {
     (item) =>
       item.stat.recognize.toLowerCase() === selected.recognize.toLowerCase()
   )[0];
-  console.log(RelevantStats, selected);
-  console.log(RelevantStats[selected.recognize]);
   const playerCounts = prediction.counts;
   //TODO: Add state for cycling between PCT, OVER, UNDER, etc. (use in header)
   return (
