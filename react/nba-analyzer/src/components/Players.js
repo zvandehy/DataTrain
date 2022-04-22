@@ -18,6 +18,7 @@ const Players = () => {
   const [showPlayers, setShowPlayers] = useState([]);
   const [statPreference, setStatPreference] = useState("");
   const [positionLookup, setPositionLookup] = useState("");
+  const [searchLookup, setSearchLookup] = useState("");
   const [date, setDate] = useState(FormatDate(new Date()));
   const { loading, error, data, refetch } = useQuery(HOME_QUERY, {
     variables: { date: date },
@@ -52,9 +53,32 @@ const Players = () => {
               (item) => item.player.position === positionLookup
             )
           : filterByStat;
-      setShowPlayers(filterByPosition);
+      let filterBySearch =
+        searchLookup !== ""
+          ? filterCleaning.filter((projection) => {
+              console.log(projection);
+              return (
+                projection.player.name
+                  .toLowerCase()
+                  .search(searchLookup.toLowerCase()) !== -1 ||
+                projection.player.currentTeam.abbreviation
+                  .toLowerCase()
+                  .search(searchLookup.toLowerCase()) !== -1 ||
+                projection.opponent.abbreviation
+                  .toLowerCase()
+                  .search(searchLookup.toLowerCase()) !== -1 ||
+                projection.opponent.name
+                  .toLowerCase()
+                  .search(searchLookup.toLowerCase()) !== -1 ||
+                projection.player.currentTeam.name
+                  .toLowerCase()
+                  .search(searchLookup.toLowerCase()) !== -1
+              );
+            })
+          : filterByPosition;
+      setShowPlayers(filterBySearch);
     }
-  }, [data, teamLookup, statPreference, positionLookup]);
+  }, [data, teamLookup, statPreference, positionLookup, searchLookup]);
 
   function changeDate(date) {
     date = FormatDate(date);
@@ -150,6 +174,11 @@ const Players = () => {
           clearInputOnClick={true}
           suppressReselect={false}
           value={positionLookup}
+        />
+        <input
+          type={"text"}
+          placeholder={"Filter by keyword"}
+          onChange={(e) => setSearchLookup(e.target.value)}
         />
       </div>
       <ul className="players-list">

@@ -280,6 +280,7 @@ export const HOME_QUERY = gql`
         currentTeam {
           abbreviation
           teamID
+          name
         }
         games(input: { season: "2021-22" }) {
           season
@@ -308,6 +309,7 @@ export const HOME_QUERY = gql`
       opponent {
         abbreviation
         teamID
+        name
       }
       targets {
         target
