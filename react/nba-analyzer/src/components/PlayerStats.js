@@ -2,10 +2,10 @@ import React from "react";
 import LastNGames from "./LastNGames";
 import { GetPropScore, AveragePropScore, GetColor } from "../utils";
 import { RelevantStats } from "../utils";
-import { SimilarPlayerRows, SimilarPlayersPreview } from "./SimilarPlayers";
+import { SimilarPlayerRows } from "./SimilarPlayers";
 
 export const PlayerStatsPreview = (props) => {
-  const { predictions, selected, matchups, opponent, similar } = props;
+  const { predictions, selected, matchups } = props;
   const prediction = predictions.filter(
     (item) =>
       item.stat.recognize.toLowerCase() === selected.recognize.toLowerCase()
@@ -48,16 +48,6 @@ export const PlayerStatsPreview = (props) => {
           </React.Fragment>
         );
       })}
-
-      {/* <SimilarPlayersPreview
-        similar={similar}
-        opponent={opponent}
-        prediction={prediction}
-      /> */}
-
-      {/* <span className="header similar-opp-header">Similar Opp</span>
-      <span className="similar-opp-stat">xx.x</span>
-      <span className="similar-opp-stat-result">XX%</span> */}
     </div>
   );
 };

@@ -61,8 +61,6 @@ const Playercard = (props) => {
         predictions={predictions}
         selected={stat}
         matchups={matchups}
-        opponent={projection.opponent.teamID}
-        similar={player.similarPlayers}
       ></PlayerStatsPreview>
     </div>
   );
