@@ -282,33 +282,6 @@ export const HOME_QUERY = gql`
           teamID
           name
         }
-        similarPlayers(input: { season: "2021-22" }) {
-          name
-          playerID
-          games(input: { season: "2021-22" }) {
-            season
-            date
-            gameID
-            opponent {
-              name
-              teamID
-              abbreviation
-            }
-            points
-            assists
-            rebounds
-            defensive_rebounds
-            offensive_rebounds
-            three_pointers_attempted
-            three_pointers_made
-            free_throws_attempted
-            free_throws_made
-            minutes
-            blocks
-            turnovers
-            steals
-          }
-        }
         games(input: { season: "2021-22" }) {
           season
           date

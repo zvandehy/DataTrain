@@ -49,15 +49,15 @@ export const PlayerStatsPreview = (props) => {
         );
       })}
 
-      <SimilarPlayersPreview
+      {/* <SimilarPlayersPreview
         similar={similar}
         opponent={opponent}
         prediction={prediction}
-      />
+      /> */}
 
-      <span className="header similar-opp-header">Similar Opp</span>
+      {/* <span className="header similar-opp-header">Similar Opp</span>
       <span className="similar-opp-stat">xx.x</span>
-      <span className="similar-opp-stat-result">XX%</span>
+      <span className="similar-opp-stat-result">XX%</span> */}
     </div>
   );
 };
@@ -143,6 +143,7 @@ export const PlayerStatsTable = (props) => {
             opponent={opponent}
             prediction={prediction}
             selected={selected}
+            average={AveragePropScore(games, prediction.stat.recognize)}
           />
         </tbody>
       </table>

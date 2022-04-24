@@ -1,5 +1,10 @@
 import React from "react";
-import { AveragePropScore, GetColor, GetPropScore } from "../utils";
+import {
+  AveragePropScore,
+  GetColor,
+  GetPropScore,
+  RelevantStats,
+} from "../utils";
 import { round } from "mathjs";
 
 export const SimilarPlayersPreview = (props) => {
@@ -46,7 +51,8 @@ export const SimilarPlayersPreview = (props) => {
 };
 
 export const SimilarPlayerRows = (props) => {
-  const { similar, opponent, prediction, selected } = props;
+  const { similar, opponent, prediction, selected, average } = props;
+  //don't include players without games vs opponent
   let similarPlayers = similar.filter(
     (player) =>
       player.games.filter((game) => game.opponent.teamID === opponent)
@@ -60,9 +66,17 @@ export const SimilarPlayerRows = (props) => {
   let avgDiff = 0;
   let simRows = [
     <tr>
-      <th>Similar Players (AVG)</th>
-      <th>{selected}</th>
-      <th>DIFF</th>
+      <th>
+        Similar Players (AVG) vs{" "}
+        {
+          similarPlayers[0]?.games.find(
+            (game) => game.opponent.teamID === opponent
+          ).opponent.abbreviation
+        }
+      </th>
+      {RelevantStats[selected.recognize].map((item, i) => (
+        <th key={item.label}>{item.label}</th>
+      ))}
     </tr>,
   ];
   similarPlayers.forEach((player) => {
@@ -99,37 +113,22 @@ export const SimilarPlayerRows = (props) => {
         <td>
           {player.name} ({playerAvg})
         </td>
-        <td>
-          {player.games
-            .filter((game) => game.opponent.teamID === opponent)
-            .map((game, i) => {
-              const score = GetPropScore(game, prediction.stat.recognize);
-              return (
-                <span
-                  className={
-                    score > prediction.target
-                      ? "high"
-                      : score < prediction.target
-                      ? "low"
-                      : "med"
-                  }
-                >
-                  {score}
-                  {i <
-                  player.games.filter(
-                    (game) => game.opponent.teamID === opponent
-                  ).length -
-                    1
-                    ? ","
-                    : ""}{" "}
-                </span>
-              );
-            })}
-        </td>
-        <td className={diff > 0 ? "high" : "low"}>
-          {diff > 0 ? "+" : ""}
-          {diff}
-        </td>
+        {RelevantStats[selected.recognize].map((stat, i) => {
+          const cellTarget = AveragePropScore(player.games, stat.recognize);
+          const games = player.games.filter(
+            (game) => game.opponent.teamID === opponent
+          );
+          const score = AveragePropScore(games, stat.recognize);
+          return (
+            <td
+              className={
+                score > cellTarget ? "high" : score < cellTarget ? "low" : "med"
+              }
+            >
+              {score}
+            </td>
+          );
+        })}
       </tr>
     );
   });
@@ -141,27 +140,42 @@ export const SimilarPlayerRows = (props) => {
   const pctDiff = round((avgDiff / avg) * 100, 2);
   const pct = round((gamesOver / gamesPlayed) * 100, 2);
   simRows.push(
-    <tr>
-      <th>Average ({avg})</th>
-      <td>
-        <span
+    <>
+      <tr>
+        <th className={"right"}>Average ({avg})</th>
+        <td
+          className={avgVsOpp > avg ? "high" : avgVsOpp < avg ? "low" : "med"}
+        >
+          {avgVsOpp}
+        </td>
+      </tr>
+      <tr>
+        <th className="right">
+          % Over ({gamesOver} / {gamesPlayed})
+        </th>
+        <td className={GetColor("pct", pct)}>{pct}%</td>
+      </tr>
+      <tr>
+        <th className={"right"}>Difference</th>
+        <td className={avgDiff > 0 ? "high" : avgDiff < 0 ? "low" : "med"}>
+          {avgDiff > 0 ? "+" : ""}
+          {avgDiff}, {avgDiff > 0 ? "+" : ""}
+          {pctDiff}%
+        </td>
+      </tr>
+      <tr>
+        <th className={"right"}>
+          {average}*{pctDiff}%
+        </th>
+        <td
           className={
-            avgVsOpp > prediction.target
-              ? "high"
-              : avgVsOpp < prediction.target
-              ? "low"
-              : "med"
+            average * (1 + pctDiff / 100) > prediction.target ? "high" : "low"
           }
         >
-          {avgVsOpp},
-        </span>
-        <span className={GetColor("pct", pct)}> {pct}%</span>
-      </td>
-      <td className={avgDiff > 0 ? "high" : "low"}>
-        {avgDiff}, {avgDiff > 0 ? "+" : ""}
-        {pctDiff}%
-      </td>
-    </tr>
+          {round(average * (1 + pctDiff / 100), 2)}
+        </td>
+      </tr>
+    </>
   );
   return simRows;
 };
