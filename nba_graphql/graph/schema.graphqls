@@ -12,7 +12,7 @@ type Player {
   position: String!
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
-  injury: Injury!
+  injury: [Injury!]!
 }
 
 type Team {
