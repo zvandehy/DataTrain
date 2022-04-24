@@ -5,7 +5,7 @@ import { GetPropScore } from "./utils";
 //TODO: add counts option to custom filters
 const counts = [0, -30, -10, -5];
 const weights = [0.3, 0.27, 0.25, 0.18]; //TODO: determine best weights to use
-const stats = [
+export const StatObjects = [
   {
     label: "Points",
     abbreviation: "PTS",
@@ -54,8 +54,10 @@ const stats = [
 ];
 
 export function CalculatePredictions(projection, statData) {
-  return stats.map((item) => {
-    const target = getTarget(projection.targets, item.recognize);
+  return StatObjects.map((item) => {
+    const target = projection
+      ? getTarget(projection.targets, item.recognize)
+      : [];
     const playerStats = getStats(statData, counts, item.recognize, target);
     const predictionAndConfidence = getPredictionAndConfidence(
       playerStats,
@@ -69,6 +71,18 @@ export function CalculatePredictions(projection, statData) {
       counts: playerStats,
     };
   });
+}
+
+export function GetHighestConfidence(predictions) {
+  let highest = 0;
+  let highestIndex = 0;
+  for (let i = 0; i < predictions.length; i++) {
+    if (predictions[i].confidence > highest && predictions[i].target) {
+      highest = predictions[i].confidence;
+      highestIndex = i;
+    }
+  }
+  return predictions[highestIndex];
 }
 
 //TODO: Make this more sophisticated

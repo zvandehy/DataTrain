@@ -238,7 +238,7 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 	} else if input.EndDate != nil {
 		filter["date"] = bson.M{"$lte": *input.EndDate}
 	}
-	cur, err := projectionDB.Find(ctx, filter)
+	cur, err := projectionDB.Find(ctx, filter, options.Find().SetSort(bson.M{"date": 1}))
 	logrus.Printf("Query Projections From: %v \tTook %v", input, time.Since(start))
 	return cur, err
 }

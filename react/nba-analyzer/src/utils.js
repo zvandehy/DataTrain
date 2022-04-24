@@ -2,7 +2,7 @@ import { gql } from "@apollo/client";
 import { round, mean } from "mathjs";
 
 export const RelevantStats = {
-  Points: [
+  points: [
     { recognize: "points", label: "PTS" },
     { recognize: "field_goals_made", label: "FGM" },
     { recognize: "field_goals_attempted", label: "FGA" },
@@ -17,7 +17,7 @@ export const RelevantStats = {
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
   ],
-  Assists: [
+  assists: [
     { recognize: "assists", label: "AST" },
     { recognize: "assist_percentage", label: "AST%" },
     // { recognize: "potential_assists", label: "POT. AST" },
@@ -26,7 +26,7 @@ export const RelevantStats = {
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
   ],
-  "3 Pointers": [
+  "3-pt made": [
     { recognize: "three_pointers_made", label: "3PM" },
     { recognize: "three_pointers_attempted", label: "3PA" },
     { recognize: "three_point_percentage", label: "3P%" },
@@ -35,7 +35,7 @@ export const RelevantStats = {
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
   ],
-  "PTS + REB + AST": [
+  "pts+rebs+asts": [
     { recognize: "pts+rebs+asts", label: "PRA" },
     { recognize: "points", label: "PTS" },
     { recognize: "rebounds", label: "REB" },
@@ -47,37 +47,39 @@ export const RelevantStats = {
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
   ],
-  Rebounds: [
+  rebounds: [
     { recognize: "rebounds", label: "REB" },
     { recognize: "offensive_rebounds", label: "OREB" },
     { recognize: "defensive_rebounds", label: "DREB" },
     { recognize: "offensive_rebound_percentage", label: "OREB%" },
     { recognize: "defensive_rebound_percentage", label: "DREB%" },
   ],
-  "Free Throws": [
+  "free throws made": [
     { recognize: "free_throws_made", label: "FTM" },
     { recognize: "free_throws_attempted", label: "FTA" },
     { recognize: "free_throws_percentage", label: "FT%" },
     // { recognize: "free_throw_rate", label: "FT RT" },
     { recognize: "personal_fouls_drawn", label: "PFD" },
   ],
-  Fantasy: [
+  "fantasy score": [
     { recognize: "fantasy score", label: "FAN" },
+    { recognize: "fantasy per min", label: "FAN / MIN" },
     { recognize: "points", label: "PTS (1)" },
     { recognize: "assists", label: "AST (1.5)" },
     { recognize: "rebounds", label: "REB (1.2)" },
     { recognize: "blocks", label: "BLK (3)" },
     { recognize: "steals", label: "STL (3)" },
     { recognize: "turnovers", label: "TOV (-1)" },
+    { recognize: "minutes", label: "MIN" },
   ],
-  "Blocks + Steals": [
+  "blks+stls": [
     { recognize: "blks+stls", label: "B+S" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
     { recognize: "personal_fouls", label: "PF" },
     { recognize: "minutes", label: "MIN" },
   ],
-  "Double Double": [
+  "double-double": [
     { recognize: "double-double", label: "DD" },
     { recognize: "points", label: "PTS" },
     { recognize: "assists", label: "AST" },
@@ -136,11 +138,16 @@ export function AveragePropScore(games, stat) {
         mean(games.map((game) => GetPropScore(game, "field_goals_attempted")));
       break;
     case "three_point_percentage":
-      val =
-        mean(games.map((game) => GetPropScore(game, "three_pointers_made"))) /
-        mean(
-          games.map((game) => GetPropScore(game, "three_pointers_attempted"))
-        );
+      const attempts = mean(
+        games.map((game) => GetPropScore(game, "three_pointers_attempted"))
+      );
+      if (!attempts) {
+        val = 0;
+      } else {
+        val =
+          mean(games.map((game) => GetPropScore(game, "three_pointers_made"))) /
+          attempts;
+      }
       break;
     case "free_throw_percentage":
       val =
@@ -158,6 +165,9 @@ export function AveragePropScore(games, stat) {
       break;
     default:
       val = mean(games.map((game) => GetPropScore(game, stat))) ?? 0;
+  }
+  if (isNaN(val)) {
+    return 0;
   }
   return round(val, 2);
 }
@@ -179,6 +189,11 @@ export function GetPropScore(game, propType) {
           game["blocks"] * 3 +
           game["steals"] * 3 -
           game["turnovers"],
+        2
+      );
+    case "fantasy per min":
+      return round(
+        GetPropScore(game, "fantasy score") / GetPropScore(game, "minutes"),
         2
       );
     case "blks+stls":
@@ -265,6 +280,7 @@ export const HOME_QUERY = gql`
         currentTeam {
           abbreviation
           teamID
+          name
         }
         similarPlayers(input: { season: "2021-22" }) {
           name
@@ -320,6 +336,7 @@ export const HOME_QUERY = gql`
       opponent {
         abbreviation
         teamID
+        name
       }
       targets {
         target

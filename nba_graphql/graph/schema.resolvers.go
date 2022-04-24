@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -49,7 +50,22 @@ func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input mod
 		return []*model.PlayerGame{}, nil
 	}
 	input.PlayerID = &obj.PlayerID
-	return dataloader.For(ctx).PlayerGameByFilter.Load(input)
+	games, err := dataloader.For(ctx).PlayerGameByFilter.Load(input)
+	if err != nil {
+		return games, err
+	}
+	sort.SliceStable(games, func(i, j int) bool {
+		a, err := time.Parse("2006-01-02", games[i].Date)
+		if err != nil {
+			return false
+		}
+		b, err := time.Parse("2006-01-02", games[j].Date)
+		if err != nil {
+			return false
+		}
+		return a.After(b)
+	})
+	return games, err
 }
 
 func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error) {
@@ -60,8 +76,8 @@ func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, inp
 	}
 
 	if input.StartDate == nil && input.EndDate == nil {
-		today := time.Now().Format("2006-01-02")
-		input.StartDate = &today
+		// today := time.Now().Format("2006-01-02")
+		// input.StartDate = &today
 	}
 	name := fmt.Sprintf("%s %s", obj.FirstName, obj.LastName)
 	input.PlayerName = &name

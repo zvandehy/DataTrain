@@ -10,17 +10,17 @@ import "../styles/player.css";
 import StatSelectBtns from "./Statselectbtns.js";
 import Prediction from "./Prediction.js";
 import { PlayerStatsTable } from "./PlayerStats.js";
-import { CalculatePredictions } from "../predictions.js";
+import { CalculatePredictions, StatObjects } from "../predictions.js";
 import { round, mean } from "mathjs";
 
 const Player = () => {
   let location = useLocation();
-  const date = FormatDate(new Date());
   const playerID = parseInt(
     location.pathname.split("/")[location.pathname.split("/").length - 1]
   );
+  const [date, setDate] = useState(FormatDate(new Date()));
   const query = gql`
-    query Player($playerID: Int!, $date: String!) {
+    query Player($playerID: Int!) {
       player(input: { playerID: $playerID }) {
         name
         playerID
@@ -29,7 +29,7 @@ const Player = () => {
           abbreviation
           teamID
         }
-        projections(input: { sportsbook: "PrizePicks", startDate: $date }) {
+        projections(input: { sportsbook: "PrizePicks" }) {
           date
           opponent {
             abbreviation
@@ -61,6 +61,10 @@ const Player = () => {
             three_pointers_attempted
             blocks
             steals
+          }
+          team {
+            abbreviation
+            teamID
           }
           opponent {
             abbreviation
@@ -123,7 +127,9 @@ const Player = () => {
     variables: { playerID: playerID, date: date },
   });
 
-  const [stat, setStat] = useState("Points");
+  const [stat, setStat] = useState(
+    StatObjects.find((stat) => stat.label === "Points")
+  );
   function onStatSelect(stat) {
     setStat(stat);
   }
@@ -133,18 +139,17 @@ const Player = () => {
     return `Error! ${error.message}. ${loading}. ${data}`;
   }
   console.log(data);
+  const projection = data.player.projections.find((p) => p.date === date);
   const statData = data.player.games.filter(
     (game) => game.season === "2021-22"
   );
-  const predictions = CalculatePredictions(
-    data.player.projections[0],
-    statData
-  );
+  const predictions = CalculatePredictions(projection, statData);
 
   const game = data.player.games.find((game) => game.date === date);
   const matchups = data.player.games.filter(
-    (game) =>
-      game.opponent.teamID === data.player.projections[0].opponent.teamID
+    (matchup) =>
+      matchup.opponent.teamID ===
+      (projection?.opponent.teamID ?? game?.opponent.teamID)
   );
 
   const percentOfTeamStats = RelevantStats["Profile"].map((item) => {
@@ -161,12 +166,18 @@ const Player = () => {
     };
   });
 
+  function onDateSelect(newDate) {
+    setDate(newDate);
+  }
+
   return (
     <div className="player-page">
       <PlayerPageContext
         player={data.player}
-        opponent={data.player.projections[0].opponent}
+        opponent={projection?.opponent ?? game.opponent}
         game={game}
+        date={projection?.date ?? game.date}
+        selectDate={onDateSelect}
       />
       <PlayerProfileChart stats={percentOfTeamStats} />
       <StatSelectBtns

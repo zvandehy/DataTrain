@@ -54,6 +54,11 @@ html {
   color: var(--color-black);
 }
 
+.datalist-input .datalist-items {
+  max-height: 200px;
+  overflow: scroll;
+}
+
 .players {
   margin: 1rem 1%;
 }
@@ -88,4 +93,8 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+.sorter {
+  display: flex;
 }

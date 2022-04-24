@@ -4,10 +4,10 @@ import StatSelectBtns from "./Statselectbtns";
 import Prediction from "./Prediction";
 import { PlayerStatsPreview } from "./PlayerStats";
 import { ParseDate, CompareDates } from "../utils";
-import { CalculatePredictions } from "../predictions.js";
+import { CalculatePredictions, GetHighestConfidence } from "../predictions.js";
 
 const Playercard = (props) => {
-  const { projection, player, date } = props;
+  const { projection, player, date, statPreference } = props;
   //TODO: move to utils (or a filters.js) as function
   let seasonData = player.games
     .filter(
@@ -24,12 +24,22 @@ const Playercard = (props) => {
     (game) => game.opponent.teamID === projection.opponent.teamID
   );
 
-  //TODO: Default to highest confidence or preference from filters
-  const [stat, setStat] = useState("Points");
+  const initialStat =
+    statPreference === ""
+      ? GetHighestConfidence(predictions).stat
+      : statPreference;
+
+  const [stat, setStat] = useState(initialStat);
   function onStatSelect(stat) {
     setStat(stat);
   }
-
+  React.useEffect(() => {
+    if (statPreference !== "" && statPreference !== "ANY") {
+      setStat(statPreference);
+    } else {
+      setStat(initialStat);
+    }
+  }, [initialStat, statPreference]);
   return (
     <div className="playercard">
       <PlayerContext
