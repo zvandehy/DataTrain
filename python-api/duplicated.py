@@ -77,3 +77,33 @@ while running:
     print(count)
     if(count == 0):
         running = False
+        
+running = True
+while running:
+    result = client['nba']['injuries'].aggregate([
+        {
+            '$group': {
+                '_id': {
+                    'playerID': '$playerID', 
+                    'gameID': '$gameID'
+                }, 
+                'count': {
+                    '$count': {}
+                }, 
+            }
+        }, {
+            '$match': {
+                'count': {
+                    '$gt': 1
+                }
+            }
+        }
+    ])
+    count=0
+    for doc in result:
+        print(doc)
+        count+=1
+        client['nba']['injuries'].delete_one(doc["_id"])
+    print(count)
+    if(count == 0 or count==15):
+        running = False

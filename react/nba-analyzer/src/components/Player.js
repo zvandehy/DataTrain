@@ -228,7 +228,11 @@ const Player = () => {
         matchups={matchups}
         games={statData}
         similar={data.player.similarPlayers}
-        opponent={data.player.projections[0].opponent.teamID}
+        opponent={
+          projection?.opponent ??
+          game?.opponent ??
+          games[games.length - 1].opponent
+        }
       />
       <PlayerStatsChart games={games} />
     </div>

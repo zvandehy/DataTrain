@@ -106,7 +106,6 @@ const Players = () => {
       let filterBySearch =
         searchLookup !== ""
           ? filterCleaning.filter((projection) => {
-              console.log(projection);
               return (
                 projection.player.name
                   .toLowerCase()
@@ -255,11 +254,6 @@ const Players = () => {
           suppressReselect={false}
           value={positionLookup}
         />
-        <input
-          type={"text"}
-          placeholder={"Filter by keyword"}
-          onChange={(e) => setSearchLookup(e.target.value)}
-        />
         <div className="sorter">
           <DataListInput
             placeholder="Sort players by"
@@ -292,6 +286,12 @@ const Players = () => {
         >
           {seasonType === "" ? "ANY" : seasonType}
         </button>
+        <input
+          type={"text"}
+          className={"right"}
+          placeholder={"Search by keyword"}
+          onChange={(e) => setSearchLookup(e.target.value)}
+        />
         {/* TODO: Add Sort by projection value (instead of season average) & sort by prediction (overUnder / confidence) */}
       </div>
       <ul className="players-list">

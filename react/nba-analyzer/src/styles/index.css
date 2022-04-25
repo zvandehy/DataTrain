@@ -16,10 +16,6 @@
     url("../fonts/Oswald-Light.ttf") format("truetype");
 }
 
-.teams-dropdown {
-  max-width: 10em;
-}
-
 :root {
   --color-black: #181714;
   --color-grey: #c2cecd;

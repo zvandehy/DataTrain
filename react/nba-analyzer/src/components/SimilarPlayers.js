@@ -55,7 +55,7 @@ export const SimilarPlayerRows = (props) => {
   //don't include players without games vs opponent
   let similarPlayers = similar.filter(
     (player) =>
-      player.games.filter((game) => game.opponent.teamID === opponent)
+      player.games.filter((game) => game.opponent.teamID === opponent.teamID)
         .length !== 0
   );
 
@@ -66,14 +66,7 @@ export const SimilarPlayerRows = (props) => {
   let avgDiff = 0;
   let simRows = [
     <tr>
-      <th>
-        Similar Players (AVG) vs{" "}
-        {
-          similarPlayers[0]?.games.find(
-            (game) => game.opponent.teamID === opponent
-          ).opponent.abbreviation
-        }
-      </th>
+      <th>Similar Players (AVG) vs {opponent.abbreviation}</th>
       {RelevantStats[selected.recognize].map((item, i) => (
         <th key={item.label}>{item.label}</th>
       ))}
@@ -81,7 +74,7 @@ export const SimilarPlayerRows = (props) => {
   ];
   similarPlayers.forEach((player) => {
     const simPlayerVSOpp = player.games.filter(
-      (game) => game.opponent.teamID === opponent
+      (game) => game.opponent.teamID === opponent.teamID
     );
 
     if (simPlayerVSOpp.length === 0) {
@@ -94,7 +87,7 @@ export const SimilarPlayerRows = (props) => {
     gamesPlayed += simPlayerVSOpp.length;
 
     const playerAvgVsOpp = AveragePropScore(
-      player.games.filter((game) => game.opponent.teamID === opponent),
+      player.games.filter((game) => game.opponent.teamID === opponent.teamID),
       prediction.stat.recognize
     );
     const diff = round(playerAvgVsOpp - playerAvg, 2);
@@ -116,7 +109,7 @@ export const SimilarPlayerRows = (props) => {
         {RelevantStats[selected.recognize].map((stat, i) => {
           const cellTarget = AveragePropScore(player.games, stat.recognize);
           const games = player.games.filter(
-            (game) => game.opponent.teamID === opponent
+            (game) => game.opponent.teamID === opponent.teamID
           );
           const score = AveragePropScore(games, stat.recognize);
           return (
