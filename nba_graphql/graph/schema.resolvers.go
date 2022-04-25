@@ -283,10 +283,10 @@ func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*
 	//logrus.Printf("Get Player with filter  %v", input)
 
 	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{input})
-	defer cur.Close(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting player: %v", err)
 	}
+	defer cur.Close(ctx)
 	var player *model.Player
 	cur.Next(ctx)
 	//get first result
