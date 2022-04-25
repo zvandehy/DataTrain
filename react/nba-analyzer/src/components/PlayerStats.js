@@ -93,6 +93,29 @@ export const PlayerStatsTable = (props) => {
               })}
             </tr>
           ))}
+          {games.filter((game) => game.playoffs).length > 0 ? (
+            <tr>
+              <td>Playoffs ({games.filter((game) => game.playoffs).length})</td>
+              {RelevantStats[selected.recognize].map((stat, i) => {
+                const nGames = games.filter((game) => game.playoffs);
+
+                const cellTarget =
+                  i === 0 && prediction.target
+                    ? prediction.target
+                    : AveragePropScore(games, stat.recognize);
+                return (
+                  <AverageStatCell
+                    games={nGames}
+                    stat={stat}
+                    target={cellTarget}
+                    key={`${nGames.length} ${stat.label} ${i}`}
+                  />
+                );
+              })}
+            </tr>
+          ) : (
+            <></>
+          )}
           {matchups.length ? (
             <>
               <tr>

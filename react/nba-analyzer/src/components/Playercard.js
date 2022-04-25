@@ -3,13 +3,15 @@ import PlayerContext from "./Playercontext";
 import StatSelectBtns from "./Statselectbtns";
 import Prediction from "./Prediction";
 import { PlayerStatsPreview } from "./PlayerStats";
-import { ParseDate, CompareDates } from "../utils";
+import { ParseDate, CompareDates, GamesWithSeasonType } from "../utils";
 import { CalculatePredictions, GetHighestConfidence } from "../predictions.js";
 
 const Playercard = (props) => {
-  const { projection, player, date, statPreference } = props;
+  const { projection, player, date, statPreference, seasonType } = props;
+
+  const games = GamesWithSeasonType(player.games, seasonType);
   //TODO: move to utils (or a filters.js) as function
-  let seasonData = player.games
+  let seasonData = games
     .filter(
       (game) =>
         game.season === "2021-22" &&
@@ -17,7 +19,7 @@ const Playercard = (props) => {
     )
     .sort(CompareDates);
 
-  const game = player.games.find((game) => game.date === date);
+  const game = games.find((game) => game.date === date);
   let predictions = CalculatePredictions(projection, seasonData);
 
   const matchups = seasonData.filter(

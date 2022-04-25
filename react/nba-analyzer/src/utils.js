@@ -129,6 +129,17 @@ export function GetSelectableTeams(teams) {
   return ret;
 }
 
+export function GamesWithSeasonType(games, seasonType) {
+  return games.filter((game) => {
+    if (seasonType === "PLAYOFFS") {
+      return game.playoffs;
+    } else if (seasonType === "REG") {
+      return !game.playoffs;
+    }
+    return true;
+  });
+}
+
 export function AveragePropScore(games, stat) {
   let val;
   switch (stat.toLowerCase()) {
@@ -286,6 +297,7 @@ export const HOME_QUERY = gql`
           season
           date
           gameID
+          playoffs
           opponent {
             name
             teamID

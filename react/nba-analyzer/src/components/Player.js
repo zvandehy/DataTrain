@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { FormatDate, RelevantStats } from "../utils.js";
+import {
+  CompareDates,
+  FormatDate,
+  GamesWithSeasonType,
+  RelevantStats,
+} from "../utils.js";
 import PlayerStatsChart from "./PlayerStatsChart";
 import { gql, useQuery } from "@apollo/client";
 import { PlayerPageContext } from "./Playercontext";
@@ -19,6 +24,7 @@ const Player = () => {
     location.pathname.split("/")[location.pathname.split("/").length - 1]
   );
   const [date, setDate] = useState(FormatDate(new Date()));
+  const [seasonType, setSeasonType] = useState("");
   const query = gql`
     query Player($playerID: Int!) {
       player(input: { playerID: $playerID }) {
@@ -83,6 +89,7 @@ const Player = () => {
           usage
           three_point_percentage
           effective_field_goal_percentage
+          playoffs
         }
         similarPlayers(input: { season: "2021-22" }) {
           name
@@ -118,6 +125,7 @@ const Player = () => {
             usage
             three_point_percentage
             effective_field_goal_percentage
+            playoffs
           }
         }
       }
@@ -139,24 +147,23 @@ const Player = () => {
     return `Error! ${error.message}. ${loading}. ${data}`;
   }
   console.log(data);
+  let games = GamesWithSeasonType(data.player.games, seasonType);
+  games = games.filter((game) => CompareDates(game.date, date) <= 0);
   const projection = data.player.projections.find((p) => p.date === date);
-  const statData = data.player.games.filter(
-    (game) => game.season === "2021-22"
-  );
+  const statData = games.filter((game) => game.season === "2021-22");
   const predictions = CalculatePredictions(projection, statData);
 
   const game = data.player.games.find((game) => game.date === date);
-  const matchups = data.player.games.filter(
+  const matchups = games.filter(
     (matchup) =>
       matchup.opponent.teamID ===
       (projection?.opponent.teamID ?? game?.opponent.teamID)
   );
 
   const percentOfTeamStats = RelevantStats["Profile"].map((item) => {
-    const avg = mean(data.player.games.map((game) => game[item.recognize]));
+    const avg = mean(games.map((game) => game[item.recognize]));
     const pct = round(
-      avg /
-        mean(data.player.games.map((game) => game.teamStats[item.recognize])),
+      avg / mean(games.map((game) => game.teamStats[item.recognize])),
       2
     );
     return {
@@ -178,6 +185,8 @@ const Player = () => {
         game={game}
         date={projection?.date ?? game.date}
         selectDate={onDateSelect}
+        seasonType={seasonType}
+        setSeasonType={setSeasonType}
       />
       <PlayerProfileChart stats={percentOfTeamStats} />
       <StatSelectBtns
@@ -195,7 +204,7 @@ const Player = () => {
         similar={data.player.similarPlayers}
         opponent={data.player.projections[0].opponent.teamID}
       />
-      <PlayerStatsChart games={data.player.games} />
+      <PlayerStatsChart games={games} />
     </div>
   );
 };
