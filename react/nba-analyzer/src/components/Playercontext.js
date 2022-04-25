@@ -112,10 +112,10 @@ export const PlayerInfo = (props) => {
           <img
             loading="lazy"
             className="team-logo"
-            alt={`team-logo for ${opponent.abbreviation}`}
-            src={`https://cdn.nba.com/logos/nba/${opponent.teamID}/primary/D/logo.svg`}
+            alt={`team-logo for ${opponent?.abbreviation}`}
+            src={`https://cdn.nba.com/logos/nba/${opponent?.teamID}/primary/D/logo.svg`}
           ></img>
-          <span className="opp-abr">{opponent.abbreviation}</span>
+          <span className="opp-abr">{opponent?.abbreviation}</span>
         </span>
         <EventsModal player={player} opponent={opponent} />
       </div>
