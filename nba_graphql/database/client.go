@@ -294,3 +294,45 @@ func (c *NBADatabaseClient) GetPlayerInjuries(ctx context.Context, playerIDs []i
 	logrus.Infof("Received Player Injuries for %d players\tTook %v", len(playerIDs), time.Since(start))
 	return injuries, nil
 }
+
+func (c *NBADatabaseClient) GetTeamInjuries(ctx context.Context, teamIDs []int) ([]*model.Injury, error) {
+	start := time.Now()
+	c.Queries++
+
+	lookupPlayers := bson.M{"$lookup": bson.M{
+		"from":         "players",
+		"localField":   "playerID",
+		"foreignField": "playerID",
+		"as":           "player",
+	}}
+	unwindPlayer := bson.M{"$unwind": bson.M{
+		"path":                       "$player",
+		"preserveNullAndEmptyArrays": true,
+	}}
+	lookupTeam := bson.M{"$lookup": bson.M{
+		"from":         "teams",
+		"localField":   "player.teamABR",
+		"foreignField": "abbreviation",
+		"as":           "team",
+	}}
+	unwindTeam := bson.M{"$unwind": bson.M{
+		"path":                       "$team",
+		"preserveNullAndEmptyArrays": true,
+	}}
+	matchTeam := bson.M{"$match": bson.M{"team.teamID": bson.M{"$in": teamIDs}}}
+
+	cur, err := c.Database("nba").Collection("injuries").Aggregate(ctx, bson.A{lookupPlayers, unwindPlayer, lookupTeam, unwindTeam, matchTeam})
+	if err != nil {
+		logrus.Warnf("error getting injury data for teams: %v", err)
+		return nil, err
+	}
+	var injuries []*model.Injury
+	err = cur.All(ctx, &injuries)
+	if err != nil {
+		logrus.Warnf("error getting injury data for teams: %v", err)
+		return nil, err
+	}
+	logrus.Infof("Received Injuries for %d teams\tTook %v", len(teamIDs), time.Since(start))
+	return injuries, nil
+
+}

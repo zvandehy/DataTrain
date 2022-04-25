@@ -549,39 +549,7 @@ func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.P
 }
 
 func (r *teamResolver) Injuries(ctx context.Context, obj *model.Team) ([]*model.Injury, error) {
-	// TODO: Add dataloader
-	start := time.Now()
-	lookupPlayers := bson.M{"$lookup": bson.M{
-		"from":         "players",
-		"localField":   "playerID",
-		"foreignField": "playerID",
-		"as":           "player",
-	}}
-	unwindPlayer := bson.M{"$unwind": bson.M{
-		"path":                       "$player",
-		"preserveNullAndEmptyArrays": true,
-	}}
-	lookupTeam := bson.M{"$lookup": bson.M{
-		"from":         "teams",
-		"localField":   "player.teamABR",
-		"foreignField": "abbreviation",
-		"as":           "team",
-	}}
-	unwindTeam := bson.M{"$unwind": bson.M{
-		"path":                       "$team",
-		"preserveNullAndEmptyArrays": true,
-	}}
-	matchTeam := bson.M{"$match": bson.M{"team.teamID": obj.TeamID}}
-
-	cur, err := r.Db.Database("nba").Collection("injuries").Aggregate(ctx, bson.A{lookupPlayers, unwindPlayer, lookupTeam, unwindTeam, matchTeam})
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-	var injuries []*model.Injury
-	cur.All(ctx, &injuries)
-	logrus.Infof("Received Team Injuries for %v in %v", obj.Abbreviation, time.Since(start))
-	return injuries, nil
+	return dataloader.For(ctx).TeamInjuryLoader.Load(obj.TeamID)
 }
 
 func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {
