@@ -75,26 +75,21 @@ func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input mod
 }
 
 func (r *playerResolver) Injuries(ctx context.Context, obj *model.Player) ([]*model.Injury, error) {
-	playerData, err := dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
-	playerData.FirstName += ""
-	data := make([]*model.Injury, 4)
-	injuryData := make([]*model.Injury, 4)
-	//errorData := make([]*model.Injury, 2)
-	data[0] = &model.Injury2
-	data[1] = &model.Injury3
-	data[2] = &model.Injury4
-	data[3] = &model.Injury5
+	var data []*model.Injury
+	var injuryData []*model.Injury
+	data = append(data, &model.Injury2)
+	data = append(data, &model.Injury3)
+	data = append(data, &model.Injury4)
+	data = append(data, &model.Injury5)
 
 	for i := 0; i < len(data); i++ {
 		//fmt.Println(data[i].PlayerID)
 		//fmt.Println(obj.PlayerID)
 		if data[i].PlayerID == obj.PlayerID {
-			injuryData[i] = data[i]
-		} else {
-			injuryData[i] = &model.Injury{}
+			injuryData = append(injuryData, data[i])
 		}
 	}
-	return injuryData, err
+	return injuryData, nil
 }
 
 func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error) {
@@ -575,25 +570,27 @@ func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.P
 }
 
 func (r *teamResolver) InjuredPlayers(ctx context.Context, obj *model.Team) ([]*model.Injury, error) {
-	teamData, err := dataloader.For(ctx).TeamByID.Load(obj.TeamID)
-	teamData.Name += ""
-	data := make([]*model.Injury, 4)
-	injuryData := make([]*model.Injury, 4)
-	data[0] = &model.Injury2
-	data[1] = &model.Injury3
-	data[2] = &model.Injury4
-	data[3] = &model.Injury5
+	// data := make([]*model.Injury, 4)
+	var injuryData []*model.Injury
+	// data[0] = &model.Injury2
+	// data[1] = &model.Injury3
+	// data[2] = &model.Injury4
+	// data[3] = &model.Injury5
 
-	for i := 0; i < len(data); i++ {
-		playerData, err := dataloader.For(ctx).PlayerByID.Load(data[i].PlayerID)
-		fmt.Printf("err: %v\n", err)
-		if teamData.Abbreviation != playerData.CurrentTeam {
-			injuryData[i] = &model.Injury{}
-		} else {
-			injuryData[i] = data[i]
-		}
-	}
-	return injuryData, err
+	// players, err := r.FilterPlayers(ctx, obj)
+
+	// for _, player := players {
+	// 	playerData, err := dataloader.For(ctx).PlayerByID.Load(data[i].PlayerID)
+	// }
+
+	// 	fmt.Printf("err: %v\n", err)
+	// 	if obj.Abbreviation != playerData.CurrentTeam {
+	// 		injuryData[i] = &model.Injury{}
+	// 	} else {
+	// 		injuryData[i] = data[i]
+	// 	}
+	// }
+	return injuryData, nil
 }
 
 func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {

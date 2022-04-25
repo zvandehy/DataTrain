@@ -12,7 +12,7 @@ type Player {
   position: String!
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
-  injuries: [Injury!]
+  injuries: [Injury!]!
   projections(input: ProjectionFilter!): [Projection!]!
   height: String!
   weight: Int!
