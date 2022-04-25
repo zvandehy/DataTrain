@@ -92,6 +92,14 @@ const Player = () => {
           opponent {
             abbreviation
             teamID
+            injuries {
+              startDate
+              returnDate
+              status
+              player {
+                name
+              }
+            }
           }
           minutes
           date
@@ -199,9 +207,9 @@ const Player = () => {
     <div className="player-page">
       <PlayerPageContext
         player={data.player}
-        opponent={projection?.opponent ?? game.opponent}
+        opponent={projection?.opponent ?? game?.opponent}
         game={game}
-        date={projection?.date ?? game.date}
+        date={projection?.date ?? game?.date}
         selectDate={onDateSelect}
         seasonType={seasonType}
         setSeasonType={setSeasonType}

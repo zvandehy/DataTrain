@@ -27,7 +27,7 @@ const EventsModal = (props) => {
               />
             );
           })}
-          {opponent.injuries?.map((injury, i) => {
+          {opponent?.injuries?.map((injury, i) => {
             let status = injury.status;
             let date = injury.startDate;
             if (injury.returnDate !== "") {
