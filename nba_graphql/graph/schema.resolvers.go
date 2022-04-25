@@ -126,7 +126,7 @@ func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame
 	start := time.Now()
 	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
 	if time.Since(start) > (time.Second * 5) {
-		logrus.Warnf("2 Received Opponent after %v", time.Since(start))
+		logrus.Warnf("Received Team (from Playergame) after %v", time.Since(start))
 	}
 	return team, err
 }
@@ -139,7 +139,7 @@ func (r *playerGameResolver) Team(ctx context.Context, obj *model.PlayerGame) (*
 	start := time.Now()
 	team, err := dataloader.For(ctx).TeamByID.Load(obj.TeamID)
 	if time.Since(start) > (time.Second * 5) {
-		logrus.Warnf("3 Received Opponent after %v", time.Since(start))
+		logrus.Warnf("Received Opponent (from PlayerGame) after %v", time.Since(start))
 	}
 	return team, err
 }
@@ -547,7 +547,7 @@ func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*
 	start := time.Now()
 	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
 	if time.Since(start) > (time.Second * 5) {
-		logrus.Warnf("1 Received Opponent after %v", time.Since(start))
+		logrus.Warnf("Received Opponent (from teamGame) after %v", time.Since(start))
 	}
 	return team, err
 }
