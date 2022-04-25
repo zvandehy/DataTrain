@@ -24,6 +24,7 @@ const Player = () => {
     location.pathname.split("/")[location.pathname.split("/").length - 1]
   );
   const [date, setDate] = useState(FormatDate(new Date()));
+  //TODO: Handle error when pick game that isn't in seasonType
   const [seasonType, setSeasonType] = useState("");
   const query = gql`
     query Player($playerID: Int!) {
