@@ -10,6 +10,17 @@
   width: 250px;
 }
 
+.player-info > button {
+  margin-left: 1rem;
+  background-color: var(--color-grey);
+  padding: 0.25em;
+}
+
+.player-info > button:hover {
+  background-color: var(--color-accent);
+  cursor: pointer;
+}
+
 @media (max-width: 555px) {
   .player-page {
     grid-template-columns: 1fr;
