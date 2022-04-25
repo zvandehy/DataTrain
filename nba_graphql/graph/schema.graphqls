@@ -10,8 +10,10 @@ type Player {
   seasons: [String!]!
   #G, F, or C
   position: String!
+  # TODO: change 'currentTeam' to 'team'
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
+  injuries: [Injury!]
   projections(input: ProjectionFilter!): [Projection!]!
   height: String!
   weight: Int!
@@ -27,6 +29,7 @@ type Team {
   numLoss: Int! #TODO
   games(input: GameFilter!): [TeamGame!]!
   players: [Player!]!
+  injuries: [Injury!]
 }
 
 type TeamGame {
@@ -46,12 +49,12 @@ type TeamGame {
   defensive_rebound_percentage: Float!
   field_goal_percentage: Float!
   field_goals_attempted: Int!
+  gameID: String!
+  home_or_away: String!
   field_goals_made: Int!
   free_throws_attempted: Int!
   free_throws_made: Int!
   free_throws_percentage: Float!
-  gameID: String!
-  home_or_away: String!
   offensive_rebound_percentage: Float!
   opponent: Team!
   opponent_assists: Int!
@@ -121,6 +124,14 @@ type Projection {
   targets: [Target!]!
   startTime: String!
   date: String!
+}
+
+# add injuries to games
+type Injury {
+  startDate: String!
+  returnDate: String!
+  status: String!
+  player: Player!
 }
 
 type Target {

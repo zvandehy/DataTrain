@@ -117,7 +117,7 @@ export const PlayerInfo = (props) => {
           ></img>
           <span className="opp-abr">{opponent.abbreviation}</span>
         </span>
-        <EventsModal />
+        <EventsModal player={player} opponent={opponent} />
       </div>
       <button
         onClick={() =>
