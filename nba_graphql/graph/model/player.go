@@ -1,7 +1,7 @@
 package model
 
-var PlayerNames map[int]string = map[int]string{
-	1630538: "Bones Hyland",
+var PlayerNames map[string]string = map[string]string{
+	"Nah'Shon Hyland": "Bones Hyland",
 }
 
 type Player struct {
