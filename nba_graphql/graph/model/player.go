@@ -7,7 +7,6 @@ type Player struct {
 	Seasons     []string `json:"seasons" bson:"seasons"`
 	Position    string   `json:"position" bson:"position"`
 	CurrentTeam string   `json:"currentTeam" bson:"teamABR"`
-	Injury      Injury   `json:"player_injury" bson:"player_injury"`
 }
 
 func (p Player) String() string {

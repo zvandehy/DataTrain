@@ -20,38 +20,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var injury2 = model.Injury{
-	Injury:     "Ankle",
-	InjuryDate: "4/10/2022",
-	ReturnDate: "4/25/2022",
-	PlayerID:   200746,
-}
-var injury3 = model.Injury{
-	Injury:     "Elbow",
-	InjuryDate: "4/08/2022",
-	ReturnDate: "4/31/2022",
-	PlayerID:   2546,
-}
-var injury4 = model.Injury{
-	Injury:     "Elbow",
-	InjuryDate: "4/08/2022",
-	ReturnDate: "4/31/2022",
-	PlayerID:   203507,
-}
-var injury5 = model.Injury{
-	Injury:     "Wrist",
-	InjuryDate: "4/01/2022",
-	ReturnDate: "5/01/2022",
-	PlayerID:   1630173,
-}
-
 func (r *injuryResolver) Player(ctx context.Context, obj *model.Injury) (*model.Player, error) {
 	fmt.Println("hello")
 	data := make([]*model.Injury, 4)
-	data[0] = &injury2
-	data[1] = &injury3
-	data[2] = &injury4
-	data[3] = &injury5
+	data[0] = &model.Injury2
+	data[1] = &model.Injury3
+	data[2] = &model.Injury4
+	data[3] = &model.Injury5
 
 	playerData, err := dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
 	for i := 0; i < 4; i++ {
@@ -95,17 +70,16 @@ func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input mod
 	return dataloader.For(ctx).PlayerGameByFilter.Load(input)
 }
 
-func (r *playerResolver) Injury(ctx context.Context, obj *model.Player) ([]*model.Injury, error) {
+func (r *playerResolver) Injuries(ctx context.Context, obj *model.Player) ([]*model.Injury, error) {
 	playerData, err := dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
 	playerData.FirstName += ""
 	data := make([]*model.Injury, 4)
 	injuryData := make([]*model.Injury, 4)
 	//errorData := make([]*model.Injury, 2)
-	data[0] = &injury2
-
-	data[1] = &injury3
-	data[2] = &injury4
-	data[3] = &injury5
+	data[0] = &model.Injury2
+	data[1] = &model.Injury3
+	data[2] = &model.Injury4
+	data[3] = &model.Injury5
 
 	for i := 0; i < len(data); i++ {
 		//fmt.Println(data[i].PlayerID)
@@ -117,25 +91,6 @@ func (r *playerResolver) Injury(ctx context.Context, obj *model.Player) ([]*mode
 		}
 	}
 	return injuryData, err
-	/*
-				id := obj.PlayerID
-				if id == injury2.PlayerID {
-					injuryData[0] = &injury2
-					return injuryData, err
-				}
-
-		/*
-		playerData, err := dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
-		playerData.FirstName += ""
-
-		injuryData := make([]*model.Injury, 1)
-		id := obj.PlayerID
-		if id == injury2.PlayerID {
-			injuryData[0] = &injury2
-			return injuryData, err
-		}
-		return nil, err
-	*/
 }
 
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
@@ -476,10 +431,10 @@ func (r *teamResolver) InjuredPlayers(ctx context.Context, obj *model.Team) ([]*
 	teamData.Name += ""
 	data := make([]*model.Injury, 4)
 	injuryData := make([]*model.Injury, 4)
-	data[0] = &injury2
-	data[1] = &injury3
-	data[2] = &injury4
-	data[3] = &injury5
+	data[0] = &model.Injury2
+	data[1] = &model.Injury3
+	data[2] = &model.Injury4
+	data[3] = &model.Injury5
 
 	for i := 0; i < len(data); i++ {
 		playerData, err := dataloader.For(ctx).PlayerByID.Load(data[i].PlayerID)
@@ -575,14 +530,3 @@ type projectionResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type teamGameResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-
-func (r *projectionResolver) PropType(ctx context.Context, obj *model.Projection) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}

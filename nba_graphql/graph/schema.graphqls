@@ -12,7 +12,7 @@ type Player {
   position: String!
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
-  injury: [Injury!]!
+  injuries: [Injury!]
 }
 
 type Team {
@@ -28,87 +28,87 @@ type Team {
 }
 
 type TeamGame {
-	date: String!
-	defensive_rating: Float!
-	defensive_rebound_percentage: Float!
-	field_goal_percentage: Float!
-	field_goals_attempted: Int!
-	gameID: String! #should be Int
-	home_or_away: String!
-	offensive_rebound_percentage: Float!
-	opponent: Team!
-	opponent_assists: Int!
-	opponent_effective_field_goal_percentage: Float!
-	opponent_field_goals_attempted: Int!
-	opponent_free_throws_attempted: Int!
-	opponent_points: Int!
-	opponent_rebounds: Int!
-	opponent_three_pointers_attempted: Int!
-	opponent_three_pointers_made: Int!
-	plus_minus_per_hundred: Float!
-	possessions: Int!
-	personal_fouls: Int!
-	personal_fouls_drawn: Int!
-	season: String!
-	win_or_loss: String!
-  	playersInGame: PlayersInGame!
+  date: String!
+  defensive_rating: Float!
+  defensive_rebound_percentage: Float!
+  field_goal_percentage: Float!
+  field_goals_attempted: Int!
+  gameID: String! #should be Int
+  home_or_away: String!
+  offensive_rebound_percentage: Float!
+  opponent: Team!
+  opponent_assists: Int!
+  opponent_effective_field_goal_percentage: Float!
+  opponent_field_goals_attempted: Int!
+  opponent_free_throws_attempted: Int!
+  opponent_points: Int!
+  opponent_rebounds: Int!
+  opponent_three_pointers_attempted: Int!
+  opponent_three_pointers_made: Int!
+  plus_minus_per_hundred: Float!
+  possessions: Int!
+  personal_fouls: Int!
+  personal_fouls_drawn: Int!
+  season: String!
+  win_or_loss: String!
+  playersInGame: PlayersInGame!
 }
 
 type PlayerGame {
-	assist_percentage: Float!
-	assists: Int!
-	date: String!
-	defensive_rebound_percentage: Float!
-	defensive_rebounds: Int!
-	effective_field_goal_percentage: Float!
-	field_goal_percentage: Float!
-	field_goals_attempted: Int!
-	field_goals_made: Int!
-	free_throws_attempted: Int!
-	free_throws_made: Int!
-	free_throws_percentage: Float!
-	gameID: String! #should be Int
-	home_or_away: String!
-	minutes: String!
-	offensive_rebound_percentage: Float!
-	offensive_rebounds: Int!
-	opponent: Team!
-	personal_fouls_drawn: Int!
-	personal_fouls: Int!
-	points: Int!
-	player: Player!
-	season: String!
-	three_point_percentage: Float!
-	three_pointers_attempted: Int!
-	three_pointers_made: Int!
-	total_rebounds: Int!
-	true_shooting_percentage: Float!
-	turnovers: Int!
-	usage: Float!
-	blocks: Int!
-	steals: Int!
-  	playersInGame: PlayersInGame!
+  assist_percentage: Float!
+  assists: Int!
+  date: String!
+  defensive_rebound_percentage: Float!
+  defensive_rebounds: Int!
+  effective_field_goal_percentage: Float!
+  field_goal_percentage: Float!
+  field_goals_attempted: Int!
+  field_goals_made: Int!
+  free_throws_attempted: Int!
+  free_throws_made: Int!
+  free_throws_percentage: Float!
+  gameID: String! #should be Int
+  home_or_away: String!
+  minutes: String!
+  offensive_rebound_percentage: Float!
+  offensive_rebounds: Int!
+  opponent: Team!
+  personal_fouls_drawn: Int!
+  personal_fouls: Int!
+  points: Int!
+  player: Player!
+  season: String!
+  three_point_percentage: Float!
+  three_pointers_attempted: Int!
+  three_pointers_made: Int!
+  total_rebounds: Int!
+  true_shooting_percentage: Float!
+  turnovers: Int!
+  usage: Float!
+  blocks: Int!
+  steals: Int!
+  playersInGame: PlayersInGame!
 }
 
 type Projection {
-	player: Player!
-	sportsbook: String!
-	opponent: Team!
-	targets: [Target!]!
-	startTime: String!
-	date: String!
+  player: Player!
+  sportsbook: String!
+  opponent: Team!
+  targets: [Target!]!
+  startTime: String!
+  date: String!
 }
 
 type Injury {
-	injuryDate: String!
-	returnDate: String!
-	injury: String!
-	player: Player!
+  startDate: String!
+  returnDate: String!
+  description: String!
+  player: Player!
 }
 
 type Target {
-	target: Float!
-	type: String!
+  target: Float!
+  type: String!
 }
 
 type PlayersInGame {
