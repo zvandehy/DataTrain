@@ -1,65 +1,213 @@
-import React, {useState, useEffect, useRef} from 'react'
-import {useLocation} from 'react-router-dom';
-import {GetPropScore} from '../utils.js'
-import PlayerStatsChart from './PlayerStatsChart'
-import DataListInput from "react-datalist-input";
-import {std, mean} from 'mathjs'
-import NormalDistribution from 'normal-distribution'
-import {gql, useQuery} from '@apollo/client';
-import Playercard from './Playercard.js';
+import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
+import {
+  CompareDates,
+  FormatDate,
+  GamesWithSeasonType,
+  RelevantStats,
+} from "../utils.js";
+import PlayerStatsChart from "./PlayerStatsChart";
+import { gql, useQuery } from "@apollo/client";
+import { PlayerPageContext } from "./Playercontext";
+import PlayerProfileChart from "./PlayerProfileChart.js";
 
-import "../styles/player.css"
+import "../styles/player.css";
+import StatSelectBtns from "./Statselectbtns.js";
+import Prediction from "./Prediction.js";
+import { PlayerStatsTable } from "./PlayerStats.js";
+import { CalculatePredictions, StatObjects } from "../predictions.js";
+import { round, mean } from "mathjs";
 
 const Player = () => {
-    let location = useLocation()
-    const playerID = parseInt(location.pathname.split("/")[location.pathname.split("/").length-1])
-    const query = gql` query Player($playerID: Int!) {
-        player(input:{playerID: $playerID}) {
-            name
-            games(input: {season:"2021-22"}) {
-                points
-                assists
-                minutes
-                date
-                field_goals_attempted
-                field_goal_percentage
-                field_goals_made
-            }
+  let location = useLocation();
+  const playerID = parseInt(
+    location.pathname.split("/")[location.pathname.split("/").length - 1]
+  );
+  const [date, setDate] = useState(FormatDate(new Date()));
+  //TODO: Handle error when pick game that isn't in seasonType
+  const [seasonType, setSeasonType] = useState("");
+  const query = gql`
+    query Player($playerID: Int!) {
+      player(input: { playerID: $playerID }) {
+        name
+        playerID
+        position
+        currentTeam {
+          abbreviation
+          teamID
         }
-      }`;
-    const { loading, error, data } = useQuery(query, {variables: {playerID}});
-    // const [games, setGames] = useState([]);
-    // const [player, setPlayer] = useState('');
-
-    // useEffect(() => {
-    //     console.log(data.player.games)
-    //     if (data) { 
-    //         setPlayer(data.player)
-    //         setGames(player.games)
-    //         setGames(games.sort(function(a, b) {
-    //             var c = new Date(a.date);
-    //             var d = new Date(b.date);
-    //             return c-d;}));
-    //         console.log(games)
-    //     }
-    // },
-    // [data, games, player]
-    // );
-    
-    if (loading) return 'Loading...';
-    if (error) {
-        return `Error! ${error.message}. ${loading}. ${data}`;
+        projections(input: { sportsbook: "PrizePicks" }) {
+          date
+          opponent {
+            abbreviation
+            teamID
+          }
+          targets {
+            target
+            type
+          }
+        }
+        games(input: { season: "2021-22" }) {
+          points
+          season
+          assists
+          assist_percentage
+          rebounds
+          offensive_rebounds
+          offensive_rebound_percentage
+          defensive_rebounds
+          defensive_rebound_percentage
+          personal_fouls_drawn
+          steals
+          blocks
+          turnovers
+          teamStats {
+            points
+            assists
+            rebounds
+            three_pointers_attempted
+            blocks
+            steals
+          }
+          team {
+            abbreviation
+            teamID
+          }
+          opponent {
+            abbreviation
+            teamID
+          }
+          minutes
+          date
+          field_goals_attempted
+          field_goal_percentage
+          field_goals_made
+          three_pointers_attempted
+          three_pointers_made
+          free_throws_attempted
+          free_throws_made
+          free_throws_percentage
+          usage
+          three_point_percentage
+          effective_field_goal_percentage
+          playoffs
+        }
+        similarPlayers(input: { season: "2021-22" }) {
+          name
+          playerID
+          games(input: { season: "2021-22" }) {
+            points
+            season
+            assists
+            assist_percentage
+            rebounds
+            offensive_rebounds
+            offensive_rebound_percentage
+            defensive_rebounds
+            defensive_rebound_percentage
+            personal_fouls_drawn
+            steals
+            blocks
+            turnovers
+            opponent {
+              abbreviation
+              teamID
+            }
+            minutes
+            date
+            field_goals_attempted
+            field_goal_percentage
+            field_goals_made
+            three_pointers_attempted
+            three_pointers_made
+            free_throws_attempted
+            free_throws_made
+            free_throws_percentage
+            usage
+            three_point_percentage
+            effective_field_goal_percentage
+            playoffs
+          }
+        }
+      }
     }
-    // console.log(games)
+  `;
+  const { loading, error, data } = useQuery(query, {
+    variables: { playerID: playerID, date: date },
+  });
 
-    return (
-        <div className="player-page">
-            <div className="player-card">
-                <h1>{data.player.name}</h1>
-            </div>
-            <PlayerStatsChart games={data.player.games}/>
-        </div>
-    )
-}
+  const [stat, setStat] = useState(
+    StatObjects.find((stat) => stat.label === "Points")
+  );
+  function onStatSelect(stat) {
+    setStat(stat);
+  }
 
-export default Player
+  if (loading) return "Loading...";
+  if (error) {
+    return `Error! ${error.message}. ${loading}. ${data}`;
+  }
+  console.log(data);
+  let games = GamesWithSeasonType(data.player.games, seasonType);
+  games = games.filter((game) => CompareDates(game.date, date) <= 0);
+  const projection = data.player.projections.find((p) => p.date === date);
+  const statData = games.filter((game) => game.season === "2021-22");
+  const predictions = CalculatePredictions(projection, statData);
+
+  const game = data.player.games.find((game) => game.date === date);
+  const matchups = games.filter(
+    (matchup) =>
+      matchup.opponent.teamID ===
+      (projection?.opponent.teamID ?? game?.opponent.teamID)
+  );
+
+  const percentOfTeamStats = RelevantStats["Profile"].map((item) => {
+    const avg = mean(games.map((game) => game[item.recognize]));
+    const pct = round(
+      avg / mean(games.map((game) => game.teamStats[item.recognize])),
+      2
+    );
+    return {
+      stat: item.label,
+      avg: avg,
+      pct: pct,
+    };
+  });
+
+  function onDateSelect(newDate) {
+    setDate(newDate);
+  }
+
+  return (
+    <div className="player-page">
+      <PlayerPageContext
+        player={data.player}
+        opponent={projection?.opponent ?? game.opponent}
+        game={game}
+        date={projection?.date ?? game.date}
+        selectDate={onDateSelect}
+        seasonType={seasonType}
+        setSeasonType={setSeasonType}
+      />
+      <PlayerProfileChart stats={percentOfTeamStats} />
+      <StatSelectBtns
+        predictions={predictions}
+        playername={data.player.name}
+        selected={stat}
+        onStatSelect={onStatSelect}
+      />
+      <Prediction predictions={predictions} selected={stat} game={game} />
+      <PlayerStatsTable
+        predictions={predictions}
+        selected={stat}
+        matchups={matchups}
+        games={statData}
+        similar={data.player.similarPlayers}
+        opponent={data.player.projections[0].opponent.teamID}
+      />
+      <PlayerStatsChart games={games} />
+    </div>
+  );
+};
+
+export default Player;

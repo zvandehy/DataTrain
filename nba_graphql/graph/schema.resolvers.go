@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -36,18 +37,115 @@ func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*m
 	return t, err
 }
 
+var countGames int = 0
+
 func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.PlayerGame, error) {
-	//logrus.Printf("Get Games filtered by %v for Player %v", input, obj)
+	// logrus.Printf("Get Games filtered by %v for Player %v", input, obj)
+	countGames++
+	logrus.Infof("%d -- %s %s", countGames, obj.FirstName, obj.LastName)
 	if obj.PlayerID == 0 {
 		return []*model.PlayerGame{}, nil
 	}
 	input.PlayerID = &obj.PlayerID
-	return dataloader.For(ctx).PlayerGameByFilter.Load(input)
+	games, err := dataloader.For(ctx).PlayerGameByFilter.Load(input)
+	if err != nil {
+		return games, err
+	}
+	sort.SliceStable(games, func(i, j int) bool {
+		a, err := time.Parse("2006-01-02", games[i].Date)
+		if err != nil {
+			return false
+		}
+		b, err := time.Parse("2006-01-02", games[j].Date)
+		if err != nil {
+			return false
+		}
+		return a.After(b)
+	})
+	return games, err
+}
+
+func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error) {
+	start := time.Now()
+	var allProjections []*model.Projection
+	if strings.ToLower(*input.Sportsbook) != "prizepicks" {
+		return nil, fmt.Errorf("unsupported Sportsbook: %s. Current support only exists for: %v", *input.Sportsbook, []string{"PrizePicks"})
+	}
+
+	if input.StartDate == nil && input.EndDate == nil {
+		// today := time.Now().Format("2006-01-02")
+		// input.StartDate = &today
+	}
+	name := fmt.Sprintf("%s %s", obj.FirstName, obj.LastName)
+	input.PlayerName = &name
+
+	cur, err := r.Db.GetProjections(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get player projections: %v", err)
+	}
+	defer cur.Close(ctx)
+	err = cur.All(ctx, &allProjections)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get player projections: %v", err)
+	}
+	if time.Since(start) > (time.Second * 5) {
+		logrus.Warnf("Received %d player projections after %v", len(allProjections), time.Since(start))
+	}
+
+	duplicates := make(map[string][]*model.Projection, len(allProjections)/2)
+	for _, projection := range allProjections {
+		//TODO: Potential bug with "Tacos" / discounted projections
+		if projection.OpponentAbr == "" {
+			continue
+		}
+		key := fmt.Sprintf("%s+%s", projection.PlayerName, projection.Date)
+		if _, ok := duplicates[key]; !ok {
+			duplicates[key] = []*model.Projection{projection}
+		} else {
+			duplicates[key] = append(duplicates[key], projection)
+		}
+	}
+	var uniqueProjections []*model.Projection
+	for _, projections := range duplicates {
+		best := model.GetBestProjection(projections)
+		if best.PlayerName == "" {
+			logrus.Fatalf("projection has BLANK playername: %#v", best)
+		}
+		uniqueProjections = append(uniqueProjections, best)
+	}
+	return uniqueProjections, nil
+}
+
+func (r *playerResolver) SimilarPlayers(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.Player, error) {
+	input.PlayerID = &obj.PlayerID
+	return dataloader.For(ctx).SimilarPlayerLoader.Load(input)
 }
 
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from PlayerGame %v", obj)
-	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	start := time.Now()
+	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	if time.Since(start) > (time.Second * 5) {
+		logrus.Warnf("Received Team (from Playergame) after %v", time.Since(start))
+	}
+	return team, err
+}
+
+func (r *playerGameResolver) OpponentStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error) {
+	return dataloader.For(ctx).OpponentGameByPlayerGame.Load(*obj)
+}
+
+func (r *playerGameResolver) Team(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
+	start := time.Now()
+	team, err := dataloader.For(ctx).TeamByID.Load(obj.TeamID)
+	if time.Since(start) > (time.Second * 5) {
+		logrus.Warnf("Received Opponent (from PlayerGame) after %v", time.Since(start))
+	}
+	return team, err
+}
+
+func (r *playerGameResolver) TeamStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error) {
+	return dataloader.For(ctx).TeamGameByPlayerGame.Load(*obj)
 }
 
 func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error) {
@@ -114,6 +212,10 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 		return nil, fmt.Errorf("cannot get player from projection without player name")
 	}
 	playerFilter := model.PlayerFilter{Name: &obj.PlayerName}
+	if val, ok := model.PlayerNames[obj.PlayerName]; ok {
+		playerFilter.Name = &val
+	}
+
 	p, err := dataloader.For(ctx).PlayerByFilter.Load(playerFilter)
 	if err != nil {
 		logrus.Warnf("err when loading player for projection: %v", err)
@@ -179,16 +281,20 @@ func (r *queryResolver) FilterPlayers(ctx context.Context, input model.PlayerFil
 
 func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*model.Player, error) {
 	//logrus.Printf("Get Player with filter  %v", input)
-	playersDB := r.Db.Database("nba").Collection("players")
-	filter := bson.M{
-		"playerID": input.PlayerID,
-	}
-	opts := options.FindOne().SetSort(bson.D{{"playerID", 1}})
-	var player *model.Player
-	err := playersDB.FindOne(ctx, filter, opts).Decode(&player)
+
+	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{input})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting player: %v", err)
 	}
+	defer cur.Close(ctx)
+	var player *model.Player
+	cur.Next(ctx)
+	//get first result
+	err = cur.Decode(&player)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding player: %v", err)
+	}
+
 	return player, nil
 }
 
@@ -335,7 +441,6 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		logrus.Warnf("Received %d projections after %v", len(allProjections), time.Since(start))
 	}
 
-	//TODO: update a projection target instead of writing a new one
 	duplicates := make(map[string][]*model.Projection, len(allProjections)/2)
 	for _, projection := range allProjections {
 		//TODO: Potential bug with "Tacos" / discounted projections
@@ -351,7 +456,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	}
 	var uniqueProjections []*model.Projection
 	for _, projections := range duplicates {
-		best := GetBestProjection(projections)
+		best := model.GetBestProjection(projections)
 		if best.PlayerName == "" {
 			logrus.Fatalf("projection has BLANK playername: %#v", best)
 		}
@@ -359,6 +464,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	}
 
 	go func() {
+		start := time.Now()
 		var projections []*model.Projection
 		url := "https://partner-api.prizepicks.com/projections?single_stat=True&per_page=1000&league_id=7"
 		res, err := http.Get(url)
@@ -386,38 +492,29 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		projectionsDB := r.Db.Database("nba").Collection("projections")
 		insertCtx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 		for _, projection := range projections {
-			//TODO: implement upsert so duplicates are not created
-			res := projectionsDB.FindOne(insertCtx, bson.M{"playername": projection.PlayerName, "date": projection.Date})
-			if res.Err() != nil {
-				ins, err := projectionsDB.InsertOne(insertCtx, projection)
+			res, err := projectionsDB.UpdateOne(insertCtx, bson.M{"playername": projection.PlayerName, "date": projection.Date}, bson.M{"$set": projection}, options.Update().SetUpsert(true))
+			if err != nil {
 				if err != nil {
 					logrus.Warn(err)
 				}
-				logrus.Printf("INSERT %v: %v", projection.PlayerName, ins)
+				if res.UpsertedCount > 0 {
+					logrus.Printf("INSERTED %v", projection.PlayerName)
+				}
+				if res.ModifiedCount > 0 {
+					logrus.Printf("UPDATED %v", projection.PlayerName)
+				}
+
 			}
 		}
-		logrus.Printf("DONE retrieving prizepicks projections for today")
+		logrus.Printf("DONE retrieving prizepicks projections\tTook %v", time.Since(start))
 	}()
 
 	return uniqueProjections, nil
 }
 
-func GetBestProjection(projections []*model.Projection) *model.Projection {
-	maxTargets := 0
-	var bestProjections []*model.Projection
-	for _, projection := range projections {
-		if len(projection.Targets) > maxTargets {
-			maxTargets = len(projection.Targets)
-			bestProjections = []*model.Projection{projection}
-		} else if len(projection.Targets) == maxTargets {
-			bestProjections = append(bestProjections, projection)
-		}
-	}
-	return bestProjections[len(bestProjections)-1]
-}
-
 func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error) {
 	//logrus.Printf("Get Games from team %v filtered by %v", obj, input)
+	//TODO: Add dataloader for situation where player.games.team.games is called
 	input.TeamID = &obj.TeamID
 	cur, err := r.Db.GetTeamGames(ctx, []model.GameFilter{input})
 	if err != nil {
@@ -447,7 +544,12 @@ func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.P
 
 func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from TeamGame %v", obj)
-	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	start := time.Now()
+	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	if time.Since(start) > (time.Second * 5) {
+		logrus.Warnf("Received Opponent (from teamGame) after %v", time.Since(start))
+	}
+	return team, err
 }
 
 func (r *teamGameResolver) PlayersInGame(ctx context.Context, obj *model.TeamGame) (*model.PlayersInGame, error) {
@@ -523,13 +625,3 @@ type projectionResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type teamGameResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *projectionResolver) PropType(ctx context.Context, obj *model.Projection) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}

@@ -108,3 +108,17 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 	projections = append(projections, &Projection{Sportsbook: "PrizePicks", PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Date: date, StartTime: prop.Attributes.Start_time, Targets: []*Target{{Target: target, Type: statType}}})
 	return projections, nil
 }
+
+func GetBestProjection(projections []*Projection) *Projection {
+	maxTargets := 0
+	var bestProjections []*Projection
+	for _, projection := range projections {
+		if len(projection.Targets) > maxTargets {
+			maxTargets = len(projection.Targets)
+			bestProjections = []*Projection{projection}
+		} else if len(projection.Targets) == maxTargets {
+			bestProjections = append(bestProjections, projection)
+		}
+	}
+	return bestProjections[len(bestProjections)-1]
+}

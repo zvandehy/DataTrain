@@ -1,32 +1,45 @@
-import React from 'react'
-import {PredictionIconSmall} from './Prediction'
-
+import React from "react";
+import { PredictionIconSmall } from "./Prediction";
 
 const StatSelectBtns = (props) => {
-  const {projections,playername, onStatSelect, selected} = props;
+  const { predictions, playername, onStatSelect, selected } = props;
   return (
     <div className="stat-select">
-      {projections.map(item => {
-        return <StatSelectButton key={`${playername} ${item.stat.label}`} projection={item} selected={item.stat.label === selected} onStatSelect={onStatSelect}/>
+      {predictions.map((item) => {
+        return (
+          <StatSelectButton
+            key={`${playername} ${item.stat.label}`}
+            prediction={item}
+            isSelected={item.stat.recognize === selected.recognize}
+            onStatSelect={onStatSelect}
+          />
+        );
       })}
-      <button className="stat-select-btn span-3">
+      {/* <button className="stat-select-btn span-3">
           <p className="bold">Other</p>
-      </button>
+      </button> */}
     </div>
-  )
-}
+  );
+};
 const StatSelectButton = (props) => {
-  const {projection, onStatSelect, selected} = props;
-  const {stat, target, prediction, confidence} = projection;
+  const { prediction, onStatSelect, isSelected } = props;
+  const { stat, target, overUnder, confidence } = prediction;
   return (
-    <button className={`stat-select-btn ${selected ? 'selected' : ''}`} onClick={() => onStatSelect(stat.label)}>
-        <p className="bold titlecase">{stat.label}</p>
-        {target && confidence ? <>
+    <button
+      className={`stat-select-btn ${isSelected ? "selected" : ""}`}
+      onClick={() => onStatSelect(stat)}
+    >
+      <p className="bold titlecase">{stat.label}</p>
+      {target && confidence ? (
+        <>
           <p className="hide">T: {target}</p>
-          <PredictionIconSmall confidence={confidence} prediction={prediction}/>
-        </>: <></>}
+          <PredictionIconSmall confidence={confidence} overUnder={overUnder} />
+        </>
+      ) : (
+        <></>
+      )}
     </button>
-  )
-}
+  );
+};
 
-export default StatSelectBtns
+export default StatSelectBtns;
