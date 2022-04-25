@@ -28,7 +28,7 @@ type Team {
   numLoss: Int! #TODO
   games(input: GameFilter!): [TeamGame!]!
   players: [Player!]!
-  injuredPlayers: [Injury!]
+  injuries: [Injury!]
 }
 
 type TeamGame {
@@ -128,7 +128,7 @@ type Projection {
 type Injury {
   startDate: String!
   returnDate: String!
-  description: String!
+  status: String!
   player: Player!
 }
 

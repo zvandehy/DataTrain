@@ -280,3 +280,17 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 	return &averages, nil
 
 }
+
+func (c *NBADatabaseClient) GetPlayerInjuries(ctx context.Context, playerIDs []int) ([]*model.Injury, error) {
+	start := time.Now()
+	c.Queries++
+	cur, err := c.Database("nba").Collection("injuries").Find(ctx, bson.M{"playerID": bson.M{"$in": playerIDs}})
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	var injuries []*model.Injury
+	cur.All(ctx, &injuries)
+	logrus.Infof("Received Player Injuries for %d players\tTook %v", len(playerIDs), time.Since(start))
+	return injuries, nil
+}

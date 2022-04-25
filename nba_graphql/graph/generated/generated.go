@@ -50,10 +50,10 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Injury struct {
-		Description func(childComplexity int) int
-		Player      func(childComplexity int) int
-		ReturnDate  func(childComplexity int) int
-		StartDate   func(childComplexity int) int
+		Player     func(childComplexity int) int
+		ReturnDate func(childComplexity int) int
+		StartDate  func(childComplexity int) int
+		Status     func(childComplexity int) int
 	}
 
 	Player struct {
@@ -144,15 +144,15 @@ type ComplexityRoot struct {
 	}
 
 	Team struct {
-		Abbreviation   func(childComplexity int) int
-		Games          func(childComplexity int, input model.GameFilter) int
-		InjuredPlayers func(childComplexity int) int
-		Location       func(childComplexity int) int
-		Name           func(childComplexity int) int
-		NumLoss        func(childComplexity int) int
-		NumWins        func(childComplexity int) int
-		Players        func(childComplexity int) int
-		TeamID         func(childComplexity int) int
+		Abbreviation func(childComplexity int) int
+		Games        func(childComplexity int, input model.GameFilter) int
+		Injuries     func(childComplexity int) int
+		Location     func(childComplexity int) int
+		Name         func(childComplexity int) int
+		NumLoss      func(childComplexity int) int
+		NumWins      func(childComplexity int) int
+		Players      func(childComplexity int) int
+		TeamID       func(childComplexity int) int
 	}
 
 	TeamGame struct {
@@ -245,7 +245,7 @@ type QueryResolver interface {
 type TeamResolver interface {
 	Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error)
 	Players(ctx context.Context, obj *model.Team) ([]*model.Player, error)
-	InjuredPlayers(ctx context.Context, obj *model.Team) ([]*model.Injury, error)
+	Injuries(ctx context.Context, obj *model.Team) ([]*model.Injury, error)
 }
 type TeamGameResolver interface {
 	Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error)
@@ -268,13 +268,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Injury.description":
-		if e.complexity.Injury.Description == nil {
-			break
-		}
-
-		return e.complexity.Injury.Description(childComplexity), true
-
 	case "Injury.player":
 		if e.complexity.Injury.Player == nil {
 			break
@@ -295,6 +288,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Injury.StartDate(childComplexity), true
+
+	case "Injury.status":
+		if e.complexity.Injury.Status == nil {
+			break
+		}
+
+		return e.complexity.Injury.Status(childComplexity), true
 
 	case "Player.currentTeam":
 		if e.complexity.Player.CurrentTeam == nil {
@@ -848,12 +848,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Team.Games(childComplexity, args["input"].(model.GameFilter)), true
 
-	case "Team.injuredPlayers":
-		if e.complexity.Team.InjuredPlayers == nil {
+	case "Team.injuries":
+		if e.complexity.Team.Injuries == nil {
 			break
 		}
 
-		return e.complexity.Team.InjuredPlayers(childComplexity), true
+		return e.complexity.Team.Injuries(childComplexity), true
 
 	case "Team.location":
 		if e.complexity.Team.Location == nil {
@@ -1257,7 +1257,7 @@ type Team {
   numLoss: Int! #TODO
   games(input: GameFilter!): [TeamGame!]!
   players: [Player!]!
-  injuredPlayers: [Injury!]
+  injuries: [Injury!]
 }
 
 type TeamGame {
@@ -1357,7 +1357,7 @@ type Projection {
 type Injury {
   startDate: String!
   returnDate: String!
-  description: String!
+  status: String!
   player: Player!
 }
 
@@ -1710,7 +1710,7 @@ func (ec *executionContext) _Injury_returnDate(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Injury_description(ctx context.Context, field graphql.CollectedField, obj *model.Injury) (ret graphql.Marshaler) {
+func (ec *executionContext) _Injury_status(ctx context.Context, field graphql.CollectedField, obj *model.Injury) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1728,7 +1728,7 @@ func (ec *executionContext) _Injury_description(ctx context.Context, field graph
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Description, nil
+		return obj.Status, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4623,7 +4623,7 @@ func (ec *executionContext) _Team_players(ctx context.Context, field graphql.Col
 	return ec.marshalNPlayer2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Team_injuredPlayers(ctx context.Context, field graphql.CollectedField, obj *model.Team) (ret graphql.Marshaler) {
+func (ec *executionContext) _Team_injuries(ctx context.Context, field graphql.CollectedField, obj *model.Team) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4641,7 +4641,7 @@ func (ec *executionContext) _Team_injuredPlayers(ctx context.Context, field grap
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Team().InjuredPlayers(rctx, obj)
+		return ec.resolvers.Team().Injuries(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7426,8 +7426,8 @@ func (ec *executionContext) _Injury(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "description":
-			out.Values[i] = ec._Injury_description(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._Injury_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -8235,7 +8235,7 @@ func (ec *executionContext) _Team(ctx context.Context, sel ast.SelectionSet, obj
 				}
 				return res
 			})
-		case "injuredPlayers":
+		case "injuries":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -8243,7 +8243,7 @@ func (ec *executionContext) _Team(ctx context.Context, sel ast.SelectionSet, obj
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Team_injuredPlayers(ctx, field, obj)
+				res = ec._Team_injuries(ctx, field, obj)
 				return res
 			})
 		default:
