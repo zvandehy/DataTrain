@@ -238,13 +238,13 @@
 
 .teams-dropdown input,
 .teams-dropdown button {
-  padding: 0.25em;
+  padding: 0.25em 0;
   background-color: inherit;
 }
 .react-datepicker-wrapper input {
   width: inherit;
 }
-.teams-dropdown *:hover {
+.teams-dropdown > *:hover {
   background-color: var(--color-accent);
 }
 
