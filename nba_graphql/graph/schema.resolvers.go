@@ -22,9 +22,6 @@ import (
 )
 
 func (r *playerResolver) Name(ctx context.Context, obj *model.Player) (string, error) {
-	// if name, ok := model.PlayerNames[obj.PlayerID]; ok {
-	// 	return name, nil
-	// }
 	return obj.FirstName + " " + obj.LastName, nil
 }
 
@@ -224,10 +221,6 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 		logrus.Warnf("err when loading player for projection: %v", err)
 		return &model.Player{FirstName: *playerFilter.Name}, nil
 	}
-	// if _, ok := model.PlayerNames[p.PlayerID]; ok {
-	// 	name := strings.SplitN(model.PlayerNames[p.PlayerID], " ", 2)
-	// 	return &model.Player{FirstName: name[0], LastName: name[1]}, nil
-	// }
 	if p == nil {
 		logrus.Warnf("Player %v is nil. Probably needs to be uploaded to the database.", *playerFilter.Name)
 		name := strings.SplitN(*playerFilter.Name, " ", 2)
