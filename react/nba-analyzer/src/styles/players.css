@@ -218,6 +218,44 @@
   margin: 0.75em;
 }
 
+.teams-dropdown {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  background-color: var(--color-grey);
+  color: var(--color-black);
+}
+.datalist-input button {
+  width: 56px;
+}
+.teams-dropdown > div {
+  margin-inline: 5px;
+  max-width: 120px;
+  background-color: inherit;
+  color: inherit;
+  padding: 0.25rem 0;
+}
+
+.teams-dropdown input,
+.teams-dropdown button {
+  padding: 0.25em;
+  background-color: inherit;
+}
+.react-datepicker-wrapper input {
+  width: inherit;
+}
+.teams-dropdown *:hover {
+  background-color: var(--color-accent);
+}
+
+.datalist-input input {
+  width: 100px;
+  color: inherit;
+}
+.sorter {
+  width: 100px;
+}
+
 @media (max-width: 885px) {
   .playercard {
     grid-template-columns: 1fr 2fr !important;
@@ -297,5 +335,10 @@
   .stat-select-btn:hover .hide {
     display: inline;
     padding-left: 2px;
+  }
+
+  .teams-dropdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
   }
 }
