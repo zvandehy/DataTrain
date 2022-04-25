@@ -28,6 +28,8 @@ type Loaders struct {
 	TeamGameByPlayerGame     TeamGameLoader
 	OpponentGameByPlayerGame TeamGameLoader
 	SimilarPlayerLoader      SimilarPlayerLoader
+	PlayerInjuryLoader       PlayerInjuryLoader
+	TeamInjuryLoader         TeamInjuryLoader
 }
 
 func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handler {
@@ -164,6 +166,52 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 							players[i] = playersByName[*player.Name]
 						}
 						return players, errs
+					},
+				},
+			),
+			PlayerInjuryLoader: *NewPlayerInjuryLoader(
+				PlayerInjuryLoaderConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch: func(keys []int) ([][]*model.Injury, []error) {
+						playerInjuries := make([][]*model.Injury, len(keys))
+						injuriesByPlayerID := make(map[int][]*model.Injury, len(keys))
+						errs := make([]error, len(keys))
+						injuries, err := conn.GetPlayerInjuries(r.Context(), keys)
+						if err != nil {
+							return nil, []error{err}
+						}
+
+						for _, injury := range injuries {
+							injuriesByPlayerID[injury.PlayerID] = append(injuriesByPlayerID[injury.PlayerID], injury)
+						}
+						for i, playerID := range keys {
+							playerInjuries[i] = injuriesByPlayerID[playerID]
+						}
+						return playerInjuries, errs
+					},
+				},
+			),
+			TeamInjuryLoader: *NewTeamInjuryLoader(
+				TeamInjuryLoaderConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch: func(keys []int) ([][]*model.Injury, []error) {
+						teamInjuries := make([][]*model.Injury, len(keys))
+						injuriesByTeamID := make(map[int][]*model.Injury, len(keys))
+						errs := make([]error, len(keys))
+						injuries, err := conn.GetTeamInjuries(r.Context(), keys)
+						if err != nil {
+							return nil, []error{err}
+						}
+
+						for _, injury := range injuries {
+							injuriesByTeamID[injury.Team.TeamID] = append(injuriesByTeamID[injury.Team.TeamID], injury)
+						}
+						for i, teamID := range keys {
+							teamInjuries[i] = injuriesByTeamID[teamID]
+						}
+						return teamInjuries, errs
 					},
 				},
 			),

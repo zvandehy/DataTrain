@@ -21,6 +21,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func (r *injuryResolver) Player(ctx context.Context, obj *model.Injury) (*model.Player, error) {
+	return dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
+}
+
 func (r *playerResolver) Name(ctx context.Context, obj *model.Player) (string, error) {
 	return obj.FirstName + " " + obj.LastName, nil
 }
@@ -36,8 +40,6 @@ func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*m
 	}
 	return t, err
 }
-
-var countGames int = 0
 
 func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.PlayerGame, error) {
 	// logrus.Printf("Get Games filtered by %v for Player %v", input, obj)
@@ -63,6 +65,10 @@ func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input mod
 		return a.After(b)
 	})
 	return games, err
+}
+
+func (r *playerResolver) Injuries(ctx context.Context, obj *model.Player) ([]*model.Injury, error) {
+	return dataloader.For(ctx).PlayerInjuryLoader.Load(obj.PlayerID)
 }
 
 func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error) {
@@ -542,6 +548,10 @@ func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.P
 	return r.Query().FilterPlayers(ctx, input)
 }
 
+func (r *teamResolver) Injuries(ctx context.Context, obj *model.Team) ([]*model.Injury, error) {
+	return dataloader.For(ctx).TeamInjuryLoader.Load(obj.TeamID)
+}
+
 func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from TeamGame %v", obj)
 	start := time.Now()
@@ -597,6 +607,9 @@ func (r *teamGameResolver) PlayersInGame(ctx context.Context, obj *model.TeamGam
 	return &model.PlayersInGame{TeamPlayers: teamPlayers, OpponentPlayers: oppPlayers}, nil
 }
 
+// Injury returns generated.InjuryResolver implementation.
+func (r *Resolver) Injury() generated.InjuryResolver { return &injuryResolver{r} }
+
 // Player returns generated.PlayerResolver implementation.
 func (r *Resolver) Player() generated.PlayerResolver { return &playerResolver{r} }
 
@@ -618,6 +631,7 @@ func (r *Resolver) Team() generated.TeamResolver { return &teamResolver{r} }
 // TeamGame returns generated.TeamGameResolver implementation.
 func (r *Resolver) TeamGame() generated.TeamGameResolver { return &teamGameResolver{r} }
 
+type injuryResolver struct{ *Resolver }
 type playerResolver struct{ *Resolver }
 type playerGameResolver struct{ *Resolver }
 type playersInGameResolver struct{ *Resolver }
@@ -625,3 +639,11 @@ type projectionResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type teamGameResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+var countGames int = 0

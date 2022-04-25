@@ -35,12 +35,28 @@ const Player = () => {
         currentTeam {
           abbreviation
           teamID
+          injuries {
+            startDate
+            returnDate
+            status
+            player {
+              name
+            }
+          }
         }
         projections(input: { sportsbook: "PrizePicks" }) {
           date
           opponent {
             abbreviation
             teamID
+            injuries {
+              startDate
+              returnDate
+              status
+              player {
+                name
+              }
+            }
           }
           targets {
             target
@@ -178,6 +194,7 @@ const Player = () => {
     setDate(newDate);
   }
 
+  // TODO: handle injuries for previous games
   return (
     <div className="player-page">
       <PlayerPageContext
