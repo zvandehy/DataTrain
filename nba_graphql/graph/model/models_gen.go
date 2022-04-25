@@ -18,6 +18,16 @@ type PlayerFilter struct {
 	TeamID   *int    `json:"teamID" bson:"teamID"`
 }
 
+type ProjectionFilter struct {
+	Sportsbook *string `json:"sportsbook" bson:"sportsbook"`
+	PlayerName *string `json:"playerName" bson:"playerName"`
+	PlayerID   *int    `json:"playerID" bson:"playerID"`
+	StartDate  *string `json:"startDate" bson:"startDate"`
+	EndDate    *string `json:"endDate" bson:"endDate"`
+	TeamID     *int    `json:"teamID" bson:"teamID"`
+	OpponentID *int    `json:"opponentID" bson:"opponentID"`
+}
+
 type Target struct {
 	Target float64 `json:"target" bson:"target"`
 	Type   string  `json:"type" bson:"type"`

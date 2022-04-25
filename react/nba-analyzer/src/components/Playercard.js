@@ -1,142 +1,71 @@
-import React, {useState} from 'react'
-import PlayerContext from "./Playercontext"
-import StatSelectBtns from "./Statselectbtns"
-import Prediction from "./Prediction"
-import PlayerStatsPreview from "./Playerstatspreview"
-import { GetPropScore } from '../utils'
-import {round, mean} from "mathjs"
+import React, { useState } from "react";
+import PlayerContext from "./Playercontext";
+import StatSelectBtns from "./Statselectbtns";
+import Prediction from "./Prediction";
+import { PlayerStatsPreview } from "./PlayerStats";
+import { ParseDate, CompareDates, GamesWithSeasonType } from "../utils";
+import { CalculatePredictions, GetHighestConfidence } from "../predictions.js";
 
 const Playercard = (props) => {
-  let {playerProp} = props;
-  const {player} = playerProp;
+  const { projection, player, date, statPreference, seasonType } = props;
+
+  const games = GamesWithSeasonType(player.games, seasonType);
   //TODO: move to utils (or a filters.js) as function
-  let seasonData = player.games.filter((game) => game.season === "2021-22").sort(function(a, b) {
-      var c = new Date(a.date);
-      var d = new Date(b.date);
-      return c-d;
-  });
-  //TODO: add counts option to custom filters
-  const counts = [0, -30, -10, -5];
-  const weights = [.30,.27,.25,.18]; //TODO: determine best weights to use
-  //TODO: create a constant list of stat types, shorthand, and backend score mapping
-  const stats = [
-    {
-      label:"Points",
-      abbreviation:"PTS",
-      recognize:"points",
-    },
-    {
-      label:"Assists",
-      abbreviation:"AST",
-      recognize:"assists",
-    },
-    {
-      label:"3 Pointers",
-      abbreviation:"3PM",
-      recognize:"3-pt made",
-    },
-    {
-      label:"PTS + REB + AST",
-      abbreviation:"PRA",
-      recognize:"pts+rebs+asts",
-    },
-    {
-      label:"Rebounds",
-      abbreviation:"REB",
-      recognize:"rebounds",
-    },
-    {
-      label:"Free Throws",
-      abbreviation:"FTM",
-      recognize:"free throws made",
-    },
-    {
-      label:"Fantasy",
-      abbreviation:"FAN",
-      recognize:"fantasy score",
-    },
-    {
-      label:"Blocks + Steals",
-      abbreviation:"B+S",
-      recognize:"blks+stls",
-    },
-    {
-      label:"Double Double",
-      abbreviation:"DD",
-      recognize:"double-double",
-    },
-  ];
-  
-  //TODO: Get the targets (if it exists) and the prediction & confidence for each stat type
-  let projections = stats.map(item => {
-    const target = getTarget(playerProp.targets, item.recognize);
-    const playerStats = getStats(seasonData, counts, item.recognize, target);
-    const predictionAndConfidence = getPredictionAndConfidence(playerStats, weights);
-    return {
-    stat:item, 
-    target: target,
-    prediction:predictionAndConfidence[0],
-    confidence:predictionAndConfidence[1], 
-    //TODO: generate counts data using counts option & seasonData
-    counts: playerStats,
-  }});
+  let seasonData = games
+    .filter(
+      (game) =>
+        game.season === "2021-22" &&
+        CompareDates(date, ParseDate(game.date)) > 1
+    )
+    .sort(CompareDates);
 
-  //TODO: Make this more sophisticated
-  function getPredictionAndConfidence(stats, weights) {
-    let conf_o = 0;
-    let conf_u = 0;
-    stats.forEach((item,i)=> {
-      conf_o += item.pct_o * weights[i];
-      conf_u += item.pct_u * weights[i];
-    })
-    conf_o = round(conf_o,2);
-    conf_u = round(conf_u,2);
-    if (conf_o > conf_u) {
-      return ["OVER", conf_o];
-    } return ["UNDER", conf_u]
-  }
+  const game = games.find((game) => game.date === date);
+  let predictions = CalculatePredictions(projection, seasonData);
 
-  function getTarget(targets, stat) {
-    //TODO: Update this using the constant list of types and score mappings to get all the types
-    const exists = targets.filter(item => item.type.toLowerCase() === stat.toLowerCase());
-    if (exists.length === 1) {
-      return exists[0].target
-    } 
-    return 0;
-  }
+  const matchups = seasonData.filter(
+    (game) => game.opponent.teamID === projection.opponent.teamID
+  );
 
-  function getStats(games, counts, stat, target) {
-    let stats = [];
-    const scores = games.map(game => GetPropScore(game, stat));
-    counts.forEach(count => {
-      //TODO: Apply game stat filters
-      const data = scores.slice(count);
-      const avg = round(mean(data),2);
-      const over = data.filter(score => score > target).length;
-      const under = data.filter(score => score < target).length;
-      const pct_o = round((over / data.length)*100, 2);
-      const pct_u = round((under / data.length)*100, 2);
-      stats.push({n:data.length, avg:avg, over:over, under:under, pct_o:pct_o, pct_u:pct_u})
-    })
-    return stats
-  }
+  const initialStat =
+    statPreference === ""
+      ? GetHighestConfidence(predictions).stat
+      : statPreference;
 
-  const matchups = seasonData.filter((game) => game.opponent.teamID === playerProp.opponent.teamID);
-
-  //TODO: Default to highest confidence or preference from filters
-  const [stat, setStat] = useState("Points");
+  const [stat, setStat] = useState(initialStat);
   function onStatSelect(stat) {
     setStat(stat);
   }
-
+  React.useEffect(() => {
+    if (statPreference !== "" && statPreference !== "ANY") {
+      setStat(statPreference);
+    } else {
+      setStat(initialStat);
+    }
+  }, [initialStat, statPreference]);
   return (
     <div className="playercard">
-        <PlayerContext playerProp={playerProp} opponent={playerProp.opponent}></PlayerContext>
-        <StatSelectBtns projections={projections} playername={player.name} selected={stat} onStatSelect={onStatSelect}></StatSelectBtns>
-        <Prediction projections={projections} selected={stat}></Prediction>
-        <PlayerStatsPreview projections={projections} selected={stat} matchups={matchups} similarData={""}></PlayerStatsPreview>
+      <PlayerContext
+        player={player}
+        opponent={projection.opponent}
+      ></PlayerContext>
+      <StatSelectBtns
+        predictions={predictions}
+        playername={player.name}
+        selected={stat}
+        onStatSelect={onStatSelect}
+      ></StatSelectBtns>
+      <Prediction
+        predictions={predictions}
+        selected={stat}
+        game={game}
+      ></Prediction>
+      <PlayerStatsPreview
+        predictions={predictions}
+        selected={stat}
+        matchups={matchups}
+      ></PlayerStatsPreview>
     </div>
-  )
-}
+  );
+};
 
-export default Playercard
+export default Playercard;
