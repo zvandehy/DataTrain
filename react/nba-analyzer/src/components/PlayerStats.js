@@ -2,6 +2,7 @@ import React from "react";
 import LastNGames from "./LastNGames";
 import { GetPropScore, AveragePropScore, GetColor } from "../utils";
 import { RelevantStats } from "../utils";
+import { SimilarPlayerRows } from "./SimilarPlayers";
 
 export const PlayerStatsPreview = (props) => {
   const { predictions, selected, matchups } = props;
@@ -47,22 +48,12 @@ export const PlayerStatsPreview = (props) => {
           </React.Fragment>
         );
       })}
-
-      {/* SIMILAR STATS */}
-
-      <span className="header similar-players-header">Similar Players</span>
-      <span className="similar-players-stat">xx.x</span>
-      <span className="similar-players-stat-result">XX%</span>
-
-      <span className="header similar-opp-header">Similar Opp</span>
-      <span className="similar-opp-stat">xx.x</span>
-      <span className="similar-opp-stat-result">XX%</span>
     </div>
   );
 };
 
 export const PlayerStatsTable = (props) => {
-  const { predictions, selected, games, matchups } = props;
+  const { predictions, selected, games, matchups, opponent, similar } = props;
   const prediction = predictions.filter(
     (item) =>
       item.stat.recognize.toLowerCase() === selected.recognize.toLowerCase()
@@ -102,6 +93,29 @@ export const PlayerStatsTable = (props) => {
               })}
             </tr>
           ))}
+          {games.filter((game) => game.playoffs).length > 0 ? (
+            <tr>
+              <td>Playoffs ({games.filter((game) => game.playoffs).length})</td>
+              {RelevantStats[selected.recognize].map((stat, i) => {
+                const nGames = games.filter((game) => game.playoffs);
+
+                const cellTarget =
+                  i === 0 && prediction.target
+                    ? prediction.target
+                    : AveragePropScore(games, stat.recognize);
+                return (
+                  <AverageStatCell
+                    games={nGames}
+                    stat={stat}
+                    target={cellTarget}
+                    key={`${nGames.length} ${stat.label} ${i}`}
+                  />
+                );
+              })}
+            </tr>
+          ) : (
+            <></>
+          )}
           {matchups.length ? (
             <>
               <tr>
@@ -137,6 +151,13 @@ export const PlayerStatsTable = (props) => {
           ) : (
             <></>
           )}
+          <SimilarPlayerRows
+            similar={similar}
+            opponent={opponent}
+            prediction={prediction}
+            selected={selected}
+            average={AveragePropScore(games, prediction.stat.recognize)}
+          />
         </tbody>
       </table>
     </div>

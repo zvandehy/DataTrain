@@ -49,15 +49,16 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Player struct {
-		CurrentTeam func(childComplexity int) int
-		Games       func(childComplexity int, input model.GameFilter) int
-		Height      func(childComplexity int) int
-		Name        func(childComplexity int) int
-		PlayerID    func(childComplexity int) int
-		Position    func(childComplexity int) int
-		Projections func(childComplexity int, input model.ProjectionFilter) int
-		Seasons     func(childComplexity int) int
-		Weight      func(childComplexity int) int
+		CurrentTeam    func(childComplexity int) int
+		Games          func(childComplexity int, input model.GameFilter) int
+		Height         func(childComplexity int) int
+		Name           func(childComplexity int) int
+		PlayerID       func(childComplexity int) int
+		Position       func(childComplexity int) int
+		Projections    func(childComplexity int, input model.ProjectionFilter) int
+		Seasons        func(childComplexity int) int
+		SimilarPlayers func(childComplexity int, input model.GameFilter) int
+		Weight         func(childComplexity int) int
 	}
 
 	PlayerGame struct {
@@ -194,6 +195,8 @@ type PlayerResolver interface {
 	CurrentTeam(ctx context.Context, obj *model.Player) (*model.Team, error)
 	Games(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.PlayerGame, error)
 	Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error)
+
+	SimilarPlayers(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.Player, error)
 }
 type PlayerGameResolver interface {
 	Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error)
@@ -315,6 +318,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Player.Seasons(childComplexity), true
+
+	case "Player.similarPlayers":
+		if e.complexity.Player.SimilarPlayers == nil {
+			break
+		}
+
+		args, err := ec.field_Player_similarPlayers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Player.SimilarPlayers(childComplexity, args["input"].(model.GameFilter)), true
 
 	case "Player.weight":
 		if e.complexity.Player.Weight == nil {
@@ -1172,6 +1187,7 @@ type Player {
   projections(input: ProjectionFilter!): [Projection!]!
   height: String!
   weight: Int!
+  similarPlayers(input: GameFilter!): [Player!]!
 }
 
 type Team {
@@ -1362,6 +1378,21 @@ func (ec *executionContext) field_Player_projections_args(ctx context.Context, r
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNProjectionFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProjectionFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Player_similarPlayers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.GameFilter
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNGameFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐGameFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1870,6 +1901,48 @@ func (ec *executionContext) _Player_weight(ctx context.Context, field graphql.Co
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Player_similarPlayers(ctx context.Context, field graphql.CollectedField, obj *model.Player) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Player",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Player_similarPlayers_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Player().SimilarPlayers(rctx, obj, args["input"].(model.GameFilter))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Player)
+	fc.Result = res
+	return ec.marshalNPlayer2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PlayerGame_assist_percentage(ctx context.Context, field graphql.CollectedField, obj *model.PlayerGame) (ret graphql.Marshaler) {
@@ -7151,6 +7224,20 @@ func (ec *executionContext) _Player(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "similarPlayers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Player_similarPlayers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

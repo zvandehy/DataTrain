@@ -8,6 +8,7 @@ import (
 
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
+	"github.com/zvandehy/DataTrain/nba_graphql/util"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -26,6 +27,7 @@ type Loaders struct {
 	PlayerGameByFilter       PlayerGameLoader
 	TeamGameByPlayerGame     TeamGameLoader
 	OpponentGameByPlayerGame TeamGameLoader
+	SimilarPlayerLoader      SimilarPlayerLoader
 }
 
 func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handler {
@@ -274,6 +276,34 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 							games[i] = gamesByPlayerID[*filter.PlayerID]
 						}
 						return games, errs
+					},
+				},
+			),
+			SimilarPlayerLoader: *NewSimilarPlayerLoader(
+				SimilarPlayerLoaderConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch: func(keys []model.GameFilter) ([][]*model.Player, []error) {
+						similarPlayers := make([][]*model.Player, len(keys))
+						errs := make([]error, len(keys))
+						removedPlayerIDs := make([]model.GameFilter, len(keys))
+						for i, filter := range keys {
+							removedPlayerIDs[i] = model.GameFilter{Season: filter.Season} //TODO: add other filters if applicable
+						}
+						playerAverages, err := conn.GetAverages(r.Context(), removedPlayerIDs)
+						if err != nil || len(*playerAverages) == 0 {
+							return nil, []error{err}
+						}
+						for i, filter := range keys {
+							targetPlayer := (*playerAverages)[0]
+							for _, p := range *playerAverages {
+								if p.Player.PlayerID == *filter.PlayerID {
+									targetPlayer = p
+								}
+							}
+							similarPlayers[i] = util.SimilarPlayers(*playerAverages, targetPlayer)
+						}
+						return similarPlayers, errs
 					},
 				},
 			),

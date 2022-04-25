@@ -1,6 +1,7 @@
 import React from "react";
 import DataListInput from "react-datalist-input";
 import { Link } from "react-router-dom";
+import { CompareDates, FormatDate, GamesWithSeasonType } from "../utils";
 import EventsModal from "./EventsModal";
 
 const PlayerContext = (props) => {
@@ -19,15 +20,18 @@ const PlayerContext = (props) => {
 };
 
 export const PlayerPageContext = (props) => {
-  const { player, opponent, date, selectDate } = props;
+  const { player, opponent, date, selectDate, seasonType, setSeasonType } =
+    props;
   return (
     <div className="player-context">
       <PlayerInfo
         player={player}
+        seasonType={seasonType}
         opponent={opponent}
         link={false}
         date={date}
         selectDate={selectDate}
+        setSeasonType={setSeasonType}
       />
       <div className="container">
         <img
@@ -41,28 +45,20 @@ export const PlayerPageContext = (props) => {
   );
 };
 
-function GetGameDropdowns(player) {
-  let dropdowns = player.games.map((game) => {
+function GetGameDropdowns(player, seasonType) {
+  const games = GamesWithSeasonType(player.games, seasonType);
+  let dropdowns = games.map((game) => {
     return { date: game.date, opponent: game.opponent, team: game.team };
   });
-  const projections = player.projections.filter(
-    (projection) =>
-      dropdowns.findIndex((game) => game.date === projection.date) === -1
-  );
-  projections.forEach((projection) => {
-    dropdowns.unshift({
-      date: projection.date,
-      opponent: projection.opponent,
-      team: player.currentTeam,
-    });
+  player.projections.forEach((projection) => {
+    if (CompareDates(FormatDate(new Date()), projection.date) <= 0) {
+      dropdowns.unshift({
+        date: projection.date,
+        opponent: projection.opponent,
+        team: player.currentTeam,
+      });
+    }
   });
-  // if (input) {
-  //   dropdowns = dropdowns.filter(
-  //     (game) =>
-  //       game.date.search(input) !== -1 ||
-  //       game.opponent.abbreviation.toLowerCase().search(input) !== -1
-  //   );
-  // }
   return dropdowns.map((game, i, arr) => {
     return {
       key: game.date,
@@ -74,7 +70,8 @@ function GetGameDropdowns(player) {
 }
 
 export const PlayerInfo = (props) => {
-  const { player, opponent, link, selectDate } = props;
+  const { player, opponent, link, selectDate, seasonType, setSeasonType } =
+    props;
   return (
     <div className="player-info">
       <h2 className="player-name">
@@ -91,7 +88,7 @@ export const PlayerInfo = (props) => {
         <div id={"games-dropdown"}>
           <DataListInput
             placeholder="Select a game"
-            items={GetGameDropdowns(player)}
+            items={GetGameDropdowns(player, seasonType)}
             onSelect={(date) => selectDate(date.value)}
             clearInputOnClick={true}
             suppressReselect={true}
@@ -122,6 +119,19 @@ export const PlayerInfo = (props) => {
         </span>
         <EventsModal />
       </div>
+      <button
+        onClick={() =>
+          setSeasonType(
+            seasonType === "REG"
+              ? "PLAYOFFS"
+              : seasonType === "PLAYOFFS"
+              ? ""
+              : "REG"
+          )
+        }
+      >
+        {seasonType === "" ? "ANY" : seasonType}
+      </button>
     </div>
   );
 };

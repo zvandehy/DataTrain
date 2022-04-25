@@ -15,6 +15,7 @@ type Player {
   projections(input: ProjectionFilter!): [Projection!]!
   height: String!
   weight: Int!
+  similarPlayers(input: GameFilter!): [Player!]!
 }
 
 type Team {

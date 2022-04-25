@@ -37,8 +37,12 @@ func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*m
 	return t, err
 }
 
+var countGames int = 0
+
 func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.PlayerGame, error) {
-	//logrus.Printf("Get Games filtered by %v for Player %v", input, obj)
+	// logrus.Printf("Get Games filtered by %v for Player %v", input, obj)
+	countGames++
+	logrus.Infof("%d -- %s %s", countGames, obj.FirstName, obj.LastName)
 	if obj.PlayerID == 0 {
 		return []*model.PlayerGame{}, nil
 	}
@@ -112,9 +116,19 @@ func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, inp
 	return uniqueProjections, nil
 }
 
+func (r *playerResolver) SimilarPlayers(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.Player, error) {
+	input.PlayerID = &obj.PlayerID
+	return dataloader.For(ctx).SimilarPlayerLoader.Load(input)
+}
+
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from PlayerGame %v", obj)
-	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	start := time.Now()
+	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	if time.Since(start) > (time.Second * 5) {
+		logrus.Warnf("Received Team (from Playergame) after %v", time.Since(start))
+	}
+	return team, err
 }
 
 func (r *playerGameResolver) OpponentStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error) {
@@ -122,7 +136,12 @@ func (r *playerGameResolver) OpponentStats(ctx context.Context, obj *model.Playe
 }
 
 func (r *playerGameResolver) Team(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
-	return dataloader.For(ctx).TeamByID.Load(obj.TeamID)
+	start := time.Now()
+	team, err := dataloader.For(ctx).TeamByID.Load(obj.TeamID)
+	if time.Since(start) > (time.Second * 5) {
+		logrus.Warnf("Received Opponent (from PlayerGame) after %v", time.Since(start))
+	}
+	return team, err
 }
 
 func (r *playerGameResolver) TeamStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error) {
@@ -193,6 +212,10 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 		return nil, fmt.Errorf("cannot get player from projection without player name")
 	}
 	playerFilter := model.PlayerFilter{Name: &obj.PlayerName}
+	if val, ok := model.PlayerNames[obj.PlayerName]; ok {
+		playerFilter.Name = &val
+	}
+
 	p, err := dataloader.For(ctx).PlayerByFilter.Load(playerFilter)
 	if err != nil {
 		logrus.Warnf("err when loading player for projection: %v", err)
@@ -260,10 +283,10 @@ func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*
 	//logrus.Printf("Get Player with filter  %v", input)
 
 	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{input})
-	defer cur.Close(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting player: %v", err)
 	}
+	defer cur.Close(ctx)
 	var player *model.Player
 	cur.Next(ctx)
 	//get first result
@@ -441,6 +464,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	}
 
 	go func() {
+		start := time.Now()
 		var projections []*model.Projection
 		url := "https://partner-api.prizepicks.com/projections?single_stat=True&per_page=1000&league_id=7"
 		res, err := http.Get(url)
@@ -482,7 +506,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 
 			}
 		}
-		logrus.Printf("DONE retrieving prizepicks projections for today")
+		logrus.Printf("DONE retrieving prizepicks projections\tTook %v", time.Since(start))
 	}()
 
 	return uniqueProjections, nil
@@ -520,7 +544,12 @@ func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.P
 
 func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from TeamGame %v", obj)
-	return dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	start := time.Now()
+	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	if time.Since(start) > (time.Second * 5) {
+		logrus.Warnf("Received Opponent (from teamGame) after %v", time.Since(start))
+	}
+	return team, err
 }
 
 func (r *teamGameResolver) PlayersInGame(ctx context.Context, obj *model.TeamGame) (*model.PlayersInGame, error) {

@@ -62,21 +62,21 @@ function GetSortMethod(method) {
 }
 
 const Players = () => {
-  const [teamLookup, setTeamLookup] = useState("ANY");
+  const [teamLookup, setTeamLookup] = useState("");
   const [showPlayers, setShowPlayers] = useState([]);
   const [statPreference, setStatPreference] = useState("");
   const [positionLookup, setPositionLookup] = useState("");
   const [searchLookup, setSearchLookup] = useState("");
   const [sortMethod, setSortMethod] = useState("team");
   const [sortOrder, setSortOrder] = useState("DESC");
+  const [seasonType, setSeasonType] = useState("");
   const [date, setDate] = useState(FormatDate(new Date()));
   const { loading, error, data, refetch } = useQuery(HOME_QUERY, {
     variables: { date: date },
   });
   useEffect(() => {
-    let team = localStorage.getItem("lookup");
+    // let team = localStorage.getItem("lookup");
     if (data) {
-      setTeamLookup(team);
       let filterCleaning = data.projections.filter(
         (item) => item.player.playerID !== 0
       );
@@ -156,7 +156,7 @@ const Players = () => {
         let selected = selectedItem.label;
         if (selected === "ANY" || selected === teamLookup) {
           selected = "";
-          setTeamLookup("ANY");
+          setTeamLookup("");
         } else {
           setTeamLookup(selected);
         }
@@ -279,6 +279,19 @@ const Players = () => {
             )}
           </button>
         </div>
+        <button
+          onClick={() =>
+            setSeasonType(
+              seasonType === "REG"
+                ? "PLAYOFFS"
+                : seasonType === "PLAYOFFS"
+                ? ""
+                : "REG"
+            )
+          }
+        >
+          {seasonType === "" ? "ANY" : seasonType}
+        </button>
         {/* TODO: Add Sort by projection value (instead of season average) & sort by prediction (overUnder / confidence) */}
       </div>
       <ul className="players-list">
@@ -290,6 +303,7 @@ const Players = () => {
               date={date}
               key={item.player.playerID}
               statPreference={statPreference}
+              seasonType={seasonType}
             />
           ))
         ) : (
