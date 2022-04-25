@@ -10,6 +10,7 @@ type Player {
   seasons: [String!]!
   #G, F, or C
   position: String!
+  # TODO: change 'currentTeam' to 'team'
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
   injuries: [Injury!]!
@@ -125,6 +126,7 @@ type Projection {
   date: String!
 }
 
+# add injuries to games
 type Injury {
   startDate: String!
   returnDate: String!

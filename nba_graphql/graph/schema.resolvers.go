@@ -549,6 +549,7 @@ func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.P
 }
 
 func (r *teamResolver) Injuries(ctx context.Context, obj *model.Team) ([]*model.Injury, error) {
+	// TODO: Add dataloader
 	start := time.Now()
 	lookupPlayers := bson.M{"$lookup": bson.M{
 		"from":         "players",

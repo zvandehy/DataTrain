@@ -292,6 +292,19 @@ export const HOME_QUERY = gql`
           abbreviation
           teamID
           name
+          injuries {
+            startDate
+            returnDate
+            status
+            player {
+              name
+            }
+          }
+        }
+        injuries {
+          startDate
+          returnDate
+          status
         }
         games(input: { season: "2021-22" }) {
           season
@@ -322,6 +335,14 @@ export const HOME_QUERY = gql`
         abbreviation
         teamID
         name
+        injuries {
+          startDate
+          returnDate
+          status
+          player {
+            name
+          }
+        }
       }
       targets {
         target

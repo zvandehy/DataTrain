@@ -1,5 +1,6 @@
 package model
 
+//TODO: Might eventually want team IDs and/or maybe missed gameIDs
 type Injury struct {
 	Status     string `json:"status" bson:"status"`
 	StartDate  string `json:"start_date" bson:"start_date"`
