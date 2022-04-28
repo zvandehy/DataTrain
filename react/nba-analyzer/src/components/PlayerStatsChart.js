@@ -33,7 +33,7 @@ ChartJS.register(
 );
 
 const PlayerStatsChart = (props) => {
-  let { games } = props;
+  let { games, predictions, selected } = props;
   const options = {
     responsive: true,
     interaction: {
@@ -57,7 +57,7 @@ const PlayerStatsChart = (props) => {
       },
       title: {
         display: true,
-        text: "Chart.js Line Chart - Multi Axis",
+        text: "Player Stats Chart",
       },
       tooltip: {
         enabled: true,
@@ -79,7 +79,6 @@ const PlayerStatsChart = (props) => {
     },
   };
   const dates = games.map((game) => game.date);
-  let type = "points";
   const lines = ["minutes", "field_goal_percentage"];
   let datasets = Object.getOwnPropertyNames(games[0])
     .filter((item) => item !== "__typename" && item !== "date")
@@ -99,8 +98,8 @@ const PlayerStatsChart = (props) => {
             : prop === "minutes"
             ? prop
             : "y",
-        hidden: prop !== type,
-        order: prop !== type ? (prop === "minutes" ? 100 : i) : 0,
+        hidden: prop !== selected.recorgnize,
+        order: prop !== selected.recognize ? (prop === "minutes" ? 100 : i) : 0,
         backgroundColor: `rgba(${r}, ${g}, ${b}, 0.5)`,
         color: `rgba(${r}, ${g}, ${b}, 0.5)`,
         fillColor: `rgba(${r}, ${g}, ${b}, 0.5)`,
@@ -108,15 +107,19 @@ const PlayerStatsChart = (props) => {
         pointBorderColor: function (context) {
           const index = context.dataIndex;
           const value = context.dataset.data[index];
-          if (type !== prop) {
+          const prediction = predictions.find(
+            (prediction) => prediction.stat.recognize === prop
+          );
+          if (prediction === undefined) {
             return `rgba(${r}, ${g}, ${b}, 0.5)`;
           }
-          return value < target ? "rgba(255,0,0,0.5)" : "rgba(0,255,0,0.5)";
+          return value <= prediction.target
+            ? "rgba(255,0,0,0.5)"
+            : "rgba(0,255,0,0.5)";
         },
       };
     });
 
-  let target = 9.5;
   // let propDataset = datasets[datasets.findIndex(item => item.id === prop)]
   // for (let i=0; i<datasets[datasets.findIndex(item => item.id === prop)].data.length; i++) {
   //     if (GetPropScore({points:datasets[datasets.findIndex(item => item.id === prop)].data[i]},prop) > target) {

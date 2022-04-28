@@ -9,7 +9,9 @@ import { CalculatePredictions, GetHighestConfidence } from "../predictions.js";
 const Playercard = (props) => {
   const { projection, player, date, statPreference, seasonType } = props;
 
-  const games = GamesWithSeasonType(player.games, seasonType);
+  let games = GamesWithSeasonType(player.games, seasonType);
+  games = games.filter((game) => CompareDates(game.date, date) <= 0);
+  games = games.sort((a, b) => CompareDates(a.date, b.date));
   //TODO: move to utils (or a filters.js) as function
   let seasonData = games
     .filter(
