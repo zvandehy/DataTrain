@@ -173,17 +173,19 @@ const Player = () => {
   }
   console.log(data);
   let games = GamesWithSeasonType(data.player.games, seasonType);
-  games = games.filter((game) => CompareDates(game.date, date) <= 0);
+  games = games.filter((game) => CompareDates(game.date, date) < 0);
+  games = games.sort((a, b) => CompareDates(a.date, b.date));
   const projection = data.player.projections.find((p) => p.date === date);
   const statData = games.filter((game) => game.season === "2021-22");
   const predictions = CalculatePredictions(projection, statData);
 
   const game = data.player.games.find((game) => game.date === date);
-  const matchups = games.filter(
+  let matchups = games.filter(
     (matchup) =>
       matchup.opponent.teamID ===
       (projection?.opponent.teamID ?? game?.opponent.teamID)
   );
+  if (game !== undefined) matchups.push(game);
 
   const percentOfTeamStats = RelevantStats["Profile"].map((item) => {
     const avg = mean(games.map((game) => game[item.recognize]));
@@ -234,7 +236,11 @@ const Player = () => {
           games[games.length - 1].opponent
         }
       />
-      <PlayerStatsChart games={games} />
+      <PlayerStatsChart
+        games={games}
+        predictions={predictions}
+        selected={stat}
+      />
     </div>
   );
 };

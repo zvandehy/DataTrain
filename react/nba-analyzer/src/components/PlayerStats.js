@@ -34,7 +34,7 @@ export const PlayerStatsPreview = (props) => {
           <React.Fragment key={game.gameID}>
             {/* TODO: make "vs."" dynamic between 'vs' (home) &  '@' (away) */}
             <span className="header player-vs-opp-instance">
-              vs {game.opponent.abbreviation}
+              vs {game.opponent.abbreviation} {game.date}
             </span>
             <span className="player-vs-opp-stat">{score}</span>
             <span
@@ -124,11 +124,16 @@ export const PlayerStatsTable = (props) => {
                   <th key={item.label}>{item.label}</th>
                 ))}
               </tr>
-              {matchups.reverse().map((game) => {
+              {matchups.map((game) => {
                 return (
                   <tr key={`'vs' ${game.opponent.abbreviation} ${game.date}`}>
                     <td>
                       vs {game.opponent.abbreviation} {game.date}
+                      {games.find((g) => {
+                        return game.date === g.date;
+                      }) === undefined
+                        ? " (ACTUAL)"
+                        : ""}
                     </td>
                     {RelevantStats[selected.recognize].map((stat, i) => {
                       const cellTarget =
