@@ -97,7 +97,6 @@ func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, inp
 	if time.Since(start) > (time.Second * 5) {
 		logrus.Warnf("Received %d player projections after %v", len(allProjections), time.Since(start))
 	}
-
 	duplicates := make(map[string][]*model.Projection, len(allProjections)/2)
 	for _, projection := range allProjections {
 		//TODO: Potential bug with "Tacos" / discounted projections
@@ -236,7 +235,6 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 }
 
 func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error) {
-	//logrus.Printf("Get TEAM for projection %v", obj)
 	return dataloader.For(ctx).TeamByAbr.Load(obj.OpponentAbr)
 }
 
@@ -446,7 +444,6 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	if time.Since(start) > (time.Second * 5) {
 		logrus.Warnf("Received %d projections after %v", len(allProjections), time.Since(start))
 	}
-
 	duplicates := make(map[string][]*model.Projection, len(allProjections)/2)
 	for _, projection := range allProjections {
 		//TODO: Potential bug with "Tacos" / discounted projections
@@ -468,7 +465,6 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		}
 		uniqueProjections = append(uniqueProjections, best)
 	}
-
 	go func() {
 		start := time.Now()
 		var projections []*model.Projection
@@ -489,6 +485,10 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 			return
 		}
 		for _, prop := range prizepicks.Data {
+			if prop.Attributes.Is_promo {
+				logrus.Warn("skipping promo")
+				continue
+			}
 			projections, err = model.ParsePrizePick(prop, prizepicks.Included, projections)
 			if err != nil {
 				logrus.Warnf("couldn't parse prizepicks projections for today: %v", err)

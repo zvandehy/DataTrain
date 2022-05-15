@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type Projection struct {
@@ -91,6 +92,7 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 	if statType == "" {
 		return nil, fmt.Errorf("error retrieving prizepick stat type")
 	}
+
 	target, err := strconv.ParseFloat(prop.Attributes.Line_score, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve prizepicks target")
@@ -100,6 +102,10 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 	date := dateSlice[0]
 	for i, projection := range projections {
 		if projection.PlayerName == playerName {
+			if prop.Attributes.Is_promo {
+				logrus.Warn("skipping promo prizepick")
+				continue
+			}
 			projections[i].Targets = append(projections[i].Targets, &Target{Target: target, Type: statType})
 			return projections, nil
 		}
