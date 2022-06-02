@@ -202,6 +202,36 @@ func (r *playerGameResolver) PlayersInGame(ctx context.Context, obj *model.Playe
 	return &model.PlayersInGame{TeamPlayers: teamPlayers, OpponentPlayers: oppPlayers}, nil
 }
 
+func (r *playerGameResolver) Projections(ctx context.Context, obj *model.PlayerGame) ([]*model.Projection, error) {
+	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{{PlayerID: &obj.PlayerID}})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	var player model.Player
+	cur.Next(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = cur.Decode(&player)
+	if err != nil {
+		return nil, err
+	}
+	playername := player.FirstName + " " + player.LastName
+	fmt.Println(playername)
+	cur, err = r.Db.Client.Database("nba").Collection("projections").Find(ctx, bson.M{"playername": playername, "date": obj.Date})
+	if err != nil {
+		logrus.Error(err)
+		return nil, err
+	}
+	fmt.Println(model.ProjectionFilter{PlayerID: &obj.PlayerID, StartDate: &obj.Date, EndDate: &obj.Date})
+	defer cur.Close(ctx)
+	var projections []*model.Projection
+	cur.All(ctx, &projections)
+	logrus.Warn(projections)
+	return projections, nil
+}
+
 func (r *playersInGameResolver) Team(ctx context.Context, obj *model.PlayersInGame) ([]*model.Player, error) {
 	return obj.TeamPlayers, nil
 }

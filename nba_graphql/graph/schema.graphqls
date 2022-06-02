@@ -115,15 +115,29 @@ type PlayerGame {
   blocks: Int!
   steals: Int!
   playersInGame: PlayersInGame!
+  projections: [Projection]!
 }
 
 type Projection {
   player: Player!
-  sportsbook: String!
   opponent: Team!
-  targets: [Target!]!
+  propositions: [Proposition]!
   startTime: String!
   date: String!
+}
+
+type Proposition {
+  target: Float!
+  type: String!
+  # lastModified
+  sportsbook: String!
+  predictions: [Prediction!]!
+}
+
+type Prediction {
+  model: String!
+  overUnderPrediction: String!
+  totalPrediction: Float
 }
 
 # add injuries to games
