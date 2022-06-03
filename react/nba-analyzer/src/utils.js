@@ -47,6 +47,42 @@ export const RelevantStats = {
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
   ],
+  "pts+asts": [
+    { recognize: "pts+asts", label: "P+A" },
+    { recognize: "points", label: "PTS" },
+    { recognize: "rebounds", label: "REB" },
+    { recognize: "assists", label: "AST" },
+    { recognize: "field_goals_attempted", label: "FGA" },
+    { recognize: "effective_field_goal_percentage", label: "eFG%" },
+    { recognize: "offensive_rebounds", label: "OREB" },
+    { recognize: "defensive_rebounds", label: "DREB" },
+    { recognize: "usage", label: "USG%" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  "pts+rebs": [
+    { recognize: "pts+rebs", label: "P+R" },
+    { recognize: "points", label: "PTS" },
+    { recognize: "rebounds", label: "REB" },
+    { recognize: "assists", label: "AST" },
+    { recognize: "field_goals_attempted", label: "FGA" },
+    { recognize: "effective_field_goal_percentage", label: "eFG%" },
+    { recognize: "offensive_rebounds", label: "OREB" },
+    { recognize: "defensive_rebounds", label: "DREB" },
+    { recognize: "usage", label: "USG%" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  "rebs+asts": [
+    { recognize: "rebs+asts", label: "R+A" },
+    { recognize: "points", label: "PTS" },
+    { recognize: "rebounds", label: "REB" },
+    { recognize: "assists", label: "AST" },
+    { recognize: "field_goals_attempted", label: "FGA" },
+    { recognize: "effective_field_goal_percentage", label: "eFG%" },
+    { recognize: "offensive_rebounds", label: "OREB" },
+    { recognize: "defensive_rebounds", label: "DREB" },
+    { recognize: "usage", label: "USG%" },
+    { recognize: "minutes", label: "MIN" },
+  ],
   rebounds: [
     { recognize: "rebounds", label: "REB" },
     { recognize: "offensive_rebounds", label: "OREB" },
@@ -73,6 +109,27 @@ export const RelevantStats = {
     { recognize: "minutes", label: "MIN" },
   ],
   "blks+stls": [
+    { recognize: "blks+stls", label: "B+S" },
+    { recognize: "blocks", label: "BLK" },
+    { recognize: "steals", label: "STL" },
+    { recognize: "personal_fouls", label: "PF" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  turnovers: [
+    { recognize: "blks+stls", label: "B+S" },
+    { recognize: "blocks", label: "BLK" },
+    { recognize: "steals", label: "STL" },
+    { recognize: "personal_fouls", label: "PF" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  blocks: [
+    { recognize: "blks+stls", label: "B+S" },
+    { recognize: "blocks", label: "BLK" },
+    { recognize: "steals", label: "STL" },
+    { recognize: "personal_fouls", label: "PF" },
+    { recognize: "minutes", label: "MIN" },
+  ],
+  steals: [
     { recognize: "blks+stls", label: "B+S" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
@@ -209,6 +266,12 @@ export function GetPropScore(game, propType) {
       );
     case "blks+stls":
       return game["blocks"] + game["steals"];
+    case "pts+asts":
+      return game["points"] + game["assists"];
+    case "pts+rebs":
+      return game["points"] + game["rebounds"];
+    case "rebs+asts":
+      return game["rebounds"] + game["assists"];
     case "double-double":
       let doubles = 0;
       if (game["points"] >= 10) doubles++;
@@ -242,6 +305,12 @@ export function GetShortType(type) {
       return "FAN";
     case "pts+rebs+asts":
       return "PRA";
+    case "pts+rebs":
+      return "P+R";
+    case "pts+asts":
+      return "P+A";
+    case "rebs+asts":
+      return "R+A";
     case "free throws made":
       return "FTM";
     default:
