@@ -47,9 +47,39 @@ export const StatObjects = [
     recognize: "blks+stls",
   },
   {
+    label: "Blocks",
+    abbreviation: "BLK",
+    recognize: "blocks",
+  },
+  {
+    label: "Steals",
+    abbreviation: "STL",
+    recognize: "steals",
+  },
+  {
+    label: "Turnovers",
+    abbreviation: "TOV",
+    recognize: "turnovers",
+  },
+  {
     label: "Double Double",
     abbreviation: "DD",
     recognize: "double-double",
+  },
+  {
+    label: "Pts+Asts",
+    abbreviation: "P+A",
+    recognize: "pts+asts",
+  },
+  {
+    label: "Pts+Rebs",
+    abbreviation: "P+R",
+    recognize: "pts+rebs",
+  },
+  {
+    label: "Rebs+Asts",
+    abbreviation: "R+A",
+    recognize: "rebs+asts",
   },
 ];
 
