@@ -115,7 +115,7 @@ type PlayerGame {
   blocks: Int!
   steals: Int!
   playersInGame: PlayersInGame!
-  projections: [Projection]!
+  projections: [Projection]! #TODO change to propositions
 }
 
 type Projection {

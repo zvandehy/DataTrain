@@ -89,7 +89,7 @@ const Players = () => {
         statPreference !== ""
           ? filteredByTeam.filter(
               (item) =>
-                item.targets.filter((target) => {
+                item.propositions.filter((target) => {
                   return (
                     target?.type.toLowerCase() === statPreference.recognize &&
                     target?.target

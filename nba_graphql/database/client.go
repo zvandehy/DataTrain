@@ -224,7 +224,7 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 	start := time.Now()
 	c.Queries++
 	projectionDB := c.Database("nba").Collection("projections")
-	filter := bson.M{"sportsbook": "PrizePicks"}
+	filter := bson.M{}
 
 	if input.PlayerName != nil && *input.PlayerName != "" {
 		filter["playername"] = *input.PlayerName
