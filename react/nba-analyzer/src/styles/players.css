@@ -179,11 +179,6 @@
   white-space: nowrap;
 }
 
-.stat-select-btn:hover,
-.selected {
-  background-color: var(--color-accent);
-}
-
 .stat-select-btn:hover .hide {
   display: block;
 }
@@ -254,6 +249,15 @@
 }
 .sorter {
   width: 100px;
+}
+
+.stat-select-btn {
+  background-color: var(--color-black);
+  color: var(--color-white);
+}
+.stat-select-btn:hover,
+.selected {
+  background-color: var(--color-accent);
 }
 
 @media (max-width: 885px) {
