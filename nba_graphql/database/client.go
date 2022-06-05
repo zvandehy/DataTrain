@@ -224,7 +224,7 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 	start := time.Now()
 	c.Queries++
 	projectionDB := c.Database("nba").Collection("projections")
-	filter := bson.M{"sportsbook": "PrizePicks"}
+	filter := bson.M{}
 
 	if input.PlayerName != nil && *input.PlayerName != "" {
 		filter["playername"] = *input.PlayerName
@@ -232,7 +232,11 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 
 	//filter date between input.StartDate and input.EndDate if they are set
 	if input.StartDate != nil && input.EndDate != nil {
-		filter["date"] = bson.M{"$gte": *input.StartDate, "$lte": *input.EndDate}
+		if *input.StartDate == *input.EndDate {
+			filter["date"] = *input.StartDate
+		} else {
+			filter["date"] = bson.M{"$gte": *input.StartDate, "$lte": *input.EndDate}
+		}
 	} else if input.StartDate != nil {
 		filter["date"] = bson.M{"$gte": *input.StartDate}
 	} else if input.EndDate != nil {

@@ -4,20 +4,33 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 type Projection struct {
-	PlayerName  string    `json:"playername" bson:"playername"`
-	Sportsbook  string    `json:"sportsbook" bson:"sportsbook"`
-	OpponentAbr string    `json:"opponent" bson:"opponent"`
-	Targets     []*Target `json:"targets" bson:"targets"`
-	StartTime   string    `json:"startTime" bson:"startTime"`
-	Date        string    `json:"date" bson:"date"`
+	PlayerName   string         `json:"playername" bson:"playername"`
+	OpponentAbr  string         `json:"opponent" bson:"opponent"`
+	Propositions []*Proposition `json:"propositions" bson:"propositions"`
+	StartTime    string         `json:"startTime" bson:"startTime"`
+	Date         string         `json:"date" bson:"date"`
 }
 
+type Proposition struct {
+	Sportsbook   string        `json:"sportsbook" bson:"sportsbook"`
+	Target       float64       `json:"target" bson:"target"`
+	Type         string        `json:"type" bson:"type"`
+	LastModified *time.Time    `json:"lastModified" bson:"lastModified"`
+	Predictions  []*Prediction `json:"predictions" bson:"predictions"`
+}
+
+type Prediction struct {
+	Model               string  `json:"model" bson:"model"`
+	OverUnderPrediction string  `json:"overUnderPrediction" bson:"overUnderPrediction"`
+	TotalPrediction     float64 `json:"totalPrediction" bson:"totalPrediction"`
+}
 type PrizePicks struct {
 	Data     []PrizePicksData     `json:"data" bson:"data"`
 	Included []PrizePicksIncluded `json:"included" bson:"included"`
@@ -100,18 +113,21 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 
 	dateSlice := strings.SplitN(prop.Attributes.Start_time, "T", 2)
 	date := dateSlice[0]
+	now := time.Now()
+	// if player is already in list of projections, just add a proposition (for this prop type) to their projection
 	for i, projection := range projections {
 		if projection.PlayerName == playerName {
 			if prop.Attributes.Is_promo {
 				logrus.Warn("skipping promo prizepick")
 				continue
 			}
-			projections[i].Targets = append(projections[i].Targets, &Target{Target: target, Type: statType})
+			projections[i].Propositions = append(projections[i].Propositions, &Proposition{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now})
 			return projections, nil
 		}
 	}
 
-	projections = append(projections, &Projection{Sportsbook: "PrizePicks", PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Date: date, StartTime: prop.Attributes.Start_time, Targets: []*Target{{Target: target, Type: statType}}})
+	// otherwise, create a new player projection with this proposition (prop type) in it
+	projections = append(projections, &Projection{PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Date: date, StartTime: prop.Attributes.Start_time, Propositions: []*Proposition{{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now}}})
 	return projections, nil
 }
 
@@ -119,10 +135,10 @@ func GetBestProjection(projections []*Projection) *Projection {
 	maxTargets := 0
 	var bestProjections []*Projection
 	for _, projection := range projections {
-		if len(projection.Targets) > maxTargets {
-			maxTargets = len(projection.Targets)
+		if len(projection.Propositions) > maxTargets {
+			maxTargets = len(projection.Propositions)
 			bestProjections = []*Projection{projection}
-		} else if len(projection.Targets) == maxTargets {
+		} else if len(projection.Propositions) == maxTargets {
 			bestProjections = append(bestProjections, projection)
 		}
 	}

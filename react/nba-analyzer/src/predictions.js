@@ -86,7 +86,7 @@ export const StatObjects = [
 export function CalculatePredictions(projection, statData) {
   return StatObjects.map((item) => {
     const target = projection
-      ? getTarget(projection.targets, item.recognize)
+      ? getTarget(projection.propositions, item.recognize)
       : [];
     const playerStats = getStats(statData, counts, item.recognize, target);
     const predictionAndConfidence = getPredictionAndConfidence(

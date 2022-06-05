@@ -58,7 +58,7 @@ const Player = () => {
               }
             }
           }
-          targets {
+          propositions {
             target
             type
           }

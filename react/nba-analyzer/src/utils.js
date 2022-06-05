@@ -413,7 +413,7 @@ export const HOME_QUERY = gql`
           }
         }
       }
-      targets {
+      propositions {
         target
         type
       }
