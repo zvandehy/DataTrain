@@ -3,10 +3,12 @@
 package model
 
 type GameFilter struct {
-	TeamID   *int    `json:"teamID"`
-	PlayerID *int    `json:"playerID"`
-	GameID   *string `json:"gameID"`
-	Season   *string `json:"season"`
+	TeamID    *int    `json:"teamID"`
+	PlayerID  *int    `json:"playerID"`
+	GameID    *string `json:"gameID"`
+	Season    *string `json:"season"`
+	StartDate *string `json:"startDate"`
+	EndDate   *string `json:"endDate"`
 }
 
 type PlayerFilter struct {

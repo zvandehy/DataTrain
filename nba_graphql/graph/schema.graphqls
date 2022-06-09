@@ -122,6 +122,7 @@ type Projection {
   player: Player!
   opponent: Team!
   propositions: [Proposition]!
+  result: PlayerGame
   startTime: String!
   date: String!
 }
@@ -195,9 +196,12 @@ input TeamFilter {
   abbreviation: String
 }
 
+# TODO: Add a date filter
 input GameFilter {
   teamID: Int
   playerID: Int
   gameID: String
   season: String
+  startDate: String
+  endDate: String
 }
