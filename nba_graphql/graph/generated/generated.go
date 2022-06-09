@@ -129,6 +129,7 @@ type ComplexityRoot struct {
 		Opponent     func(childComplexity int) int
 		Player       func(childComplexity int) int
 		Propositions func(childComplexity int) int
+		Result       func(childComplexity int) int
 		StartTime    func(childComplexity int) int
 	}
 
@@ -243,6 +244,8 @@ type PlayersInGameResolver interface {
 type ProjectionResolver interface {
 	Player(ctx context.Context, obj *model.Projection) (*model.Player, error)
 	Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error)
+
+	Result(ctx context.Context, obj *model.Projection) (*model.PlayerGame, error)
 }
 type QueryResolver interface {
 	Players(ctx context.Context) ([]*model.Player, error)
@@ -743,6 +746,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Projection.Propositions(childComplexity), true
+
+	case "Projection.result":
+		if e.complexity.Projection.Result == nil {
+			break
+		}
+
+		return e.complexity.Projection.Result(childComplexity), true
 
 	case "Projection.startTime":
 		if e.complexity.Projection.StartTime == nil {
@@ -1406,13 +1416,14 @@ type PlayerGame {
   blocks: Int!
   steals: Int!
   playersInGame: PlayersInGame!
-  projections: [Projection]!
+  projections: [Projection]! #TODO change to propositions
 }
 
 type Projection {
   player: Player!
   opponent: Team!
   propositions: [Proposition]!
+  result: PlayerGame
   startTime: String!
   date: String!
 }
@@ -1486,11 +1497,14 @@ input TeamFilter {
   abbreviation: String
 }
 
+# TODO: Add a date filter
 input GameFilter {
   teamID: Int
   playerID: Int
   gameID: String
   season: String
+  startDate: String
+  endDate: String
 }
 `, BuiltIn: false},
 }
@@ -3936,6 +3950,38 @@ func (ec *executionContext) _Projection_propositions(ctx context.Context, field 
 	res := resTmp.([]*model.Proposition)
 	fc.Result = res
 	return ec.marshalNProposition2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProposition(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Projection_result(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Projection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Projection().Result(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.PlayerGame)
+	fc.Result = res
+	return ec.marshalOPlayerGame2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerGame(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Projection_startTime(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
@@ -7535,6 +7581,22 @@ func (ec *executionContext) unmarshalInputGameFilter(ctx context.Context, obj in
 			if err != nil {
 				return it, err
 			}
+		case "startDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
+			it.StartDate, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "endDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endDate"))
+			it.EndDate, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -8314,6 +8376,17 @@ func (ec *executionContext) _Projection(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "result":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Projection_result(ctx, field, obj)
+				return res
+			})
 		case "startTime":
 			out.Values[i] = ec._Projection_startTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -10048,6 +10121,13 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 	return graphql.MarshalInt(*v)
+}
+
+func (ec *executionContext) marshalOPlayerGame2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerGame(ctx context.Context, sel ast.SelectionSet, v *model.PlayerGame) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PlayerGame(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOProjection2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProjection(ctx context.Context, sel ast.SelectionSet, v *model.Projection) graphql.Marshaler {
