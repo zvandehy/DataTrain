@@ -13,8 +13,8 @@ import {
 } from "@apollo/client";
 
 const wnbaGQL = createHttpLink({
-  // uri: "https://datatrain-nba-yxh2z.ondigitalocean.app/query",
-  uri: "http://localhost:8080/wnba/query",
+  uri: "https://datatrain-nba-yxh2z.ondigitalocean.app/wnba/query",
+  // uri: "http://localhost:8080/wnba/query",
 });
 
 // 3
@@ -25,9 +25,8 @@ export const WNBAClient = new ApolloClient({
 
 // 2
 const nbaGQL = createHttpLink({
-  // uri: "https://datatrain-nba-yxh2z.ondigitalocean.app/query",
-  uri: "http://localhost:8080/nba/query",
-  // uri: "http://localhost:8080/wnba/query",
+  uri: "https://datatrain-nba-yxh2z.ondigitalocean.app/nba/query",
+  // uri: "http://localhost:8080/nba/query",
 });
 
 // 3
