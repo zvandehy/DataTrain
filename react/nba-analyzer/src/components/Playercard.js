@@ -7,7 +7,8 @@ import { ParseDate, CompareDates, GamesWithSeasonType } from "../utils";
 import { CalculatePredictions, GetHighestConfidence } from "../predictions.js";
 
 const Playercard = (props) => {
-  const { projection, player, date, statPreference, seasonType } = props;
+  const { projection, player, date, statPreference, seasonType, league } =
+    props;
 
   let games = GamesWithSeasonType(player.games, seasonType);
   games = games.filter((game) => CompareDates(game.date, date) <= 0);
@@ -16,7 +17,7 @@ const Playercard = (props) => {
   let seasonData = games
     .filter(
       (game) =>
-        game.season === "2021-22" &&
+        // game.season === "2021-22" &&
         CompareDates(date, ParseDate(game.date)) > 1
     )
     .sort(CompareDates);
@@ -49,6 +50,7 @@ const Playercard = (props) => {
       <PlayerContext
         player={player}
         opponent={projection.opponent}
+        league={league}
       ></PlayerContext>
       <StatSelectBtns
         predictions={predictions}
@@ -57,6 +59,7 @@ const Playercard = (props) => {
         onStatSelect={onStatSelect}
       ></StatSelectBtns>
       <Prediction
+        propositions={projection.propositions}
         predictions={predictions}
         selected={stat}
         game={game}

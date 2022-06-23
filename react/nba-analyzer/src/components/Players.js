@@ -61,7 +61,8 @@ function GetSortMethod(method) {
   }
 }
 
-const Players = () => {
+const Players = (prop) => {
+  const { client, league } = prop;
   const [teamLookup, setTeamLookup] = useState("");
   const [showPlayers, setShowPlayers] = useState([]);
   const [statPreference, setStatPreference] = useState("");
@@ -73,6 +74,7 @@ const Players = () => {
   const [date, setDate] = useState(FormatDate(new Date()));
   const { loading, error, data, refetch } = useQuery(HOME_QUERY, {
     variables: { date: date },
+    client: client,
   });
   useEffect(() => {
     // let team = localStorage.getItem("lookup");
@@ -298,6 +300,7 @@ const Players = () => {
         {showPlayers.length > 0 ? (
           showPlayers.map((item) => (
             <Playercard
+              league={league}
               projection={item}
               player={item.player}
               date={date}

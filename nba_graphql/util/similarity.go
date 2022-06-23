@@ -21,6 +21,9 @@ func SimilarPlayers(players []model.PlayerAverage, toPlayer model.PlayerAverage)
 				continue
 			}
 		}
+		if player.Player.Height == "" {
+			continue
+		}
 		distance := EuclideanDistance(player, toPlayer)
 		_, found := playerDistances[distance]
 		for found {

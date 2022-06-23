@@ -26,10 +26,6 @@ func (r *injuryResolver) Player(ctx context.Context, obj *model.Injury) (*model.
 	return dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
 }
 
-func (r *playerResolver) Name(ctx context.Context, obj *model.Player) (string, error) {
-	return obj.FirstName + " " + obj.LastName, nil
-}
-
 func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*model.Team, error) {
 	//logrus.Printf("Get TEAM for player %v", obj)
 	t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
@@ -107,16 +103,15 @@ func (r *playerResolver) Injuries(ctx context.Context, obj *model.Player) ([]*mo
 func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error) {
 	start := time.Now()
 	var allProjections []*model.Projection
-	if strings.ToLower(*input.Sportsbook) != "prizepicks" {
-		return nil, fmt.Errorf("unsupported Sportsbook: %s. Current support only exists for: %v", *input.Sportsbook, []string{"PrizePicks"})
-	}
+	// if strings.ToLower(*input.Sportsbook) != "prizepicks" {
+	// 	return nil, fmt.Errorf("unsupported Sportsbook: %s. Current support only exists for: %v", *input.Sportsbook, []string{"PrizePicks"})
+	// }
 
 	if input.StartDate == nil && input.EndDate == nil {
 		// today := time.Now().Format("2006-01-02")
 		// input.StartDate = &today
 	}
-	name := fmt.Sprintf("%s %s", obj.FirstName, obj.LastName)
-	input.PlayerName = &name
+	input.PlayerName = &obj.Name
 
 	cur, err := r.Db.GetProjections(ctx, input)
 	if err != nil {
@@ -143,15 +138,29 @@ func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, inp
 			duplicates[key] = append(duplicates[key], projection)
 		}
 	}
-	var uniqueProjections []*model.Projection
-	for _, projections := range duplicates {
-		best := model.GetBestProjection(projections)
-		if best.PlayerName == "" {
-			logrus.Fatalf("projection has BLANK playername: %#v", best)
+	//TODO: need to fix having same code in 2 places
+	filteredProjections := []*model.Projection{}
+	if input.Sportsbook != nil {
+		logrus.Warn("filtering projections: ", *input.Sportsbook)
+		for _, projection := range allProjections {
+			filteredProps := []*model.Proposition{}
+			for _, prop := range projection.Propositions {
+				if strings.ToLower(prop.Sportsbook) == strings.ToLower(*input.Sportsbook) {
+					filteredProps = append(filteredProps, prop)
+				}
+			}
+
+			// log difference
+			logrus.Warn("filtered projections: ", len(filteredProps), " of ", len(projection.Propositions))
+			projection.Propositions = filteredProps
+			if len(projection.Propositions) > 0 {
+				filteredProjections = append(filteredProjections, projection)
+			}
 		}
-		uniqueProjections = append(uniqueProjections, best)
+	} else {
+		return allProjections, nil
 	}
-	return uniqueProjections, nil
+	return filteredProjections, nil
 }
 
 func (r *playerResolver) SimilarPlayers(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.Player, error) {
@@ -250,9 +259,9 @@ func (r *playerGameResolver) Projections(ctx context.Context, obj *model.PlayerG
 	if err != nil {
 		return nil, err
 	}
-	playername := player.FirstName + " " + player.LastName
+	playername := player.Name
 	fmt.Println(playername)
-	cur, err = r.Db.Client.Database("nba").Collection("projections").Find(ctx, bson.M{"playername": playername, "date": obj.Date})
+	cur, err = r.Db.Collection("projections").Find(ctx, bson.M{"playername": playername, "date": obj.Date})
 	if err != nil {
 		logrus.Error(err)
 		return nil, err
@@ -261,7 +270,6 @@ func (r *playerGameResolver) Projections(ctx context.Context, obj *model.PlayerG
 	defer cur.Close(ctx)
 	var projections []*model.Projection
 	cur.All(ctx, &projections)
-	logrus.Warn(projections)
 	return projections, nil
 }
 
@@ -287,12 +295,11 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 	p, err := dataloader.For(ctx).PlayerByFilter.Load(playerFilter)
 	if err != nil {
 		logrus.Warnf("err when loading player for projection: %v", err)
-		return &model.Player{FirstName: *playerFilter.Name}, nil
+		return &model.Player{Name: *playerFilter.Name}, nil
 	}
 	if p == nil {
 		logrus.Warnf("Player %v is nil. Probably needs to be uploaded to the database.", *playerFilter.Name)
-		name := strings.SplitN(*playerFilter.Name, " ", 2)
-		return &model.Player{FirstName: name[0], LastName: name[1]}, nil
+		return &model.Player{Name: *playerFilter.Name}, nil
 	}
 	return p, err
 }
@@ -306,7 +313,7 @@ func (r *projectionResolver) Result(ctx context.Context, obj *model.Projection) 
 		return nil, fmt.Errorf("cannot get result from projection without player name")
 	}
 	var player *model.Player
-	err := r.Db.Client.Database("nba").Collection("players").FindOne(ctx, bson.M{"first_name": strings.SplitN(obj.PlayerName, " ", 2)[0], "last_name": strings.SplitN(obj.PlayerName, " ", 2)[1]}).Decode(&player)
+	err := r.Db.Collection("players").FindOne(ctx, bson.M{"first_name": strings.SplitN(obj.PlayerName, " ", 2)[0], "last_name": strings.SplitN(obj.PlayerName, " ", 2)[1]}).Decode(&player)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -318,10 +325,10 @@ func (r *projectionResolver) Result(ctx context.Context, obj *model.Projection) 
 		return nil, fmt.Errorf("didn't find a player with name %v", obj.PlayerName)
 	}
 	var game model.PlayerGame
-	err = r.Db.Client.Database("nba").Collection("games").FindOne(ctx, bson.M{"player": player.PlayerID, "date": obj.Date}).Decode(&game)
+	err = r.Db.Collection("games").FindOne(ctx, bson.M{"player": player.PlayerID, "date": obj.Date}).Decode(&game)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			logrus.Warnf("no game found for player %v %v on date %v", player.FirstName, player.LastName, obj.Date)
+			logrus.Warnf("no game found for player %v on date %v", player.Name, obj.Date)
 			return nil, nil
 		}
 		logrus.Error(err)
@@ -331,6 +338,7 @@ func (r *projectionResolver) Result(ctx context.Context, obj *model.Projection) 
 }
 
 func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
+	fmt.Println(r.Db.Name)
 	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{})
 	if err != nil {
 		return nil, err
@@ -396,7 +404,7 @@ func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*
 
 func (r *queryResolver) Teams(ctx context.Context) ([]*model.Team, error) {
 	//logrus.Println("Get Teams")
-	teamsDB := r.Db.Database("nba").Collection("teams")
+	teamsDB := r.Db.Collection("teams")
 	filter := bson.M{}
 	cur, err := teamsDB.Find(ctx, filter)
 
@@ -422,7 +430,7 @@ func (r *queryResolver) Teams(ctx context.Context) ([]*model.Team, error) {
 
 func (r *queryResolver) FilterTeams(ctx context.Context, input model.TeamFilter) ([]*model.Team, error) {
 	//logrus.Printf("Get Teams with filter %v\n", input)
-	teamsDB := r.Db.Database("nba").Collection("teams")
+	teamsDB := r.Db.Collection("teams")
 	filter := bson.M{
 		"teamID": input.TeamID,
 		// "$or": []interface{}{
@@ -453,7 +461,7 @@ func (r *queryResolver) FilterTeams(ctx context.Context, input model.TeamFilter)
 
 func (r *queryResolver) Team(ctx context.Context, input model.TeamFilter) (*model.Team, error) {
 	//logrus.Printf("Get Team with filter %#v\n", input)
-	teamsDB := r.Db.Database("nba").Collection("teams")
+	teamsDB := r.Db.Collection("teams")
 	filter := bson.M{
 		"abbreviation": input.Abbreviation,
 		// "$or": []interface{}{
@@ -544,7 +552,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 				return
 			}
 		}
-		projectionsDB := r.Db.Database("nba").Collection("projections")
+		projectionsDB := r.Db.Client.Database("nba").Collection("projections")
 		insertCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		for _, projection := range projections {
 			//if projection with same playername and date exists, add the propositions to the list of propositions
@@ -589,7 +597,155 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 			}
 		}
 		cancel()
-		logrus.Printf("DONE retrieving prizepicks projections\tTook %v", time.Since(start))
+		logrus.Printf("DONE retrieving NBA prizepicks projections\tTook %v", time.Since(start))
+	}()
+	go func() {
+		start := time.Now()
+		var projections []*model.Projection
+		url := "https://partner-api.prizepicks.com/projections?single_stat=True&per_page=1000&league_id=3"
+		res, err := http.Get(url)
+		if err != nil {
+			logrus.Warnf("couldn't retrieve prizepicks projections for today: %v", err)
+			return
+		}
+		bytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			logrus.Warnf("couldn't read prizepicks projections for today: %v", err)
+			return
+		}
+		var prizepicks model.PrizePicks
+		if err := json.Unmarshal(bytes, &prizepicks); err != nil {
+			logrus.Warnf("couldn't decode prizepicks projections for today: %v", err)
+			return
+		}
+		for _, prop := range prizepicks.Data {
+			if prop.Attributes.Is_promo {
+				logrus.Warn("skipping promo")
+				continue
+			}
+			projections, err = model.ParsePrizePick(prop, prizepicks.Included, projections)
+			if err != nil {
+				logrus.Warnf("couldn't parse prizepicks projections for today: %v", err)
+				return
+			}
+		}
+		projectionsDB := r.Db.Client.Database("wnba").Collection("projections")
+		insertCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		for _, projection := range projections {
+			//if projection with same playername and date exists, add the propositions to the list of propositions
+			filter := bson.M{
+				"playerName": projection.PlayerName,
+				"date":       projection.Date,
+			}
+			var projectionFound *model.Projection
+			err := projectionsDB.FindOne(insertCtx, filter).Decode(&projectionFound)
+			if err != nil && err != mongo.ErrNoDocuments {
+				logrus.Warnf("error finding projection for %v: %v", projection.PlayerName, err)
+			}
+			if projectionFound != nil {
+				for _, prop := range projection.Propositions {
+					//if projectionFound.Propositions contains the proposition, don't add it
+					exists := false
+					for _, propFound := range projectionFound.Propositions {
+						if prop.Type == propFound.Type && prop.Target == propFound.Target && prop.Sportsbook == propFound.Sportsbook {
+							exists = true
+							break
+						}
+					}
+					if !exists {
+						projectionFound.Propositions = append(projectionFound.Propositions, prop)
+					}
+				}
+				projection.Propositions = projectionFound.Propositions
+			}
+			//upsert
+			res, err := projectionsDB.UpdateOne(insertCtx, filter, bson.M{"$set": projection}, options.Update().SetUpsert(true))
+			if err != nil {
+				if err != nil {
+					logrus.Warn(err)
+				}
+				if res.UpsertedCount > 0 {
+					logrus.Printf("INSERTED %v", projection.PlayerName)
+				}
+				if res.ModifiedCount > 0 {
+					logrus.Printf("UPDATED %v", projection.PlayerName)
+				}
+
+			}
+		}
+		cancel()
+		logrus.Printf("DONE retrieving WNBA prizepicks projections\tTook %v", time.Since(start))
+	}()
+	go func() {
+		start := time.Now()
+		var projections []*model.Projection
+		url := "https://api.underdogfantasy.com/beta/v2/over_under_lines"
+		res, err := http.Get(url)
+		if err != nil {
+			logrus.Warnf("couldn't retrieve underdog fantasy projections for today: %v", err)
+			return
+		}
+		bytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			logrus.Warnf("couldn't read underdog fantasy projections for today: %v", err)
+			return
+		}
+		var underdog model.UnderdogFantasy
+		if err := json.Unmarshal(bytes, &underdog); err != nil {
+			logrus.Warnf("couldn't decode underdog fantasy projections for today: %v", err)
+			return
+		}
+		projections, err = model.ParseUnderdogProjection(underdog, "wnba")
+		if err != nil {
+			logrus.Warnf("couldn't parse underdog fantasy projections for today: %v", err)
+			return
+		}
+		projectionsDB := r.Db.Client.Database("wnba").Collection("projections")
+		insertCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		for _, projection := range projections {
+			//if projection with same playername and date exists, add the propositions to the list of propositions
+			filter := bson.M{
+				"playerName": projection.PlayerName,
+				"date":       projection.Date,
+			}
+			var projectionFound *model.Projection
+			err := projectionsDB.FindOne(insertCtx, filter).Decode(&projectionFound)
+			if err != nil && err != mongo.ErrNoDocuments {
+				logrus.Warnf("error finding projection for %v: %v", projection.PlayerName, err)
+			}
+			if projectionFound != nil {
+				for _, prop := range projection.Propositions {
+					//if projectionFound.Propositions contains the proposition, don't add it
+					exists := false
+					for _, propFound := range projectionFound.Propositions {
+						if prop.Type == propFound.Type && prop.Target == propFound.Target && prop.Sportsbook == propFound.Sportsbook {
+							exists = true
+							break
+						}
+					}
+					if !exists {
+						projectionFound.Propositions = append(projectionFound.Propositions, prop)
+					}
+				}
+				projection.Propositions = projectionFound.Propositions
+			}
+			//upsert
+			res, err := projectionsDB.UpdateOne(insertCtx, filter, bson.M{"$set": projection}, options.Update().SetUpsert(true))
+			if err != nil {
+				if err != nil {
+					logrus.Warn(err)
+				}
+				if res.UpsertedCount > 0 {
+					logrus.Printf("INSERTED %v", projection.PlayerName)
+				}
+				if res.ModifiedCount > 0 {
+					logrus.Printf("UPDATED %v", projection.PlayerName)
+				}
+
+			}
+		}
+		cancel()
+		logrus.Printf("DONE retrieving WNBA prizepicks projections\tTook %v", time.Since(start))
 	}()
 	// go func() {
 	// 	start := time.Now()
@@ -670,9 +826,9 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	// }()
 	start := time.Now()
 	var allProjections []*model.Projection
-	if input.Sportsbook != nil && strings.ToLower(*input.Sportsbook) != "prizepicks" {
-		return nil, fmt.Errorf("unsupported Sportsbook: %s. Current support only exists for: %v", *input.Sportsbook, []string{"PrizePicks"})
-	}
+	// if input.Sportsbook != nil && strings.ToLower(*input.Sportsbook) != "prizepicks" {
+	// 	return nil, fmt.Errorf("unsupported Sportsbook: %s. Current support only exists for: %v", *input.Sportsbook, []string{"PrizePicks"})
+	// }
 
 	if input.StartDate == nil && input.EndDate == nil {
 		today := time.Now().Format("2006-01-02")
@@ -691,29 +847,51 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	if time.Since(start) > (time.Second * 5) {
 		logrus.Warnf("Received %d projections after %v", len(allProjections), time.Since(start))
 	}
-	duplicates := make(map[string][]*model.Projection, len(allProjections)/2)
-	for _, projection := range allProjections {
-		//TODO: Potential bug with "Tacos" / discounted projections
-		if projection.OpponentAbr == "" {
-			continue
-		}
-		key := fmt.Sprintf("%s+%s", projection.PlayerName, projection.Date)
-		if _, ok := duplicates[key]; !ok {
-			duplicates[key] = []*model.Projection{projection}
-		} else {
-			duplicates[key] = append(duplicates[key], projection)
-		}
-	}
-	var uniqueProjections []*model.Projection
-	for _, projections := range duplicates {
-		best := model.GetBestProjection(projections)
-		if best.PlayerName == "" {
-			logrus.Fatalf("projection has BLANK playername: %#v", best)
-		}
-		uniqueProjections = append(uniqueProjections, best)
-	}
+	filteredProjections := []*model.Projection{}
+	if input.Sportsbook != nil {
+		logrus.Warn("filtering projections: ", *input.Sportsbook)
+		for _, projection := range allProjections {
+			filteredProps := []*model.Proposition{}
+			for _, prop := range projection.Propositions {
+				if strings.ToLower(prop.Sportsbook) == strings.ToLower(*input.Sportsbook) {
+					filteredProps = append(filteredProps, prop)
+				}
+			}
 
-	return uniqueProjections, nil
+			// log difference
+			logrus.Warn("filtered projections: ", len(filteredProps), " of ", len(projection.Propositions))
+			projection.Propositions = filteredProps
+			if len(projection.Propositions) > 0 {
+				filteredProjections = append(filteredProjections, projection)
+			}
+		}
+	} else {
+		return allProjections, nil
+	}
+	return filteredProjections, nil
+	// duplicates := make(map[string][]*model.Projection, len(allProjections)/2)
+	// for _, projection := range allProjections {
+	// 	//TODO: Potential bug with "Tacos" / discounted projections
+	// 	if projection.OpponentAbr == "" {
+	// 		continue
+	// 	}
+	// 	key := fmt.Sprintf("%s+%s", projection.PlayerName, projection.Date)
+	// 	if _, ok := duplicates[key]; !ok {
+	// 		duplicates[key] = []*model.Projection{projection}
+	// 	} else {
+	// 		duplicates[key] = append(duplicates[key], projection)
+	// 	}
+	// }
+	// var uniqueProjections []*model.Projection
+	// for _, projections := range duplicates {
+	// 	best := model.GetBestProjection(projections)
+	// 	if best.PlayerName == "" {
+	// 		logrus.Fatalf("projection has BLANK playername: %#v", best)
+	// 	}
+	// 	uniqueProjections = append(uniqueProjections, best)
+	// }
+
+	// return allProjections, nil
 }
 
 func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error) {

@@ -7,6 +7,7 @@ var PlayerNames map[string]string = map[string]string{
 type Player struct {
 	FirstName   string   `json:"first_name" bson:"first_name"`
 	LastName    string   `json:"last_name" bson:"last_name"`
+	Name        string   `json:"name" bson:"name"`
 	PlayerID    int      `json:"playerID" bson:"playerID"`
 	Seasons     []string `json:"seasons" bson:"seasons"`
 	Position    string   `json:"position" bson:"position"`

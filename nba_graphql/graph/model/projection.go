@@ -131,6 +131,148 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 	return projections, nil
 }
 
+type UnderdogFantasy struct {
+	Players        []UnderdogPlayer        `json:"players"`
+	Appearances    []UnderdogAppearance    `json:"appearances"`
+	OverUnderLines []UnderdogOverUnderLine `json:"over_under_lines"`
+	Games          []UnderdogGame          `json:"games"`
+}
+
+type UnderdogPlayer struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	PlayerID  string `json:"id"`
+	Sport     string `json:"sport_id"`
+	TeamID    string `json:"team_id"`
+}
+
+type UnderdogAppearance struct {
+	PlayerID     string `json:"player_id"`
+	AppearanceID string `json:"id"`
+}
+
+type UnderdogOverUnderLine struct {
+	OverUnder struct {
+		Appearance struct {
+			AppearanceID string `json:"appearance_id"`
+			Category     string `json:"stat"`
+		} `json:"appearance_stat"`
+	} `json:"over_under"`
+
+	Target string `json:"stat_value"`
+}
+
+type UnderdogGame struct {
+	AwayTeamID string `json:"away_team_id"`
+	HomeTeamID string `json:"home_team_id"`
+	Title      string `json:"title"`
+	StartTime  string `json:"scheduled_at"`
+}
+
+func ParseUnderdogProjection(json UnderdogFantasy, sport string) ([]*Projection, error) {
+	now := time.Now()
+	var projections []*Projection
+	for _, player := range json.Players {
+		if strings.ToLower(player.Sport) != strings.ToLower(sport) {
+			continue
+		}
+		playername := fmt.Sprintf("%s %s", player.FirstName, player.LastName)
+		opponent, game, err := getOpponent(json.Games, player.TeamID)
+		if err != nil {
+			return nil, err
+		}
+		opponent = getAbbreviation(opponent)
+		startTime, err := time.Parse("2006-01-02T15:04:05Z", game.StartTime)
+		startTime = startTime.Add(time.Hour * -6)
+		start := startTime.Format("2006-01-02T15:04:05Z")
+		dateSlice := strings.SplitN(start, "T", 2)
+		date := dateSlice[0]
+
+		appearanceID, err := getAppearanceIDForPlayer(player.PlayerID, json.Appearances)
+		if err != nil {
+			return nil, err
+		}
+		var propositions []*Proposition
+		for _, overUnder := range json.OverUnderLines {
+			if overUnder.OverUnder.Appearance.AppearanceID == appearanceID {
+				target, err := strconv.ParseFloat(overUnder.Target, 64)
+				if err != nil {
+					return nil, fmt.Errorf("couldn't get target for %v / %v", playername, overUnder.OverUnder.Appearance.Category)
+				}
+				category, ok := categories[overUnder.OverUnder.Appearance.Category]
+				if !ok {
+					category = overUnder.OverUnder.Appearance.Category
+				}
+				proposition := Proposition{
+					Sportsbook:   "UnderdogFantasy",
+					LastModified: &now,
+					Target:       target,
+					Type:         category,
+				}
+				propositions = append(propositions, &proposition)
+			}
+
+		}
+		logrus.Warnf("%s %s %s %s %v", playername, opponent, date, startTime, len(propositions))
+		for _, proposition := range propositions {
+			logrus.Warnf("%v", proposition)
+		}
+		logrus.Warn()
+		projections = append(projections, &Projection{
+			PlayerName:   playername,
+			OpponentAbr:  opponent,
+			StartTime:    start,
+			Date:         date,
+			Propositions: propositions,
+		})
+	}
+	return projections, nil
+}
+
+var abbreviations = map[string]string{
+	"PHX":  "PHO",
+	"LA":   "LAS",
+	"WSH":  "WAS",
+	"NY":   "NYL",
+	"CONN": "CON",
+}
+
+func getAbbreviation(opp string) string {
+	if abbr, ok := abbreviations[opp]; ok {
+		return abbr
+	}
+	return opp
+}
+
+var categories map[string]string = map[string]string{
+	"pts_rebs_asts":     "Pts+Rebs+Asts",
+	"points":            "Points",
+	"assists":           "Assists",
+	"three_points_made": "3-PT Made",
+	"rebounds":          "Rebounds",
+}
+
+func getAppearanceIDForPlayer(playerID string, appearances []UnderdogAppearance) (string, error) {
+	for _, appearance := range appearances {
+		if appearance.PlayerID == playerID {
+			return appearance.AppearanceID, nil
+		}
+	}
+	return "", fmt.Errorf("Couldn't find appearance for playerID: %s", playerID)
+}
+
+func getOpponent(underdogGames []UnderdogGame, teamID string) (string, *UnderdogGame, error) {
+	for _, game := range underdogGames {
+		if game.AwayTeamID == teamID {
+			return strings.SplitN(game.Title, " @ ", 2)[1], &game, nil
+		}
+		if game.HomeTeamID == teamID {
+			return strings.SplitN(game.Title, " @ ", 2)[0], &game, nil
+		}
+	}
+	return "", nil, fmt.Errorf("Couldn't find opponent for team %s", teamID)
+}
+
 func GetBestProjection(projections []*Projection) *Projection {
 	maxTargets := 0
 	var bestProjections []*Projection

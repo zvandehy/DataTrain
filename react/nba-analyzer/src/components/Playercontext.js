@@ -5,23 +5,36 @@ import { CompareDates, FormatDate, GamesWithSeasonType } from "../utils";
 import EventsModal from "./EventsModal";
 
 const PlayerContext = (props) => {
-  const { player, opponent, date } = props;
+  const { player, opponent, date, league } = props;
   return (
     <div className="player-context">
-      <PlayerInfo player={player} opponent={opponent} link={true} date={date} />
+      <PlayerInfo
+        player={player}
+        opponent={opponent}
+        link={true}
+        date={date}
+        league={league}
+      />
       <img
         loading="lazy"
         className="player-photo"
         alt={player.name}
-        src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${player.playerID}.png`}
+        src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/${league}/latest/260x190/${player.playerID}.png`}
       ></img>
     </div>
   );
 };
 
 export const PlayerPageContext = (props) => {
-  const { player, opponent, date, selectDate, seasonType, setSeasonType } =
-    props;
+  const {
+    player,
+    opponent,
+    date,
+    selectDate,
+    seasonType,
+    setSeasonType,
+    league,
+  } = props;
   return (
     <div className="player-context">
       <PlayerInfo
@@ -32,13 +45,14 @@ export const PlayerPageContext = (props) => {
         date={date}
         selectDate={selectDate}
         setSeasonType={setSeasonType}
+        league={league}
       />
       <div className="container">
         <img
           loading="lazy"
           className="player-photo"
           alt={player.name}
-          src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${player.playerID}.png`}
+          src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/wnba/latest/260x190/${player.playerID}.png`}
         ></img>
       </div>
     </div>
@@ -62,21 +76,30 @@ function GetGameDropdowns(player, seasonType) {
   return dropdowns.map((game, i, arr) => {
     return {
       key: game.date,
-      label: `${game.opponent.abbreviation} ${arr.length - i} | ${game.date} | 
-      ${game.team.abbreviation} vs ${game.opponent.abbreviation}`,
+      label: `${game.opponent?.abbreviation} ${arr.length - i} | ${game.date} | 
+      ${game.team.abbreviation} vs ${game.opponent?.abbreviation}`,
       value: game.date,
     };
   });
 }
 
 export const PlayerInfo = (props) => {
-  const { player, opponent, link, selectDate, seasonType, setSeasonType } =
-    props;
+  const {
+    player,
+    opponent,
+    link,
+    selectDate,
+    seasonType,
+    setSeasonType,
+    league,
+  } = props;
   return (
     <div className="player-info">
       <h2 className="player-name">
         {link ? (
-          <Link to={`/players/${player.playerID}`}>{player.name}</Link>
+          <Link to={`/${league}/players/${player.playerID}`}>
+            {player.name}
+          </Link>
         ) : (
           player.name
         )}
@@ -103,7 +126,11 @@ export const PlayerInfo = (props) => {
             loading="lazy"
             className="team-logo"
             alt={`team-logo for ${player.currentTeam.abbreviation}`}
-            src={`https://cdn.nba.com/logos/nba/${player.currentTeam.teamID}/primary/D/logo.svg`}
+            src={
+              league === "nba"
+                ? `https://cdn.nba.com/logos/nba/${player.currentTeam.teamID}/primary/D/logo.svg`
+                : `https://${player.currentTeam.name.toLowerCase()}.wnba.com/wp-content/themes/wnba-parent/img/logos/${player.currentTeam.name.toLowerCase()}-primary-logo.svg`
+            }
           ></img>
           <span className="team-abr">{player.currentTeam.abbreviation}</span>
         </span>
@@ -113,7 +140,11 @@ export const PlayerInfo = (props) => {
             loading="lazy"
             className="team-logo"
             alt={`team-logo for ${opponent?.abbreviation}`}
-            src={`https://cdn.nba.com/logos/nba/${opponent?.teamID}/primary/D/logo.svg`}
+            src={
+              league === "nba"
+                ? `https://cdn.nba.com/logos/wnba/${opponent?.teamID}/primary/D/logo.svg`
+                : `https://${opponent?.name.toLowerCase()}.wnba.com/wp-content/themes/wnba-parent/img/logos/${opponent?.name.toLowerCase()}-primary-logo.svg`
+            }
           ></img>
           <span className="opp-abr">{opponent?.abbreviation}</span>
         </span>

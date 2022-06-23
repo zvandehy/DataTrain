@@ -217,8 +217,6 @@ type InjuryResolver interface {
 	Player(ctx context.Context, obj *model.Injury) (*model.Player, error)
 }
 type PlayerResolver interface {
-	Name(ctx context.Context, obj *model.Player) (string, error)
-
 	CurrentTeam(ctx context.Context, obj *model.Player) (*model.Team, error)
 	Games(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.PlayerGame, error)
 	Injuries(ctx context.Context, obj *model.Player) ([]*model.Injury, error)
@@ -1883,14 +1881,14 @@ func (ec *executionContext) _Player_name(ctx context.Context, field graphql.Coll
 		Object:     "Player",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Player().Name(rctx, obj)
+		return obj.Name, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7847,19 +7845,10 @@ func (ec *executionContext) _Player(ctx context.Context, sel ast.SelectionSet, o
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Player")
 		case "name":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Player_name(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Player_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "playerID":
 			out.Values[i] = ec._Player_playerID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

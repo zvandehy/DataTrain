@@ -18,7 +18,9 @@ import { PlayerStatsTable } from "./PlayerStats.js";
 import { CalculatePredictions, StatObjects } from "../predictions.js";
 import { round, mean } from "mathjs";
 
-const Player = () => {
+const Player = (prop) => {
+  const { client, league } = prop;
+  const season = league === "nba" ? "2021-22" : "2022-23";
   let location = useLocation();
   const playerID = parseInt(
     location.pathname.split("/")[location.pathname.split("/").length - 1]
@@ -27,7 +29,7 @@ const Player = () => {
   //TODO: Handle error when pick game that isn't in seasonType
   const [seasonType, setSeasonType] = useState("");
   const query = gql`
-    query Player($playerID: Int!) {
+    query Player($playerID: Int!, $season: String!) {
       player(input: { playerID: $playerID }) {
         name
         playerID
@@ -35,6 +37,7 @@ const Player = () => {
         currentTeam {
           abbreviation
           teamID
+          name
           injuries {
             startDate
             returnDate
@@ -44,11 +47,12 @@ const Player = () => {
             }
           }
         }
-        projections(input: { sportsbook: "PrizePicks" }) {
+        projections(input: {}) {
           date
           opponent {
             abbreviation
             teamID
+            name
             injuries {
               startDate
               returnDate
@@ -61,9 +65,10 @@ const Player = () => {
           propositions {
             target
             type
+            sportsbook
           }
         }
-        games(input: { season: "2021-22" }) {
+        games(input: { season: $season }) {
           points
           season
           assists
@@ -116,10 +121,10 @@ const Player = () => {
           effective_field_goal_percentage
           playoffs
         }
-        similarPlayers(input: { season: "2021-22" }) {
+        similarPlayers(input: { season: $season }) {
           name
           playerID
-          games(input: { season: "2021-22" }) {
+          games(input: { season: $season }) {
             points
             season
             assists
@@ -157,7 +162,8 @@ const Player = () => {
     }
   `;
   const { loading, error, data } = useQuery(query, {
-    variables: { playerID: playerID, date: date },
+    variables: { playerID: playerID, date: date, season: season },
+    client: client,
   });
 
   const [stat, setStat] = useState(
@@ -169,16 +175,17 @@ const Player = () => {
 
   if (loading) return "Loading...";
   if (error) {
-    return `Error! ${error.message}. ${loading}. ${data}`;
+    return `Error! ${error.message}. ${error}. ${loading}. ${data}`;
   }
-  console.log(data);
   let games = GamesWithSeasonType(data.player.games, seasonType);
   games = games.filter((game) => CompareDates(game.date, date) < 0);
   games = games.sort((a, b) => CompareDates(a.date, b.date));
-  const projection = data.player.projections.find((p) => p.date === date);
-  const statData = games.filter((game) => game.season === "2021-22");
+  // const statData = games.filter((game) => game.season === "2021-22");
+  const projection =
+    data.player.projections.find((p) => p.date === date) ||
+    data.player.projections[0];
+  const statData = games;
   const predictions = CalculatePredictions(projection, statData);
-
   const game = data.player.games.find((game) => game.date === date);
   let matchups = games.filter(
     (matchup) =>
@@ -215,6 +222,7 @@ const Player = () => {
         selectDate={onDateSelect}
         seasonType={seasonType}
         setSeasonType={setSeasonType}
+        league={league}
       />
       <PlayerProfileChart stats={percentOfTeamStats} />
       <StatSelectBtns
@@ -223,7 +231,12 @@ const Player = () => {
         selected={stat}
         onStatSelect={onStatSelect}
       />
-      <Prediction predictions={predictions} selected={stat} game={game} />
+      <Prediction
+        propositions={projection.propositions}
+        predictions={predictions}
+        selected={stat}
+        game={game}
+      />
       <PlayerStatsTable
         predictions={predictions}
         selected={stat}

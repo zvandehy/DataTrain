@@ -350,9 +350,7 @@ export const HOME_QUERY = gql`
       teamID
       abbreviation
     }
-    projections(
-      input: { sportsbook: "PrizePicks", startDate: $date, endDate: $date }
-    ) {
+    projections(input: { startDate: $date, endDate: $date }) {
       player {
         name
         position
@@ -375,7 +373,7 @@ export const HOME_QUERY = gql`
           returnDate
           status
         }
-        games(input: { season: "2021-22" }) {
+        games(input: {}) {
           season
           date
           gameID
@@ -416,6 +414,7 @@ export const HOME_QUERY = gql`
       propositions {
         target
         type
+        sportsbook
       }
     }
   }
