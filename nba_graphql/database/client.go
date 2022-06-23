@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -16,23 +15,25 @@ import (
 )
 
 var once sync.Once
-var instance *NBADatabaseClient
+var instance *mongo.Client
 
 type NBADatabaseClient struct {
-	*mongo.Client
+	Name string
+	*mongo.Database
 	conn    string
 	Queries int
+	Client  *mongo.Client
 }
 
-func ConnectDB(ctx context.Context) (*NBADatabaseClient, error) {
+func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
 	var connErr error
+	config, err := util.LoadConfig(".")
+	if err != nil {
+		logrus.Fatal("cannot load configuration")
+	}
+	nbaClient := &NBADatabaseClient{conn: config.DBSource}
 	once.Do(func() {
-		config, err := util.LoadConfig(".")
-		if err != nil {
-			logrus.Fatal("cannot load configuration")
-		}
-		instance = &NBADatabaseClient{conn: config.DBSource}
-		client, connErr := mongo.NewClient(options.Client().ApplyURI(instance.conn))
+		client, connErr := mongo.NewClient(options.Client().ApplyURI(nbaClient.conn))
 		if connErr != nil {
 			return
 		}
@@ -40,20 +41,22 @@ func ConnectDB(ctx context.Context) (*NBADatabaseClient, error) {
 		if connErr != nil {
 			return
 		}
-		//TODO: Should the initialized client be Database("nba")?
-		instance.Client = client
+		instance = client
 	})
 	if connErr != nil {
 		return nil, connErr
 	}
 	logrus.Println("Connected to DB")
-	return instance, nil
+	nbaClient.Name = db
+	nbaClient.Client = instance
+	nbaClient.Database = nbaClient.Client.Database(db)
+	return nbaClient, nil
 }
 
 func (c *NBADatabaseClient) GetTeamsByAbr(ctx context.Context, abbreviations []string) (*mongo.Cursor, error) {
 	start := time.Now()
 	c.Queries++
-	teamsDB := c.Database("nba").Collection("teams")
+	teamsDB := c.Collection("teams")
 	filter := bson.M{
 		"abbreviation": bson.M{"$in": abbreviations},
 	}
@@ -69,7 +72,7 @@ func (c *NBADatabaseClient) GetTeamsByAbr(ctx context.Context, abbreviations []s
 func (c *NBADatabaseClient) GetTeamsById(ctx context.Context, teamIDs []int) (*mongo.Cursor, error) {
 	start := time.Now()
 	c.Queries++
-	teamsDB := c.Database("nba").Collection("teams")
+	teamsDB := c.Collection("teams")
 	filter := bson.M{
 		"teamID": bson.M{"$in": teamIDs},
 	}
@@ -85,7 +88,7 @@ func (c *NBADatabaseClient) GetTeamsById(ctx context.Context, teamIDs []int) (*m
 func (c *NBADatabaseClient) GetTeamGames(ctx context.Context, inputs []model.GameFilter) (*mongo.Cursor, error) {
 	start := time.Now()
 	c.Queries++
-	teamGamesDB := c.Database("nba").Collection("teamgames")
+	teamGamesDB := c.Collection("teamgames")
 	var teamIDs []int
 	var seasons []string
 	for _, in := range inputs {
@@ -110,7 +113,7 @@ func (c *NBADatabaseClient) GetTeamGames(ctx context.Context, inputs []model.Gam
 func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.GameFilter) (*mongo.Cursor, error) {
 	start := time.Now()
 	c.Queries++
-	playerGamesDB := c.Database("nba").Collection("games")
+	playerGamesDB := c.Collection("games")
 	filter := createGameFilter(inputs)
 	cur, err := playerGamesDB.Find(ctx, filter)
 	if len(inputs) < 5 {
@@ -174,47 +177,35 @@ func createGameFilter(inputs []model.GameFilter) bson.M {
 func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.PlayerFilter) (*mongo.Cursor, error) {
 	start := time.Now()
 	c.Queries++
-	playersDB := c.Database("nba").Collection("players")
+	playersDB := c.Collection("players")
 	var playerIDs []int
-	var first_names []string
-	var last_names []string
+	var names []string
 	for _, in := range inputs {
 		if in.PlayerID != nil {
 			playerIDs = append(playerIDs, *in.PlayerID)
 		}
 		if in.Name != nil {
-			if len(strings.SplitN(*in.Name, " ", 2)) < 2 {
-				return nil, fmt.Errorf("invalid Player Name: %s", *in.Name)
-			}
-			first_names = append(first_names, strings.SplitN(*in.Name, " ", 2)[0])
-			last_names = append(last_names, strings.SplitN(*in.Name, " ", 2)[1])
+			names = append(names, *in.Name)
 		}
 	}
 	var filter bson.M
 	if len(playerIDs) == 0 {
-		if len(first_names) == 0 {
+		if len(names) == 0 {
 			filter = bson.M{}
 		} else {
-			filter = bson.M{"$and": bson.A{
-				bson.M{"first_name": bson.M{"$in": first_names}},
-				bson.M{"last_name": bson.M{"$in": last_names}},
-			}}
+			filter = bson.M{"name": bson.M{"$in": names}}
 		}
 	} else {
-		if len(first_names) == 0 {
+		if len(names) == 0 {
 			filter = bson.M{"playerID": bson.M{"$in": playerIDs}}
 		} else {
 			filter = bson.M{"$or": bson.A{
 				bson.M{"playerID": bson.M{"$in": playerIDs}},
-				bson.M{"$and": bson.A{
-					bson.M{"first_name": bson.M{"$in": first_names}},
-					bson.M{"last_name": bson.M{"$in": last_names}},
-				},
-				},
-			}}
+				bson.M{"$and": bson.M{"name": bson.M{"$in": names}}},
+			},
+			}
 		}
 	}
-
 	cur, err := playersDB.Find(ctx, filter)
 	logrus.Printf("Query %d Players\tTook %v", len(inputs), time.Since(start))
 	return cur, err
@@ -223,7 +214,7 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.Playe
 func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.ProjectionFilter) (*mongo.Cursor, error) {
 	start := time.Now()
 	c.Queries++
-	projectionDB := c.Database("nba").Collection("projections")
+	projectionDB := c.Collection("projections")
 	filter := bson.M{}
 
 	if input.PlayerName != nil && *input.PlayerName != "" {
@@ -272,7 +263,7 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 	lookupPlayer := bson.M{"$lookup": bson.M{"from": "players", "localField": "_id", "foreignField": "playerID", "as": "player"}}
 	unwindPlayer := bson.M{"$unwind": "$player"}
 
-	cur, err := c.Database("nba").Collection("games").Aggregate(ctx, bson.A{matchGames, averageStats, lookupPlayer, unwindPlayer})
+	cur, err := c.Collection("games").Aggregate(ctx, bson.A{matchGames, averageStats, lookupPlayer, unwindPlayer})
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +279,7 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 func (c *NBADatabaseClient) GetPlayerInjuries(ctx context.Context, playerIDs []int) ([]*model.Injury, error) {
 	start := time.Now()
 	c.Queries++
-	cur, err := c.Database("nba").Collection("injuries").Find(ctx, bson.M{"playerID": bson.M{"$in": playerIDs}})
+	cur, err := c.Collection("injuries").Find(ctx, bson.M{"playerID": bson.M{"$in": playerIDs}})
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -325,7 +316,7 @@ func (c *NBADatabaseClient) GetTeamInjuries(ctx context.Context, teamIDs []int) 
 	}}
 	matchTeam := bson.M{"$match": bson.M{"team.teamID": bson.M{"$in": teamIDs}}}
 
-	cur, err := c.Database("nba").Collection("injuries").Aggregate(ctx, bson.A{lookupPlayers, unwindPlayer, lookupTeam, unwindTeam, matchTeam})
+	cur, err := c.Collection("injuries").Aggregate(ctx, bson.A{lookupPlayers, unwindPlayer, lookupTeam, unwindTeam, matchTeam})
 	if err != nil {
 		logrus.Warnf("error getting injury data for teams: %v", err)
 		return nil, err

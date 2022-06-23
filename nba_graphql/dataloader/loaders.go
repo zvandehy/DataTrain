@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 	"github.com/zvandehy/DataTrain/nba_graphql/util"
@@ -62,6 +63,9 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 						}
 						for i, team := range keys {
 							teams[i] = teamsByAbr[team]
+							if teams[i] == nil {
+								logrus.Error(team)
+							}
 						}
 						return teams, errs
 					},
@@ -156,8 +160,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 							if err != nil {
 								return nil, []error{err}
 							}
-							name := player.FirstName + " " + player.LastName
-							playersByName[name] = player
+							playersByName[player.Name] = player
 						}
 						if err := cur.Err(); err != nil {
 							return nil, []error{err}
@@ -229,7 +232,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 						teamGames := make([]*model.TeamGame, len(keys))
 						teamGamesByPlayerGame := make(map[string]*model.TeamGame, len(keys))
 						errs := make([]error, len(keys))
-						cur, err := conn.Database("nba").Collection("teamgames").Find(r.Context(), bson.M{"gameID": bson.M{"$in": gameIDs}, "opponent": bson.M{"$in": opponentIDs}})
+						cur, err := conn.Collection("teamgames").Find(r.Context(), bson.M{"gameID": bson.M{"$in": gameIDs}, "opponent": bson.M{"$in": opponentIDs}})
 						if err != nil {
 							return nil, []error{err}
 						}
@@ -269,7 +272,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 						teamGames := make([]*model.TeamGame, len(keys))
 						teamGamesByPlayerGame := make(map[string]*model.TeamGame, len(keys))
 						errs := make([]error, len(keys))
-						cur, err := conn.Database("nba").Collection("teamgames").Find(r.Context(), bson.M{"gameID": bson.M{"$in": gameIDs}, "opponent": bson.M{"$in": teamIDs}})
+						cur, err := conn.Collection("teamgames").Find(r.Context(), bson.M{"gameID": bson.M{"$in": gameIDs}, "opponent": bson.M{"$in": teamIDs}})
 						if err != nil {
 							return nil, []error{err}
 						}

@@ -7,7 +7,7 @@ const PlayerPreview = (props) => {
   const { playerProp } = props;
   let player = playerProp.player;
   let seasonData = playerProp.player.games
-    .filter((game) => game.season === "2021-22")
+    // .filter((game) => game.season === "2021-22")
     .sort(function (a, b) {
       var c = new Date(a.date);
       var d = new Date(b.date);

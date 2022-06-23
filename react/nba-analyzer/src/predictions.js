@@ -3,8 +3,9 @@ import { round, mean } from "mathjs";
 import { GetPropScore } from "./utils";
 
 //TODO: add counts option to custom filters
-const counts = [0, -30, -10, -5];
-const weights = [0.3, 0.27, 0.25, 0.18]; //TODO: determine best weights to use
+// const counts = [0, -30, -10, -5];
+const season_pcts = [1, 0.65, 0.45, 0.25];
+const weights = [0.25, 0.25, 0.25, 0.25]; //TODO: determine best weights to use
 export const StatObjects = [
   {
     label: "Points",
@@ -88,6 +89,12 @@ export function CalculatePredictions(projection, statData) {
     const target = projection
       ? getTarget(projection.propositions, item.recognize)
       : [];
+    const counts = [
+      0,
+      round(statData.length * -1 * season_pcts[1]),
+      round(statData.length * -1 * season_pcts[2]),
+      round(statData.length * -1 * season_pcts[3]),
+    ];
     const playerStats = getStats(statData, counts, item.recognize, target);
     const predictionAndConfidence = getPredictionAndConfidence(
       playerStats,
@@ -137,7 +144,7 @@ function getTarget(targets, stat) {
   const exists = targets.filter(
     (item) => item.type.toLowerCase() === stat.toLowerCase()
   );
-  if (exists.length === 1) {
+  if (exists.length >= 1) {
     return exists[0].target;
   }
   return 0;

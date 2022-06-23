@@ -8,7 +8,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const Prediction = (props) => {
-  const { predictions, selected, game } = props;
+  const { propositions, predictions, selected, game } = props;
+
   const projection = predictions.filter(
     (item) =>
       item.stat.recognize.toLowerCase() === selected.recognize.toLowerCase()
@@ -22,6 +23,17 @@ const Prediction = (props) => {
   const { overUnder, confidence } = projection;
   return (
     <div className="prediction">
+      <p>{projection.stat.label}</p>
+      {propositions.map((prop) => {
+        console.log(prop);
+        return prop.type.toLowerCase() === projection.stat.recognize ? (
+          <p>
+            {prop.sportsbook} {prop.target}
+          </p>
+        ) : (
+          <></>
+        );
+      })}
       <p>
         TARGET:{" "}
         <input

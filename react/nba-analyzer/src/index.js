@@ -12,22 +12,34 @@ import {
   InMemoryCache,
 } from "@apollo/client";
 
-// 2
-const httpLink = createHttpLink({
-  uri: "https://datatrain-nba-yxh2z.ondigitalocean.app/query",
-  // uri: "http://localhost:8080/query",
+const wnbaGQL = createHttpLink({
+  // uri: "https://datatrain-nba-yxh2z.ondigitalocean.app/query",
+  uri: "http://localhost:8080/wnba/query",
 });
 
 // 3
-const client = new ApolloClient({
-  link: httpLink,
+export const WNBAClient = new ApolloClient({
+  link: wnbaGQL,
+  cache: new InMemoryCache(),
+});
+
+// 2
+const nbaGQL = createHttpLink({
+  // uri: "https://datatrain-nba-yxh2z.ondigitalocean.app/query",
+  uri: "http://localhost:8080/nba/query",
+  // uri: "http://localhost:8080/wnba/query",
+});
+
+// 3
+export const NBAClient = new ApolloClient({
+  link: nbaGQL,
   cache: new InMemoryCache(),
 });
 
 // 4
 ReactDOM.render(
   <BrowserRouter>
-    <ApolloProvider client={client}>
+    <ApolloProvider client={NBAClient}>
       <App />
     </ApolloProvider>
   </BrowserRouter>,
