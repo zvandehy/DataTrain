@@ -345,7 +345,7 @@ export function GetColor(type, num) {
 // GRAPHQL Queries
 
 export const HOME_QUERY = gql`
-  query HOME($date: String!) {
+  query HOME($date: String!, $season: String!) {
     teams {
       teamID
       abbreviation
@@ -373,7 +373,7 @@ export const HOME_QUERY = gql`
           returnDate
           status
         }
-        games(input: {}) {
+        games(input: { season: $season }) {
           season
           date
           gameID

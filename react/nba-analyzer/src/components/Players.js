@@ -63,6 +63,7 @@ function GetSortMethod(method) {
 
 const Players = (prop) => {
   const { client, league } = prop;
+  const season = league === "nba" ? "2021-22" : "2022-23";
   const [teamLookup, setTeamLookup] = useState("");
   const [showPlayers, setShowPlayers] = useState([]);
   const [statPreference, setStatPreference] = useState("");
@@ -73,7 +74,7 @@ const Players = (prop) => {
   const [seasonType, setSeasonType] = useState("");
   const [date, setDate] = useState(FormatDate(new Date()));
   const { loading, error, data, refetch } = useQuery(HOME_QUERY, {
-    variables: { date: date },
+    variables: { date: date, season: season },
     client: client,
   });
   useEffect(() => {
