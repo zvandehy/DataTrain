@@ -28,6 +28,10 @@ func (r *injuryResolver) Player(ctx context.Context, obj *model.Injury) (*model.
 
 func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*model.Team, error) {
 	//logrus.Printf("Get TEAM for player %v", obj)
+	if obj.CurrentTeam == "" {
+		logrus.Errorf("CurrentTeam is empty for player %v", obj)
+		return nil, fmt.Errorf("CurrentTeam is empty for player %v", obj)
+	}
 	t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
 	if err != nil {
 		return nil, err
@@ -171,6 +175,9 @@ func (r *playerResolver) SimilarPlayers(ctx context.Context, obj *model.Player, 
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from PlayerGame %v", obj)
 	start := time.Now()
+	if obj.OpponentID == 0 {
+		return nil, fmt.Errorf("OpponentID doesn't exist on player game")
+	}
 	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
 	if time.Since(start) > (time.Second * 5) {
 		logrus.Warnf("Received Team (from Playergame) after %v", time.Since(start))
@@ -305,7 +312,18 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 }
 
 func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error) {
-	return dataloader.For(ctx).TeamByAbr.Load(obj.OpponentAbr)
+	if obj.OpponentAbr == "" {
+		logrus.Fatalf("OpponentAbr is empty: %#v", obj)
+		return nil, fmt.Errorf("cannot get opponent from projection without opponent name")
+	}
+	t, err := dataloader.For(ctx).TeamByAbr.Load(obj.OpponentAbr)
+	if err != nil {
+		return nil, err
+	}
+	if t == nil {
+		return &model.Team{}, nil
+	}
+	return t, err
 }
 
 func (r *projectionResolver) Result(ctx context.Context, obj *model.Projection) (*model.PlayerGame, error) {
@@ -847,13 +865,20 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	if time.Since(start) > (time.Second * 5) {
 		logrus.Warnf("Received %d projections after %v", len(allProjections), time.Since(start))
 	}
+	// remove projections that have player containing "Starters
+	for i := 0; i < len(allProjections); i++ {
+		if strings.Contains(allProjections[i].PlayerName, "Starters") {
+			allProjections = append(allProjections[:i], allProjections[i+1:]...)
+			i--
+		}
+	}
 	filteredProjections := []*model.Projection{}
 	if input.Sportsbook != nil {
 		logrus.Warn("filtering projections: ", *input.Sportsbook)
 		for _, projection := range allProjections {
 			filteredProps := []*model.Proposition{}
 			for _, prop := range projection.Propositions {
-				if strings.ToLower(prop.Sportsbook) == strings.ToLower(*input.Sportsbook) {
+				if strings.EqualFold(prop.Sportsbook, *input.Sportsbook) {
 					filteredProps = append(filteredProps, prop)
 				}
 			}

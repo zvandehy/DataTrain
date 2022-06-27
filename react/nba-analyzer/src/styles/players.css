@@ -9,6 +9,12 @@
   gap: 0 2vw;
   margin-top: 1rem;
 }
+.league-toggle {
+  text-decoration: none;
+  color: inherit;
+  padding: 1rem;
+  font-weight: 600;
+}
 
 .playercard > * {
   grid-row: 1/1;
