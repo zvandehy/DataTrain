@@ -235,6 +235,7 @@ var abbreviations = map[string]string{
 	"WSH":  "WAS",
 	"NY":   "NYL",
 	"CONN": "CON",
+	"LV":   "LVA",
 }
 
 func getAbbreviation(opp string) string {

@@ -217,6 +217,9 @@ const Players = (prop) => {
   return (
     <div className="players">
       <div className="teams-dropdown">
+        <a className="league-toggle" href={league === "nba" ? "/wnba" : "/nba"}>
+          {league === "nba" ? "WNBA" : "NBA"}
+        </a>
         <DataListInput
           placeholder="Filter by team"
           items={selectTeams}
