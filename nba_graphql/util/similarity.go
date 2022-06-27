@@ -11,15 +11,17 @@ import (
 //SimilarPlayers uses the euclidean distance formula to calculate the similarity between the given list of players and the target player
 // and returns the 10 closest players to the target player "toPlayer"
 func SimilarPlayers(players []model.PlayerAverage, toPlayer model.PlayerAverage) []*model.Player {
+	players = normalizePlayer(players)
+	for i := range players {
+		if players[i].Player.PlayerID == toPlayer.Player.PlayerID {
+			toPlayer = players[i]
+			break
+		}
+	}
 	var playerDistances map[float64]model.Player = make(map[float64]model.Player, len(players))
 	for _, player := range players {
 		if player.Player.PlayerID == toPlayer.Player.PlayerID {
 			continue
-		}
-		if toPlayer.GamesPlayed >= 30 {
-			if player.GamesPlayed < 30 || player.Minutes < toPlayer.Minutes-5 {
-				continue
-			}
 		}
 		if player.Player.Height == "" {
 			continue
@@ -49,27 +51,29 @@ func SimilarPlayers(players []model.PlayerAverage, toPlayer model.PlayerAverage)
 }
 
 func EuclideanDistance(player1 model.PlayerAverage, player2 model.PlayerAverage) float64 {
-	sumDistance := distance(player1.Points, player2.Points) +
-		distance(player1.Assists, player2.Assists) +
-		distance(player1.Rebounds, player2.Rebounds) +
-		distance(player1.Steals, player2.Steals) +
-		distance(player1.Blocks, player2.Blocks) +
-		distance(player1.Turnovers, player2.Turnovers) +
-		distance(player1.Minutes, player2.Minutes) +
-		distance(player1.FieldGoalsMade, player2.FieldGoalsMade) +
-		distance(player1.FieldGoalsAttempted, player2.FieldGoalsAttempted) +
-		distance(player1.ThreePointersMade, player2.ThreePointersMade) +
-		distance(player1.ThreePointersAttempted, player2.ThreePointersAttempted) +
-		distance(player1.FreeThrowsMade, player2.FreeThrowsMade) +
-		distance(player1.FreeThrowsAttempted, player2.FreeThrowsAttempted) +
-		distance(player1.Usage, player2.Usage) +
-		distance(heightInches(player1.Player.Height), heightInches(player2.Player.Height)) +
-		distance(float64(player1.Player.Weight), float64(player2.Player.Weight))
+	sumDistance := distance("Points", player1.Points, player2.Points) +
+		distance("Assists", player1.Assists, player2.Assists) +
+		distance("Rebounds", player1.Rebounds, player2.Rebounds) +
+		distance("Steals", player1.Steals, player2.Steals) +
+		distance("Blocks", player1.Blocks, player2.Blocks) +
+		distance("Turnovers", player1.Turnovers, player2.Turnovers) +
+		distance("Minutes", player1.Minutes, player2.Minutes) +
+		distance("FieldGoalsMade", player1.FieldGoalsMade, player2.FieldGoalsMade) +
+		distance("FieldGoalsAttempted", player1.FieldGoalsAttempted, player2.FieldGoalsAttempted) +
+		distance("ThreePointersMade", player1.ThreePointersMade, player2.ThreePointersMade) +
+		distance("ThreePointersAttempted", player1.ThreePointersAttempted, player2.ThreePointersAttempted) +
+		distance("FreeThrowsMade", player1.FreeThrowsMade, player2.FreeThrowsMade) +
+		distance("FreeThrowsAttempted", player1.FreeThrowsAttempted, player2.FreeThrowsAttempted) +
+		distance("Usage", player1.Usage, player2.Usage) +
+		distance("Height", player1.Height, player2.Height) +
+		distance("Weight", player1.Weight, player2.Weight)
+	// fmt.Println(sumDistance)
 	return math.Sqrt(sumDistance)
 }
 
-func distance(p float64, q float64) float64 {
-	return math.Pow((p - q), 2)
+func distance(s string, p float64, q float64) float64 {
+	r := math.Pow((p - q), 2)
+	return r
 }
 
 func heightInches(height string) float64 {
@@ -82,4 +86,107 @@ func heightInches(height string) float64 {
 		return 0
 	}
 	return feet*12 + inches
+}
+
+func mean(values []float64) float64 {
+	var sum float64
+	for _, value := range values {
+		sum += value
+	}
+	return sum / float64(len(values))
+}
+
+func std(values []float64) float64 {
+	mean := mean(values)
+	var sum float64
+	for _, value := range values {
+		sum += math.Pow(value-mean, 2)
+	}
+	return math.Sqrt(sum / float64(len(values)))
+}
+
+func normalize(values []float64) []float64 {
+	mean := mean(values)
+	std := std(values)
+	var normalized []float64
+	for _, value := range values {
+		normalized = append(normalized, (value-mean)/std)
+	}
+	return normalized
+}
+
+func normalizePlayer(players []model.PlayerAverage) []model.PlayerAverage {
+	points := make([]float64, 0, len(players))
+	gamesPlayed := make([]float64, 0, len(players))
+	assists := make([]float64, 0, len(players))
+	rebounds := make([]float64, 0, len(players))
+	steals := make([]float64, 0, len(players))
+	blocks := make([]float64, 0, len(players))
+	turnovers := make([]float64, 0, len(players))
+	minutes := make([]float64, 0, len(players))
+	fieldGoalsMakes := make([]float64, 0, len(players))
+	fieldGoalsAttempts := make([]float64, 0, len(players))
+	threePointersMakes := make([]float64, 0, len(players))
+	threePointersAttempts := make([]float64, 0, len(players))
+	freeThrowsMakes := make([]float64, 0, len(players))
+	freeThrowsAttempts := make([]float64, 0, len(players))
+	usages := make([]float64, 0, len(players))
+	heights := make([]float64, 0, len(players))
+	weights := make([]float64, 0, len(players))
+	for _, player := range players {
+		points = append(points, player.Points)
+		gamesPlayed = append(gamesPlayed, player.GamesPlayed)
+		assists = append(assists, player.Assists)
+		rebounds = append(rebounds, player.Rebounds)
+		steals = append(steals, player.Steals)
+		blocks = append(blocks, player.Blocks)
+		turnovers = append(turnovers, player.Turnovers)
+		minutes = append(minutes, player.Minutes)
+		fieldGoalsMakes = append(fieldGoalsMakes, player.FieldGoalsMade)
+		fieldGoalsAttempts = append(fieldGoalsAttempts, player.FieldGoalsAttempted)
+		threePointersMakes = append(threePointersMakes, player.ThreePointersMade)
+		threePointersAttempts = append(threePointersAttempts, player.ThreePointersAttempted)
+		freeThrowsMakes = append(freeThrowsMakes, player.FreeThrowsMade)
+		freeThrowsAttempts = append(freeThrowsAttempts, player.FreeThrowsAttempted)
+		usages = append(usages, player.Usage)
+		heights = append(heights, heightInches(player.Player.Height))
+		weights = append(weights, float64(player.Player.Weight))
+	}
+	points = normalize(points)
+	gamesPlayed = normalize(gamesPlayed)
+	assists = normalize(assists)
+	rebounds = normalize(rebounds)
+	steals = normalize(steals)
+	blocks = normalize(blocks)
+	turnovers = normalize(turnovers)
+	minutes = normalize(minutes)
+	fieldGoalsMakes = normalize(fieldGoalsMakes)
+	fieldGoalsAttempts = normalize(fieldGoalsAttempts)
+	threePointersMakes = normalize(threePointersMakes)
+	threePointersAttempts = normalize(threePointersAttempts)
+	freeThrowsMakes = normalize(freeThrowsMakes)
+	freeThrowsAttempts = normalize(freeThrowsAttempts)
+	usages = normalize(usages)
+	heights = normalize(heights)
+	weights = normalize(weights)
+	for i := range players {
+		players[i].Points = points[i]
+		players[i].GamesPlayed = gamesPlayed[i]
+		players[i].Assists = assists[i]
+		players[i].Rebounds = rebounds[i]
+		players[i].Steals = steals[i]
+		players[i].Blocks = blocks[i]
+		players[i].Turnovers = turnovers[i]
+		players[i].Minutes = minutes[i]
+		players[i].FieldGoalsMade = fieldGoalsMakes[i]
+		players[i].FieldGoalsAttempted = fieldGoalsAttempts[i]
+		players[i].ThreePointersMade = threePointersMakes[i]
+		players[i].ThreePointersAttempted = threePointersAttempts[i]
+		players[i].FreeThrowsMade = freeThrowsMakes[i]
+		players[i].FreeThrowsAttempted = freeThrowsAttempts[i]
+		players[i].Usage = usages[i]
+		players[i].Height = heights[i]
+		players[i].Weight = weights[i]
+	}
+	return players
 }

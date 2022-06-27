@@ -64,20 +64,23 @@ func (p PlayerGame) String() string {
 }
 
 type PlayerAverage struct {
-	Points                 float64 `json:"points" bson:"points"`
-	Assists                float64 `json:"assists" bson:"assists"`
-	Rebounds               float64 `json:"rebounds" bson:"rebounds"`
-	Steals                 float64 `json:"steals" bson:"steals"`
-	Blocks                 float64 `json:"blocks" bson:"blocks"`
-	Turnovers              float64 `json:"turnovers" bson:"turnovers"`
-	Minutes                float64 `json:"minutes" bson:"minutes"`
-	FieldGoalsMade         float64 `json:"field_goals_made" bson:"field_goals_made"`
-	FieldGoalsAttempted    float64 `json:"field_goals_attempted" bson:"field_goals_attempted"`
-	ThreePointersMade      float64 `json:"three_pointers_made" bson:"three_pointers_made"`
-	ThreePointersAttempted float64 `json:"three_pointers_attempted" bson:"three_pointers_attempted"`
-	FreeThrowsMade         float64 `json:"free_throws_made" bson:"free_throws_made"`
-	FreeThrowsAttempted    float64 `json:"free_throws_attempted" bson:"free_throws_attempted"`
-	Usage                  float64 `json:"usage" bson:"usage"`
-	GamesPlayed            int     `json:"games_played" bson:"games_played"`
-	Player                 Player  `json:"player" bson:"player"`
+	Points                 float64  `json:"points" bson:"points"`
+	Assists                float64  `json:"assists" bson:"assists"`
+	Rebounds               float64  `json:"rebounds" bson:"rebounds"`
+	Steals                 float64  `json:"steals" bson:"steals"`
+	Blocks                 float64  `json:"blocks" bson:"blocks"`
+	Turnovers              float64  `json:"turnovers" bson:"turnovers"`
+	AllMinutes             []string `json:"all_minutes" bson:"all_minutes"`
+	Minutes                float64  `json:"minutes" bson:"minutes"`
+	FieldGoalsMade         float64  `json:"field_goals_made" bson:"field_goals_made"`
+	FieldGoalsAttempted    float64  `json:"field_goals_attempted" bson:"field_goals_attempted"`
+	ThreePointersMade      float64  `json:"three_pointers_made" bson:"three_pointers_made"`
+	ThreePointersAttempted float64  `json:"three_pointers_attempted" bson:"three_pointers_attempted"`
+	FreeThrowsMade         float64  `json:"free_throws_made" bson:"free_throws_made"`
+	FreeThrowsAttempted    float64  `json:"free_throws_attempted" bson:"free_throws_attempted"`
+	Usage                  float64  `json:"usage" bson:"usage"`
+	GamesPlayed            float64  `json:"games_played" bson:"games_played"`
+	Height                 float64  `json:"height" bson:"height"`
+	Weight                 float64  `json:"weight" bson:"weight"`
+	Player                 Player   `json:"player" bson:"player"`
 }

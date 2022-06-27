@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -252,7 +253,8 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 		"steals":                   bson.M{"$avg": "$steals"},
 		"blocks":                   bson.M{"$avg": "$blocks"},
 		"turnovers":                bson.M{"$avg": "$turnovers"},
-		"minutes":                  bson.M{"$avg": "$minutes"},
+		"usage":                    bson.M{"$avg": "$usage"},
+		"all_minutes":              bson.M{"$push": "$minutes"},
 		"field_goals_made":         bson.M{"$avg": "$field_goals_made"},
 		"field_goals_attempted":    bson.M{"$avg": "$field_goals_attempted"},
 		"three_pointers_made":      bson.M{"$avg": "$three_pointers_made"},
@@ -262,8 +264,11 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 	}}
 	lookupPlayer := bson.M{"$lookup": bson.M{"from": "players", "localField": "_id", "foreignField": "playerID", "as": "player"}}
 	unwindPlayer := bson.M{"$unwind": "$player"}
+	// must have played more than 1 game and average more than 5 minutes per game
+	// and must have a height and weight
+	matchPlayersWhoPlay := bson.M{"$match": bson.M{"games_played": bson.M{"$gt": 0}, "player.height": bson.M{"$ne": ""}, "player.weight": bson.M{"$gt": 0}}}
 
-	cur, err := c.Collection("games").Aggregate(ctx, bson.A{matchGames, averageStats, lookupPlayer, unwindPlayer})
+	cur, err := c.Collection("games").Aggregate(ctx, bson.A{matchGames, averageStats, lookupPlayer, unwindPlayer, matchPlayersWhoPlay})
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +276,30 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 	if err = cur.All(ctx, &averages); err != nil {
 		return nil, err
 	}
-	logrus.Printf("Query %d Player Averages\tTook %v", len(inputs), time.Since(start))
+	for i := 0; i < len(averages); i++ {
+		avg := averages[i]
+		var minutes float64
+		for _, a := range avg.AllMinutes {
+			//convert "mm:ss" to minutes
+			min, err := strconv.ParseFloat(a[:len(a)-3], 64)
+			if err != nil {
+				return nil, err
+			}
+			sec, err := strconv.ParseFloat(a[len(a)-2:], 64)
+			if err != nil {
+				return nil, err
+			}
+			minutes += min
+			minutes += sec / 60
+		}
+		averages[i].Minutes = minutes
+		if averages[i].Minutes < 5 {
+			// remove
+			averages = append(averages[:i], averages[i+1:]...)
+			i--
+		}
+	}
+	logrus.Printf("Query %d Player Averages\tTook %v\n", len(inputs), time.Since(start))
 	return &averages, nil
 
 }
