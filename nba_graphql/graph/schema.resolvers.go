@@ -295,10 +295,10 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 		return nil, fmt.Errorf("cannot get player from projection without player name")
 	}
 	playerFilter := model.PlayerFilter{Name: &obj.PlayerName}
+
 	if val, ok := model.PlayerNames[obj.PlayerName]; ok {
 		playerFilter.Name = &val
 	}
-
 	p, err := dataloader.For(ctx).PlayerByFilter.Load(playerFilter)
 	if err != nil {
 		logrus.Warnf("err when loading player for projection: %v", err)
