@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 	"github.com/zvandehy/DataTrain/nba_graphql/util"
@@ -63,6 +64,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 						for i, team := range keys {
 							if teamsByAbr[team] == nil {
 								errs[i] = fmt.Errorf("failed to get team: %v", team)
+								logrus.Errorf("failed to get team: %v", team)
 							} else {
 								teams[i] = teamsByAbr[team]
 							}

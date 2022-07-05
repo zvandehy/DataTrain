@@ -47,7 +47,7 @@ const Player = (prop) => {
             }
           }
         }
-        projections(input: { startDate: $date, endDate: $date }) {
+        projections(input: { endDate: $date }) {
           date
           opponent {
             abbreviation
@@ -181,9 +181,15 @@ const Player = (prop) => {
   games = games.filter((game) => CompareDates(game.date, date) < 0);
   games = games.sort((a, b) => CompareDates(a.date, b.date));
   // const statData = games.filter((game) => game.season === "2021-22");
+  // get the projection with the current date or the most recent date
   const projection =
     data.player.projections.find((p) => p.date === date) ||
+    data.player.projections.find(
+      (p) => p.date === games[games.length - 1].date
+    ) ||
     data.player.projections[0];
+  // TODO: when automatically getting last game, the result doesn't generate
+  //TODO: handle if no projection is found
   const statData = games;
   const predictions = CalculatePredictions(projection, statData);
   const game = data.player.games.find((game) => game.date === date);

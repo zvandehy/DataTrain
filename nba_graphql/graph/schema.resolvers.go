@@ -34,6 +34,7 @@ func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*m
 	}
 	t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
 	if err != nil {
+		logrus.Errorf("Error loading team '%v' from: %v", obj.CurrentTeam, obj)
 		return nil, err
 	}
 	if t == nil {
@@ -318,6 +319,7 @@ func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection
 	}
 	t, err := dataloader.For(ctx).TeamByAbr.Load(obj.OpponentAbr)
 	if err != nil {
+		logrus.Errorf("Error loading team '%v' from: %v", obj.OpponentAbr, obj)
 		return nil, err
 	}
 	if t == nil {
@@ -573,6 +575,9 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		projectionsDB := r.Db.Client.Database("nba").Collection("projections")
 		insertCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		for _, projection := range projections {
+			if val, ok := model.PlayerNames[projection.PlayerName]; ok {
+				projection.PlayerName = val
+			}
 			//if projection with same playername and date exists, add the propositions to the list of propositions
 			filter := bson.M{
 				"playerName": projection.PlayerName,
@@ -650,6 +655,9 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		projectionsDB := r.Db.Client.Database("wnba").Collection("projections")
 		insertCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		for _, projection := range projections {
+			if val, ok := model.PlayerNames[projection.PlayerName]; ok {
+				projection.PlayerName = val
+			}
 			//if projection with same playername and date exists, add the propositions to the list of propositions
 			filter := bson.M{
 				"playerName": projection.PlayerName,
@@ -721,6 +729,9 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 		projectionsDB := r.Db.Client.Database("wnba").Collection("projections")
 		insertCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		for _, projection := range projections {
+			if val, ok := model.PlayerNames[projection.PlayerName]; ok {
+				projection.PlayerName = val
+			}
 			//if projection with same playername and date exists, add the propositions to the list of propositions
 			filter := bson.M{
 				"playerName": projection.PlayerName,

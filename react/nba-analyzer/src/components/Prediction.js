@@ -25,7 +25,6 @@ const Prediction = (props) => {
     <div className="prediction">
       <p>{projection.stat.label}</p>
       {propositions.map((prop) => {
-        console.log(prop);
         return prop.type.toLowerCase() === projection.stat.recognize ? (
           <p>
             {prop.sportsbook} {prop.target}
