@@ -177,6 +177,8 @@ func ParseUnderdogProjection(json UnderdogFantasy, sport string) ([]*Projection,
 			continue
 		}
 		playername := fmt.Sprintf("%s %s", player.FirstName, player.LastName)
+		playername = strings.TrimSpace(playername)
+		playername = strings.Replace(playername, "  ", " ", -1)
 		opponent, game, err := getOpponent(json.Games, player.TeamID)
 		if err != nil {
 			return nil, err
