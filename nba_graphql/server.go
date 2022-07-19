@@ -47,22 +47,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//TODO:  initialize 2 different databases for leagues
-	//TODO: create another graphql handler for WNBA
-	//TODO: pass a league database client to the graphql handler instead of general mongoClient
+
 	nbaServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{Db: nbaClient}}))
 	wnbaServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{Db: wnbaClient}}))
 
-	//TODO: Handle multiple endpoints
-	//TODO: Update the front end to use the new endpoints
 	router.Handle("/nba", playground.Handler("GraphQL playground", "/nba/query"))
 	router.Handle("/nba/query", timer(dataloader.Middleware(nbaClient, nbaServer), nbaClient))
 	router.Handle("/wnba", playground.Handler("GraphQL playground", "/wnba/query"))
 	router.Handle("/wnba/query", timer(dataloader.Middleware(wnbaClient, wnbaServer), wnbaClient))
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Println("connect to http://localhost:3000/nba for NBA UI")
-	log.Println("connect to http://localhost:3000/wnba for WNBA UI")
+	log.Printf("connect to http://localhost:%s/nba for NBA UI\n", port)
+	log.Printf("connect to http://localhost:%s/wnba for WNBA UI\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 

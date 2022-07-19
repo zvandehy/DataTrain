@@ -3,40 +3,40 @@
 package model
 
 type GameFilter struct {
-	TeamID    *int    `json:"teamID"`
-	PlayerID  *int    `json:"playerID"`
-	GameID    *string `json:"gameID"`
-	Season    *string `json:"season"`
-	StartDate *string `json:"startDate"`
-	EndDate   *string `json:"endDate"`
+	TeamID    *int    `json:"teamID" bson:"teamID"`
+	PlayerID  *int    `json:"playerID" bson:"playerID"`
+	GameID    *string `json:"gameID" bson:"gameID"`
+	Season    *string `json:"season" bson:"season"`
+	StartDate *string `json:"startDate" bson:"startDate"`
+	EndDate   *string `json:"endDate" bson:"endDate"`
 }
 
 type PlayerFilter struct {
-	Name     *string `json:"name"`
-	PlayerID *int    `json:"playerID"`
-	Season   *string `json:"season"`
-	Position *string `json:"position"`
-	TeamAbr  *string `json:"teamABR"`
-	TeamID   *int    `json:"teamID"`
+	Name     *string `json:"name" bson:"name"`
+	PlayerID *int    `json:"playerID" bson:"playerID"`
+	Season   *string `json:"season" bson:"season"`
+	Position *string `json:"position" bson:"position"`
+	TeamAbr  *string `json:"teamABR" bson:"teamABR"`
+	TeamID   *int    `json:"teamID" bson:"teamID"`
 }
 
 type ProjectionFilter struct {
-	Sportsbook *string `json:"sportsbook"`
-	PlayerName *string `json:"playerName"`
-	PlayerID   *int    `json:"playerID"`
-	StartDate  *string `json:"startDate"`
-	EndDate    *string `json:"endDate"`
-	TeamID     *int    `json:"teamID"`
-	OpponentID *int    `json:"opponentID"`
+	Sportsbook *string `json:"sportsbook" bson:"sportsbook"`
+	PlayerName *string `json:"playerName" bson:"playerName"`
+	PlayerID   *int    `json:"playerID" bson:"playerID"`
+	StartDate  *string `json:"startDate" bson:"startDate"`
+	EndDate    *string `json:"endDate" bson:"endDate"`
+	TeamID     *int    `json:"teamID" bson:"teamID"`
+	OpponentID *int    `json:"opponentID" bson:"opponentID"`
 }
 
 type Target struct {
-	Target float64 `json:"target"`
-	Type   string  `json:"type"`
+	Target float64 `json:"target" bson:"target"`
+	Type   string  `json:"type" bson:"type"`
 }
 
 type TeamFilter struct {
-	Name         *string `json:"name"`
-	TeamID       *int    `json:"teamID"`
-	Abbreviation *string `json:"abbreviation"`
+	Name         *string `json:"name" bson:"name"`
+	TeamID       *int    `json:"teamID" bson:"teamID"`
+	Abbreviation *string `json:"abbreviation" bson:"abbreviation"`
 }

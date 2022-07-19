@@ -1,6 +1,5 @@
 package graph
 
-// TODO: refactor to have individual schemas
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
 
@@ -23,10 +22,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Player is the resolver for the player field.
 func (r *injuryResolver) Player(ctx context.Context, obj *model.Injury) (*model.Player, error) {
 	return dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
 }
 
+// CurrentTeam is the resolver for the currentTeam field.
 func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*model.Team, error) {
 	//logrus.Printf("Get TEAM for player %v", obj)
 	if obj.CurrentTeam == "" {
@@ -44,6 +45,7 @@ func (r *playerResolver) CurrentTeam(ctx context.Context, obj *model.Player) (*m
 	return t, err
 }
 
+// Games is the resolver for the games field.
 func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.PlayerGame, error) {
 	// logrus.Printf("Get Games filtered by %v for Player %v", input, obj)
 	if obj.PlayerID == 0 {
@@ -102,10 +104,12 @@ func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input mod
 	return games, err
 }
 
+// Injuries is the resolver for the injuries field.
 func (r *playerResolver) Injuries(ctx context.Context, obj *model.Player) ([]*model.Injury, error) {
 	return dataloader.For(ctx).PlayerInjuryLoader.Load(obj.PlayerID)
 }
 
+// Projections is the resolver for the projections field.
 func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error) {
 	start := time.Now()
 	var allProjections []*model.Projection
@@ -169,11 +173,13 @@ func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, inp
 	return filteredProjections, nil
 }
 
+// SimilarPlayers is the resolver for the similarPlayers field.
 func (r *playerResolver) SimilarPlayers(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.Player, error) {
 	input.PlayerID = &obj.PlayerID
 	return dataloader.For(ctx).SimilarPlayerLoader.Load(input)
 }
 
+// Opponent is the resolver for the opponent field.
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from PlayerGame %v", obj)
 	start := time.Now()
@@ -187,10 +193,12 @@ func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame
 	return team, err
 }
 
+// OpponentStats is the resolver for the opponentStats field.
 func (r *playerGameResolver) OpponentStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error) {
 	return dataloader.For(ctx).OpponentGameByPlayerGame.Load(*obj)
 }
 
+// Team is the resolver for the team field.
 func (r *playerGameResolver) Team(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
 	start := time.Now()
 	team, err := dataloader.For(ctx).TeamByID.Load(obj.TeamID)
@@ -200,15 +208,18 @@ func (r *playerGameResolver) Team(ctx context.Context, obj *model.PlayerGame) (*
 	return team, err
 }
 
+// TeamStats is the resolver for the teamStats field.
 func (r *playerGameResolver) TeamStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error) {
 	return dataloader.For(ctx).TeamGameByPlayerGame.Load(*obj)
 }
 
+// Player is the resolver for the player field.
 func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error) {
 	//logrus.Printf("Get Player from PlayerGame %v", obj)
 	return dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
 }
 
+// PlayersInGame is the resolver for the playersInGame field.
 func (r *playerGameResolver) PlayersInGame(ctx context.Context, obj *model.PlayerGame) (*model.PlayersInGame, error) {
 	//logrus.Printf("Get PlayersInGame from PlayerGame %v", obj)
 	gameCur, err := r.Db.GetPlayerGames(ctx, []model.GameFilter{{GameID: &obj.GameID}})
@@ -253,6 +264,7 @@ func (r *playerGameResolver) PlayersInGame(ctx context.Context, obj *model.Playe
 	return &model.PlayersInGame{TeamPlayers: teamPlayers, OpponentPlayers: oppPlayers}, nil
 }
 
+// Projections is the resolver for the projections field.
 func (r *playerGameResolver) Projections(ctx context.Context, obj *model.PlayerGame) ([]*model.Projection, error) {
 	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{{PlayerID: &obj.PlayerID}})
 	if err != nil {
@@ -282,14 +294,17 @@ func (r *playerGameResolver) Projections(ctx context.Context, obj *model.PlayerG
 	return projections, nil
 }
 
+// Team is the resolver for the team field.
 func (r *playersInGameResolver) Team(ctx context.Context, obj *model.PlayersInGame) ([]*model.Player, error) {
 	return obj.TeamPlayers, nil
 }
 
+// Opponent is the resolver for the opponent field.
 func (r *playersInGameResolver) Opponent(ctx context.Context, obj *model.PlayersInGame) ([]*model.Player, error) {
 	return obj.OpponentPlayers, nil
 }
 
+// Player is the resolver for the player field.
 func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) (*model.Player, error) {
 	//logrus.Printf("Get Player from Projection %v", obj)
 	if obj.PlayerName == "" {
@@ -313,6 +328,7 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 	return p, err
 }
 
+// Opponent is the resolver for the opponent field.
 func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error) {
 	if obj.OpponentAbr == "" {
 		logrus.Fatalf("OpponentAbr is empty: %#v", obj)
@@ -329,6 +345,7 @@ func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection
 	return t, err
 }
 
+// Result is the resolver for the result field.
 func (r *projectionResolver) Result(ctx context.Context, obj *model.Projection) (*model.PlayerGame, error) {
 	if len(strings.SplitN(obj.PlayerName, " ", 2)) != 2 {
 		return nil, fmt.Errorf("cannot get result from projection without player name")
@@ -358,6 +375,7 @@ func (r *projectionResolver) Result(ctx context.Context, obj *model.Projection) 
 	return &game, nil
 }
 
+// Players is the resolver for the players field.
 func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
 	fmt.Println(r.Db.Name)
 	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{})
@@ -381,6 +399,7 @@ func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
 	return players, nil
 }
 
+// FilterPlayers is the resolver for the filterPlayers field.
 func (r *queryResolver) FilterPlayers(ctx context.Context, input model.PlayerFilter) ([]*model.Player, error) {
 	// logrus.Printf("Get Players with filter  %v", input)
 	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{input})
@@ -404,6 +423,7 @@ func (r *queryResolver) FilterPlayers(ctx context.Context, input model.PlayerFil
 	return players, nil
 }
 
+// Player is the resolver for the player field.
 func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*model.Player, error) {
 	//logrus.Printf("Get Player with filter  %v", input)
 
@@ -423,6 +443,7 @@ func (r *queryResolver) Player(ctx context.Context, input model.PlayerFilter) (*
 	return player, nil
 }
 
+// Teams is the resolver for the teams field.
 func (r *queryResolver) Teams(ctx context.Context) ([]*model.Team, error) {
 	//logrus.Println("Get Teams")
 	teamsDB := r.Db.Collection("teams")
@@ -449,6 +470,7 @@ func (r *queryResolver) Teams(ctx context.Context) ([]*model.Team, error) {
 	return teams, nil
 }
 
+// FilterTeams is the resolver for the filterTeams field.
 func (r *queryResolver) FilterTeams(ctx context.Context, input model.TeamFilter) ([]*model.Team, error) {
 	//logrus.Printf("Get Teams with filter %v\n", input)
 	teamsDB := r.Db.Collection("teams")
@@ -480,6 +502,7 @@ func (r *queryResolver) FilterTeams(ctx context.Context, input model.TeamFilter)
 	return teams, nil
 }
 
+// Team is the resolver for the team field.
 func (r *queryResolver) Team(ctx context.Context, input model.TeamFilter) (*model.Team, error) {
 	//logrus.Printf("Get Team with filter %#v\n", input)
 	teamsDB := r.Db.Collection("teams")
@@ -500,6 +523,7 @@ func (r *queryResolver) Team(ctx context.Context, input model.TeamFilter) (*mode
 	return team, nil
 }
 
+// TeamGames is the resolver for the teamGames field.
 func (r *queryResolver) TeamGames(ctx context.Context, input model.GameFilter) ([]*model.TeamGame, error) {
 	//logrus.Printf("Get TeamGames with teamID %#v\n", input)
 	cur, err := r.Db.GetTeamGames(ctx, []model.GameFilter{input})
@@ -522,6 +546,7 @@ func (r *queryResolver) TeamGames(ctx context.Context, input model.GameFilter) (
 	return games, nil
 }
 
+// PlayerGames is the resolver for the playerGames field.
 func (r *queryResolver) PlayerGames(ctx context.Context, input model.GameFilter) ([]*model.PlayerGame, error) {
 	//logrus.Printf("Get Games filtered by %v", input)
 	cur, err := r.Db.GetPlayerGames(ctx, []model.GameFilter{input})
@@ -541,6 +566,7 @@ func (r *queryResolver) PlayerGames(ctx context.Context, input model.GameFilter)
 	return playerGames, nil
 }
 
+// Projections is the resolver for the projections field.
 func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionFilter) ([]*model.Projection, error) {
 	// TODO: Fix timeouts so that can query for all projections -- maybe paging?
 	//TODO: Refactor projection queries into own functions
@@ -856,6 +882,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 	// return allProjections, nil
 }
 
+// Games is the resolver for the games field.
 func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.TeamGame, error) {
 	//logrus.Printf("Get Games from team %v filtered by %v", obj, input)
 	//TODO: Add dataloader for situation where player.games.team.games is called
@@ -880,16 +907,25 @@ func (r *teamResolver) Games(ctx context.Context, obj *model.Team, input model.G
 	return games, nil
 }
 
+// Players is the resolver for the players field.
 func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.Player, error) {
 	//logrus.Printf("Get Players from Team %v", obj)
 	input := model.PlayerFilter{TeamID: &obj.TeamID}
 	return r.Query().FilterPlayers(ctx, input)
 }
 
+// Injuries is the resolver for the injuries field.
 func (r *teamResolver) Injuries(ctx context.Context, obj *model.Team) ([]*model.Injury, error) {
 	return dataloader.For(ctx).TeamInjuryLoader.Load(obj.TeamID)
 }
 
+// SimilarTeams is the resolver for the similarTeams field.
+func (r *teamResolver) SimilarTeams(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.Team, error) {
+	input.TeamID = &obj.TeamID
+	return dataloader.For(ctx).SimilarTeamLoader.Load(input)
+}
+
+// Opponent is the resolver for the opponent field.
 func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*model.Team, error) {
 	//logrus.Printf("Get Opponent from TeamGame %v", obj)
 	start := time.Now()
@@ -900,6 +936,7 @@ func (r *teamGameResolver) Opponent(ctx context.Context, obj *model.TeamGame) (*
 	return team, err
 }
 
+// PlayersInGame is the resolver for the playersInGame field.
 func (r *teamGameResolver) PlayersInGame(ctx context.Context, obj *model.TeamGame) (*model.PlayersInGame, error) {
 	//logrus.Printf("Get Players from Game %v", obj)
 	//TODO: Abstract this with PlayerGamesResolver PlayersInGame()

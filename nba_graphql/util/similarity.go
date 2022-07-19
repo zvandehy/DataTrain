@@ -50,6 +50,44 @@ func SimilarPlayers(players []model.PlayerAverage, toPlayer model.PlayerAverage)
 	return closestPlayers
 }
 
+func SimilarTeams(teams []model.TeamAverage, toTeam model.TeamAverage) []*model.Team {
+	teams = normalizeTeam(teams)
+	for i := range teams {
+		if teams[i].Team.TeamID == toTeam.Team.TeamID {
+			toTeam = teams[i]
+			break
+		}
+	}
+	var teamDistances map[float64]model.Team = make(map[float64]model.Team, len(teams))
+	for _, team := range teams {
+		if team.Team.TeamID == toTeam.Team.TeamID {
+			continue
+		}
+		distance := TeamEuclideanDistance(team, toTeam)
+		_, found := teamDistances[distance]
+		for found {
+			distance += 0.00001
+			_, found = teamDistances[distance]
+		}
+		teamDistances[distance] = team.Team
+	}
+	var distances []float64
+	for k := range teamDistances {
+		distances = append(distances, k)
+	}
+	sort.Float64s(distances)
+	//TODO: add a limit to the filter
+	var closestTeams []*model.Team = make([]*model.Team, 0, 4)
+	for i, distance := range distances {
+		team := teamDistances[distance]
+		closestTeams = append(closestTeams, &team)
+		if i == 3 {
+			break
+		}
+	}
+	return closestTeams
+}
+
 func EuclideanDistance(player1 model.PlayerAverage, player2 model.PlayerAverage) float64 {
 	sumDistance := distance("Points", player1.Points, player2.Points) +
 		distance("Assists", player1.Assists, player2.Assists) +
@@ -67,6 +105,25 @@ func EuclideanDistance(player1 model.PlayerAverage, player2 model.PlayerAverage)
 		distance("Usage", player1.Usage, player2.Usage) +
 		distance("Height", player1.Height, player2.Height) +
 		distance("Weight", player1.Weight, player2.Weight)
+	// fmt.Println(sumDistance)
+	return math.Sqrt(sumDistance)
+}
+
+func TeamEuclideanDistance(team1 model.TeamAverage, team2 model.TeamAverage) float64 {
+	sumDistance := distance("Points", team1.Points, team2.Points)*1.5 +
+		distance("OppPoints", team1.OppPoints, team2.OppPoints)*1.5 +
+		distance("Assists", team1.Assists, team2.Assists) +
+		distance("OppAssists", team1.OppAssists, team2.OppAssists) +
+		distance("OppRebounds", team1.OppRebounds, team2.OppRebounds) +
+		distance("Rebounds", team1.Rebounds, team2.Rebounds) +
+		distance("Steals", team1.Steals, team2.Steals) +
+		distance("Blocks", team1.Blocks, team2.Blocks) +
+		distance("Turnovers", team1.Turnovers, team2.Turnovers) +
+		distance("ThreePointersMade", team1.ThreePointersMade, team2.ThreePointersMade) +
+		distance("PersonalFouls", team1.PersonalFouls, team2.PersonalFouls) +
+		distance("PersonalFoulsDrawn", team1.PersonalFoulsDrawn, team2.PersonalFoulsDrawn) +
+		distance("GamesWon", team1.GamesWon, team2.GamesWon)*1.5 +
+		distance("GamesLost", team1.GamesLost, team2.GamesLost)*1.5
 	// fmt.Println(sumDistance)
 	return math.Sqrt(sumDistance)
 }
@@ -189,4 +246,69 @@ func normalizePlayer(players []model.PlayerAverage) []model.PlayerAverage {
 		players[i].Weight = weights[i]
 	}
 	return players
+}
+
+func normalizeTeam(teams []model.TeamAverage) []model.TeamAverage {
+	gamesWon := make([]float64, 0, len(teams))
+	gamesLost := make([]float64, 0, len(teams))
+	points := make([]float64, 0, len(teams))
+	oppPoints := make([]float64, 0, len(teams))
+	assists := make([]float64, 0, len(teams))
+	oppAssists := make([]float64, 0, len(teams))
+	rebounds := make([]float64, 0, len(teams))
+	oppRebounds := make([]float64, 0, len(teams))
+	steals := make([]float64, 0, len(teams))
+	blocks := make([]float64, 0, len(teams))
+	turnovers := make([]float64, 0, len(teams))
+	threePointersMakes := make([]float64, 0, len(teams))
+	personalFouls := make([]float64, 0, len(teams))
+	personalFoulsDrawn := make([]float64, 0, len(teams))
+
+	for _, team := range teams {
+		gamesWon = append(gamesWon, team.GamesWon)
+		gamesLost = append(gamesLost, team.GamesLost)
+		points = append(points, team.Points)
+		assists = append(assists, team.Assists)
+		rebounds = append(rebounds, team.Rebounds)
+		oppPoints = append(oppPoints, team.OppPoints)
+		oppAssists = append(oppAssists, team.OppAssists)
+		oppRebounds = append(oppRebounds, team.OppRebounds)
+		steals = append(steals, team.Steals)
+		blocks = append(blocks, team.Blocks)
+		turnovers = append(turnovers, team.Turnovers)
+		threePointersMakes = append(threePointersMakes, team.ThreePointersMade)
+		personalFouls = append(personalFouls, team.PersonalFouls)
+		personalFoulsDrawn = append(personalFoulsDrawn, team.PersonalFoulsDrawn)
+	}
+	gamesWon = normalize(gamesWon)
+	gamesLost = normalize(gamesLost)
+	points = normalize(points)
+	oppPoints = normalize(oppPoints)
+	assists = normalize(assists)
+	oppAssists = normalize(oppAssists)
+	rebounds = normalize(rebounds)
+	oppRebounds = normalize(oppRebounds)
+	steals = normalize(steals)
+	blocks = normalize(blocks)
+	turnovers = normalize(turnovers)
+	threePointersMakes = normalize(threePointersMakes)
+	personalFouls = normalize(personalFouls)
+	personalFoulsDrawn = normalize(personalFoulsDrawn)
+	for i := range teams {
+		teams[i].GamesWon = gamesWon[i]
+		teams[i].GamesLost = gamesLost[i]
+		teams[i].Points = points[i]
+		teams[i].Assists = assists[i]
+		teams[i].Rebounds = rebounds[i]
+		teams[i].OppPoints = oppPoints[i]
+		teams[i].OppAssists = oppAssists[i]
+		teams[i].OppRebounds = oppRebounds[i]
+		teams[i].Steals = steals[i]
+		teams[i].Blocks = blocks[i]
+		teams[i].Turnovers = turnovers[i]
+		teams[i].ThreePointersMade = threePointersMakes[i]
+		teams[i].PersonalFouls = personalFouls[i]
+		teams[i].PersonalFoulsDrawn = personalFoulsDrawn[i]
+	}
+	return teams
 }
