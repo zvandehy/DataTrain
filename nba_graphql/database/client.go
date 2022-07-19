@@ -304,6 +304,60 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 
 }
 
+func (c *NBADatabaseClient) GetTeamAverages(ctx context.Context, inputs []model.GameFilter) (*[]model.TeamAverage, error) {
+	start := time.Now()
+	c.Queries++
+	filter := createGameFilter(inputs)
+
+	matchGames := bson.M{"$match": filter}
+	averageStats := bson.M{"$group": bson.M{"_id": "$teamID",
+		"wins_and_losses":      bson.M{"$push": "$win_or_loss"},
+		"points":               bson.M{"$avg": "$points"},
+		"opponent_points":      bson.M{"$avg": "$opponent_points"},
+		"assists":              bson.M{"$avg": "$assists"},
+		"opponent_assists":     bson.M{"$avg": "$opponent_assists"},
+		"rebounds":             bson.M{"$avg": "$rebounds"},
+		"opponent_rebounds":    bson.M{"$avg": "$opponent_rebounds"},
+		"steals":               bson.M{"$avg": "$steals"},
+		"blocks":               bson.M{"$avg": "$blocks"},
+		"turnovers":            bson.M{"$avg": "$turnovers"},
+		"three_pointers_made":  bson.M{"$avg": "$three_pointers_made"},
+		"personal_fouls_drawn": bson.M{"$avg": "$personal_fouls_drawn"},
+		"personal_fouls":       bson.M{"$avg": "$personal_fouls"},
+	}}
+	lookupTeam := bson.M{"$lookup": bson.M{"from": "teams", "localField": "_id", "foreignField": "teamID", "as": "team"}}
+	unwindTeam := bson.M{"$unwind": "$team"}
+
+	cur, err := c.Collection("teamgames").Aggregate(ctx, bson.A{matchGames, averageStats, lookupTeam, unwindTeam})
+	if err != nil {
+		return nil, err
+	}
+	var averages []model.TeamAverage
+	if err = cur.All(ctx, &averages); err != nil {
+		return nil, err
+	}
+	//count wins and losses
+	for i := 0; i < len(averages); i++ {
+		avg := averages[i]
+		wins := 0.0
+		losses := 0.0
+		for _, a := range avg.WinsAndLosses {
+			if a == "win" {
+				wins++
+			} else if a == "loss" {
+				losses++
+			}
+		}
+		averages[i].GamesWon = wins
+		averages[i].GamesLost = losses
+	}
+
+	logrus.Printf("Query %d Team Averages\tTook %v\n", len(inputs), time.Since(start))
+	logrus.Warnf("%d Team Averages", len(averages))
+	return &averages, nil
+
+}
+
 func (c *NBADatabaseClient) GetPlayerInjuries(ctx context.Context, playerIDs []int) ([]*model.Injury, error) {
 	start := time.Now()
 	c.Queries++

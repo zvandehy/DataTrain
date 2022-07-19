@@ -85,3 +85,22 @@ type PlayerAverage struct {
 	Weight                 float64  `json:"weight" bson:"weight"`
 	Player                 Player   `json:"player" bson:"player"`
 }
+
+type TeamAverage struct {
+	WinsAndLosses      []string `json:"wins_and_losses" bson:"wins_and_losses"`
+	GamesWon           float64  `json:"games_won" bson:"games_won"`
+	GamesLost          float64  `json:"games_lost" bson:"games_lost"`
+	Points             float64  `json:"points" bson:"points"`
+	OppPoints          float64  `json:"opponent_points" bson:"opponent_points"`
+	Assists            float64  `json:"assists" bson:"assists"`
+	OppAssists         float64  `json:"opponent_assists" bson:"opponent_assists"`
+	Rebounds           float64  `json:"rebounds" bson:"rebounds"`
+	OppRebounds        float64  `json:"opponent_rebounds" bson:"opponent_rebounds"`
+	Steals             float64  `json:"steals" bson:"steals"`
+	Blocks             float64  `json:"blocks" bson:"blocks"`
+	Turnovers          float64  `json:"turnovers" bson:"turnovers"`
+	ThreePointersMade  float64  `json:"three_pointers_made" bson:"three_pointers_made"`
+	PersonalFouls      float64  `json:"personal_fouls" bson:"personal_fouls"`
+	PersonalFoulsDrawn float64  `json:"personal_fouls_drawn" bson:"personal_fouls_drawn"`
+	Team               Team     `json:"team" bson:"team"`
+}

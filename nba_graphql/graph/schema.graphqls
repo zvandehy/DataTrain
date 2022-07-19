@@ -30,6 +30,7 @@ type Team {
   games(input: GameFilter!): [TeamGame!]!
   players: [Player!]!
   injuries: [Injury!]
+  similarTeams(input: GameFilter!): [Team!]!
 }
 
 type TeamGame {

@@ -29,6 +29,7 @@ type Loaders struct {
 	TeamGameByPlayerGame     TeamGameLoader
 	OpponentGameByPlayerGame TeamGameLoader
 	SimilarPlayerLoader      SimilarPlayerLoader
+	SimilarTeamLoader        SimilarTeamLoader
 	PlayerInjuryLoader       PlayerInjuryLoader
 	TeamInjuryLoader         TeamInjuryLoader
 }
@@ -343,11 +344,11 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 					Fetch: func(keys []model.GameFilter) ([][]*model.Player, []error) {
 						similarPlayers := make([][]*model.Player, len(keys))
 						errs := make([]error, len(keys))
-						removedPlayerIDs := make([]model.GameFilter, len(keys))
+						createFilterWithoutIDs := make([]model.GameFilter, len(keys))
 						for i, filter := range keys {
-							removedPlayerIDs[i] = model.GameFilter{Season: filter.Season} //TODO: add other filters if applicable
+							createFilterWithoutIDs[i] = model.GameFilter{Season: filter.Season} //TODO: add other filters if applicable
 						}
-						playerAverages, err := conn.GetAverages(r.Context(), removedPlayerIDs)
+						playerAverages, err := conn.GetAverages(r.Context(), createFilterWithoutIDs)
 						if err != nil || len(*playerAverages) == 0 {
 							return nil, []error{err}
 						}
@@ -361,6 +362,35 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 							similarPlayers[i] = util.SimilarPlayers(*playerAverages, targetPlayer)
 						}
 						return similarPlayers, errs
+					},
+				},
+			),
+			SimilarTeamLoader: *NewSimilarTeamLoader(
+				SimilarTeamLoaderConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch: func(keys []model.GameFilter) ([][]*model.Team, []error) {
+						logrus.Infof("SimilarTeamLoader: %+v", keys)
+						similarTeams := make([][]*model.Team, len(keys))
+						errs := make([]error, len(keys))
+						createFilterWithoutIDs := make([]model.GameFilter, len(keys))
+						for i, filter := range keys {
+							createFilterWithoutIDs[i] = model.GameFilter{Season: filter.Season} //TODO: add other filters if applicable
+						}
+						teamAverages, err := conn.GetTeamAverages(r.Context(), createFilterWithoutIDs)
+						if err != nil || len(*teamAverages) == 0 {
+							return nil, []error{err}
+						}
+						for i, filter := range keys {
+							targetTeam := (*teamAverages)[0]
+							for _, t := range *teamAverages {
+								if t.Team.TeamID == *filter.TeamID {
+									targetTeam = t
+								}
+							}
+							similarTeams[i] = util.SimilarTeams(*teamAverages, targetTeam)
+						}
+						return similarTeams, errs
 					},
 				},
 			),
