@@ -61,6 +61,11 @@ const Player = (prop) => {
                 name
               }
             }
+            similarTeams(input: { season: $season }) {
+              teamID
+              name
+              abbreviation
+            }
           }
           propositions {
             target
@@ -248,7 +253,9 @@ const Player = (prop) => {
         selected={stat}
         matchups={matchups}
         games={statData}
+        player={data.player}
         similar={data.player.similarPlayers}
+        similarTeams={projection.opponent.similarTeams}
         opponent={
           projection?.opponent ??
           game?.opponent ??
