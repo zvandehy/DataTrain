@@ -1,9 +1,9 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import Players from "./Players";
-import Player from "./Player";
-import "../fonts/Oswald-Regular.ttf";
-import { NBAClient, WNBAClient } from "../index";
+import Players from "./components/Players";
+import Player from "./components/Player";
+import "./fonts/Oswald-Regular.ttf";
+import { NBAClient, WNBAClient } from "./index";
 
 const App = () => {
   return (
@@ -14,10 +14,6 @@ const App = () => {
           path="/"
           element={<Players client={NBAClient} league="nba" />}
         />
-        {/* <Route
-          path="/players/:id"
-          element={<Player client={NBAClient} />}
-        ></Route> */}
         <Route
           exact
           path="/nba"

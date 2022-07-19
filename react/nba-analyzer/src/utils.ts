@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 import { round, mean } from "mathjs";
+import { PlayerGame, Team } from "./models/graphql/types";
 
 export const RelevantStats = {
   points: [
@@ -12,7 +13,6 @@ export const RelevantStats = {
     { recognize: "three_point_percentage", label: "3P%" },
     { recognize: "free_throws_made", label: "FTM" },
     { recognize: "free_throws_attempted", label: "FTA" },
-    // {recognize:,label:"FT RT"},
     { recognize: "effective_field_goal_percentage", label: "eFG%" },
     { recognize: "usage", label: "USG%" },
     { recognize: "minutes", label: "MIN" },
@@ -116,6 +116,7 @@ export const RelevantStats = {
     { recognize: "minutes", label: "MIN" },
   ],
   turnovers: [
+    { recognize: "turnovers", label: "B+S" },
     { recognize: "blks+stls", label: "B+S" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
@@ -123,16 +124,14 @@ export const RelevantStats = {
     { recognize: "minutes", label: "MIN" },
   ],
   blocks: [
-    { recognize: "blks+stls", label: "B+S" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
     { recognize: "personal_fouls", label: "PF" },
     { recognize: "minutes", label: "MIN" },
   ],
   steals: [
-    { recognize: "blks+stls", label: "B+S" },
-    { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
+    { recognize: "blocks", label: "BLK" },
     { recognize: "personal_fouls", label: "PF" },
     { recognize: "minutes", label: "MIN" },
   ],
@@ -153,7 +152,7 @@ export const RelevantStats = {
   ],
 };
 
-export function FormatDate(date) {
+export function FormatDate(date: Date): string {
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
@@ -161,32 +160,33 @@ export function FormatDate(date) {
   return ret;
 }
 
-export function ParseDate(date) {
-  return Date.parse(date.replace(/-/g, "/").replace(/T.+/, ""));
+export function ParseDate(date: string): Date {
+  return new Date(date);
+  // return Date.parse(date.replace(/-/g, "/").replace(/T.+/, "")); //TODO: REVIEW THIS
 }
 
 //returns negative if 1 is less than 2
-export function CompareDates(date1, date2) {
+export function CompareDates(date1: string, date2: string) {
   var a = new Date(date1);
   var b = new Date(date2);
-  return a - b;
+  return a.getTime() - b.getTime();
 }
 
-export function GetSelectableTeams(teams) {
+export function GetSelectableTeams(teams: Team[]) {
   let ret = teams.map((team) => ({
     // required: what to show to the user
     label: team.abbreviation,
     // required: key to identify the item within the array
     key: team.teamID,
   }));
-  ret.push({ label: "ANY", key: "ANY" });
+  ret.push({ label: "ANY", key: 0 });
   ret.sort((a, b) => {
     return a.label > b.label ? 1 : -1;
   });
   return ret;
 }
 
-export function GamesWithSeasonType(games, seasonType) {
+export function GamesWithSeasonType(games: PlayerGame[], seasonType: string) {
   return games.filter((game) => {
     if (seasonType === "PLAYOFFS") {
       return game.playoffs;
@@ -197,7 +197,7 @@ export function GamesWithSeasonType(games, seasonType) {
   });
 }
 
-export function AveragePropScore(games, stat) {
+export function AveragePropScore(games: PlayerGame[], stat: string): number {
   let val;
   switch (stat.toLowerCase()) {
     case "field_goal_percentage":
@@ -240,7 +240,7 @@ export function AveragePropScore(games, stat) {
   return round(val, 2);
 }
 
-export function GetPropScore(game, propType) {
+export function GetPropScore(game: PlayerGame, propType: string): number {
   switch (propType.toLowerCase()) {
     case "pts+rebs+asts":
       return game["points"] + game["rebounds"] + game["assists"];
@@ -289,11 +289,11 @@ export function GetPropScore(game, propType) {
         2
       );
     default:
-      return game[propType.toLowerCase()] ?? 0;
+      return (game[propType.toLowerCase() as keyof PlayerGame] as number) ?? 0;
   }
 }
 
-export function GetShortType(type) {
+export function GetShortType(type: string): string {
   switch (type.toLowerCase()) {
     case "points":
       return "PTS";
@@ -316,15 +316,6 @@ export function GetShortType(type) {
     default:
       return type;
   }
-}
-
-export function showPlayerPreview(player, props, type) {
-  let ret = props.find(
-    (prop) =>
-      player.first_name + " " + player.last_name === prop.playerName &&
-      prop.type === type
-  );
-  return ret;
 }
 
 export function GetColor(type, num) {
