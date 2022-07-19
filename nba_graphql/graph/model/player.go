@@ -3,6 +3,7 @@ package model
 var PlayerNames map[string]string = map[string]string{
 	"Nah'Shon Hyland": "Bones Hyland",
 	"Ty Harris":       "Tyasha Harris",
+	"Naz Hillman":     "Naz Hillmon",
 }
 
 type Player struct {
