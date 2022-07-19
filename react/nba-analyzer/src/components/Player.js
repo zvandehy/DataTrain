@@ -29,7 +29,7 @@ const Player = (prop) => {
   //TODO: Handle error when pick game that isn't in seasonType
   const [seasonType, setSeasonType] = useState("");
   const query = gql`
-    query Player($date: String!, $playerID: Int!, $season: String!) {
+    query Player($playerID: Int!, $season: String!) {
       player(input: { playerID: $playerID }) {
         name
         playerID
@@ -47,7 +47,7 @@ const Player = (prop) => {
             }
           }
         }
-        projections(input: { endDate: $date }) {
+        projections(input: {}) {
           date
           opponent {
             abbreviation
@@ -162,7 +162,7 @@ const Player = (prop) => {
     }
   `;
   const { loading, error, data } = useQuery(query, {
-    variables: { playerID: playerID, date: date, season: season },
+    variables: { playerID: playerID, season: season },
     client: client,
   });
 
