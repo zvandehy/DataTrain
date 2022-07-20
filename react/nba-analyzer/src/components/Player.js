@@ -112,6 +112,8 @@ const Player = (prop) => {
             }
           }
           minutes
+          margin
+          home_or_away
           date
           field_goals_attempted
           field_goal_percentage
@@ -144,6 +146,10 @@ const Player = (prop) => {
             blocks
             turnovers
             opponent {
+              abbreviation
+              teamID
+            }
+            team {
               abbreviation
               teamID
             }
