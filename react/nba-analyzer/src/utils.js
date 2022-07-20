@@ -116,21 +116,20 @@ export const RelevantStats = {
     { recognize: "minutes", label: "MIN" },
   ],
   turnovers: [
-    { recognize: "blks+stls", label: "B+S" },
+    { recognize: "turnovers", label: "TOV" },
+    { recognize: "assists", label: "AST" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
     { recognize: "personal_fouls", label: "PF" },
     { recognize: "minutes", label: "MIN" },
   ],
   blocks: [
-    { recognize: "blks+stls", label: "B+S" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
     { recognize: "personal_fouls", label: "PF" },
     { recognize: "minutes", label: "MIN" },
   ],
   steals: [
-    { recognize: "blks+stls", label: "B+S" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
     { recognize: "personal_fouls", label: "PF" },
