@@ -116,8 +116,8 @@ export const RelevantStats = {
     { recognize: "minutes", label: "MIN" },
   ],
   turnovers: [
-    { recognize: "turnovers", label: "B+S" },
-    { recognize: "blks+stls", label: "B+S" },
+    { recognize: "turnovers", label: "TOV" },
+    { recognize: "assists", label: "AST" },
     { recognize: "blocks", label: "BLK" },
     { recognize: "steals", label: "STL" },
     { recognize: "personal_fouls", label: "PF" },
@@ -318,7 +318,7 @@ export function GetShortType(type: string): string {
   }
 }
 
-export function GetColor(type, num) {
+export function GetColor(type: string, num: any) {
   if (type.toLowerCase() === "pct") {
     if (num >= 60.0) {
       return "high";

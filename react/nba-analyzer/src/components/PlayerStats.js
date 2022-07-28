@@ -3,6 +3,7 @@ import LastNGames from "./LastNGames";
 import { GetPropScore, AveragePropScore, GetColor } from "../utils";
 import { RelevantStats } from "../utils";
 import { SimilarPlayerRows } from "./SimilarPlayers";
+import { SimilarTeamRows } from "./SimilarTeams";
 
 export const PlayerStatsPreview = (props) => {
   const { predictions, selected, matchups } = props;
@@ -53,7 +54,16 @@ export const PlayerStatsPreview = (props) => {
 };
 
 export const PlayerStatsTable = (props) => {
-  const { predictions, selected, games, matchups, opponent, similar } = props;
+  const {
+    predictions,
+    selected,
+    games,
+    matchups,
+    opponent,
+    player,
+    similar,
+    similarTeams,
+  } = props;
   const prediction = predictions.filter(
     (item) =>
       item.stat.recognize.toLowerCase() === selected.recognize.toLowerCase()
@@ -156,6 +166,14 @@ export const PlayerStatsTable = (props) => {
           ) : (
             <></>
           )}
+          <SimilarTeamRows
+            similar={similarTeams}
+            opponent={opponent}
+            prediction={prediction}
+            selected={selected}
+            average={AveragePropScore(games, prediction.stat.recognize)}
+            player={player}
+          />
           <SimilarPlayerRows
             similar={similar}
             opponent={opponent}
