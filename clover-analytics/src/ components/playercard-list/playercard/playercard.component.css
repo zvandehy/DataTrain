@@ -1,0 +1,65 @@
+.playercard {
+  display: grid;
+  grid-template-columns: repeat(25%, 4);
+  grid-template-areas: "player-context stat-select prediction player-stats";
+  padding-right: 1%;
+  color: var(--color-white);
+  background-color: var(--color-primary);
+  gap: 0 2vw;
+  margin-bottom: 1rem;
+}
+
+.player-context {
+  display: flex;
+  flex-direction: column;
+  grid-area: player-context;
+}
+
+.player-context a {
+  text-decoration: none;
+  color: inherit;
+  padding-right: 0.5rem;
+}
+
+.versus {
+  margin-left: 0.5em;
+}
+
+.player-name {
+  font-size: min(2rem, 3vw);
+}
+
+.player-name,
+.player-matchup {
+  margin-left: 1rem;
+}
+
+.player-matchup,
+.player-matchup > span {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: min(1.5rem, 2vw);
+}
+
+.player-matchup {
+  background-color: var(--color-white);
+  color: var(--color-black);
+  width: max-content;
+  padding: 0px 2px;
+}
+
+.matchup-date {
+  display: block;
+}
+
+.player-context .team-logo {
+  width: 2rem;
+}
+
+.player-photo {
+  margin: auto;
+  display: block;
+  width: 100%;
+  margin-bottom: 0;
+}

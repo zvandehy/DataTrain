@@ -115,7 +115,7 @@ type PlayerGame {
   blocks: Int!
   steals: Int!
   playersInGame: PlayersInGame!
-  projections: [Projection]! #TODO change to propositions
+  projections: [Projection]!
 }
 
 type Projection {
@@ -133,6 +133,7 @@ type Proposition {
   # lastModified
   sportsbook: String!
   predictions: [Prediction!]!
+  lastModified: String!
 }
 
 type Prediction {

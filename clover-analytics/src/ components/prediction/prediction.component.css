@@ -1,0 +1,103 @@
+.prediction {
+  display: flex;
+  text-align: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  grid-area: prediction;
+  font-size: min(1.5rem, 3vw);
+}
+
+.prediction input {
+  display: inline;
+  background-color: inherit;
+  color: inherit;
+  border: 2px solid var(--color-accent);
+  width: 5ex;
+  text-align: center;
+  cursor: pointer;
+}
+
+.prediction-icon {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "icon predict"
+    "icon confidence";
+  align-content: start;
+  gap: 0 1vw;
+}
+
+.prediction-icon svg {
+  grid-area: icon;
+}
+
+.prediction-result {
+  align-self: end;
+}
+
+.arrow {
+  font-size: 5rem;
+}
+
+.actual-result {
+  margin-bottom: 0.75em;
+}
+
+.actual-score {
+  margin-left: 1rem;
+}
+
+.target-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.target-input * {
+  margin: 0 0.25rem;
+  margin-top: -0.55rem;
+}
+
+.selected-stat-display {
+  margin: 1rem 0;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+div.target-input .MuiSelect-icon {
+  color: var(--color-white);
+  /* padding-left: 14px; */
+  /* padding-top: 8px; */
+  font-size: 2.2rem;
+  top: calc(50% - 9px);
+  right: -5px;
+}
+.target-label {
+  display: inline;
+  color: inherit;
+}
+
+.MuiInput-root {
+  height: 40px;
+  padding-top: 20px;
+}
+
+.MuiInput-underline:after {
+  border-bottom: 2px solid var(--color-accent) !important;
+}
+
+.target-input svg::after {
+  border-bottom: "var(--color-accent) solid 2px";
+}
+
+.prediction div.MuiInputBase-input {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.prediction-icon {
+  margin-top: 2rem;
+}

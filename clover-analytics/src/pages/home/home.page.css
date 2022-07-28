@@ -1,0 +1,43 @@
+#home-page {
+  display: grid;
+  grid-template-areas:
+    "query-filters list-filters"
+    "summary summary"
+    "list list";
+}
+
+#season-select {
+  color: inherit;
+  background-color: inherit;
+}
+
+.filters-wrapper {
+  background-color: var(--color-grey);
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  padding: 0.75rem;
+  grid-area: query-filters;
+}
+#list-filters {
+  grid-area: list-filters;
+}
+#player-list {
+  grid-area: list;
+}
+
+.filters-wrapper * {
+  margin-right: 0.5rem;
+  border-radius: 0;
+  color: var(--color-black) !important;
+}
+
+#filter-select {
+  width: fit-content;
+  overflow: hidden;
+  color: var(--color-black);
+}
+
+.MuiCalendarPicker-root button {
+  color: var(--color-black);
+}
