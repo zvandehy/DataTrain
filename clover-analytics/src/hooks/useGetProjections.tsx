@@ -119,7 +119,7 @@ export const GET_PROJECTIONS_AND_SIMILAR_PLAYERS = gql`
         }
         similarPlayers(input: $gameFilter) {
           name
-          currentTeam{
+          currentTeam {
             name
             abbreviation
           }
@@ -148,6 +148,7 @@ export const GET_PROJECTIONS_AND_SIMILAR_PLAYERS = gql`
             blocks
             turnovers
             steals
+          }
         }
       }
       opponent {
@@ -224,7 +225,119 @@ export const GET_PROJECTIONS_AND_SIMILAR_TEAMS = gql`
         abbreviation
         teamID
         name
-        similarTeams
+        similarTeams(input: $gameFilter) {
+          name
+          abbreviation
+          teamID
+        }
+      }
+      propositions {
+        target
+        type
+        sportsbook
+      }
+      startTime
+      result {
+        points
+        assists
+        rebounds
+        defensive_rebounds
+        offensive_rebounds
+        three_pointers_attempted
+        three_pointers_made
+        free_throws_attempted
+        free_throws_made
+        minutes
+        blocks
+        turnovers
+        steals
+      }
+    }
+  }
+`;
+
+export const GET_PROJECTIONS_AND_SIMILAR_PLAYERS_AND_TEAMS = gql`
+  query GetProjections(
+    $playerFilter: ProjectionFilter!
+    $gameFilter: GameFilter!
+  ) {
+    projections(input: $playerFilter) {
+      player {
+        name
+        position
+        playerID
+        currentTeam {
+          abbreviation
+          teamID
+          name
+        }
+        games(input: $gameFilter) {
+          season
+          date
+          gameID
+          playoffs
+          opponent {
+            name
+            teamID
+            abbreviation
+          }
+          points
+          assists
+          rebounds
+          defensive_rebounds
+          offensive_rebounds
+          three_pointers_attempted
+          three_pointers_made
+          free_throws_attempted
+          free_throws_made
+          minutes
+          blocks
+          turnovers
+          steals
+        }
+        similarPlayers(input: $gameFilter) {
+          name
+          currentTeam {
+            name
+            abbreviation
+          }
+          position
+          playerID
+          games(input: $gameFilter) {
+            season
+            date
+            gameID
+            playoffs
+            opponent {
+              name
+              teamID
+              abbreviation
+            }
+            points
+            assists
+            rebounds
+            defensive_rebounds
+            offensive_rebounds
+            three_pointers_attempted
+            three_pointers_made
+            free_throws_attempted
+            free_throws_made
+            minutes
+            blocks
+            turnovers
+            steals
+          }
+        }
+      }
+      opponent {
+        abbreviation
+        teamID
+        name
+        similarTeams(input: $gameFilter) {
+          name
+          abbreviation
+          teamID
+        }
       }
       propositions {
         target
@@ -265,18 +378,28 @@ export const useGetProjections = ({
   projectionFilter,
   gameFilter,
   predictionFilter,
-}: // skip,
-// setSkip,
-{
+  similarPlayers,
+  similarTeams,
+}: {
   projectionFilter: ProjectionFilter;
   gameFilter: GameFilter;
   predictionFilter: GameFilter;
-  // skip: boolean;
-  // setSkip: (skip: boolean) => void;
+  similarPlayers: boolean;
+  similarTeams: boolean;
 }): ProjectionQueryResult => {
-  const { loading, error, data } = useQuery(GET_PROJECTIONS, {
+  let QUERY =
+    similarPlayers && similarTeams
+      ? GET_PROJECTIONS_AND_SIMILAR_PLAYERS_AND_TEAMS
+      : similarPlayers
+      ? GET_PROJECTIONS_AND_SIMILAR_PLAYERS
+      : similarTeams
+      ? GET_PROJECTIONS_AND_SIMILAR_TEAMS
+      : GET_PROJECTIONS;
+  console.log("similarTeams: ", similarTeams);
+  console.log("similarPlayers: ", similarPlayers);
+  // QUERY = GET_PROJECTIONS;
+  const { loading, error, data } = useQuery(QUERY, {
     variables: { playerFilter: projectionFilter, gameFilter: gameFilter },
-    // skip: skip,
   });
   let loadingComponent;
   if (loading) {
@@ -289,7 +412,7 @@ export const useGetProjections = ({
   }
   let errorComponent;
   if (error) {
-    errorComponent = <Box>error</Box>;
+    errorComponent = <Box>{JSON.stringify(error) + error.message}</Box>;
   }
   if (data && data?.projections) {
     const projections = CalculatePredictions(

@@ -194,6 +194,7 @@ export const LookupStats: Record<string, Stat> = {
   "3-PT Made": ThreeFGM,
   "Free Throws Made": FreeThrowsMade,
   Turnovers: Turnovers,
+  turnovers: Turnovers,
 };
 
 export function GetStat(proposition: Proposition): Stat {

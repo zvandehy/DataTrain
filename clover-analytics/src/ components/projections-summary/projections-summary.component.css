@@ -4,3 +4,10 @@
   align-items: center;
   justify-content: space-evenly;
 }
+
+#distribution-summary {
+  grid-area: dist;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}

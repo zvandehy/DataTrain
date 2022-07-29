@@ -1,4 +1,7 @@
 export function ColorPct(value: number) {
+  if (value > 1) {
+    value = value / 100;
+  }
   let ret = "med";
   if (value <= 0.4) {
     ret = "low";
@@ -13,6 +16,16 @@ export function ColorResult(result: string) {
   if (result.toUpperCase() === "UNDER") {
     ret = "low";
   } else if (result.toUpperCase() === "OVER") {
+    ret = "high";
+  }
+  return ret;
+}
+
+export function ColorCompare(value: number, target: number) {
+  let ret = "med";
+  if (value < target) {
+    ret = "low";
+  } else if (value > target) {
     ret = "high";
   }
   return ret;

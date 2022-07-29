@@ -52,7 +52,10 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
         onSortSelect={setSortType}
         onStatSelect={setStatType}
       />
-      <ProjectionsSummary projections={projections} />
+      <ProjectionsSummary
+        projections={filteredProjections}
+        filteredStat={statType}
+      />
       <div id="player-list">
         {filteredProjections.length > 0 ? (
           filteredProjections.map((projection) => {

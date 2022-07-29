@@ -10,4 +10,5 @@ export interface Team {
   games: TeamGame[];
   players: Player[];
   injuries: Injury[];
+  similarTeams: Team[];
 }

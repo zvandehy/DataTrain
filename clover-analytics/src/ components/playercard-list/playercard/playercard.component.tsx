@@ -8,7 +8,7 @@ import {
   Proposition,
 } from "../../../shared/interfaces/graphql/projection.interface";
 import { Stat } from "../../../shared/interfaces/stat.interface";
-import PlayerStatsPreview from "../../player-stats/player-stats-preview.component";
+import PlayerStatsPreview from "../../player-stats-table/player-stats-preview/player-stats-preview.component";
 import Prediction from "../../prediction/prediction.component";
 import PlayercardContext from "./playercard-context/playercard-context.component";
 import "./playercard.component.css";
@@ -67,7 +67,11 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
     };
     const foundProp =
       projection.propositions.find((p) => p.statType === stat) ||
-      UpdatePropositionWithPrediction(customProp, projection.player.games);
+      UpdatePropositionWithPrediction(
+        customProp,
+        projection.player.games,
+        projection
+      );
     selectProp(foundProp);
   };
   return (

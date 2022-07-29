@@ -11,11 +11,72 @@ import {
 } from "../interfaces/listFilter.interface";
 
 export function FilterGames(games: Game[], gameFilter: GameFilter): Game[] {
-  return games
+  const filteredGames = games
     .filter((game) => {
+      //match the game if the season is the same
+      let seasonMatch = true;
+      if (gameFilter.season) {
+        seasonMatch = gameFilter.season === game.season;
+        if (!seasonMatch) {
+          return seasonMatch;
+        }
+      }
+      //match the game if the date is after the start date filter
+      let gameIsAfterStartDate = true;
+      if (gameFilter.startDate) {
+        gameIsAfterStartDate = GameIsAfterDate(
+          game,
+          gameFilter.startDate,
+          true
+        );
+      }
+      if (!gameIsAfterStartDate) {
+        return gameIsAfterStartDate;
+      }
+      //match the game if the date is before the end date filter
+      let gameIsBeforeEndDate = true;
+      if (gameFilter.endDate) {
+        gameIsBeforeEndDate = GameIsBeforeDate(game, gameFilter.endDate, false);
+      }
+      if (!gameIsBeforeEndDate) {
+        return gameIsBeforeEndDate;
+      }
       return game.season === gameFilter.season;
     })
     .sort((a, b) => CompareDates(a.date, b.date));
+  return filteredGames;
+}
+
+function GameIsAfterDate(
+  game: Game,
+  date: string,
+  inclusive: boolean
+): boolean {
+  const cmp = CompareDates(game.date, date);
+  if (cmp < 0) {
+    //game.date is before date
+    return false;
+  } else if (cmp === 0) {
+    //game.date is equal to date
+    return inclusive;
+  }
+  return true;
+}
+
+function GameIsBeforeDate(
+  game: Game,
+  date: string,
+  inclusive: boolean
+): boolean {
+  const cmp = CompareDates(game.date, date);
+  if (cmp < 0) {
+    //game.date is before date
+    return true;
+  } else if (cmp === 0) {
+    //game.date is equal to date
+    return inclusive;
+  }
+  return false;
 }
 
 export function Match(
