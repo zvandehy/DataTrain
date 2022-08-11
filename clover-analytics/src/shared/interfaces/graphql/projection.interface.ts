@@ -1,3 +1,4 @@
+import { ScoreType } from "../score-type.enum";
 import { Stat } from "../stat.interface";
 import { Game } from "./game.interface";
 import { Player } from "./player.interface";
@@ -27,10 +28,15 @@ export interface Prediction {
   confidence: number;
   totalPrediction: number;
   predictionFragments: PredictionFragment[];
+  // predictionFragments: {
+  //   [key in ScoreType]: PredictionFragment[];
+  // };
 }
 
 export interface PredictionFragment {
   numGames: number;
+  minutes: number;
+  avgPerMin: number;
   weight: number;
   average: number;
   median: number;

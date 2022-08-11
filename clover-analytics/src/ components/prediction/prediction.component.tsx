@@ -36,7 +36,10 @@ const Prediction: React.FC<PredictionProps> = ({
   ];
   return (
     <div className="prediction">
-      <div className={"selected-stat-display"}>{selectedStat.display}</div>
+      <div className={"selected-stat-display"}>
+        <div>{selectedStat.display}</div>
+        <div>{selectedProp?.sportsbook}</div>
+      </div>
       <div className="target-input">
         <InputLabel
           id="target-label"
@@ -82,7 +85,13 @@ const Prediction: React.FC<PredictionProps> = ({
           }}
         >
           {uniqueSportsbooks.map((groupedSportsbook) => {
-            const items = projection.propositions
+            let items: Proposition[] = projection.propositions;
+            if (
+              selectedProp &&
+              !items.some((prop) => prop.statType === selectedProp.statType)
+            )
+              items.push(selectedProp);
+            const menuItems = items
               .filter(
                 (prop) =>
                   prop.statType === selectedStat &&
@@ -106,7 +115,7 @@ const Prediction: React.FC<PredictionProps> = ({
               <ListSubheader key={groupedSportsbook}>
                 {groupedSportsbook}
               </ListSubheader>,
-              items,
+              menuItems,
             ];
           })}
         </Select>

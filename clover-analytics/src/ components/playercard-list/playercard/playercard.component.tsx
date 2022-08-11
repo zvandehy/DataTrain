@@ -3,10 +3,12 @@ import {
   GetMaxConfidence,
   UpdatePropositionWithPrediction,
 } from "../../../shared/functions/predictions.fn";
+import { GetImpliedTarget } from "../../../shared/functions/target.fn";
 import {
   Projection,
   Proposition,
 } from "../../../shared/interfaces/graphql/projection.interface";
+import { ScoreType } from "../../../shared/interfaces/score-type.enum";
 import { Stat } from "../../../shared/interfaces/stat.interface";
 import PlayerStatsPreview from "../../player-stats-table/player-stats-preview/player-stats-preview.component";
 import Prediction from "../../prediction/prediction.component";
@@ -50,12 +52,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
 
   const onStatSelect = (stat: Stat) => {
     statSelect(stat);
-    let customTarget = 0;
+    let customTarget = GetImpliedTarget(projection, stat);
     let customProp: Proposition = {
       target: customTarget || 0,
       statType: stat,
       type: stat.label,
-      sportsbook: "None",
+      sportsbook: customTarget ? "Implied" : "None",
       predictions: [],
       customPrediction: {
         model: "Custom",

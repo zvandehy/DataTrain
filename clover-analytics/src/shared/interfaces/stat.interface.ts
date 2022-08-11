@@ -1,5 +1,8 @@
+import { split } from "@apollo/client";
 import { Game } from "./graphql/game.interface";
 import { Proposition } from "./graphql/projection.interface";
+import { TeamGame } from "./graphql/teamgame.interface";
+import { ScoreType } from "./score-type.enum";
 
 interface IStat {
   display: string;
@@ -12,28 +15,75 @@ export class Stat {
   abbreviation: string;
   label: string;
   score: (game: Game) => number;
+  teamScore: (game: TeamGame) => number;
   average: (games: Game[]) => number;
+  teamAverage: (games: TeamGame[]) => number;
   median: (games: Game[]) => number;
+  scorePer: (game: Game, scoreType: ScoreType) => number;
+  averagePer: (games: Game[], scoreType: ScoreType) => number;
   constructor(
     stat: IStat,
     score?: (game: Game) => number,
+    teamScore?: (game: TeamGame) => number,
     average?: (games: Game[]) => number,
-    median?: (games: Game[]) => number
+    teamAverage?: (games: TeamGame[]) => number,
+    median?: (games: Game[]) => number,
+    scorePer?: (games: Game, scoreType: ScoreType) => number,
+    averagePer?: (games: Game[], scoreType: ScoreType) => number
   ) {
     this.display = stat.display;
     this.abbreviation = stat.abbreviation;
     this.label = stat.label;
-    this.score =
-      score || ((game: Game) => defaultScore(game, this.label)(game));
+    this.score = score || ((game: Game) => defaultScore(this.label)(game));
+    this.teamScore =
+      teamScore || ((game: TeamGame) => defaultTeamScore(this.label)(game));
     this.average =
       average || ((games: Game[]) => defaultAverage(games, this.score));
+    this.teamAverage =
+      teamAverage ||
+      ((games: TeamGame[]) => defaultTeamAverage(games, this.teamScore));
     this.median =
       median || ((games: Game[]) => defaultMedian(games, this.score));
+    this.scorePer =
+      scorePer ||
+      ((game: Game, scoreType: ScoreType) =>
+        defaultScorePer(game, this.score, scoreType));
+    this.averagePer =
+      averagePer ||
+      ((games: Game[], scoreType: ScoreType) =>
+        defaultAveragePer(games, this.scorePer, scoreType));
   }
 }
 
-function defaultScore(game: Game, stat: string): (game: Game) => number {
+function defaultScore(stat: string): (game: Game) => number {
   return (game: Game) => +game[stat as keyof Game];
+}
+
+function defaultTeamScore(stat: string): (game: TeamGame) => number {
+  return (game: TeamGame) => +game[stat as keyof TeamGame];
+}
+
+function defaultScorePer(
+  game: Game,
+  scoreFn: (game: Game) => number,
+  scoreType: ScoreType
+): number {
+  if (scoreType === ScoreType.PerGame) {
+    return scoreFn(game);
+  }
+  if (scoreType === ScoreType.PerMin) {
+    return +(scoreFn(game) / ConvertMinutes(game.minutes)).toFixed(2);
+  }
+  if (scoreType === ScoreType.Per36Min) {
+    return +(scoreFn(game) / (ConvertMinutes(game.minutes) / 36)).toFixed(2);
+  }
+  return 0;
+}
+
+export function ConvertMinutes(minutes: string): number {
+  const splitMinutes = minutes.split(":");
+  const seconds = +splitMinutes[0] * 60 + +splitMinutes[1];
+  return +(seconds / 60).toFixed(2);
 }
 
 function defaultAverage(
@@ -42,6 +92,26 @@ function defaultAverage(
 ): number {
   return +(
     games.reduce((acc, game) => acc + scoreFn(game), 0) / games.length
+  ).toFixed(2);
+}
+
+function defaultTeamAverage(
+  games: TeamGame[],
+  scoreFn: (game: TeamGame) => number
+): number {
+  return +(
+    games.reduce((acc, game) => acc + scoreFn(game), 0) / games.length
+  ).toFixed(2);
+}
+
+function defaultAveragePer(
+  games: Game[],
+  scorePerFn: (game: Game, scoreType: ScoreType) => number,
+  scoreType: ScoreType
+): number {
+  return +(
+    games.reduce((acc, game) => acc + scorePerFn(game, scoreType), 0) /
+    games.length
   ).toFixed(2);
 }
 
@@ -185,6 +255,7 @@ export const LookupStats: Record<string, Stat> = {
   Rebounds: Rebounds,
   Assists: Assists,
   "Blks+Stls": BlocksSteals,
+  "blks_stls": BlocksSteals,
   "Pts+Rebs+Asts": PointsReboundsAssists,
   "Pts+Rebs": PointsRebounds,
   "Pts+Asts": PointsAssists,

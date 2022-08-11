@@ -39,11 +39,12 @@ func SimilarPlayers(players []model.PlayerAverage, toPlayer model.PlayerAverage)
 		distances = append(distances, k)
 	}
 	sort.Float64s(distances)
-	var closestPlayers []*model.Player = make([]*model.Player, 0, 10)
+	limit := 15
+	var closestPlayers []*model.Player = make([]*model.Player, 0, limit)
 	for i, distance := range distances {
 		player := playerDistances[distance]
 		closestPlayers = append(closestPlayers, &player)
-		if i == 9 {
+		if i >= limit-1 {
 			break
 		}
 	}

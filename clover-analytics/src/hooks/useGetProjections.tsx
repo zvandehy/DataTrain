@@ -395,8 +395,6 @@ export const useGetProjections = ({
       : similarTeams
       ? GET_PROJECTIONS_AND_SIMILAR_TEAMS
       : GET_PROJECTIONS;
-  console.log("similarTeams: ", similarTeams);
-  console.log("similarPlayers: ", similarPlayers);
   // QUERY = GET_PROJECTIONS;
   const { loading, error, data } = useQuery(QUERY, {
     variables: { playerFilter: projectionFilter, gameFilter: gameFilter },

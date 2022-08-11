@@ -54,12 +54,12 @@ export const BETTING_CATEGORIES = [
 ];
 
 export const DEFAULT_WEIGHTS = [
-  // { count: 0, weight: 0.25 },
-  // { count: -20, weight: 0.25 },
-  // { count: -10, weight: 0.25 },
-  // { count: -5, weight: 0.25 },
-  { count: 0, weight: 1 },
-  { count: -20, weight: 0 },
-  { count: -10, weight: 0 },
-  { count: -5, weight: 0 },
+  { count: 0, weight: 0.25 },
+  { count: -20, weight: 0.25 },
+  { count: -10, weight: 0.25 },
+  { count: -5, weight: 0.25 },
+  // { count: 0, weight: 1 },
+  // { count: -20, weight: 0 },
+  // { count: -10, weight: 0 },
+  // { count: -5, weight: 0 },
 ];

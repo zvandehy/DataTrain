@@ -1,16 +1,14 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ApolloProvider } from "@apollo/client";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-import Header from "../header/header.component";
-import About from "../../pages/about/about.page";
 import Home from "../../pages/home/home.page";
-
+import PlayerPage from "../../pages/player/player.page";
 import "../../shared/styles";
 import "./app.component.css";
 import "../../shared/fonts/Oswald-Regular.ttf";
 import client from "../../shared/apollo-client";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
@@ -68,8 +66,38 @@ const App: React.FC = () => {
       <ApolloProvider client={client}>
         <Router>
           <Routes>
-            <Route path="/about" element={<About />} />
+            <Route path="/nba/players/:id" element={<PlayerPage />}></Route>
+            <Route path="/wnba/players/:id" element={<PlayerPage />}></Route>
             <Route path="/" element={<Home />} />
+            <Route path="/wnba" element={<Home />} />
+            <Route path="/nba" element={<Home />} />
+            {/* <Route
+          exact
+          path="/"
+          element={<Players client={NBAClient} league="nba" />}
+        />
+        <Route
+          exact
+          path="/nba"
+          element={<Players client={NBAClient} league="nba" />}
+        />
+        <Route
+          path="/nba/players/:id"
+          element={<Player client={NBAClient} />}
+        ></Route>
+        <Route
+          path="/wnba/players/:id"
+          element={<Player client={WNBAClient} league="wnba" />}
+        ></Route>
+        <Route
+          exact
+          path="/wnba"
+          element={<Players client={WNBAClient} league="wnba" />}
+        />
+        <Route
+          path="/wnba/players/:id"
+          element={<Player client={WNBAClient} league="wnba" />}
+        ></Route> */}
           </Routes>
         </Router>
       </ApolloProvider>

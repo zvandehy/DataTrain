@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ProjectionQueryResult } from "../../hooks/useGetProjections";
 import { Match, SortProjections } from "../../shared/functions/filters.fn";
-import { Proposition } from "../../shared/interfaces/graphql/projection.interface";
+import { ScoreType } from "../../shared/interfaces/score-type.enum";
 import { Stat } from "../../shared/interfaces/stat.interface";
 import ProjectionsSummary from "../projections-summary/projections-summary.component";
 import PlayerListFilters from "./list-filters/list-filters.component";
@@ -34,6 +34,7 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
   if (error) {
     return <>{error}</>;
   }
+  console.log(projections.filter((p) => p.date === undefined));
   let filteredProjections = projections.filter((projection) => {
     if (statType !== undefined) {
       return Match(projection, { lookup: lookup, statType: statType as Stat });
@@ -44,6 +45,7 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
     sortBy: sortType,
     statType: statType,
   });
+  console.log(filteredProjections);
 
   return (
     <>

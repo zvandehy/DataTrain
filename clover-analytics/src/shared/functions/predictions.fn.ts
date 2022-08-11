@@ -1,4 +1,3 @@
-import ProjectionsSummary from "../../ components/projections-summary/projections-summary.component";
 import { DEFAULT_WEIGHTS } from "../constants";
 import { GameFilter } from "../interfaces/graphql/filters.interface";
 import { Game } from "../interfaces/graphql/game.interface";
@@ -8,13 +7,15 @@ import {
   Projection,
   Proposition,
 } from "../interfaces/graphql/projection.interface";
+import { ScoreType } from "../interfaces/score-type.enum";
 import { SimilarCalculation } from "../interfaces/similarCalculation.interface";
-import { GetStat } from "../interfaces/stat.interface";
+import { ConvertMinutes, GetStat } from "../interfaces/stat.interface";
 import { FilterGames } from "./filters.fn";
 
 export function CalculatePredictions(
   projections: Projection[],
-  predictionFilter: GameFilter
+  predictionFilter: GameFilter,
+  games?: Game[]
 ) {
   return projections.map((projection) => {
     let updatedProjection = projection;
@@ -32,7 +33,10 @@ export function CalculatePredictions(
     }
     return CalculatePrediction(
       updatedProjection,
-      FilterGames(projection.player.games, predictionFilter)
+      FilterGames(games ?? projection.player.games, {
+        ...predictionFilter,
+        endDate: projection.date,
+      })
     );
   });
 }
@@ -82,11 +86,29 @@ export function UpdatePropositionWithStatType(
   return updatedProp;
 }
 
+// EXPERIMENTAL COUNT PREDICTION
+interface CountPrediction {
+  games: number[];
+  opponent: number[];
+  similarPlayerAdj: number;
+  similarTeamAdj: number;
+  similarPlayerPct: number;
+  similarTeamPct: number;
+}
+
 export function UpdatePropositionWithPrediction(
   proposition: Proposition,
   games: Game[],
   projection: Projection
 ): Proposition {
+  let countPrediction: CountPrediction = {
+    games: [],
+    opponent: [],
+    similarPlayerAdj: 0,
+    similarTeamAdj: 0,
+    similarPlayerPct: 0,
+    similarTeamPct: 0,
+  };
   let updatedProp;
   let prediction: Prediction = {
     model: "Custom",
@@ -94,6 +116,11 @@ export function UpdatePropositionWithPrediction(
     confidence: 0,
     totalPrediction: 0,
     predictionFragments: [],
+    // predictionFragments: {
+    //   [ScoreType.PerGame]: [],
+    //   [ScoreType.PerMin]: [],
+    //   [ScoreType.Per36Min]: [],
+    // },
   };
   let skipped_weight_sum = 0;
   DEFAULT_WEIGHTS.forEach((item) => {
@@ -117,15 +144,38 @@ export function UpdatePropositionWithPrediction(
       numGames: nGames.length,
       weight: item.weight,
       average: stat.average(nGames),
+      avgPerMin: stat.averagePer(nGames, ScoreType.PerMin),
+      minutes: +(
+        nGames
+          .map((game) => ConvertMinutes(game.minutes))
+          .reduce((a, b) => a + b) / nGames.length
+      ).toFixed(2),
       median: stat.median(nGames),
       numOver: numOver,
       numUnder: numUnder,
       numPush: numPush,
+
+      //TODO: add option to include numPush as either over, under, or both
       pctOver: numOver / nGames.length,
       pctUnder: numUnder / nGames.length,
     };
     prediction.predictionFragments.push(fragment);
+
+    if (fragment.pctOver > fragment.pctUnder) {
+      countPrediction.games.push(1);
+    } else {
+      countPrediction.games.push(-1);
+    }
   });
+  // COUNT PREDICTION EXPERIEMENT
+  games
+    .filter((game) => game.opponent.teamID === projection.opponent.teamID)
+    .forEach((game) => {
+      countPrediction.opponent.push(
+        proposition.statType.score(game) > proposition.target ? 1 : -1
+      );
+    });
+
   const distributed_weight =
     skipped_weight_sum / prediction.predictionFragments.length;
   prediction.totalPrediction = +(
@@ -134,45 +184,149 @@ export function UpdatePropositionWithPrediction(
       0
     ) / DEFAULT_WEIGHTS.length
   ).toFixed(2);
-  let overConfidence = +(
-    prediction.predictionFragments.reduce(
-      (acc, cur) => acc + (cur.weight + distributed_weight) * cur.pctOver,
-      0
-    ) * 100
-  ).toFixed(2);
-  let underConfidence = +(
-    prediction.predictionFragments.reduce(
-      (acc, cur) => acc + (cur.weight + distributed_weight) * cur.pctUnder,
-      0
-    ) * 100
-  ).toFixed(2);
+  let overConfidence = 0;
+  let underConfidence = 0;
+  prediction.predictionFragments.forEach((fragment) => {
+    overConfidence += (fragment.weight + distributed_weight) * fragment.pctOver;
+    underConfidence +=
+      (fragment.weight + distributed_weight) * fragment.pctUnder;
+  });
+  overConfidence = +(overConfidence * 100).toFixed(2);
+  underConfidence = +(underConfidence * 100).toFixed(2);
 
   //TODO: may have to use a different condition to calculate confidence from similarity
   if (projection.player.similarPlayers?.length > 0) {
-    const simPlayerCalc = SimilarPlayerCalculation(projection, proposition);
+    const simPlayerCalc = SimilarPlayerCalculation(
+      projection,
+      proposition,
+      proposition.statType.average(games ?? projection.player.games)
+    );
     if (projection.opponent.similarTeams?.length > 0) {
-      const simTeamCalc = SimilarTeamCalculation(projection, proposition);
+      const simTeamCalc = SimilarTeamCalculation(
+        projection,
+        proposition,
+        games ?? projection.player.games
+      );
+      // if (projection.player.name === "Diana Taurasi") {
+      //   console.log(
+      //     `${overConfidence}*.06 + ${simTeamCalc.simOverPct}*.02 + ${
+      //       simPlayerCalc.simOverPct
+      //     }*0.2 = ${
+      //       overConfidence * 0.6 +
+      //       simTeamCalc.simOverPct * 0.2 +
+      //       simPlayerCalc.simOverPct * 0.2
+      //     }`
+      //   );
+      //   console.log(
+      //     `${underConfidence}*.06 + ${simTeamCalc.simUnderPct}*.02 + ${
+      //       simPlayerCalc.simUnderPct
+      //     }*0.2 = ${
+      //       underConfidence * 0.6 +
+      //       simTeamCalc.simUnderPct * 0.2 +
+      //       simPlayerCalc.simUnderPct * 0.2
+      //     }`
+      //   );
+      // }
       overConfidence =
-        overConfidence * 0.5 +
-        simTeamCalc.simOverPct * 0.25 +
-        simPlayerCalc.simOverPct * 0.25;
+        overConfidence * 0.6 +
+        simTeamCalc.simOverPct * 0.2 +
+        simPlayerCalc.simOverPct * 0.2;
       underConfidence =
-        underConfidence * 0.5 +
-        simTeamCalc.simUnderPct * 0.25 +
-        simPlayerCalc.simUnderPct * 0.25;
+        underConfidence * 0.6 +
+        simTeamCalc.simUnderPct * 0.2 +
+        simPlayerCalc.simUnderPct * 0.2;
+
+      // COUNT PREDICTION EXPERIMENT
+      countPrediction.similarPlayerAdj =
+        simPlayerCalc.playerAvgAdj > proposition.target ? 1 : -1;
+      countPrediction.similarTeamAdj =
+        simTeamCalc.playerAvgAdj > proposition.target ? 1 : -1;
+      countPrediction.similarPlayerPct = simPlayerCalc.simOverPct > 50 ? 1 : -1;
+      countPrediction.similarTeamPct = simTeamCalc.simOverPct > 50 ? 1 : -1;
     } else {
-      overConfidence = overConfidence * 0.5 + simPlayerCalc.simOverPct * 0.5;
-      underConfidence = underConfidence * 0.5 + simPlayerCalc.simUnderPct * 0.5;
+      overConfidence = overConfidence * 0.6 + simPlayerCalc.simOverPct * 0.4;
+      underConfidence = underConfidence * 0.6 + simPlayerCalc.simUnderPct * 0.4;
+
+      // COUNT PREDICTION EXPERIMENT
+      countPrediction.similarPlayerAdj =
+        simPlayerCalc.playerAvgAdj > proposition.target ? 1 : -1;
+      countPrediction.similarPlayerPct = simPlayerCalc.simOverPct > 50 ? 1 : -1;
     }
   } else if (projection.opponent.similarTeams?.length > 0) {
-    const simTeamCalc = SimilarTeamCalculation(projection, proposition);
-    overConfidence = overConfidence * 0.5 + simTeamCalc.simOverPct * 0.5;
-    underConfidence = underConfidence * 0.5 + simTeamCalc.simUnderPct * 0.5;
+    const simTeamCalc = SimilarTeamCalculation(
+      projection,
+      proposition,
+      games ?? projection.player.games
+    );
+    overConfidence = overConfidence * 0.6 + simTeamCalc.simOverPct * 0.6;
+    underConfidence = underConfidence * 0.6 + simTeamCalc.simUnderPct * 0.6;
+
+    // COUNT PREDICTION EXPERIMENT
+    countPrediction.similarTeamAdj =
+      simTeamCalc.playerAvgAdj > proposition.target ? 1 : -1;
+    countPrediction.similarTeamPct = simTeamCalc.simOverPct > 50 ? 1 : -1;
   }
 
   prediction.confidence = +Math.max(overConfidence, underConfidence).toFixed(2);
   prediction.overUnderPrediction =
     overConfidence > underConfidence ? "Over" : "Under";
+
+  let predictionCountOver = countPrediction.games.filter(
+    (val) => val > 0
+  ).length;
+  predictionCountOver += countPrediction.opponent.filter(
+    (val) => val > 0
+  ).length;
+  predictionCountOver += countPrediction.similarPlayerAdj > 0 ? 1 : 0;
+  predictionCountOver += countPrediction.similarTeamAdj > 0 ? 1 : 0;
+  predictionCountOver += countPrediction.similarTeamPct > 0 ? 1 : 0;
+  predictionCountOver += countPrediction.similarPlayerPct > 0 ? 1 : 0;
+
+  let predictionCountUnder = countPrediction.games.filter(
+    (val) => val < 0
+  ).length;
+  predictionCountUnder += countPrediction.opponent.filter(
+    (val) => val < 0
+  ).length;
+  predictionCountUnder += countPrediction.similarPlayerAdj < 0 ? 1 : 0;
+  predictionCountUnder += countPrediction.similarTeamAdj < 0 ? 1 : 0;
+  predictionCountUnder += countPrediction.similarTeamPct < 0 ? 1 : 0;
+  predictionCountUnder += countPrediction.similarPlayerPct < 0 ? 1 : 0;
+
+  const predictionCountTotal =
+    countPrediction.games.length +
+    countPrediction.opponent.length +
+    Math.abs(countPrediction.similarPlayerAdj) +
+    Math.abs(countPrediction.similarTeamPct) +
+    Math.abs(countPrediction.similarPlayerPct) +
+    Math.abs(countPrediction.similarTeamAdj);
+
+  // DISABLE COUNT PREDICTION
+  // if (predictionCountOver > predictionCountUnder) {
+  //   prediction.overUnderPrediction = "Over";
+  //   prediction.confidence = +(
+  //     (predictionCountOver / predictionCountTotal) *
+  //     100
+  //   ).toFixed(2);
+  // } else {
+  //   prediction.overUnderPrediction = "Under";
+  //   prediction.confidence = +(
+  //     (predictionCountUnder / predictionCountTotal) *
+  //     100
+  //   ).toFixed(2);
+  // }
+
+  // console.group(projection.player.name);
+  // console.log(
+  //   proposition.type,
+  //   predictionCountOver,
+  //   predictionCountUnder,
+  //   predictionCountTotal,
+  //   prediction.confidence,
+  //   prediction.overUnderPrediction,
+  //   countPrediction
+  // );
+  // console.groupEnd();
   updatedProp = {
     ...proposition,
     customPrediction: prediction,
@@ -203,47 +357,10 @@ export function GetMaxConfidence(propositions: Proposition[]): Proposition {
   )[0];
 }
 
-// export function UpdatePropositionWithSimilarCalculation(
-//   sim: SimilarCalculation,
-//   proposition: Proposition
-// ): Proposition {
-//   //TODO: revisit the best way to do this
-//   let overConfidence = proposition.customPrediction.
-//   if (sim.simOverPct > sim.simUnderPct) {
-//     if(proposition.customPrediction.overUnderPrediction === "Over") {
-//       updatedConfidence = +(
-//         proposition.customPrediction.confidence * 0.5 +
-//         sim.simOverPct * 0.5
-//       ).toFixed(2);
-//   }
-//   let updatedConfidence = proposition.customPrediction.confidence;
-//   if (
-//     (sim.similarDiff > 0 &&
-//       proposition.customPrediction.overUnderPrediction === "Over") ||
-//     (sim.similarDiff < 0 &&
-//       proposition.customPrediction.overUnderPrediction === "Under")
-//   ) {
-
-//   } else {
-//     updatedConfidence = +(
-//       proposition.customPrediction.confidence * 0.5 +
-//       (1 - sim.simOverPct) * 0.5
-//     ).toFixed(2);
-//   }
-//   //TODO: need to reverse the confidence if the prediction is opposite
-//   let updatedProp: Proposition = {
-//     ...proposition,
-//     customPrediction: {
-//       ...proposition.customPrediction,
-//       confidence: updatedConfidence,
-//     },
-//   };
-//   return updatedProp;
-// }
-
 export function SimilarPlayerCalculation(
   projection: Projection,
-  selectedProp: Proposition
+  selectedProp: Proposition,
+  playerAvg: number
 ): SimilarCalculation {
   let simPlayerGamesVsOpp: Game[] = [];
   let simPlayerAllGames: Game[] = [];
@@ -259,32 +376,41 @@ export function SimilarPlayerCalculation(
     selectedProp.statType.average(simPlayerGamesVsOpp);
   let simPlayerAverage: number =
     selectedProp.statType.average(simPlayerAllGames);
+  let simPlayerAveragePerMin: number = selectedProp.statType.averagePer(
+    simPlayerAllGames,
+    ScoreType.PerMin
+  );
+  let simPlayerVsOppAveragePerMin: number = selectedProp.statType.averagePer(
+    simPlayerGamesVsOpp,
+    ScoreType.PerMin
+  );
   let simPlayerDifference: number = +(
     simPlayerAverageVsOpp - simPlayerAverage
-  ).toFixed(2);
+  ).toFixed(5);
   let simPlayerDiffPct: number = +(
     simPlayerDifference / simPlayerAverage
   ).toFixed(2);
 
   let playerAvgAdj: number = +(
-    selectedProp.statType.average(projection.player.games) +
-    selectedProp.statType.average(projection.player.games) * simPlayerDiffPct
+    playerAvg +
+    playerAvg * simPlayerDiffPct
   ).toFixed(2);
 
   let countSimPlayerOverVsOpp: number = 0;
   let countSimPlayerUnderVsOpp: number = 0;
   let countSimPlayerPushVsOpp: number = 0;
   simPlayerGamesVsOpp.forEach((game) => {
-    // if (selectedProp.statType.score(game) > selectedProp.target) {
+    // if (selectedProp.statType.scorePer(game, DEFAULT_SCORE_TYPE) > selectedProp.target) {
     //   countSimPlayerOverVsOpp++;
-    // } else if (selectedProp.statType.score(game) < selectedProp.target) {
+    // } else if (selectedProp.statType.scorePer(game, DEFAULT_SCORE_TYPE) < selectedProp.target) {
     //   countSimPlayerUnderVsOpp++;
     // } else {
     //   countSimPlayerPushVsOpp++;
     // }
-    if (selectedProp.statType.score(game) > playerAvgAdj) {
+    // base over/under on the outcome vs player's average
+    if (selectedProp.statType.score(game) > simPlayerAverage) {
       countSimPlayerOverVsOpp++;
-    } else if (selectedProp.statType.score(game) < playerAvgAdj) {
+    } else if (selectedProp.statType.score(game) < simPlayerAverage) {
       countSimPlayerUnderVsOpp++;
     } else {
       countSimPlayerPushVsOpp++;
@@ -300,6 +426,10 @@ export function SimilarPlayerCalculation(
     similarCount: projection.player.similarPlayers.length,
     similarGames: simPlayerGamesVsOpp,
     similarAvg: simPlayerAverage,
+    similarAvgPerMin: simPlayerAveragePerMin,
+    similarAvgPerMinDiff: +(
+      simPlayerVsOppAveragePerMin - simPlayerAveragePerMin
+    ).toFixed(2),
     similarDiff: simPlayerDifference,
     similarDiffPct: +(simPlayerDiffPct * 100).toFixed(2),
     playerAvgAdj: playerAvgAdj,
@@ -313,19 +443,27 @@ export function SimilarPlayerCalculation(
 
 export function SimilarTeamCalculation(
   projection: Projection,
-  selectedProp: Proposition
+  selectedProp: Proposition,
+  games?: Game[]
 ): SimilarCalculation {
   let gamesVsSimTeams: Game[] = [];
+  if (!games) {
+    games = projection.player.games;
+  }
   projection.opponent.similarTeams.forEach((team) => {
     gamesVsSimTeams.push(
-      ...projection.player.games.filter(
-        (game) => game.opponent.teamID === team.teamID
-      )
+      ...games!.filter((game) => game.opponent.teamID === team.teamID)
     );
   });
+  const playerAvg = selectedProp.statType.average(games);
   let avgVsSimTeams: number = selectedProp.statType.average(gamesVsSimTeams);
-  let playerAvg: number = selectedProp.statType.average(
-    projection.player.games
+  const playerAvgPerMin = selectedProp.statType.averagePer(
+    gamesVsSimTeams,
+    ScoreType.PerMin
+  );
+  let avgVsSimTeamsPerMin: number = selectedProp.statType.averagePer(
+    gamesVsSimTeams,
+    ScoreType.PerMin
   );
   let simTeamDifference: number = +(avgVsSimTeams - playerAvg).toFixed(2);
   let simTeamDiffPct: number = +(simTeamDifference / playerAvg).toFixed(2);
@@ -356,6 +494,8 @@ export function SimilarTeamCalculation(
     similarCount: projection.opponent.similarTeams.length,
     similarGames: gamesVsSimTeams,
     similarAvg: avgVsSimTeams,
+    similarAvgPerMin: playerAvgPerMin,
+    similarAvgPerMinDiff: +(avgVsSimTeamsPerMin - playerAvgPerMin).toFixed(2),
     similarDiff: simTeamDifference,
     similarDiffPct: +(simTeamDiffPct * 100).toFixed(2),
     playerAvgAdj: playerAvgAdj,

@@ -45,7 +45,7 @@ export const useGetPlayers = (
     variables: { playerFilter: playerFilter, gameFilter: gameFilter },
   });
   if (data) {
-    console.log(data.filterPlayers);
+    // console.log(data.filterPlayers);
     return data?.filterPlayers;
   }
 };

@@ -38,10 +38,17 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
   }
 
   let distribution: DistributionItem[] = [];
+  let maxDistribution: DistributionItem[] = [];
 
-  const stepSize = 20;
+  const stepSize = 10;
   for (let x = 0; x <= 100 - stepSize; x += stepSize) {
     distribution.push({
+      min: x,
+      max: x + stepSize,
+      correct: 0,
+      incorrect: 0,
+    });
+    maxDistribution.push({
       min: x,
       max: x + stepSize,
       correct: 0,
@@ -127,16 +134,48 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
           if (maxProp.statType.score(projection.result) > maxProp.target) {
             countMaxCorrect++;
             countMaxTotal++;
+            maxDistribution.forEach((dist) => {
+              if (
+                maxProp.customPrediction.confidence > dist.min &&
+                maxProp.customPrediction.confidence <= dist.max
+              ) {
+                dist.correct++;
+              }
+            });
           } else {
+            maxDistribution.forEach((dist) => {
+              if (
+                maxProp.customPrediction.confidence > dist.min &&
+                maxProp.customPrediction.confidence <= dist.max
+              ) {
+                dist.incorrect++;
+              }
+            });
             countMaxIncorrect++;
             countMaxTotal++;
           }
         }
         if (maxProp.customPrediction.overUnderPrediction === "Under") {
           if (maxProp.statType.score(projection.result) < maxProp.target) {
+            maxDistribution.forEach((dist) => {
+              if (
+                maxProp.customPrediction.confidence > dist.min &&
+                maxProp.customPrediction.confidence <= dist.max
+              ) {
+                dist.correct++;
+              }
+            });
             countMaxCorrect++;
             countMaxTotal++;
           } else {
+            maxDistribution.forEach((dist) => {
+              if (
+                maxProp.customPrediction.confidence > dist.min &&
+                maxProp.customPrediction.confidence <= dist.max
+              ) {
+                dist.incorrect++;
+              }
+            });
             countMaxIncorrect++;
             countMaxTotal++;
           }
@@ -265,26 +304,56 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
           <></>
         )}
       </div>
-      <div id="distribution-summary">
-        {distribution
-          .filter((dist) => dist.correct + dist.incorrect > 0)
-          .map((dist) => {
-            return (
-              <span
-                className={ColorPct(
-                  dist.correct / (dist.correct + dist.incorrect)
-                )}
-              >
-                {dist.min}-{dist.max}%: {dist.correct}-{dist.incorrect} (
-                {(
-                  (dist.correct / (dist.correct + dist.incorrect)) *
-                  100
-                ).toFixed(2)}
-                %)
-              </span>
-            );
-          })}
-      </div>
+      {countTotal > 0 ? (
+        <div id="distribution-summary">
+          <span>All</span>
+          {distribution
+            .filter((dist) => dist.correct + dist.incorrect > 0)
+            .map((dist) => {
+              return (
+                <span
+                  className={ColorPct(
+                    dist.correct / (dist.correct + dist.incorrect)
+                  )}
+                >
+                  {dist.min}-{dist.max}%: {dist.correct}-{dist.incorrect} (
+                  {(
+                    (dist.correct / (dist.correct + dist.incorrect)) *
+                    100
+                  ).toFixed(2)}
+                  %)
+                </span>
+              );
+            })}
+        </div>
+      ) : (
+        <></>
+      )}
+      {countMaxTotal > 0 ? (
+        <div id="max-distribution-summary">
+          <span>Highest</span>
+          {maxDistribution
+            .filter((dist) => dist.correct + dist.incorrect > 0)
+            .map((dist) => {
+              return (
+                <span
+                  className={ColorPct(
+                    dist.correct / (dist.correct + dist.incorrect)
+                  )}
+                >
+                  {dist.min}-{dist.max}%: {dist.correct}-{dist.incorrect} (
+                  {(
+                    (dist.correct / (dist.correct + dist.incorrect)) *
+                    100
+                  ).toFixed(2)}
+                  %)
+                </span>
+              );
+            })}
+        </div>
+      ) : (
+        <></>
+      )}
     </>
   );
 };

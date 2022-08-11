@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import PlayerCardList from "../../ components/playercard-list/playercard-list.component";
-import { FormatDate } from "../../shared/functions/dates.fn";
 import "./home.page.css";
 
 import {
@@ -33,9 +32,8 @@ const Home: React.FC = () => {
   }
   const gameFilter: GameFilter = {
     season: season,
-    endDate: FormatDate(date),
+    endDate: moment(date).format("YYYY-MM-DD"),
   };
-  console.log(projectionFilter, gameFilter);
   //SEASONS
   const seasons: Option<string>[] = [
     { label: "2022-23 (Current)", id: "2022-23" },

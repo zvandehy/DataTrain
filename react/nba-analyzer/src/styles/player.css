@@ -56,15 +56,14 @@
   font-size: 4.5vw;
   margin-right: 6px;
 }
+.player-page .player-position {
+  margin-left: 10px;
+}
 
 #profile-chart {
   text-align: center;
   margin: 0 auto;
   height: 350px;
-}
-
-.player-page .player-position {
-  margin-left: 10px;
 }
 
 #chart-wrapper {

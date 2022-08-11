@@ -11,3 +11,10 @@
   align-items: center;
   justify-content: space-evenly;
 }
+
+#max-distribution-summary {
+  grid-area: max-dist;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
