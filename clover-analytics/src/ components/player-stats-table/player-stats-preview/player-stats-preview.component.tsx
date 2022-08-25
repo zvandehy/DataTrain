@@ -117,6 +117,7 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
                   </StyledTableRow>
                 );
               }
+              return <></>;
             })}
           </TableBody>
         </Table>

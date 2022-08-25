@@ -47,6 +47,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// wait for the database to be ready
+	time.Sleep(time.Second * 5)
 
 	nbaServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{Db: nbaClient}}))
 	wnbaServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{Db: wnbaClient}}))

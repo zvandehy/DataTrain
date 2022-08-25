@@ -4,7 +4,7 @@ import { ApolloProvider } from "@apollo/client";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 import Home from "../../pages/home/home.page";
-import PlayerPage from "../../pages/player/player.page";
+import PlayerPage from "../../pages/player/player-wrapper.page";
 import "../../shared/styles";
 import "./app.component.css";
 import "../../shared/fonts/Oswald-Regular.ttf";

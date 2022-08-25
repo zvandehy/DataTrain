@@ -4,6 +4,8 @@ import { useParams } from "react-router-dom";
 import AutocompleteFilter from "../../ components/autocomplete-filter/autocomplete-filter.component";
 import PlayerContext from "../../ components/player-detailed/player-context/player-context.component";
 import PlayerProfileChart from "../../ components/player-detailed/player-profile/player-profile.component";
+import PlayerPage from "../../ components/player-detailed/player/player.page";
+import PlayerStatsPreview from "../../ components/player-stats-table/player-stats-preview/player-stats-preview.component";
 import StatSelectButtons from "../../ components/playercard-list/playercard/stat-select-buttons/stat-select-buttons.component";
 import { useGetPlayerDetails } from "../../hooks/useGetPlayerDetail";
 import { CompareDates } from "../../shared/functions/dates.fn";
@@ -25,7 +27,7 @@ import {
 import { Team } from "../../shared/interfaces/graphql/team.interface";
 import { Option } from "../../shared/interfaces/option.interface";
 import { Stat } from "../../shared/interfaces/stat.interface";
-import "./player.page.css";
+import "./player-wrapper.page.css";
 
 // const [date, setDate] = useState(FormatDate(new Date()));
 // //TODO: Handle error when pick game that isn't in seasonType
@@ -58,7 +60,7 @@ function getProposition(
   return undefined;
 }
 
-const PlayerPage: React.FC = () => {
+const PlayerPageWrapper: React.FC = () => {
   const { id } = useParams();
   let playerID = id ? parseInt(id) : 0;
   const [date, setDate] = useState(new Date());
@@ -74,6 +76,7 @@ const PlayerPage: React.FC = () => {
   const [similarTeamsToggle, toggleSimilarTeams] = useState(false);
 
   const onStatSelect = (stat: Stat) => {
+    console.log("onStatSelect", stat);
     if (projection) {
       setStatType(stat);
       let customTarget = GetImpliedTarget(projection, stat);
@@ -127,99 +130,18 @@ const PlayerPage: React.FC = () => {
     predictionFilter: gameFilter,
   });
 
-  useEffect(() => {
-    if (player) {
-      setProjection(getProjection(date, player.projections));
-    }
-  }, [date, player]);
-
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error</div>;
   if (!player) return <div>No player found</div>;
-  let filteredGames = player.games.filter((game) =>
-    moment(game.date).isBefore(date)
-  );
-  console.log(filteredGames);
-  let gameOptions = player.games.map((game) => {
-    return {
-      id: game.date,
-      label: game.date,
-    };
-  });
-  let missingProjections = player.projections.filter(
-    (projection) => !gameOptions.some((game) => game.id === projection.date)
-  );
-  gameOptions = [
-    ...gameOptions,
-    ...missingProjections.map((projection) => {
-      return {
-        id: projection.date,
-        label: projection.date,
-      };
-    }),
-  ];
-  gameOptions = gameOptions.sort((a, b) => {
-    return moment(b.id).unix() - moment(a.id).unix();
-  });
   return (
-    <div className="player-page">
-      <div id={"games-dropdown"}>
-        <AutocompleteFilter
-          label="Game"
-          options={gameOptions}
-          onChange={(date: Date) => {
-            setDate(date || new Date());
-          }}
-          width={180}
-        />
-      </div>
-      <PlayerContext
+    <div className="player-wrapper">
+      <PlayerPage
         player={player}
         selectedDate={date}
-        setDate={setDate}
-        projection={projection}
-        game={player.games.find((game) =>
-          moment(game.date).isSame(date, "day")
-        )}
+        setSelectedDate={setDate}
       />
-      <PlayerProfileChart player={player} filteredGames={filteredGames} />
-
-      {projection && proposition ? (
-        <StatSelectButtons
-          propositions={projection.propositions}
-          selectedStat={proposition.statType}
-          onStatSelect={onStatSelect}
-        />
-      ) : (
-        <></>
-      )}
-      {/*<Prediction
-        propositions={projection.propositions}
-        predictions={predictions}
-        selected={stat}
-        game={game}
-    /> */}
-      {/*<PlayerStatsTable
-        predictions={predictions}
-        selected={stat}
-        matchups={matchups}
-        games={statData}
-        player={data.player}
-        similar={data.player.similarPlayers}
-        similarTeams={projection.opponent.similarTeams}
-        opponent={
-          projection?.opponent ??
-          game?.opponent ??
-          games[games.length - 1].opponent
-        }
-      /> */}
-      {/*<PlayerStatsChart
-        games={games}
-        predictions={predictions}
-        selected={stat}
-      /> */}
     </div>
   );
 };
 
-export default PlayerPage;
+export default PlayerPageWrapper;

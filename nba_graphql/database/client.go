@@ -45,12 +45,13 @@ func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
 		instance = client
 	})
 	if connErr != nil {
+		logrus.Error((connErr))
 		return nil, connErr
 	}
 	logrus.Println("Connected to DB")
 	nbaClient.Name = db
 	nbaClient.Client = instance
-	nbaClient.Database = nbaClient.Client.Database(db)
+	nbaClient.Database = nbaClient.Client.Database(nbaClient.Name)
 	return nbaClient, nil
 }
 
