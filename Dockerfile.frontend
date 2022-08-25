@@ -12,8 +12,8 @@ COPY clover-analytics/package.json ./
 COPY clover-analytics/package-lock.json ./
 RUN npm install --silent
 RUN npm install react-scripts@3.4.1 -g --silent
-RUN npm i -g serve --silent
-RUN npm install --save chart.js react-chartjs-2
+RUN npm install -g serve --silent
+RUN npm install --save chart.js react-chartjs-2 material-ui/core --silent
 
 # add app
 COPY react/nba-analyzer/ ./
