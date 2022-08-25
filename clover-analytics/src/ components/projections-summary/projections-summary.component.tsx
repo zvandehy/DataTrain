@@ -1,3 +1,4 @@
+import React from "react";
 import { BETTING_CATEGORIES } from "../../shared/constants";
 import { ColorPct } from "../../shared/functions/color.fn";
 import { GetMaxConfidence } from "../../shared/functions/predictions.fn";
@@ -331,7 +332,7 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
       )}
       {countMaxTotal > 0 ? (
         <div id="max-distribution-summary">
-          <span>Highest</span>
+          <span>Highest Conf. Prop for each Player</span>
           {maxDistribution
             .filter((dist) => dist.correct + dist.incorrect > 0)
             .map((dist) => {
