@@ -16,6 +16,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import React from "react";
 import { Chart } from "react-chartjs-2";
 import { ALL_STATS } from "../../../shared/constants";
 import { Player } from "../../../shared/interfaces/graphql/player.interface";
@@ -134,9 +135,9 @@ const PlayerStatsChart: React.FC<PlayerStatsChartProps> = ({
       hidden: stat !== selectedStat,
       order: stat !== selectedStat ? 0 : 1,
       backgroundColor: function (context: any) {
-        if (stat !== selectedStat) {
-          return `${colors[i % colors.length]}`;
-        }
+        // if (stat !== selectedStat) {
+        //   return `${colors[i % colors.length]}`;
+        // }
         return graphColor(context, selectedProjection, stat, colors, i);
       },
       borderColor: function (context: any) {
@@ -177,6 +178,10 @@ function graphColor(
   colors: string[],
   i: number
 ) {
+  console.log(context.dataset.hidden);
+  if (!context.dataset.hidden) {
+    return "rgb(150,150,150)";
+  }
   const index = context.dataIndex;
   const value = context.dataset.data[index];
   const proposition = projection.propositions.find(

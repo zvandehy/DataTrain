@@ -3,7 +3,7 @@ FROM node:alpine
 
 # set working directory
 WORKDIR /app
-
+EXPOSE 3000
 # add `/app/node_modules/.bin` to $PATH
 ENV PATH /app/node_modules/.bin:$PATH
 RUN npm install -g npm@8.18.0
