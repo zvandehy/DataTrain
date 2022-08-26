@@ -1,3 +1,4 @@
+import moment from "moment";
 import { DEFAULT_WEIGHTS } from "../constants";
 import { GameFilter } from "../interfaces/graphql/filters.interface";
 import { Game } from "../interfaces/graphql/game.interface";
@@ -67,6 +68,9 @@ export function CalculatePrediction(
     //   );
     // }
     updatedProps.push(updatedProp);
+    updatedProps = updatedProps.sort((a, b) => {
+      return moment(a.lastModified).diff(b.lastModified);
+    });
   });
   let updatedProjection = {
     ...projection,

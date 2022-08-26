@@ -14,8 +14,8 @@ RUN npm install react-scripts@3.4.1 -g --silent
 RUN npm install -g serve --silent
 RUN npm install --legacy-peer-deps --silent
 
-# add app
-# COPY ./ ./
+# add app (e.g. public/index.html) to /app
+COPY ./ ./
 
 # start app
 RUN npm run build
