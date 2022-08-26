@@ -55,10 +55,7 @@ const StatSelectButton: React.FC<StatSelectButtonProps> = ({
       className={`stat-select-btn ${isSelected ? "selected" : ""}`}
       onClick={() => onStatSelect(stat)}
     >
-      <p className="bold titlecase">
-        {stat.abbreviation}{" "}
-        {moment(proposition?.lastModified).format("MM-DD hh:mm a")}
-      </p>
+      <p className="bold titlecase">{stat.abbreviation}</p>
       {proposition?.target && proposition.customPrediction.confidence ? (
         <>
           <p className="hide">T: {proposition.target}</p>

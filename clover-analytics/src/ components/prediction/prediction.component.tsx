@@ -1,4 +1,6 @@
 import { InputLabel, ListSubheader, MenuItem, Select } from "@mui/material";
+import moment from "moment";
+import React from "react";
 import { PropositionResult } from "../../shared/functions/predictions.fn";
 import {
   Projection,
@@ -39,6 +41,10 @@ const Prediction: React.FC<PredictionProps> = ({
       <div className={"selected-stat-display"}>
         <div>{selectedStat.display}</div>
         <div>{selectedProp?.sportsbook}</div>
+        <div>
+          {" on "}
+          {moment(selectedProp?.lastModified).format("MM-DD [at] hh:mm a")}
+        </div>
       </div>
       <div className="target-input">
         <InputLabel

@@ -59,7 +59,6 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
   }
 
   BETTING_CATEGORIES.forEach((stat) => {
-    // countCorrect += projections.reduce((acc, projection) => {
     projections.forEach((projection) => {
       if (projection.result) {
         let latestStatProps = projection.propositions
@@ -230,14 +229,20 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
             countPush
           );
         }
-      } else {
-        countUnknown += projection.propositions.filter(
-          (prop) => prop.statType === filteredStat || !filteredStat
-        ).length;
-        countMaxUnknown += 1;
       }
     });
   });
+
+  // get unknowns
+  projections.forEach((projection) => {
+    if (!projection?.result) {
+      countUnknown += projection.propositions.filter(
+        (prop) => prop.statType === filteredStat || !filteredStat
+      ).length;
+      countMaxUnknown += 1;
+    }
+  });
+
   return (
     <>
       <div id="projection-summary">
