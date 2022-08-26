@@ -32,20 +32,21 @@ func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
 	if err != nil {
 		logrus.Fatal("cannot load configuration")
 	}
+	logrus.Warn(config.DBSource)
 	nbaClient := &NBADatabaseClient{conn: config.DBSource}
 	once.Do(func() {
 		client, connErr := mongo.NewClient(options.Client().ApplyURI(nbaClient.conn))
 		if connErr != nil {
-			return
+			logrus.Fatal("Can't create new mongo client: ", connErr)
 		}
 		connErr = client.Connect(ctx)
 		if connErr != nil {
+			logrus.Fatal("Can't connect to mongo client: ", connErr)
 			return
 		}
 		instance = client
 	})
 	if connErr != nil {
-		logrus.Error((connErr))
 		return nil, connErr
 	}
 	logrus.Println("Connected to DB")

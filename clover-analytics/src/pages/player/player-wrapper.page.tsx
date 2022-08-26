@@ -86,6 +86,7 @@ const PlayerPageWrapper: React.FC = () => {
         type: stat.label,
         sportsbook: customTarget ? "Implied" : "None",
         predictions: [],
+        lastModified: new Date(),
         customPrediction: {
           model: "Custom",
           overUnderPrediction: "",

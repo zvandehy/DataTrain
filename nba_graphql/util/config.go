@@ -3,6 +3,7 @@ package util
 import (
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -28,5 +29,6 @@ func LoadConfig(path string) (config Config, err error) {
 		return
 	}
 	err = viper.Unmarshal(&config)
+	logrus.Warn(config.DBSource)
 	return
 }

@@ -38,7 +38,6 @@ func main() {
 			return true
 		}, //overrides allowed origins
 	}).Handler)
-
 	nbaClient, err := database.ConnectDB(context.Background(), "nba")
 	if err != nil {
 		log.Fatal(err)

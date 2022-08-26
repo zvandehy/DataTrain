@@ -20,6 +20,7 @@ export interface Proposition {
   sportsbook: string;
   predictions: Prediction[];
   customPrediction: Prediction;
+  lastModified: Date;
 }
 
 export interface Prediction {

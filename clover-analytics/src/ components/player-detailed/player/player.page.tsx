@@ -101,6 +101,7 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
           statType: statType,
           type: statType.label,
           sportsbook: customTarget ? "Implied" : "None",
+          lastModified: new Date(),
           predictions: [],
           customPrediction: {
             model: "Custom",

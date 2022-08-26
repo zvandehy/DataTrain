@@ -1,6 +1,7 @@
 import { ApolloQueryResult, gql, useQuery } from "@apollo/client";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import React from "react";
 import { CalculatePredictions } from "../shared/functions/predictions.fn";
 import {
   GameFilter,
@@ -343,6 +344,7 @@ export const GET_PROJECTIONS_AND_SIMILAR_PLAYERS_AND_TEAMS = gql`
         target
         type
         sportsbook
+        lastModified
       }
       startTime
       result {
@@ -418,6 +420,7 @@ export const useGetProjections = ({
       predictionFilter
     );
     console.log(projections);
+    console.log(projections[0]?.propositions[0]?.lastModified);
     // setSkip(true);
     return {
       loading: loadingComponent,

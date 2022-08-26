@@ -1,3 +1,4 @@
+import React from "react";
 import { useEffect, useState } from "react";
 import {
   GetMaxConfidence,
@@ -58,6 +59,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       statType: stat,
       type: stat.label,
       sportsbook: customTarget ? "Implied" : "None",
+      lastModified: new Date(),
       predictions: [],
       customPrediction: {
         model: "Custom",

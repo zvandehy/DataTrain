@@ -1,3 +1,4 @@
+import moment from "moment";
 import React from "react";
 import { BETTING_CATEGORIES } from "../../shared/constants";
 import { ColorPct } from "../../shared/functions/color.fn";
@@ -57,20 +58,34 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
     });
   }
 
-  //TODO: if a statType has more than one proposition, use the most recent one
-  projections.forEach((projection) => {
-    if (projection.result) {
-      BETTING_CATEGORIES.filter(
-        (category) => category === filteredStat || !filteredStat
-      ).forEach((category) => {
-        //TODO: get the most recent proposition
-        const prop = projection.propositions.find(
-          (p) => p.statType === category
-        );
-        if (prop) {
+  BETTING_CATEGORIES.forEach((stat) => {
+    // countCorrect += projections.reduce((acc, projection) => {
+    projections.forEach((projection) => {
+      if (projection.result) {
+        let latestStatProps = projection.propositions
+          .filter((proposition) => proposition.statType === stat)
+          .sort((a, b) =>
+            a.customPrediction.confidence > b.customPrediction.confidence
+              ? -1
+              : 1
+          );
+        // .sort((a, b) => moment(a.lastModified).diff(b.lastModified));
+        if (latestStatProps.length > 0) {
+          let prop = latestStatProps[0];
           if (prop.statType.score(projection.result) === prop.target) {
             countPush++;
             countTotal++;
+            //highest
+            if (
+              projection.propositions.sort((a, b) =>
+                a.customPrediction.confidence > b.customPrediction.confidence
+                  ? -1
+                  : 1
+              )[0].statType === stat
+            ) {
+              countMaxPush++;
+              countMaxTotal++;
+            }
           } else {
             if (prop.customPrediction.overUnderPrediction === "Over") {
               if (prop.statType.score(projection.result) > prop.target) {
@@ -84,6 +99,27 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
                 });
                 countCorrect++;
                 countTotal++;
+
+                //highest
+                if (
+                  projection.propositions.sort((a, b) =>
+                    a.customPrediction.confidence >
+                    b.customPrediction.confidence
+                      ? -1
+                      : 1
+                  )[0].statType === stat
+                ) {
+                  maxDistribution.forEach((dist) => {
+                    if (
+                      prop.customPrediction.confidence >= dist.min &&
+                      prop.customPrediction.confidence < dist.max
+                    ) {
+                      dist.correct++;
+                    }
+                  });
+                  countMaxCorrect++;
+                  countMaxTotal++;
+                }
               } else {
                 distribution.forEach((dist) => {
                   if (
@@ -95,6 +131,26 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
                 });
                 countIncorrect++;
                 countTotal++;
+                //highest
+                if (
+                  projection.propositions.sort((a, b) =>
+                    a.customPrediction.confidence >
+                    b.customPrediction.confidence
+                      ? -1
+                      : 1
+                  )[0].statType === stat
+                ) {
+                  maxDistribution.forEach((dist) => {
+                    if (
+                      prop.customPrediction.confidence >= dist.min &&
+                      prop.customPrediction.confidence < dist.max
+                    ) {
+                      dist.incorrect++;
+                    }
+                  });
+                  countMaxIncorrect++;
+                  countMaxTotal++;
+                }
               }
             }
             if (prop.customPrediction.overUnderPrediction === "Under") {
@@ -109,6 +165,26 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
                 });
                 countCorrect++;
                 countTotal++;
+                //highest
+                if (
+                  projection.propositions.sort((a, b) =>
+                    a.customPrediction.confidence >
+                    b.customPrediction.confidence
+                      ? -1
+                      : 1
+                  )[0].statType === stat
+                ) {
+                  maxDistribution.forEach((dist) => {
+                    if (
+                      prop.customPrediction.confidence >= dist.min &&
+                      prop.customPrediction.confidence < dist.max
+                    ) {
+                      dist.correct++;
+                    }
+                  });
+                  countMaxCorrect++;
+                  countMaxTotal++;
+                }
               } else {
                 distribution.forEach((dist) => {
                   if (
@@ -120,74 +196,47 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
                 });
                 countIncorrect++;
                 countTotal++;
+                //highest
+                if (
+                  projection.propositions.sort((a, b) =>
+                    a.customPrediction.confidence >
+                    b.customPrediction.confidence
+                      ? -1
+                      : 1
+                  )[0].statType === stat
+                ) {
+                  maxDistribution.forEach((dist) => {
+                    if (
+                      prop.customPrediction.confidence >= dist.min &&
+                      prop.customPrediction.confidence < dist.max
+                    ) {
+                      dist.incorrect++;
+                    }
+                  });
+                  countMaxIncorrect++;
+                  countMaxTotal++;
+                }
               }
             }
           }
+          console.log(
+            projection.player.name,
+            stat.display,
+            prop.target,
+            prop.lastModified,
+            prop.customPrediction.confidence,
+            countCorrect,
+            countIncorrect,
+            countPush
+          );
         }
-      });
-      //get max proposition
-      const maxProp = GetMaxConfidence(projection.propositions);
-      if (maxProp.statType.score(projection.result) === maxProp.target) {
-        countMaxPush++;
-        countMaxTotal++;
       } else {
-        if (maxProp.customPrediction.overUnderPrediction === "Over") {
-          if (maxProp.statType.score(projection.result) > maxProp.target) {
-            countMaxCorrect++;
-            countMaxTotal++;
-            maxDistribution.forEach((dist) => {
-              if (
-                maxProp.customPrediction.confidence > dist.min &&
-                maxProp.customPrediction.confidence <= dist.max
-              ) {
-                dist.correct++;
-              }
-            });
-          } else {
-            maxDistribution.forEach((dist) => {
-              if (
-                maxProp.customPrediction.confidence > dist.min &&
-                maxProp.customPrediction.confidence <= dist.max
-              ) {
-                dist.incorrect++;
-              }
-            });
-            countMaxIncorrect++;
-            countMaxTotal++;
-          }
-        }
-        if (maxProp.customPrediction.overUnderPrediction === "Under") {
-          if (maxProp.statType.score(projection.result) < maxProp.target) {
-            maxDistribution.forEach((dist) => {
-              if (
-                maxProp.customPrediction.confidence > dist.min &&
-                maxProp.customPrediction.confidence <= dist.max
-              ) {
-                dist.correct++;
-              }
-            });
-            countMaxCorrect++;
-            countMaxTotal++;
-          } else {
-            maxDistribution.forEach((dist) => {
-              if (
-                maxProp.customPrediction.confidence > dist.min &&
-                maxProp.customPrediction.confidence <= dist.max
-              ) {
-                dist.incorrect++;
-              }
-            });
-            countMaxIncorrect++;
-            countMaxTotal++;
-          }
-        }
+        countUnknown += projection.propositions.filter(
+          (prop) => prop.statType === filteredStat || !filteredStat
+        ).length;
+        countMaxUnknown += 1;
       }
-    } else {
-      countUnknown += projection.propositions.filter(
-        (prop) => prop.statType === filteredStat || !filteredStat
-      ).length;
-      countMaxUnknown += 1;
-    }
+    });
   });
   return (
     <>
