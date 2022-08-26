@@ -58,6 +58,7 @@ export const GET_PROJECTIONS = gql`
         target
         type
         sportsbook
+        lastModified
       }
       startTime
       result {

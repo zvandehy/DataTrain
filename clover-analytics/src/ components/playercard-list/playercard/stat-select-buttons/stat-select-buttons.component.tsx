@@ -1,3 +1,5 @@
+import moment from "moment";
+import React from "react";
 import { BETTING_CATEGORIES } from "../../../../shared/constants";
 import { Proposition } from "../../../../shared/interfaces/graphql/projection.interface";
 import { Stat } from "../../../../shared/interfaces/stat.interface";
@@ -53,7 +55,10 @@ const StatSelectButton: React.FC<StatSelectButtonProps> = ({
       className={`stat-select-btn ${isSelected ? "selected" : ""}`}
       onClick={() => onStatSelect(stat)}
     >
-      <p className="bold titlecase">{stat.abbreviation}</p>
+      <p className="bold titlecase">
+        {stat.abbreviation}{" "}
+        {moment(proposition?.lastModified).format("MM-DD hh:mm a")}
+      </p>
       {proposition?.target && proposition.customPrediction.confidence ? (
         <>
           <p className="hide">T: {proposition.target}</p>

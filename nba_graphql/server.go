@@ -31,7 +31,7 @@ func main() {
 	// Add CORS middleware around every request
 	// See https://github.com/rs/cors for full option listing
 	router.Use(cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://datatrain-mp34k.ondigitalocean.app"},
+		AllowedOrigins:   []string{"https://datatrain-mp34k.ondigitalocean.app", "https://clover-backend.fly.dev"},
 		AllowCredentials: true,
 		Debug:            false,
 		AllowOriginFunc: func(origin string) bool {
