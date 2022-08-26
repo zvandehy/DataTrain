@@ -375,6 +375,11 @@ func (r *projectionResolver) Result(ctx context.Context, obj *model.Projection) 
 	return &game, nil
 }
 
+// LastModified is the resolver for the lastModified field.
+func (r *propositionResolver) LastModified(ctx context.Context, obj *model.Proposition) (string, error) {
+	return obj.LastModified.Format(time.RFC822), nil
+}
+
 // Players is the resolver for the players field.
 func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
 	fmt.Println(r.Db.Name)
@@ -997,6 +1002,9 @@ func (r *Resolver) PlayersInGame() generated.PlayersInGameResolver { return &pla
 // Projection returns generated.ProjectionResolver implementation.
 func (r *Resolver) Projection() generated.ProjectionResolver { return &projectionResolver{r} }
 
+// Proposition returns generated.PropositionResolver implementation.
+func (r *Resolver) Proposition() generated.PropositionResolver { return &propositionResolver{r} }
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -1011,6 +1019,7 @@ type playerResolver struct{ *Resolver }
 type playerGameResolver struct{ *Resolver }
 type playersInGameResolver struct{ *Resolver }
 type projectionResolver struct{ *Resolver }
+type propositionResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type teamGameResolver struct{ *Resolver }

@@ -41,6 +41,7 @@ type ResolverRoot interface {
 	PlayerGame() PlayerGameResolver
 	PlayersInGame() PlayersInGameResolver
 	Projection() ProjectionResolver
+	Proposition() PropositionResolver
 	Query() QueryResolver
 	Team() TeamResolver
 	TeamGame() TeamGameResolver
@@ -135,10 +136,11 @@ type ComplexityRoot struct {
 	}
 
 	Proposition struct {
-		Predictions func(childComplexity int) int
-		Sportsbook  func(childComplexity int) int
-		Target      func(childComplexity int) int
-		Type        func(childComplexity int) int
+		LastModified func(childComplexity int) int
+		Predictions  func(childComplexity int) int
+		Sportsbook   func(childComplexity int) int
+		Target       func(childComplexity int) int
+		Type         func(childComplexity int) int
 	}
 
 	Query struct {
@@ -246,6 +248,9 @@ type ProjectionResolver interface {
 	Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error)
 
 	Result(ctx context.Context, obj *model.Projection) (*model.PlayerGame, error)
+}
+type PropositionResolver interface {
+	LastModified(ctx context.Context, obj *model.Proposition) (string, error)
 }
 type QueryResolver interface {
 	Players(ctx context.Context) ([]*model.Player, error)
@@ -761,6 +766,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Projection.StartTime(childComplexity), true
+
+	case "Proposition.lastModified":
+		if e.complexity.Proposition.LastModified == nil {
+			break
+		}
+
+		return e.complexity.Proposition.LastModified(childComplexity), true
 
 	case "Proposition.predictions":
 		if e.complexity.Proposition.Predictions == nil {
@@ -1437,7 +1449,7 @@ type PlayerGame {
   blocks: Int!
   steals: Int!
   playersInGame: PlayersInGame!
-  projections: [Projection]! #TODO change to propositions
+  projections: [Projection]!
 }
 
 type Projection {
@@ -1452,9 +1464,9 @@ type Projection {
 type Proposition {
   target: Float!
   type: String!
-  # lastModified
   sportsbook: String!
   predictions: [Prediction!]!
+  lastModified: String!
 }
 
 type Prediction {
@@ -5092,6 +5104,8 @@ func (ec *executionContext) fieldContext_Projection_propositions(ctx context.Con
 				return ec.fieldContext_Proposition_sportsbook(ctx, field)
 			case "predictions":
 				return ec.fieldContext_Proposition_predictions(ctx, field)
+			case "lastModified":
+				return ec.fieldContext_Proposition_lastModified(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Proposition", field.Name)
 		},
@@ -5489,6 +5503,50 @@ func (ec *executionContext) fieldContext_Proposition_predictions(ctx context.Con
 				return ec.fieldContext_Prediction_totalPrediction(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Prediction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Proposition_lastModified(ctx context.Context, field graphql.CollectedField, obj *model.Proposition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Proposition_lastModified(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Proposition().LastModified(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Proposition_lastModified(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Proposition",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11750,29 +11808,49 @@ func (ec *executionContext) _Proposition(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._Proposition_target(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "type":
 
 			out.Values[i] = ec._Proposition_type(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "sportsbook":
 
 			out.Values[i] = ec._Proposition_sportsbook(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "predictions":
 
 			out.Values[i] = ec._Proposition_predictions(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "lastModified":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Proposition_lastModified(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
