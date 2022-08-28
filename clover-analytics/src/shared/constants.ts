@@ -24,6 +24,7 @@ export const ALL_STATS = [
   Assists,
   Steals,
   Blocks,
+  BlocksSteals,
   Turnovers,
   PointsAssists,
   PointsRebounds,

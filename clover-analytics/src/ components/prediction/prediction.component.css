@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   grid-area: prediction;
-  font-size: min(1.5rem, 3vw);
+  font-size: 1.5rem;
 }
 
 .prediction input {
@@ -19,23 +19,27 @@
 }
 
 .prediction-icon {
-  display: grid;
-  grid-template-columns: auto auto;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "icon predict"
-    "icon confidence";
-  align-content: start;
-  gap: 0 1vw;
+  display: flex;
+  /* grid-template-columns: auto auto; */
+  /* grid-template-rows: auto auto; */
+  /* grid-template-areas: */
+  /* "icon predict" */
+  /* "icon confidence"; */
+  /* align-content: start; */
+  /* gap: 0 1vw; */
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
 }
 
 .prediction-icon svg {
-  grid-area: icon;
+  margin: 0;
+  margin-right: 0.5rem;
 }
 
-.prediction-result {
+/* .prediction-result {
   align-self: end;
-}
+} */
 
 .arrow {
   font-size: 5rem;
@@ -100,4 +104,16 @@ div.target-input .MuiSelect-icon {
 
 .prediction-icon {
   margin-top: 2rem;
+}
+
+@media (max-width: 885px) {
+  .selected-stat-display {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .prediction {
+    flex-direction: row;
+    font-size: 1rem;
+  }
 }

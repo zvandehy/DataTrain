@@ -96,6 +96,7 @@ export const GET_PLAYER = gql`
           target
           type
           sportsbook
+          lastModified
         }
         result {
           points
@@ -195,11 +196,6 @@ export const GET_PLAYER = gql`
     }
   }
 `;
-// # const { loading, error, data } = useQuery(query, {
-// #   variables: { playerID: playerID, season: season },
-// #   client: client,
-// # });
-// # `;
 
 export interface QueryResult {
   loading?: any;
@@ -225,7 +221,7 @@ export const useGetPlayerDetails = ({
   let loadingComponent;
   if (loading) {
     loadingComponent = (
-      <Box className={"loading-player"}>
+      <Box className={"loading-results"}>
         <h1>Loading </h1>
         <CircularProgress />
       </Box>
@@ -233,6 +229,7 @@ export const useGetPlayerDetails = ({
   }
   let errorComponent;
   if (error) {
+    console.log(JSON.stringify(error) + error.message);
     errorComponent = <Box>{JSON.stringify(error) + error.message}</Box>;
   }
   if (data && data?.player?.projections) {

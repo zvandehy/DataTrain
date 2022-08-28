@@ -1,20 +1,27 @@
 #projection-summary {
   grid-area: summary;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
 }
 
 #distribution-summary {
   grid-area: dist;
+}
+
+#max-distribution-summary {
+  grid-area: max-dist;
+}
+
+#projection-summary,
+#distribution-summary,
+#max-distribution-summary {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
 }
 
-#max-distribution-summary {
-  grid-area: max-dist;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
+@media (max-width: 885px) {
+  #projection-summary,
+  #distribution-summary,
+  #max-distribution-summary {
+    flex-direction: column;
+  }
 }

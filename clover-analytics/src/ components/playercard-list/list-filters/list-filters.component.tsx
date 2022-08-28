@@ -35,7 +35,6 @@ const PlayerListFilters: React.FC<PlayerListFiltersProps> = ({
         options={StatOptions}
         onChange={onStatSelect}
         label="Stat"
-        width={180}
       />
       <AutocompleteFilter
         options={[
@@ -44,14 +43,16 @@ const PlayerListFilters: React.FC<PlayerListFiltersProps> = ({
         ]}
         onChange={onSortSelect}
         label="Sort by"
-        width={180}
       />
       <TextField
         label="Search..."
         onChange={(e) => onSearchChange(e.target.value)}
-        sx={{
-          textAlign: "end",
-        }}
+        sx={
+          {
+            // textAlign: "end",
+            // width: "fit-content",
+          }
+        }
       />
     </div>
   );

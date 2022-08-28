@@ -20,3 +20,6 @@
 .loading-results > * {
   margin: 1rem;
 }
+
+@media (max-width: 885px) {
+}

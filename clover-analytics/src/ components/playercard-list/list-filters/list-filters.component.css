@@ -1,0 +1,15 @@
+.MuiInputBase-root {
+  max-width: 100%;
+  width: 8rem !important;
+}
+
+.MuiAutocomplete-popper {
+  font-size: small !important;
+  width: fit-content !important;
+}
+
+@media (max-width: 885px) {
+  .MuiInputBase-root {
+    width: 10rem;
+  }
+}

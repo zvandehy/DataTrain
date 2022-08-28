@@ -6,7 +6,7 @@ interface AutocompleteFilterProps {
   options: Option<any>[];
   onChange: Function;
   label: string;
-  width: number;
+  width?: number;
 }
 
 const AutocompleteFilter: React.FC<AutocompleteFilterProps> = ({
@@ -29,7 +29,7 @@ const AutocompleteFilter: React.FC<AutocompleteFilterProps> = ({
       onChange={(event, value) => {
         onChange(value?.id || options[0].id);
       }}
-      style={{ width: width, color: "black" }}
+      style={{ width: `${width}px`, color: "black" }}
     />
   );
 };

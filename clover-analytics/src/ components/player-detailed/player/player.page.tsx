@@ -123,9 +123,14 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
     }
   }, [selectedDate, player, projection, statType]);
 
-  let filteredGames = player.games.filter((game) =>
-    moment(game.date).isBefore(selectedDate)
-  );
+  let filteredGames = player.games.filter((game) => {
+    console.log(
+      game.date,
+      selectedDate,
+      moment(game.date).isBefore(selectedDate)
+    );
+    return moment(game.date).isBefore(selectedDate);
+  });
   let gameOptions = player.games.map((game) => {
     return {
       id: game.date,
@@ -176,6 +181,7 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
           <StatSelectButtons
             propositions={projection.propositions} // TODO: select active proposition for each statType (most recent 'last modified')
             selectedStat={proposition.statType}
+            selectedProp={proposition}
             onStatSelect={onStatSelect}
           />
           <Prediction
@@ -190,7 +196,7 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
             projection={{ ...projection, player: player }}
           />
           <PlayerStatsChart
-            player={player}
+            games={filteredGames}
             selectedProjection={projection}
             selectedStat={proposition?.statType}
           />

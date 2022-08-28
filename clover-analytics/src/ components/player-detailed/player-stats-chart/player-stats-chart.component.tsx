@@ -1,6 +1,5 @@
 import {
   BarController,
-  ChartData,
   ChartDataset,
   ChartOptions,
   LineController,
@@ -19,9 +18,9 @@ import {
 import React from "react";
 import { Chart } from "react-chartjs-2";
 import { ALL_STATS } from "../../../shared/constants";
-import { Player } from "../../../shared/interfaces/graphql/player.interface";
+import { Game } from "../../../shared/interfaces/graphql/game.interface";
 import { Projection } from "../../../shared/interfaces/graphql/projection.interface";
-import { Fantasy, Stat } from "../../../shared/interfaces/stat.interface";
+import { Stat } from "../../../shared/interfaces/stat.interface";
 import "./player-stats-chart.component.css";
 
 ChartJS.register(
@@ -39,17 +38,16 @@ ChartJS.register(
 );
 
 interface PlayerStatsChartProps {
-  player: Player;
+  games: Game[];
   selectedStat: Stat;
   selectedProjection: Projection;
 }
 
 const PlayerStatsChart: React.FC<PlayerStatsChartProps> = ({
-  player,
+  games,
   selectedProjection,
   selectedStat,
 }: PlayerStatsChartProps) => {
-  let games = [...player.games];
   games = games.sort((a, b) => (a.date > b.date ? 1 : -1));
   const options: ChartOptions = {
     responsive: true,
@@ -80,6 +78,7 @@ const PlayerStatsChart: React.FC<PlayerStatsChartProps> = ({
       tooltip: {
         enabled: true,
         mode: "index",
+        caretPadding: 10,
         callbacks: {
           // label: function (context) {
           //   return "Hello world";
@@ -135,21 +134,25 @@ const PlayerStatsChart: React.FC<PlayerStatsChartProps> = ({
       hidden: stat !== selectedStat,
       order: stat !== selectedStat ? 0 : 1,
       backgroundColor: function (context: any) {
-        // if (stat !== selectedStat) {
-        //   return `${colors[i % colors.length]}`;
-        // }
-        return graphColor(context, selectedProjection, stat, colors, i);
+        if (stat !== selectedStat) {
+          return `${colors[i % colors.length]}`;
+        }
+        let color = graphColor(context, selectedProjection, stat, colors, i);
+        color = color.replace("rgb", "rgba");
+        color = color.replace(")", ",.5)");
+        return color;
       },
       borderColor: function (context: any) {
-        // if (stat !== selectedStat) {
-        return `${colors[i % colors.length]}`;
-        // }
-        // return graphColor(context, selectedProjection, stat, colors, i);
+        if (stat !== selectedStat) {
+          return `${colors[i % colors.length]}`;
+        }
+        return graphColor(context, selectedProjection, stat, colors, i);
       },
       borderWidth: 2,
       pointBorderColor: function (context: any) {
         return graphColor(context, selectedProjection, stat, colors, i);
       },
+      hoverRadius: 8,
     };
     return data;
   });
@@ -178,22 +181,20 @@ function graphColor(
   colors: string[],
   i: number
 ) {
-  console.log(context.dataset.hidden);
-  if (!context.dataset.hidden) {
-    return "rgb(150,150,150)";
-  }
+  //TODO: update color after hidden/unhidden
   const index = context.dataIndex;
   const value = context.dataset.data[index];
   const proposition = projection.propositions.find(
     (prop) => prop.statType === selectedStat
   );
   if (proposition === undefined) {
-    return `${colors[i % colors.length]}`;
+    let color = `${colors[i % colors.length]}`;
+    return color;
   }
   return value < proposition.target
-    ? "rgba(200,50,50)"
+    ? "rgb(200,50,50)"
     : value > proposition.target
-    ? "rgba(0,200,100)"
+    ? "rgb(0,200,100)"
     : "rgb(150,150,150)";
 }
 

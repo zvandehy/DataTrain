@@ -46,109 +46,118 @@ const Prediction: React.FC<PredictionProps> = ({
           {moment(selectedProp?.lastModified).format("MM-DD [at] hh:mm a")}
         </div>
       </div>
-      <div className="target-input">
-        <InputLabel
-          id="target-label"
-          className={"target-label"}
-          sx={{
-            fontSize: "inherit",
-            display: "inline",
-            color: "inherit",
-          }}
-        >
-          Target:
-        </InputLabel>
-        <Select
-          className={"target-select"}
-          labelId="target-label"
-          id="target-select"
-          sx={{
-            // color: theme.palette.text.primary,
-            // border: "1px solid var(--color-accent)",
-            paddingRight: "0.25rem",
-            paddingLeft: "0.25rem",
-            "&:after, &:before": {
-              borderColor: "var(--color-accent)",
-            },
-            input: {
-              padding: "0.5rem",
-            },
-          }}
-          inputProps={{
-            classes: {
-              input: {
-                fontSize: "20rem",
-              },
-            },
-          }}
-          value={selectedProp?.target || 0}
-          onChange={(event) => {
-            onPredictionSelect(
-              projection.propositions.filter(
-                (prop) => prop.target === Number(event.target.value)
-              )[0]
-            );
-          }}
-        >
-          {uniqueSportsbooks.map((groupedSportsbook) => {
-            let items: Proposition[] = projection.propositions;
-            if (
-              selectedProp &&
-              !items.some((prop) => prop.statType === selectedProp.statType)
-            )
-              items.push(selectedProp);
-            const menuItems = items
-              .filter(
-                (prop) =>
-                  prop.statType === selectedStat &&
-                  prop.sportsbook === groupedSportsbook
-              )
-              .map((prop) => {
-                return (
-                  <MenuItem
-                    key={`${prop.sportsbook} ${prop.type} ${prop.target}`}
-                    value={prop.target}
-                    onClick={() => onPredictionSelect(prop)}
-                    sx={{
-                      color: "var(--color-black)",
-                    }}
-                  >
-                    {prop.target}
-                  </MenuItem>
-                );
-              });
-            return [
-              <ListSubheader key={groupedSportsbook}>
-                {groupedSportsbook}
-              </ListSubheader>,
-              menuItems,
-            ];
-          })}
-        </Select>
-      </div>
-      {projection.result ? (
-        <div className={"actual-result"}>
-          ACTUAL:
-          <span
-            className={
-              "actual-score " +
-              (actual === "Over" ? "high" : actual === "Under" ? "low" : "med")
-            }
+      <div>
+        <div className="target-input">
+          <InputLabel
+            id="target-label"
+            className={"target-label"}
+            sx={{
+              fontSize: "inherit",
+              display: "inline",
+              color: "inherit",
+            }}
           >
-            {selectedStat.score(projection.result)}
-          </span>
+            Target:
+          </InputLabel>
+          <Select
+            className={"target-select"}
+            labelId="target-label"
+            id="target-select"
+            sx={{
+              // color: theme.palette.text.primary,
+              // border: "1px solid var(--color-accent)",
+              paddingRight: "0.25rem",
+              paddingLeft: "0.25rem",
+              "&:after, &:before": {
+                borderColor: "var(--color-accent)",
+              },
+              input: {
+                padding: "0.5rem",
+              },
+            }}
+            inputProps={{
+              classes: {
+                input: {
+                  fontSize: "20rem",
+                },
+              },
+            }}
+            value={selectedProp?.target || 0}
+            onChange={(event) => {
+              console.log(event);
+              onPredictionSelect(
+                projection.propositions.filter(
+                  (prop) =>
+                    prop.target === Number(event.target.value) &&
+                    prop.statType === selectedStat
+                )[0]
+              );
+            }}
+          >
+            {uniqueSportsbooks.map((groupedSportsbook) => {
+              let items: Proposition[] = projection.propositions;
+              if (
+                selectedProp &&
+                !items.some((prop) => prop.statType === selectedProp.statType)
+              )
+                items.push(selectedProp);
+              const menuItems = items
+                .filter(
+                  (prop) =>
+                    prop.statType === selectedStat &&
+                    prop.sportsbook === groupedSportsbook
+                )
+                .map((prop) => {
+                  return (
+                    <MenuItem
+                      key={`${prop.sportsbook} ${prop.type} ${prop.target}`}
+                      value={prop.target}
+                      onClick={() => onPredictionSelect(prop)}
+                      sx={{
+                        color: "var(--color-black)",
+                      }}
+                    >
+                      {prop.target}
+                    </MenuItem>
+                  );
+                });
+              return [
+                <ListSubheader key={groupedSportsbook}>
+                  {groupedSportsbook}
+                </ListSubheader>,
+                menuItems,
+              ];
+            })}
+          </Select>
         </div>
-      ) : (
-        <></>
-      )}
-      {selectedProp ? (
-        <PredictionIcon
-          prediction={selectedProp.customPrediction}
-          actual={actual}
-        />
-      ) : (
-        <></>
-      )}
+        {projection.result ? (
+          <div className={"actual-result"}>
+            ACTUAL:
+            <span
+              className={
+                "actual-score " +
+                (actual === "Over"
+                  ? "high"
+                  : actual === "Under"
+                  ? "low"
+                  : "med")
+              }
+            >
+              {selectedStat.score(projection.result)}
+            </span>
+          </div>
+        ) : (
+          <></>
+        )}
+        {selectedProp ? (
+          <PredictionIcon
+            prediction={selectedProp.customPrediction}
+            actual={actual}
+          />
+        ) : (
+          <></>
+        )}
+      </div>
     </div>
   );
 };

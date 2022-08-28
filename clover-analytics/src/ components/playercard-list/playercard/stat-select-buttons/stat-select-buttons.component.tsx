@@ -9,18 +9,25 @@ import "./stat-select-buttons.component.css";
 interface StatSelectButtonsProps {
   propositions: Proposition[];
   selectedStat: Stat;
+  selectedProp: Proposition;
   onStatSelect: (stat: Stat) => void;
 }
 
 const StatSelectButtons: React.FC<StatSelectButtonsProps> = ({
   propositions,
+  selectedProp,
   selectedStat: selected,
   onStatSelect,
 }: StatSelectButtonsProps) => {
   return (
     <div className="stat-select">
       {BETTING_CATEGORIES.map((stat) => {
-        const proposition = propositions.find((prop) => prop.statType === stat);
+        let proposition: Proposition | undefined;
+        if (stat === selectedProp?.statType) {
+          proposition = selectedProp;
+        } else {
+          proposition = propositions.find((prop) => prop.statType === stat);
+        }
         return (
           <StatSelectButton
             key={`${stat.label}`}

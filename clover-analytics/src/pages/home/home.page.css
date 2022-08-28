@@ -8,6 +8,11 @@
     "list list";
 }
 
+h1,
+p {
+  text-align: center;
+}
+
 #season-select {
   color: inherit;
   background-color: inherit;
@@ -28,18 +33,40 @@
   grid-area: list;
 }
 
+.filters-wrapper {
+  align-items: center;
+}
+
 .filters-wrapper * {
-  margin-right: 0.5rem;
   border-radius: 0;
   color: var(--color-black) !important;
 }
-
-#filter-select {
-  width: fit-content;
-  overflow: hidden;
+.filters-wrapper > * {
+  margin-right: 0.5rem;
+}
+#checkboxes {
+  display: flex;
+  flex-direction: column;
+}
+.MuiCalendarPicker-root button {
   color: var(--color-black);
 }
 
-.MuiCalendarPicker-root button {
-  color: var(--color-black);
+@media (max-width: 885px) {
+  #home-page {
+    display: flex;
+    flex-direction: column;
+  }
+  .filters-wrapper {
+    padding: 0.25rem;
+    flex-direction: column;
+    /* max-width: min-content; */
+  }
+  .filters-wrapper > * {
+    margin-right: 0;
+    margin-top: 0.05rem;
+  }
+  #checkboxes {
+    flex-direction: row;
+  }
 }

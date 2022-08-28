@@ -131,8 +131,8 @@ const PlayerPageWrapper: React.FC = () => {
     predictionFilter: gameFilter,
   });
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error</div>;
+  if (loading) return <div>{loading}</div>;
+  if (error) return <div>{error}</div>;
   if (!player) return <div>No player found</div>;
   return (
     <div className="player-wrapper">

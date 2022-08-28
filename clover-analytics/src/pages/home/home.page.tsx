@@ -61,14 +61,7 @@ const Home: React.FC = () => {
       {/* Move to own component */}
       {/* Query Filters trigger a new query */}
       <div id="query-filters" className={"filters-wrapper"}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            height: "fit-content",
-          }}
-        >
+        <div id="checkboxes">
           <FormControlLabel
             control={
               <Checkbox
@@ -110,23 +103,26 @@ const Home: React.FC = () => {
           ]}
           onChange={setSportsbook}
           label="Sportsbook"
-          width={180}
         />
         <AutocompleteFilter
           options={seasons}
           onChange={onSeasonChange}
           label="Season"
-          width={160}
         />
         <LocalizationProvider dateAdapter={AdapterMoment}>
           <DesktopDatePicker
             label="Date"
-            inputFormat="MM-DD-YYYY"
+            inputFormat="M-D-YY"
             value={date}
             onChange={onDateChange}
             PaperProps={{
               style: {
                 color: "black",
+              },
+              sx: {
+                "&input": {
+                  "max-width": "180px",
+                },
               },
             }}
             renderInput={(params) => <TextField {...params} />}

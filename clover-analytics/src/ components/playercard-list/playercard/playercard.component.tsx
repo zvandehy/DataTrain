@@ -26,6 +26,7 @@ function PreselectProp(
   filteredStatType: Stat | undefined,
   projection: Projection
 ): Proposition {
+  console.log("preselect:", filteredStatType, projection);
   if (filteredStatType !== undefined) {
     return projection.propositions.find(
       (p) => p.statType === filteredStatType
@@ -42,11 +43,13 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
     onPropSelect(PreselectProp(filteredStatType, projection));
   }, [projection, filteredStatType]);
 
-  const [selectedProp, selectProp] = useState(
-    PreselectProp(filteredStatType, projection)
-  );
+  const [selectedProp, selectProp] = useState(() => {
+    console.log("init selectedProp");
+    return PreselectProp(filteredStatType, projection);
+  });
   const [stat, statSelect] = useState(selectedProp.statType);
   const onPropSelect = (prop: Proposition) => {
+    console.log("selected: ", prop);
     selectProp(prop);
     statSelect(prop.statType);
   };
@@ -84,6 +87,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       <StatSelectButtons
         propositions={projection.propositions}
         selectedStat={stat}
+        selectedProp={selectedProp}
         onStatSelect={onStatSelect}
       />
       <Prediction

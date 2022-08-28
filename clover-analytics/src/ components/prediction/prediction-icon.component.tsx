@@ -31,10 +31,10 @@ const PredictionIcon: React.FC<PredictionIconProps> = ({
         icon={getIcon(prediction.confidence, prediction.overUnderPrediction)}
         rotation={getRotation(prediction.overUnderPrediction)}
       />
-      <p className={`bold tall prediction-result`}>
-        {prediction.overUnderPrediction.toUpperCase()}
-      </p>
       <div>
+        <p className={`bold tall prediction-result`}>
+          {prediction.overUnderPrediction.toUpperCase()}
+        </p>
         <p
           className={`${
             prediction.confidence >= 60

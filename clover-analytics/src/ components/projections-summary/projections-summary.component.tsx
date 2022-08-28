@@ -248,10 +248,12 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
       <div id="projection-summary">
         <span id="count-teams">{uniqueTeams.length} Teams</span>
         <span id="count-teams">
-          {countMaxTotal} Players ({countMaxUnknown} TBD)
+          {countMaxTotal} Players{" "}
+          {countMaxUnknown > 0 ? `(${countMaxUnknown} TBD)` : <></>}
         </span>
         <span id="count-teams">
-          {countTotal} Props ({countUnknown} TBD)
+          {countTotal} Props{" "}
+          {countUnknown > 0 ? `(${countUnknown} TBD)` : <></>}
         </span>
         {countCorrect + countIncorrect ? (
           <>
