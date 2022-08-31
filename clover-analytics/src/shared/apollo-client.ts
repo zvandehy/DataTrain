@@ -5,6 +5,9 @@ const client = new ApolloClient({
   // uri: "http://localhost:8080/wnba/query",
   // uri: "https://www.clover-analytics.com/api/wnba",
   cache: new InMemoryCache(),
+  headers: {
+    "CORS-Access-Control-Allow-Origin": "*",
+  },
 });
 
 export default client;
