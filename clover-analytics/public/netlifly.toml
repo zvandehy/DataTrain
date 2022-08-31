@@ -1,5 +1,10 @@
 [[redirects]]
-  from = "/api/*"
+  from = "/api/wnba"
   to = "https://clover-backend.fly.dev/wnba/query"
   status = 200
   force = true
+  headers = {X-From = "Netlify"}
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
