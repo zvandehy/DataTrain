@@ -218,16 +218,6 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
               }
             }
           }
-          console.log(
-            projection.player.name,
-            stat.display,
-            prop.target,
-            prop.lastModified,
-            prop.customPrediction.confidence,
-            countCorrect,
-            countIncorrect,
-            countPush
-          );
         }
       }
     });

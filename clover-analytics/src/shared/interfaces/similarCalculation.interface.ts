@@ -11,6 +11,7 @@ export interface SimilarCalculation {
   playerAvgAdj: number;
   countSimOver: number;
   simOverPct: number;
+  simPushPct: number;
   simUnderPct: number;
   countSimUnder: number;
   countSimPush: number;

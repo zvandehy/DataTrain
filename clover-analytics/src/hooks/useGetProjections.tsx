@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import React from "react";
 import { CalculatePredictions } from "../shared/functions/predictions.fn";
+import { CustomCalculation } from "../shared/interfaces/custom-prediction.interface";
 import {
   GameFilter,
   ProjectionFilter,
@@ -383,12 +384,14 @@ export const useGetProjections = ({
   predictionFilter,
   similarPlayers,
   similarTeams,
+  customModel,
 }: {
   projectionFilter: ProjectionFilter;
   gameFilter: GameFilter;
   predictionFilter: GameFilter;
   similarPlayers: boolean;
   similarTeams: boolean;
+  customModel: CustomCalculation;
 }): ProjectionQueryResult => {
   let QUERY =
     similarPlayers && similarTeams
@@ -418,11 +421,10 @@ export const useGetProjections = ({
   if (data && data?.projections) {
     const projections = CalculatePredictions(
       data.projections,
-      predictionFilter
+      predictionFilter,
+      customModel
     );
     console.log(projections);
-    console.log(projections[0]?.propositions[0]?.lastModified);
-    // setSkip(true);
     return {
       loading: loadingComponent,
       error: errorComponent,

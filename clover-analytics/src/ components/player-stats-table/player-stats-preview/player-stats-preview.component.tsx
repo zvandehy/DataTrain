@@ -22,15 +22,18 @@ import "./player-stats-preview.component.css";
 import { ConvertMinutes } from "../../../shared/interfaces/stat.interface";
 import moment from "moment";
 import { ScoreType } from "../../../shared/interfaces/score-type.enum";
+import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
 
 interface PlayerStatsPreviewProps {
   selectedProp: Proposition;
   projection: Projection;
+  customModel: CustomCalculation;
 }
 
 const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
   selectedProp,
   projection,
+  customModel,
 }: PlayerStatsPreviewProps) => {
   return (
     <div className={"player-stats"}>
@@ -44,7 +47,17 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
               <StyledTableCell>MINS</StyledTableCell>
               <StyledTableCell>DIFF</StyledTableCell>
               <StyledTableCell>O-U-P</StyledTableCell>
-              <StyledTableCell>OVER %</StyledTableCell>
+              {customModel.includePush ? (
+                <StyledTableCell>OVER / PUSH %</StyledTableCell>
+              ) : (
+                <StyledTableCell>OVER %</StyledTableCell>
+              )}
+
+              {customModel.includePush ? (
+                <StyledTableCell>UNDER / PUSH %</StyledTableCell>
+              ) : (
+                <StyledTableCell>UNDER %</StyledTableCell>
+              )}
             </StyledTableRow>
           </TableHead>
           <TableBody>
@@ -74,9 +87,34 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
                   <StyledTableCell
                     className={`${ColorPct(fragment.pctOver)}`}
                   >{`${fragment.numOver}-${fragment.numUnder}-${fragment.numPush}`}</StyledTableCell>
-                  <StyledTableCell className={`${ColorPct(fragment.pctOver)}`}>
-                    {(fragment.pctOver * 100).toFixed(2)}%
-                  </StyledTableCell>
+
+                  {customModel.includePush ? (
+                    <StyledTableCell
+                      className={`${ColorPct(fragment.pctPushOrMore)}`}
+                    >
+                      {(fragment.pctPushOrMore * 100).toFixed(2)}%
+                    </StyledTableCell>
+                  ) : (
+                    <StyledTableCell
+                      className={`${ColorPct(fragment.pctOver)}`}
+                    >
+                      {(fragment.pctOver * 100).toFixed(2)}%
+                    </StyledTableCell>
+                  )}
+
+                  {customModel.includePush ? (
+                    <StyledTableCell
+                      className={`${ColorPct(fragment.pctPushOrLess)}`}
+                    >
+                      {(fragment.pctPushOrLess * 100).toFixed(2)}%
+                    </StyledTableCell>
+                  ) : (
+                    <StyledTableCell
+                      className={`${ColorPct(fragment.pctUnder)}`}
+                    >
+                      {(fragment.pctUnder * 100).toFixed(2)}%
+                    </StyledTableCell>
+                  )}
                 </StyledTableRow>
               )
             )}
@@ -128,6 +166,7 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
           selectedProp={selectedProp}
           header={`${projection.player.name} vs ${projection.opponent.similarTeams?.length} Similar Teams`}
           sim={SimilarTeamCalculation(projection, selectedProp)}
+          customModel={customModel}
         />
       ) : (
         <></>
@@ -142,6 +181,7 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
             selectedProp,
             selectedProp.statType.average(projection.player.games)
           )}
+          customModel={customModel}
         />
       ) : (
         <></>

@@ -5,6 +5,7 @@ import {
   UpdatePropositionWithPrediction,
 } from "../../../shared/functions/predictions.fn";
 import { GetImpliedTarget } from "../../../shared/functions/target.fn";
+import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
 import {
   Projection,
   Proposition,
@@ -20,13 +21,13 @@ import StatSelectButtons from "./stat-select-buttons/stat-select-buttons.compone
 interface PlayerCardProps {
   projection: Projection;
   filteredStatType: Stat | undefined;
+  customModel: CustomCalculation;
 }
 
 function PreselectProp(
   filteredStatType: Stat | undefined,
   projection: Projection
 ): Proposition {
-  console.log("preselect:", filteredStatType, projection);
   if (filteredStatType !== undefined) {
     return projection.propositions.find(
       (p) => p.statType === filteredStatType
@@ -38,18 +39,17 @@ function PreselectProp(
 const PlayerCard: React.FC<PlayerCardProps> = ({
   projection,
   filteredStatType,
+  customModel,
 }: PlayerCardProps) => {
   useEffect(() => {
     onPropSelect(PreselectProp(filteredStatType, projection));
   }, [projection, filteredStatType]);
 
   const [selectedProp, selectProp] = useState(() => {
-    console.log("init selectedProp");
     return PreselectProp(filteredStatType, projection);
   });
   const [stat, statSelect] = useState(selectedProp.statType);
   const onPropSelect = (prop: Proposition) => {
-    console.log("selected: ", prop);
     selectProp(prop);
     statSelect(prop.statType);
   };
@@ -77,7 +77,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       UpdatePropositionWithPrediction(
         customProp,
         projection.player.games,
-        projection
+        projection,
+        customModel
       );
     selectProp(foundProp);
   };
@@ -99,6 +100,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       <PlayerStatsPreview
         selectedProp={selectedProp}
         projection={projection}
+        customModel={customModel}
       ></PlayerStatsPreview>
     </div>
   );

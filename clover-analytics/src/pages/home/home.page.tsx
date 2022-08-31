@@ -15,13 +15,25 @@ import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { Checkbox, FormControlLabel, TextField } from "@mui/material";
 import { Label } from "@mui/icons-material";
 import moment from "moment";
+import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
 
 const Home: React.FC = () => {
   const [date, setDate] = useState(new Date());
   const [season, setSeason] = useState("2022-23");
   const [sportsbook, setSportsbook] = useState("");
-  const [similarPlayersToggle, toggleSimilarPlayers] = useState(false);
-  const [similarTeamsToggle, toggleSimilarTeams] = useState(false);
+  const [similarPlayersToggle, toggleSimilarPlayers] = useState(true);
+  const [similarTeamsToggle, toggleSimilarTeams] = useState(true);
+  const [customPredictionModel, setCustomPredictionModel] =
+    useState<CustomCalculation>({
+      recency: [
+        { count: 0, weight: 0.25 },
+        { count: -15, weight: 0.1 },
+        { count: -5, weight: 0.1 },
+      ],
+      similarPlayers: { count: 10, weight: 0.2 },
+      similarTeams: { count: 3, weight: 0.35 },
+      includePush: true,
+    });
 
   let projectionFilter: ProjectionFilter = {
     startDate: moment(date).format("YYYY-MM-DD"),
@@ -52,6 +64,7 @@ const Home: React.FC = () => {
     predictionFilter: gameFilter,
     similarPlayers: similarPlayersToggle,
     similarTeams: similarTeamsToggle,
+    customModel: customPredictionModel,
   });
 
   //COMPONENT
@@ -129,7 +142,14 @@ const Home: React.FC = () => {
           />
         </LocalizationProvider>
       </div>
-      {result.data ? <PlayerCardList projectionQueryResult={result} /> : <></>}
+      {result.data ? (
+        <PlayerCardList
+          projectionQueryResult={result}
+          customModel={customPredictionModel}
+        />
+      ) : (
+        <></>
+      )}
     </div>
   );
 };

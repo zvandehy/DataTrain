@@ -22,6 +22,7 @@ import StatSelectButtons from "../../playercard-list/playercard/stat-select-butt
 import PlayerStatsPreview from "../../player-stats-table/player-stats-preview/player-stats-preview.component";
 import Prediction from "../../prediction/prediction.component";
 import PlayerStatsChart from "../player-stats-chart/player-stats-chart.component";
+import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
 
 // const [date, setDate] = useState(FormatDate(new Date()));
 // //TODO: Handle error when pick game that isn't in seasonType
@@ -76,6 +77,17 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
   const [sportsbook, setSportsbook] = useState("");
   const [similarPlayersToggle, toggleSimilarPlayers] = useState(false);
   const [similarTeamsToggle, toggleSimilarTeams] = useState(false);
+  const [customPredictionModel, setCustomPredictionModel] =
+    useState<CustomCalculation>({
+      recency: [
+        { count: 5, weight: 0.2 },
+        { count: 15, weight: 0.2 },
+        { count: 0, weight: 0.2 },
+      ],
+      similarPlayers: { count: 10, weight: 0.2 },
+      similarTeams: { count: 3, weight: 0.2 },
+      includePush: true,
+    });
 
   const onStatSelect = (stat: Stat) => {
     if (projection) {
@@ -116,7 +128,8 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
           UpdatePropositionWithPrediction(
             customProp,
             projection.player.games,
-            projection
+            projection,
+            customPredictionModel
           );
         setProposition(foundProp);
       }
@@ -124,11 +137,6 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
   }, [selectedDate, player, projection, statType]);
 
   let filteredGames = player.games.filter((game) => {
-    console.log(
-      game.date,
-      selectedDate,
-      moment(game.date).isBefore(selectedDate)
-    );
     return moment(game.date).isBefore(selectedDate);
   });
   let gameOptions = player.games.map((game) => {
@@ -194,6 +202,7 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
             // TODO: more in depth table
             selectedProp={proposition}
             projection={{ ...projection, player: player }}
+            customModel={customPredictionModel}
           />
           <PlayerStatsChart
             games={filteredGames}

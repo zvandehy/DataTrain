@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ProjectionQueryResult } from "../../hooks/useGetProjections";
 import { Match, SortProjections } from "../../shared/functions/filters.fn";
+import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
 import { ScoreType } from "../../shared/interfaces/score-type.enum";
 import { Stat } from "../../shared/interfaces/stat.interface";
 import ProjectionsSummary from "../projections-summary/projections-summary.component";
@@ -10,10 +11,12 @@ import PlayerCard from "./playercard/playercard.component";
 
 interface PlayerCardListProps {
   projectionQueryResult: ProjectionQueryResult;
+  customModel: CustomCalculation;
 }
 
 const PlayerCardList: React.FC<PlayerCardListProps> = ({
   projectionQueryResult,
+  customModel,
 }: PlayerCardListProps) => {
   const [lookup, setLookup] = useState("");
   const [sortType, setSortType] = useState("");
@@ -66,6 +69,7 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
                 key={`${projection.player.playerID} ${projection.date}`}
                 projection={projection}
                 filteredStatType={statType}
+                customModel={customModel}
               />
             );
           })

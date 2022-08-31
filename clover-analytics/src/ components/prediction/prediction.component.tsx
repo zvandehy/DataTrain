@@ -84,7 +84,6 @@ const Prediction: React.FC<PredictionProps> = ({
             }}
             value={selectedProp?.target || 0}
             onChange={(event) => {
-              console.log(event);
               onPredictionSelect(
                 projection.propositions.filter(
                   (prop) =>

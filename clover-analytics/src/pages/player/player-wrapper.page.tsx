@@ -14,6 +14,7 @@ import {
   UpdatePropositionWithPrediction,
 } from "../../shared/functions/predictions.fn";
 import { GetImpliedTarget } from "../../shared/functions/target.fn";
+import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
 import {
   GameFilter,
   ProjectionFilter,
@@ -72,11 +73,21 @@ const PlayerPageWrapper: React.FC = () => {
   // const [date, setDate] = useState(moment(new Date()).add(1, "days").toDate()); //Ensure that date without projection/game works
   const [season, setSeason] = useState("2022-23");
   const [sportsbook, setSportsbook] = useState("");
-  const [similarPlayersToggle, toggleSimilarPlayers] = useState(false);
-  const [similarTeamsToggle, toggleSimilarTeams] = useState(false);
+  const [similarPlayersToggle, toggleSimilarPlayers] = useState(true);
+  const [similarTeamsToggle, toggleSimilarTeams] = useState(true);
+  const [customPredictionModel, setCustomPredictionModel] =
+    useState<CustomCalculation>({
+      recency: [
+        { count: 5, weight: 0.2 },
+        { count: 15, weight: 0.2 },
+        { count: 0, weight: 0.2 },
+      ],
+      similarPlayers: { count: 10, weight: 0.2 },
+      similarTeams: { count: 3, weight: 0.2 },
+      includePush: true,
+    });
 
   const onStatSelect = (stat: Stat) => {
-    console.log("onStatSelect", stat);
     if (projection) {
       setStatType(stat);
       let customTarget = GetImpliedTarget(projection, stat);
@@ -100,7 +111,8 @@ const PlayerPageWrapper: React.FC = () => {
         UpdatePropositionWithPrediction(
           customProp,
           projection.player.games,
-          projection
+          projection,
+          customPredictionModel
         );
       setProposition(foundProp);
     }

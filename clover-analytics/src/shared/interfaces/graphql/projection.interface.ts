@@ -46,6 +46,8 @@ export interface PredictionFragment {
   numPush: number;
   pctOver: number;
   pctUnder: number;
+  pctPushOrMore: number;
+  pctPushOrLess: number;
 }
 
 export interface CountWeight {

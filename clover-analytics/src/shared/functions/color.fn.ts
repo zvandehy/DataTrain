@@ -3,7 +3,7 @@ export function ColorPct(value: number) {
     value = value / 100;
   }
   let ret = "med";
-  if (value <= 0.5) {
+  if (value <= 0.45) {
     ret = "low";
   } else if (value >= 0.6) {
     ret = "high";
