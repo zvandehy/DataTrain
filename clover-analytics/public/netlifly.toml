@@ -1,4 +1,10 @@
-[[headers]]
-  for = "/*"
-    [headers.values]
-    Access-Control-Allow-Origin=*
+[[redirects]]
+  from = "/api/*"
+  to = "https://clover-backend.fly.dev/wnba/query"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
