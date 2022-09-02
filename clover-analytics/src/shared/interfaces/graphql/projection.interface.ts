@@ -1,4 +1,5 @@
 import { ScoreType } from "../score-type.enum";
+import { SimilarCalculation } from "../similarCalculation.interface";
 import { Stat } from "../stat.interface";
 import { Game } from "./game.interface";
 import { Player } from "./player.interface";
@@ -28,10 +29,10 @@ export interface Prediction {
   overUnderPrediction: string;
   confidence: number;
   totalPrediction: number;
-  predictionFragments: PredictionFragment[];
-  // predictionFragments: {
-  //   [key in ScoreType]: PredictionFragment[];
-  // };
+  recencyFragments: PredictionFragment[];
+  vsOpponent?: SimilarCalculation;
+  vsSimilarTeams?: SimilarCalculation;
+  similarPlayersVsOpponent?: SimilarCalculation;
 }
 
 export interface PredictionFragment {

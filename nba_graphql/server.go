@@ -31,12 +31,12 @@ func main() {
 	// Add CORS middleware around every request
 	// See https://github.com/rs/cors for full option listing
 	router.Use(cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://datatrain-mp34k.ondigitalocean.app", "https://clover-analytics.fly.dev"},
+		AllowedOrigins:   []string{"https://datatrain-mp34k.ondigitalocean.app", "https://clover-analytics.fly.dev", "https://www.clover-analytics.com/"},
 		AllowCredentials: true,
-		Debug:            false,
-		AllowOriginFunc: func(origin string) bool {
-			return true
-		}, //overrides allowed origins
+		Debug:            true,
+		// AllowOriginFunc: func(origin string) bool {
+		// 	return true
+		// }, //overrides allowed origins
 	}).Handler)
 	nbaClient, err := database.ConnectDB(context.Background(), "nba")
 	if err != nil {

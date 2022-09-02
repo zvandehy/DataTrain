@@ -15,4 +15,5 @@ export interface SimilarCalculation {
   simUnderPct: number;
   countSimUnder: number;
   countSimPush: number;
+  weight: number;
 }

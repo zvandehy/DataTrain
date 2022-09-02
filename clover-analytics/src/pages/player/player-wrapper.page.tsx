@@ -9,6 +9,7 @@ import PlayerStatsPreview from "../../ components/player-stats-table/player-stat
 import StatSelectButtons from "../../ components/playercard-list/playercard/stat-select-buttons/stat-select-buttons.component";
 import { useGetPlayerDetails } from "../../hooks/useGetPlayerDetail";
 import { CompareDates } from "../../shared/functions/dates.fn";
+import { FindProjectionByDate } from "../../shared/functions/findProjection.fn";
 import {
   GetMaxConfidence,
   UpdatePropositionWithPrediction,
@@ -27,23 +28,8 @@ import {
 } from "../../shared/interfaces/graphql/projection.interface";
 import { Team } from "../../shared/interfaces/graphql/team.interface";
 import { Option } from "../../shared/interfaces/option.interface";
-import { Stat } from "../../shared/interfaces/stat.interface";
+import { Minutes, Stat } from "../../shared/interfaces/stat.interface";
 import "./player-wrapper.page.css";
-
-// const [date, setDate] = useState(FormatDate(new Date()));
-// //TODO: Handle error when pick game that isn't in seasonType
-// const [seasonType, setSeasonType] = useState("");
-
-function FormatDate(date: Date): string {
-  return moment(date).format("YYYY-MM-DD");
-}
-
-function getProjection(
-  date: Date,
-  projections: Projection[]
-): Projection | undefined {
-  return projections.find((projection) => projection.date === FormatDate(date));
-}
 
 function getProposition(
   projection: Projection | undefined,
@@ -64,13 +50,8 @@ function getProposition(
 const PlayerPageWrapper: React.FC = () => {
   const { id } = useParams();
   let playerID = id ? parseInt(id) : 0;
-  const [date, setDate] = useState(new Date());
-  const [projection, setProjection] = useState(getProjection(date, []));
-  const [statType, setStatType] = useState(undefined as Stat | undefined);
-  const [proposition, setProposition] = useState(
-    getProposition(projection, statType)
-  );
-  // const [date, setDate] = useState(moment(new Date()).add(1, "days").toDate()); //Ensure that date without projection/game works
+  // TODO: Ensure that date without projection/game works
+  const [date, setDate] = useState(new Date("2022-08-24"));
   const [season, setSeason] = useState("2022-23");
   const [sportsbook, setSportsbook] = useState("");
   const [similarPlayersToggle, toggleSimilarPlayers] = useState(true);
@@ -78,52 +59,28 @@ const PlayerPageWrapper: React.FC = () => {
   const [customPredictionModel, setCustomPredictionModel] =
     useState<CustomCalculation>({
       recency: [
-        { count: 5, weight: 0.2 },
-        { count: 15, weight: 0.2 },
         { count: 0, weight: 0.2 },
+        { count: -20, weight: 0.1 },
+        { count: -10, weight: 0.1 },
+        { count: -5, weight: 0.1 },
       ],
-      similarPlayers: { count: 10, weight: 0.2 },
-      similarTeams: { count: 3, weight: 0.2 },
-      includePush: true,
+      similarPlayers: { count: 10, weight: 0.15 },
+      similarTeams: { count: 3, weight: 0.15 },
+      includePush: false,
+      opponentWeight: 0.2,
     });
 
-  const onStatSelect = (stat: Stat) => {
-    if (projection) {
-      setStatType(stat);
-      let customTarget = GetImpliedTarget(projection, stat);
-      let customProp: Proposition = {
-        target: customTarget || 0,
-        statType: stat,
-        type: stat.label,
-        sportsbook: customTarget ? "Implied" : "None",
-        predictions: [],
-        lastModified: new Date(),
-        customPrediction: {
-          model: "Custom",
-          overUnderPrediction: "",
-          confidence: 0,
-          totalPrediction: 0,
-          predictionFragments: [],
-        },
-      };
-      const foundProp =
-        projection.propositions.find((p) => p.statType === stat) ||
-        UpdatePropositionWithPrediction(
-          customProp,
-          projection.player.games,
-          projection,
-          customPredictionModel
-        );
-      setProposition(foundProp);
-    }
-  };
   let projectionFilter: ProjectionFilter = {};
   if (sportsbook) {
     projectionFilter.sportsbook = sportsbook;
   }
-  const gameFilter: GameFilter = {
+  const predictionFilter: GameFilter = {
     season: season,
-    // endDate: moment(date).format("YYYY-MM-DD"),
+    endDate: moment(date).format("YYYY-MM-DD"),
+  };
+  const gameFilter: GameFilter = {
+    endDate: moment(date).format("YYYY-MM-DD"),
+    statFilters: [{ stat: Minutes, min: 25 }],
   };
   //SEASONS
   const seasons: Option<string>[] = [
@@ -140,18 +97,23 @@ const PlayerPageWrapper: React.FC = () => {
     data: player,
   } = useGetPlayerDetails({
     playerID: playerID,
-    predictionFilter: gameFilter,
+    predictionFilter,
+    gameFilter,
+    customModel: customPredictionModel,
   });
 
   if (loading) return <div>{loading}</div>;
   if (error) return <div>{error}</div>;
   if (!player) return <div>No player found</div>;
+  const projection = FindProjectionByDate(date, player.projections, player);
   return (
     <div className="player-wrapper">
       <PlayerPage
         player={player}
-        selectedDate={date}
+        selectedProjection={projection}
         setSelectedDate={setDate}
+        gameFilter={gameFilter}
+        customModel={customPredictionModel}
       />
     </div>
   );

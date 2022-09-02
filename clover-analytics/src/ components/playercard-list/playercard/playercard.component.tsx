@@ -6,6 +6,7 @@ import {
 } from "../../../shared/functions/predictions.fn";
 import { GetImpliedTarget } from "../../../shared/functions/target.fn";
 import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
+import { GameFilter } from "../../../shared/interfaces/graphql/filters.interface";
 import {
   Projection,
   Proposition,
@@ -22,6 +23,7 @@ interface PlayerCardProps {
   projection: Projection;
   filteredStatType: Stat | undefined;
   customModel: CustomCalculation;
+  gameFilter: GameFilter;
 }
 
 function PreselectProp(
@@ -40,6 +42,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   projection,
   filteredStatType,
   customModel,
+  gameFilter,
 }: PlayerCardProps) => {
   useEffect(() => {
     onPropSelect(PreselectProp(filteredStatType, projection));
@@ -69,14 +72,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         overUnderPrediction: "",
         confidence: 0,
         totalPrediction: 0,
-        predictionFragments: [],
+        recencyFragments: [],
       },
     };
     const foundProp =
       projection.propositions.find((p) => p.statType === stat) ||
       UpdatePropositionWithPrediction(
         customProp,
-        projection.player.games,
+        gameFilter,
         projection,
         customModel
       );

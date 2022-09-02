@@ -8,10 +8,6 @@ import {
 import React from "react";
 import { ColorCompare, ColorPct } from "../../../shared/functions/color.fn";
 import {
-  SimilarPlayerCalculation,
-  SimilarTeamCalculation,
-} from "../../../shared/functions/predictions.fn";
-import {
   Projection,
   Proposition,
 } from "../../../shared/interfaces/graphql/projection.interface";
@@ -58,67 +54,65 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
               ) : (
                 <StyledTableCell>UNDER %</StyledTableCell>
               )}
+              <StyledTableCell>Weight</StyledTableCell>
             </StyledTableRow>
           </TableHead>
           <TableBody>
-            {selectedProp.customPrediction.predictionFragments.map(
-              (fragment) => (
-                <StyledTableRow
-                  className={"player-row"}
-                  key={`${projection.player.name} ${fragment.numGames}`}
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+            {selectedProp.customPrediction.recencyFragments.map((fragment) => (
+              <StyledTableRow
+                className={"player-row"}
+                key={`${projection.player.name} ${fragment.numGames}`}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                <StyledTableCell>Last {fragment.numGames}</StyledTableCell>
+                <StyledTableCell>{fragment.average}</StyledTableCell>
+                <StyledTableCell>{fragment.avgPerMin}</StyledTableCell>
+                <StyledTableCell>{fragment.minutes}</StyledTableCell>
+                <StyledTableCell
+                  className={ColorCompare(
+                    fragment.average - selectedProp.target,
+                    0
+                  )}
                 >
-                  <StyledTableCell>Last {fragment.numGames}</StyledTableCell>
-                  <StyledTableCell>{fragment.average}</StyledTableCell>
-                  <StyledTableCell>{fragment.avgPerMin}</StyledTableCell>
-                  <StyledTableCell>{fragment.minutes}</StyledTableCell>
+                  {`${
+                    +(fragment.average - selectedProp.target).toFixed(2) > 0
+                      ? "+"
+                      : ""
+                  }${(fragment.average - selectedProp.target).toFixed(2)}`}
+                </StyledTableCell>
+                <StyledTableCell
+                  className={`${ColorPct(fragment.pctOver)}`}
+                >{`${fragment.numOver}-${fragment.numUnder}-${fragment.numPush}`}</StyledTableCell>
+
+                {customModel.includePush ? (
                   <StyledTableCell
-                    className={ColorCompare(
-                      fragment.average - selectedProp.target,
-                      0
-                    )}
+                    className={`${ColorPct(fragment.pctPushOrMore)}`}
                   >
-                    {`${
-                      +(fragment.average - selectedProp.target).toFixed(2) > 0
-                        ? "+"
-                        : ""
-                    }${(fragment.average - selectedProp.target).toFixed(2)}`}
+                    {(fragment.pctPushOrMore * 100).toFixed(2)}%
                   </StyledTableCell>
+                ) : (
+                  <StyledTableCell className={`${ColorPct(fragment.pctOver)}`}>
+                    {(fragment.pctOver * 100).toFixed(2)}%
+                  </StyledTableCell>
+                )}
+
+                {customModel.includePush ? (
                   <StyledTableCell
-                    className={`${ColorPct(fragment.pctOver)}`}
-                  >{`${fragment.numOver}-${fragment.numUnder}-${fragment.numPush}`}</StyledTableCell>
-
-                  {customModel.includePush ? (
-                    <StyledTableCell
-                      className={`${ColorPct(fragment.pctPushOrMore)}`}
-                    >
-                      {(fragment.pctPushOrMore * 100).toFixed(2)}%
-                    </StyledTableCell>
-                  ) : (
-                    <StyledTableCell
-                      className={`${ColorPct(fragment.pctOver)}`}
-                    >
-                      {(fragment.pctOver * 100).toFixed(2)}%
-                    </StyledTableCell>
-                  )}
-
-                  {customModel.includePush ? (
-                    <StyledTableCell
-                      className={`${ColorPct(fragment.pctPushOrLess)}`}
-                    >
-                      {(fragment.pctPushOrLess * 100).toFixed(2)}%
-                    </StyledTableCell>
-                  ) : (
-                    <StyledTableCell
-                      className={`${ColorPct(fragment.pctUnder)}`}
-                    >
-                      {(fragment.pctUnder * 100).toFixed(2)}%
-                    </StyledTableCell>
-                  )}
-                </StyledTableRow>
-              )
-            )}
-            {projection.player.games.map((game) => {
+                    className={`${ColorPct(fragment.pctPushOrLess)}`}
+                  >
+                    {(fragment.pctPushOrLess * 100).toFixed(2)}%
+                  </StyledTableCell>
+                ) : (
+                  <StyledTableCell className={`${ColorPct(fragment.pctUnder)}`}>
+                    {(fragment.pctUnder * 100).toFixed(2)}%
+                  </StyledTableCell>
+                )}
+                <StyledTableCell>
+                  {(fragment.weight * 100).toFixed(0)}%
+                </StyledTableCell>
+              </StyledTableRow>
+            ))}
+            {/* {projection.player.games.map((game) => {
               if (game.opponent.teamID === projection.opponent.teamID) {
                 return (
                   <StyledTableRow>
@@ -156,31 +150,45 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
                 );
               }
               return <></>;
-            })}
+            })} */}
           </TableBody>
         </Table>
       </TableContainer>
-      {projection.opponent.similarTeams?.length > 0 ? (
+      {customModel.opponentWeight &&
+      selectedProp.customPrediction.vsOpponent &&
+      projection.player.games.some(
+        (game) =>
+          game.opponent.abbreviation === projection.opponent.abbreviation
+      ) ? (
         <SimilarPreview
           projection={projection}
           selectedProp={selectedProp}
-          header={`${projection.player.name} vs ${projection.opponent.similarTeams?.length} Similar Teams`}
-          sim={SimilarTeamCalculation(projection, selectedProp)}
+          header={`${projection.player.name} vs ${projection.opponent.abbreviation}`}
+          sim={selectedProp.customPrediction.vsOpponent}
           customModel={customModel}
         />
       ) : (
         <></>
       )}
-      {projection.player.similarPlayers?.length > 0 ? (
+      {projection.opponent.similarTeams?.length > 0 &&
+      selectedProp.customPrediction.vsSimilarTeams ? (
+        <SimilarPreview
+          projection={projection}
+          selectedProp={selectedProp}
+          header={`${projection.player.name} vs ${projection.opponent.similarTeams?.length} Similar Teams`}
+          sim={selectedProp.customPrediction.vsSimilarTeams}
+          customModel={customModel}
+        />
+      ) : (
+        <></>
+      )}
+      {projection.player.similarPlayers?.length > 0 &&
+      selectedProp.customPrediction.similarPlayersVsOpponent ? (
         <SimilarPreview
           projection={projection}
           selectedProp={selectedProp}
           header={`${projection.player.similarPlayers?.length} Similar Players vs ${projection.opponent.abbreviation}`}
-          sim={SimilarPlayerCalculation(
-            projection,
-            selectedProp,
-            selectedProp.statType.average(projection.player.games)
-          )}
+          sim={selectedProp.customPrediction.similarPlayersVsOpponent}
           customModel={customModel}
         />
       ) : (

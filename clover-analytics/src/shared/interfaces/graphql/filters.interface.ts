@@ -1,3 +1,5 @@
+import { Stat } from "../stat.interface";
+
 export interface PlayerFilter {
   name?: string;
   playerID?: number;
@@ -30,4 +32,12 @@ export interface GameFilter {
   season?: string;
   startDate?: string;
   endDate?: string;
+  isPlayoffs?: boolean;
+  statFilters?: StatFilter[];
+}
+
+export interface StatFilter {
+  stat: Stat;
+  min?: number;
+  max?: number;
 }

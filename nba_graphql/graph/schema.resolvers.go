@@ -210,7 +210,11 @@ func (r *playerGameResolver) Team(ctx context.Context, obj *model.PlayerGame) (*
 
 // TeamStats is the resolver for the teamStats field.
 func (r *playerGameResolver) TeamStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error) {
-	return dataloader.For(ctx).TeamGameByPlayerGame.Load(*obj)
+	g, err := dataloader.For(ctx).TeamGameByPlayerGame.Load(*obj)
+	if err != nil || g == nil {
+		logrus.Error(g, err, *obj)
+	}
+	return g, err
 }
 
 // Player is the resolver for the player field.
@@ -331,8 +335,15 @@ func (r *projectionResolver) Player(ctx context.Context, obj *model.Projection) 
 // Opponent is the resolver for the opponent field.
 func (r *projectionResolver) Opponent(ctx context.Context, obj *model.Projection) (*model.Team, error) {
 	if obj.OpponentAbr == "" {
-		logrus.Fatalf("OpponentAbr is empty: %#v", obj)
-		return nil, fmt.Errorf("cannot get opponent from projection without opponent name")
+		logrus.Errorf("OpponentAbr is empty: %#v\n", obj)
+		for _, proposition := range obj.Propositions {
+			logrus.Errorf("Proposition: %#v\n", proposition)
+		}
+		if obj.PlayerName == "Stephanie Talbot" {
+			obj.OpponentAbr = "LVA"
+		} else {
+			return nil, fmt.Errorf("cannot get opponent from projection without opponent name")
+		}
 	}
 	t, err := dataloader.For(ctx).TeamByAbr.Load(obj.OpponentAbr)
 	if err != nil {

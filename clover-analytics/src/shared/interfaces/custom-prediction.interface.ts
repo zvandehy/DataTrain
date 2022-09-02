@@ -5,6 +5,7 @@ export interface CustomCalculation {
   similarTeams?: Factor;
   homeAwayWeight?: number;
   includePush: boolean;
+  opponentWeight?: number;
 }
 
 export interface Factor {

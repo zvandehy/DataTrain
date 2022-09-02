@@ -6,7 +6,10 @@ import {
   UpdatePropositionWithPrediction,
 } from "../../../shared/functions/predictions.fn";
 import { GetImpliedTarget } from "../../../shared/functions/target.fn";
-import { ProjectionFilter } from "../../../shared/interfaces/graphql/filters.interface";
+import {
+  GameFilter,
+  ProjectionFilter,
+} from "../../../shared/interfaces/graphql/filters.interface";
 import { Player } from "../../../shared/interfaces/graphql/player.interface";
 import {
   Projection,
@@ -17,27 +20,12 @@ import { Option } from "../../../shared/interfaces/option.interface";
 import "./player.page.css";
 import AutocompleteFilter from "../../autocomplete-filter/autocomplete-filter.component";
 import PlayerContext from "../player-context/player-context.component";
-import PlayerProfileChart from "../player-profile/player-profile.component";
 import StatSelectButtons from "../../playercard-list/playercard/stat-select-buttons/stat-select-buttons.component";
 import PlayerStatsPreview from "../../player-stats-table/player-stats-preview/player-stats-preview.component";
 import Prediction from "../../prediction/prediction.component";
 import PlayerStatsChart from "../player-stats-chart/player-stats-chart.component";
 import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
-
-// const [date, setDate] = useState(FormatDate(new Date()));
-// //TODO: Handle error when pick game that isn't in seasonType
-// const [seasonType, setSeasonType] = useState("");
-
-function FormatDate(date: Date): string {
-  return moment(date).format("YYYY-MM-DD");
-}
-
-function getProjection(date: Date, projections: Projection[]): Projection {
-  return (
-    projections.find((projection) => projection.date === FormatDate(date)) ??
-    projections.sort((a, b) => (a.date > b.date ? 1 : -1))[0]
-  );
-}
+import { FindProjectionByDate } from "../../../shared/functions/findProjection.fn";
 
 function getProposition(
   projection: Projection | undefined,
@@ -57,42 +45,32 @@ function getProposition(
 
 interface PlayerPageProps {
   player: Player;
-  selectedDate: Date;
+  selectedProjection: Projection;
   setSelectedDate: (date: Date) => void;
+  gameFilter: GameFilter;
+  customModel: CustomCalculation;
 }
 let league = "wnba";
 
 const PlayerPage: React.FC<PlayerPageProps> = ({
   player,
-  selectedDate,
+  selectedProjection,
   setSelectedDate,
+  gameFilter,
+  customModel,
 }: PlayerPageProps) => {
-  const [projection, setProjection] = useState(getProjection(selectedDate, []));
-  const [statType, setStatType] = useState(Points as Stat | undefined);
+  const [statType, setStatType] = useState(undefined as Stat | undefined);
   const [proposition, setProposition] = useState(
-    getProposition(projection, statType)
+    getProposition(selectedProjection, statType)
   );
   // const [date, setDate] = useState(moment(new Date()).add(1, "days").toDate()); //Ensure that date without projection/game works
   const [season, setSeason] = useState("2022-23");
   const [sportsbook, setSportsbook] = useState("");
   const [similarPlayersToggle, toggleSimilarPlayers] = useState(false);
   const [similarTeamsToggle, toggleSimilarTeams] = useState(false);
-  const [customPredictionModel, setCustomPredictionModel] =
-    useState<CustomCalculation>({
-      recency: [
-        { count: 5, weight: 0.2 },
-        { count: 15, weight: 0.2 },
-        { count: 0, weight: 0.2 },
-      ],
-      similarPlayers: { count: 10, weight: 0.2 },
-      similarTeams: { count: 3, weight: 0.2 },
-      includePush: true,
-    });
 
   const onStatSelect = (stat: Stat) => {
-    if (projection) {
-      setStatType(stat);
-    }
+    setStatType(stat);
   };
   //SEASONS
   const seasons: Option<string>[] = [
@@ -105,9 +83,8 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
 
   useEffect(() => {
     if (player) {
-      setProjection(getProjection(selectedDate, player.projections));
-      if (projection && statType) {
-        let customTarget = GetImpliedTarget(projection, statType);
+      if (statType) {
+        let customTarget = GetImpliedTarget(selectedProjection, statType);
         let customProp: Proposition = {
           target: customTarget || 0,
           statType: statType,
@@ -120,24 +97,26 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
             overUnderPrediction: "",
             confidence: 0,
             totalPrediction: 0,
-            predictionFragments: [],
+            recencyFragments: [],
           },
         };
         const foundProp =
-          projection.propositions.find((p) => p.statType === statType) ||
+          selectedProjection.propositions.find(
+            (p) => p.statType === statType
+          ) ||
           UpdatePropositionWithPrediction(
             customProp,
-            projection.player.games,
-            projection,
-            customPredictionModel
+            gameFilter,
+            selectedProjection,
+            customModel
           );
         setProposition(foundProp);
       }
     }
-  }, [selectedDate, player, projection, statType]);
+  }, [customModel, gameFilter, player, selectedProjection, statType]);
 
   let filteredGames = player.games.filter((game) => {
-    return moment(game.date).isBefore(selectedDate);
+    return moment(game.date).isBefore(selectedProjection.date);
   });
   let gameOptions = player.games.map((game) => {
     return {
@@ -146,7 +125,8 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
     };
   });
   let missingProjections = player.projections.filter(
-    (projection) => !gameOptions.some((game) => game.id === projection.date)
+    (projection) =>
+      !gameOptions.some((gameOption) => gameOption.id === projection.date)
   );
   gameOptions = [
     ...gameOptions,
@@ -160,7 +140,6 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
   gameOptions = gameOptions.sort((a, b) => {
     return moment(b.id).unix() - moment(a.id).unix();
   });
-
   return (
     <div className="player-page">
       <div id={"games-dropdown"}>
@@ -175,25 +154,25 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
       </div>
       <PlayerContext
         player={player}
-        selectedDate={selectedDate}
+        selectedDate={moment(selectedProjection.date).toDate()}
         setDate={setSelectedDate}
-        projection={projection}
+        projection={selectedProjection}
         game={player.games.find((game) =>
-          moment(game.date).isSame(selectedDate, "day")
+          moment(game.date).isSame(selectedProjection.date, "day")
         )}
       />
-      <PlayerProfileChart player={player} filteredGames={player.games} />
+      {/* <PlayerProfileChart player={player} filteredGames={player.games} /> */}
 
-      {projection && proposition ? (
+      {proposition ? (
         <>
           <StatSelectButtons
-            propositions={projection.propositions} // TODO: select active proposition for each statType (most recent 'last modified')
+            propositions={selectedProjection.propositions} // TODO: select active proposition for each statType (most recent 'last modified')
             selectedStat={proposition.statType}
             selectedProp={proposition}
             onStatSelect={onStatSelect}
           />
           <Prediction
-            projection={projection}
+            projection={selectedProjection}
             selectedProp={proposition}
             selectedStat={proposition.statType}
             onPredictionSelect={setProposition}
@@ -201,13 +180,14 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
           <PlayerStatsPreview // TODO: variable similarity metrics
             // TODO: more in depth table
             selectedProp={proposition}
-            projection={{ ...projection, player: player }}
-            customModel={customPredictionModel}
+            projection={{ ...selectedProjection, player: player }}
+            customModel={customModel}
           />
           <PlayerStatsChart
             games={filteredGames}
-            selectedProjection={projection}
+            selectedProjection={selectedProjection}
             selectedStat={proposition?.statType}
+            gameFilter={gameFilter}
           />
         </>
       ) : (

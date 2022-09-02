@@ -1,6 +1,7 @@
 import { ApolloQueryResult, gql, useQuery } from "@apollo/client";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import moment from "moment";
 import React from "react";
 import { CalculatePredictions } from "../shared/functions/predictions.fn";
 import { CustomCalculation } from "../shared/interfaces/custom-prediction.interface";
@@ -403,7 +404,7 @@ export const useGetProjections = ({
       : GET_PROJECTIONS;
   // QUERY = GET_PROJECTIONS;
   const { loading, error, data } = useQuery(QUERY, {
-    variables: { playerFilter: projectionFilter, gameFilter: gameFilter },
+    variables: { playerFilter: projectionFilter, gameFilter: predictionFilter },
   });
   let loadingComponent;
   if (loading) {
@@ -419,12 +420,19 @@ export const useGetProjections = ({
     errorComponent = <Box>{JSON.stringify(error) + error.message}</Box>;
   }
   if (data && data?.projections) {
-    const projections = CalculatePredictions(
-      data.projections,
-      predictionFilter,
-      customModel
-    );
-    console.log(projections);
+    let projections = data?.projections.map((projection: Projection) => {
+      let player = { ...projection.player };
+      let games = player.games.map((game) => {
+        return { ...game };
+      });
+      games.sort((a, b) => {
+        return moment(a.date).diff(b.date);
+      });
+      player.games = games;
+      return { ...projection, player: player };
+    });
+    projections = CalculatePredictions(projections, gameFilter, customModel);
+    console.table(projections);
     return {
       loading: loadingComponent,
       error: errorComponent,

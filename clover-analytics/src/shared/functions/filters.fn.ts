@@ -1,4 +1,7 @@
-import { GameFilter } from "../interfaces/graphql/filters.interface";
+import {
+  GameFilter,
+  StatFilter,
+} from "../interfaces/graphql/filters.interface";
 import { Game } from "../interfaces/graphql/game.interface";
 import { CompareDates } from "./dates.fn";
 import {
@@ -10,7 +13,10 @@ import {
   ListSortOptions,
 } from "../interfaces/listFilter.interface";
 
+// TODO: Implement this with Chain of Responsibility
+
 export function FilterGames(games: Game[], gameFilter: GameFilter): Game[] {
+  let filteredCount = 0;
   const filteredGames = games
     .filter((game) => {
       //match the game if the season is the same
@@ -18,7 +24,7 @@ export function FilterGames(games: Game[], gameFilter: GameFilter): Game[] {
       if (gameFilter.season) {
         seasonMatch = gameFilter.season === game.season;
         if (!seasonMatch) {
-          return seasonMatch;
+          return false;
         }
       }
       //match the game if the date is after the start date filter
@@ -31,7 +37,7 @@ export function FilterGames(games: Game[], gameFilter: GameFilter): Game[] {
         );
       }
       if (!gameIsAfterStartDate) {
-        return gameIsAfterStartDate;
+        return false;
       }
       //match the game if the date is before the end date filter
       let gameIsBeforeEndDate = true;
@@ -39,9 +45,26 @@ export function FilterGames(games: Game[], gameFilter: GameFilter): Game[] {
         gameIsBeforeEndDate = GameIsBeforeDate(game, gameFilter.endDate, false);
       }
       if (!gameIsBeforeEndDate) {
-        return gameIsBeforeEndDate;
+        return false;
       }
-      return game.season === gameFilter.season;
+
+      //use statFilters
+      let matchesStatFilter = true;
+      if (gameFilter.statFilters && gameFilter.statFilters.length > 0) {
+        gameFilter.statFilters.forEach((statFilter) => {
+          if (!StatFilterMatch(game, statFilter)) {
+            filteredCount++;
+            matchesStatFilter = false;
+            return false;
+          }
+        });
+      }
+      return (
+        seasonMatch &&
+        gameIsAfterStartDate &&
+        gameIsBeforeEndDate &&
+        matchesStatFilter
+      );
     })
     .sort((a, b) => CompareDates(a.date, b.date));
   return filteredGames;
@@ -136,4 +159,15 @@ export function SortProjections(
     }
     return a.player.currentTeam.name.localeCompare(b.player.currentTeam.name);
   });
+}
+
+export function StatFilterMatch(game: Game, filter: StatFilter): boolean {
+  const score = filter.stat.score(game);
+  if (filter.min !== undefined && score < filter.min) {
+    return false;
+  }
+  if (filter.max !== undefined && score > filter.max) {
+    return false;
+  }
+  return true;
 }

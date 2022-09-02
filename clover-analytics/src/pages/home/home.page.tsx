@@ -13,9 +13,9 @@ import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { Checkbox, FormControlLabel, TextField } from "@mui/material";
-import { Label } from "@mui/icons-material";
 import moment from "moment";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
+import { Minutes } from "../../shared/interfaces/stat.interface";
 
 const Home: React.FC = () => {
   const [date, setDate] = useState(new Date());
@@ -26,13 +26,15 @@ const Home: React.FC = () => {
   const [customPredictionModel, setCustomPredictionModel] =
     useState<CustomCalculation>({
       recency: [
-        { count: 0, weight: 0.25 },
-        { count: -15, weight: 0.1 },
+        { count: 0, weight: 0.2 },
+        { count: -20, weight: 0.1 },
+        { count: -10, weight: 0.1 },
         { count: -5, weight: 0.1 },
       ],
-      similarPlayers: { count: 10, weight: 0.2 },
-      similarTeams: { count: 3, weight: 0.35 },
-      includePush: true,
+      similarPlayers: { count: 10, weight: 0.15 },
+      similarTeams: { count: 3, weight: 0.15 },
+      includePush: false,
+      opponentWeight: 0.2,
     });
 
   let projectionFilter: ProjectionFilter = {
@@ -43,6 +45,10 @@ const Home: React.FC = () => {
     projectionFilter.sportsbook = sportsbook;
   }
   const gameFilter: GameFilter = {
+    endDate: moment(date).format("YYYY-MM-DD"),
+    // statFilters: [{ stat: Minutes, min: 10 }],
+  };
+  const predictionFilter: GameFilter = {
     season: season,
     endDate: moment(date).format("YYYY-MM-DD"),
   };
@@ -61,7 +67,7 @@ const Home: React.FC = () => {
   let result = useGetProjections({
     projectionFilter,
     gameFilter,
-    predictionFilter: gameFilter,
+    predictionFilter,
     similarPlayers: similarPlayersToggle,
     similarTeams: similarTeamsToggle,
     customModel: customPredictionModel,
@@ -146,6 +152,7 @@ const Home: React.FC = () => {
         <PlayerCardList
           projectionQueryResult={result}
           customModel={customPredictionModel}
+          gameFilter={gameFilter}
         />
       ) : (
         <></>

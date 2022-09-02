@@ -193,7 +193,6 @@ const Players = (prop) => {
   if (error) {
     return `Error! ${error.message}. ${loading}. ${data}`;
   }
-  console.log(data);
 
   const selectTeams = GetSelectableTeams(data.teams);
   let selectableStats = StatObjects.map((item) => ({

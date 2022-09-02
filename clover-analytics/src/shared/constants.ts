@@ -5,6 +5,7 @@ import {
   Fantasy,
   FreeThrowsAttempted,
   FreeThrowsMade,
+  Minutes,
   Points,
   PointsAssists,
   PointsRebounds,
@@ -35,6 +36,7 @@ export const ALL_STATS = [
   ThreeFGA,
   FreeThrowsAttempted,
   FreeThrowsMade,
+  Minutes,
 ];
 
 export const BETTING_CATEGORIES = [

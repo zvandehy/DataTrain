@@ -130,7 +130,14 @@ export const Points: Stat = new Stat({
   abbreviation: "PTS",
   label: "points",
 });
-
+export const Minutes: Stat = new Stat(
+  {
+    display: "Minutes",
+    abbreviation: "MIN",
+    label: "minutes",
+  },
+  (game: Game) => ConvertMinutes(game.minutes)
+);
 export const Rebounds: Stat = new Stat({
   display: "Rebounds",
   abbreviation: "REB",
@@ -255,7 +262,7 @@ export const LookupStats: Record<string, Stat> = {
   Rebounds: Rebounds,
   Assists: Assists,
   "Blks+Stls": BlocksSteals,
-  "blks_stls": BlocksSteals,
+  blks_stls: BlocksSteals,
   "Pts+Rebs+Asts": PointsReboundsAssists,
   "Pts+Rebs": PointsRebounds,
   "Pts+Asts": PointsAssists,
@@ -271,7 +278,7 @@ export const LookupStats: Record<string, Stat> = {
 export function GetStat(proposition: Proposition): Stat {
   let stat: Stat = LookupStats[proposition.type];
   if (!stat) {
-    console.log("UNKNOWN type: ", proposition.type);
+    console.warn("UNKNOWN type: ", proposition.type);
     return Unknown;
   }
   return stat;

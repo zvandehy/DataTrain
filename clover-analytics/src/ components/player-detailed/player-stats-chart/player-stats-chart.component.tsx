@@ -15,9 +15,12 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import moment from "moment";
 import React from "react";
 import { Chart } from "react-chartjs-2";
 import { ALL_STATS } from "../../../shared/constants";
+import { FilterGames } from "../../../shared/functions/filters.fn";
+import { GameFilter } from "../../../shared/interfaces/graphql/filters.interface";
 import { Game } from "../../../shared/interfaces/graphql/game.interface";
 import { Projection } from "../../../shared/interfaces/graphql/projection.interface";
 import { Stat } from "../../../shared/interfaces/stat.interface";
@@ -41,14 +44,18 @@ interface PlayerStatsChartProps {
   games: Game[];
   selectedStat: Stat;
   selectedProjection: Projection;
+  gameFilter: GameFilter;
 }
 
 const PlayerStatsChart: React.FC<PlayerStatsChartProps> = ({
   games,
   selectedProjection,
   selectedStat,
+  gameFilter,
 }: PlayerStatsChartProps) => {
-  games = games.sort((a, b) => (a.date > b.date ? 1 : -1));
+  games = FilterGames(games, gameFilter).sort((a, b) =>
+    a.date > b.date ? 1 : -1
+  );
   const options: ChartOptions = {
     responsive: true,
     interaction: {
@@ -117,7 +124,9 @@ const PlayerStatsChart: React.FC<PlayerStatsChartProps> = ({
     "#F29E4C",
     "#F29E4C",
   ];
-  const labels = games.map((game) => `${game.opponent.abbreviation}`);
+  const labels = games.map(
+    (game) => `${game.opponent.abbreviation} ${moment(game.date).format("M/D")}`
+  );
   let datasets: ChartDataset[] = [...ALL_STATS].map((stat, i) => {
     let data: ChartDataset = {
       //   id: stat.label,
