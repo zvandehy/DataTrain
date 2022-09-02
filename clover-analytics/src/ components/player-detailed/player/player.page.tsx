@@ -126,7 +126,9 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
   });
   let missingProjections = player.projections.filter(
     (projection) =>
-      !gameOptions.some((gameOption) => gameOption.id === projection.date)
+      !gameOptions.some((gameOption) =>
+        moment(gameOption.id).isSame(projection.date)
+      )
   );
   gameOptions = [
     ...gameOptions,
