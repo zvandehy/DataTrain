@@ -35,7 +35,7 @@ func main() {
 		AllowCredentials: true,
 		Debug:            true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Access-Control-Allow-Origin"},
 		// AllowOriginFunc: func(origin string) bool {
 		// 	return true
 		// }, //overrides allowed origins
