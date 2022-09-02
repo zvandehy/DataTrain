@@ -31,7 +31,7 @@ func main() {
 	// Add CORS middleware around every request
 	// See https://github.com/rs/cors for full option listing
 	router.Use(cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://datatrain-mp34k.ondigitalocean.app", "https://clover-analytics.fly.dev", "https://www.clover-analytics.com/"},
+		AllowedOrigins:   []string{"https://datatrain-mp34k.ondigitalocean.app", "https://clover-analytics.fly.dev", "https://www.clover-analytics.com/", "https://www.clover-analytics.com"},
 		AllowCredentials: true,
 		Debug:            true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
