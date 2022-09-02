@@ -10,3 +10,5 @@
   for = "/*"
     [headers.values]
     Access-Control-Allow-Origin = "https://clover-backend.fly.dev/wnba/query"
+    Access-Control-Request-Method = POST
+    Access-Control-Allow-Methods = OPTIONS, POST, GET
