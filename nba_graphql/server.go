@@ -34,6 +34,8 @@ func main() {
 		AllowedOrigins:   []string{"https://datatrain-mp34k.ondigitalocean.app", "https://clover-analytics.fly.dev", "https://www.clover-analytics.com/"},
 		AllowCredentials: true,
 		Debug:            true,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		// AllowOriginFunc: func(origin string) bool {
 		// 	return true
 		// }, //overrides allowed origins
