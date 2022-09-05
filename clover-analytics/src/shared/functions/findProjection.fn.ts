@@ -8,10 +8,12 @@ export function FindProjectionByDate(
   projections: Projection[],
   player: Player
 ): Projection {
+  // TODO: currently querying for all projections so that most recent is pre-selected. This makes the page loading take longer...
+  if (projections.length === 0) return CreateMissingProjection(date, player);
   let p =
     projections.find((projection) =>
       moment(projection.date).isSame(moment(date))
-    ) ?? CreateMissingProjection(date, player);
+    ) ?? projections[projections.length - 1];
   let dates = projections.map((projection) => projection.date);
   dates.push(...player.games.map((game) => game.date));
   return p;

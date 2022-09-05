@@ -25,16 +25,18 @@ const Home: React.FC = () => {
   const [similarTeamsToggle, toggleSimilarTeams] = useState(true);
   const [customPredictionModel, setCustomPredictionModel] =
     useState<CustomCalculation>({
+      includePush: true,
+      includeOnDifferentTeam: true,
       recency: [
         { count: 0, weight: 0.2 },
         { count: -20, weight: 0.1 },
         { count: -10, weight: 0.1 },
-        { count: -5, weight: 0.1 },
+        { count: -5, weight: 0.12 },
       ],
-      similarPlayers: { count: 10, weight: 0.15 },
+      similarPlayers: { count: 10, weight: 0.12 },
       similarTeams: { count: 3, weight: 0.15 },
-      includePush: false,
-      opponentWeight: 0.2,
+      opponentWeight: 0.21,
+      // homeAwayWeight:0.1,
     });
 
   let projectionFilter: ProjectionFilter = {

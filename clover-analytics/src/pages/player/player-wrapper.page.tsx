@@ -51,23 +51,25 @@ const PlayerPageWrapper: React.FC = () => {
   const { id } = useParams();
   let playerID = id ? parseInt(id) : 0;
   // TODO: Ensure that date without projection/game works
-  const [date, setDate] = useState(new Date("2022-08-24"));
+  const [date, setDate] = useState(new Date());
   const [season, setSeason] = useState("2022-23");
   const [sportsbook, setSportsbook] = useState("");
   const [similarPlayersToggle, toggleSimilarPlayers] = useState(true);
   const [similarTeamsToggle, toggleSimilarTeams] = useState(true);
   const [customPredictionModel, setCustomPredictionModel] =
     useState<CustomCalculation>({
+      includePush: true,
+      includeOnDifferentTeam: true,
       recency: [
         { count: 0, weight: 0.2 },
         { count: -20, weight: 0.1 },
         { count: -10, weight: 0.1 },
-        { count: -5, weight: 0.1 },
+        { count: -5, weight: 0.12 },
       ],
-      similarPlayers: { count: 10, weight: 0.15 },
+      similarPlayers: { count: 10, weight: 0.12 },
       similarTeams: { count: 3, weight: 0.15 },
-      includePush: false,
-      opponentWeight: 0.2,
+      opponentWeight: 0.21,
+      // homeAwayWeight:0.1,
     });
 
   let projectionFilter: ProjectionFilter = {};
@@ -80,7 +82,7 @@ const PlayerPageWrapper: React.FC = () => {
   };
   const gameFilter: GameFilter = {
     endDate: moment(date).format("YYYY-MM-DD"),
-    statFilters: [{ stat: Minutes, min: 25 }],
+    statFilters: [{ stat: Minutes, min: 10 }],
   };
   //SEASONS
   const seasons: Option<string>[] = [

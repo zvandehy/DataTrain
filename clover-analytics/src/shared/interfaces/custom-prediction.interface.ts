@@ -1,14 +1,17 @@
 export interface CustomCalculation {
+  includePush: boolean;
+  includeOnDifferentTeam: boolean;
   recency?: Factor[];
   recencyPct?: Factor[];
   similarPlayers?: Factor;
   similarTeams?: Factor;
   homeAwayWeight?: number;
-  includePush: boolean;
   opponentWeight?: number;
+  playoffs?: Factor;
 }
 
 export interface Factor {
   weight: number;
-  count: number;
+  count?: number;
+  seasons?: string[];
 }

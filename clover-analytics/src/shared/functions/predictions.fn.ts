@@ -113,7 +113,7 @@ export function UpdatePropositionWithPrediction(
     );
 
     if (
-      projection.player.games.slice(item.count).length < item.count * -1 ||
+      projection.player.games.slice(item.count).length < item.count! * -1 ||
       filteredGames.length === item.count
     ) {
       skipped_weight_sum += item.weight;

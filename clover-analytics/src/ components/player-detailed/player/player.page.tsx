@@ -152,6 +152,7 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
             setSelectedDate(date || new Date());
           }}
           width={180}
+          value={selectedProjection.date}
         />
       </div>
       <PlayerContext

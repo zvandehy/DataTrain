@@ -69,7 +69,7 @@ export const GET_PLAYER = gql`
           playoffs
         }
       }
-      projections(input: { startDate: $date }) {
+      projections(input: {}) {
         date
         opponent {
           abbreviation

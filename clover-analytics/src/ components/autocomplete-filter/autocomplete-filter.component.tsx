@@ -7,6 +7,7 @@ interface AutocompleteFilterProps {
   onChange: Function;
   label: string;
   width?: number;
+  value?: any;
 }
 
 const AutocompleteFilter: React.FC<AutocompleteFilterProps> = ({
@@ -14,12 +15,14 @@ const AutocompleteFilter: React.FC<AutocompleteFilterProps> = ({
   onChange,
   label,
   width,
+  value,
 }: AutocompleteFilterProps) => {
   return (
     <Autocomplete
       id="filter-select"
       className={"filter-select"}
       options={options}
+      value={value}
       ListboxProps={{
         style: {
           color: "black",
