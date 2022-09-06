@@ -108,12 +108,12 @@ export function UpdatePropositionWithPrediction(
   //setup recency
   customModel.recency?.forEach((item) => {
     const nGames = FilterGames(
-      projection.player.games.slice(item.count),
+      projection.player.games.slice(item.count! * -1),
       gameFilter
     );
 
     if (
-      projection.player.games.slice(item.count).length < item.count! * -1 ||
+      projection.player.games.slice(item.count! * -1).length < item.count! ||
       filteredGames.length === item.count
     ) {
       skipped_weight_sum += item.weight;
@@ -232,10 +232,10 @@ export function UpdatePropositionWithPrediction(
     prediction.similarPlayersVsOpponent = simPlayerCalc;
   }
 
-  confidence.over = +(confidence.over * 100).toFixed(2);
-  confidence.under = +(confidence.under * 100).toFixed(2);
-  confidence.overOrPush = +(confidence.overOrPush * 100).toFixed(2);
-  confidence.underOrPush = +(confidence.underOrPush * 100).toFixed(2);
+  confidence.over = +confidence.over.toFixed(2);
+  confidence.under = +confidence.under.toFixed(2);
+  confidence.overOrPush = +confidence.overOrPush.toFixed(2);
+  confidence.underOrPush = +confidence.underOrPush.toFixed(2);
 
   if (customModel.includePush) {
     prediction.confidence = +Math.max(

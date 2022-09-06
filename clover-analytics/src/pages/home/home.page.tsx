@@ -12,32 +12,19 @@ import { useGetProjections } from "../../hooks/useGetProjections";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import { Checkbox, FormControlLabel, TextField } from "@mui/material";
+import { Button, TextField } from "@mui/material";
+import { INITIAL_CUSTOM_MODEL_STATE } from "../../ components/custom-model-dialog/custom-model-dialog.reducer";
 import moment from "moment";
+import CustomModelDialog from "../../ components/custom-model-dialog/custom-model-dialog.component";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
-import { Minutes } from "../../shared/interfaces/stat.interface";
 
 const Home: React.FC = () => {
   const [date, setDate] = useState(new Date());
   const [season, setSeason] = useState("2022-23");
   const [sportsbook, setSportsbook] = useState("");
-  const [similarPlayersToggle, toggleSimilarPlayers] = useState(true);
-  const [similarTeamsToggle, toggleSimilarTeams] = useState(true);
+  const [openCustomModel, setOpenCustomModel] = useState(false);
   const [customPredictionModel, setCustomPredictionModel] =
-    useState<CustomCalculation>({
-      includePush: true,
-      includeOnDifferentTeam: true,
-      recency: [
-        { count: 0, weight: 0.2 },
-        { count: -20, weight: 0.1 },
-        { count: -10, weight: 0.1 },
-        { count: -5, weight: 0.12 },
-      ],
-      similarPlayers: { count: 10, weight: 0.12 },
-      similarTeams: { count: 3, weight: 0.15 },
-      opponentWeight: 0.21,
-      // homeAwayWeight:0.1,
-    });
+    useState<CustomCalculation>(INITIAL_CUSTOM_MODEL_STATE);
 
   let projectionFilter: ProjectionFilter = {
     startDate: moment(date).format("YYYY-MM-DD"),
@@ -70,11 +57,12 @@ const Home: React.FC = () => {
     projectionFilter,
     gameFilter,
     predictionFilter,
-    similarPlayers: similarPlayersToggle,
-    similarTeams: similarTeamsToggle,
     customModel: customPredictionModel,
   });
 
+  const close = () => {
+    setOpenCustomModel(false);
+  };
   //COMPONENT
 
   return (
@@ -82,40 +70,18 @@ const Home: React.FC = () => {
       {/* Move to own component */}
       {/* Query Filters trigger a new query */}
       <div id="query-filters" className={"filters-wrapper"}>
-        <div id="checkboxes">
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                name="SimilarPlayers"
-                value={similarPlayersToggle}
-                sx={{
-                  "&.Mui-checked": {
-                    color: "var(--color-accent)",
-                  },
-                }}
-                onChange={() => toggleSimilarPlayers(!similarPlayersToggle)}
-              />
-            }
-            label="Similar Players"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                name="SimilarTeams"
-                value={similarTeamsToggle}
-                sx={{
-                  "&.Mui-checked": {
-                    color: "var(--color-accent)",
-                  },
-                }}
-                onChange={() => toggleSimilarTeams(!similarTeamsToggle)}
-              />
-            }
-            label="Similar Teams"
-          />
-        </div>
+        <Button
+          variant={"outlined"}
+          onClick={() => setOpenCustomModel(true)}
+          sx={{ marginRight: "1rem" }}
+        >
+          Custom Model
+        </Button>
+        <CustomModelDialog
+          open={openCustomModel}
+          closeDialog={close}
+          setCustomModel={setCustomPredictionModel}
+        />
 
         <AutocompleteFilter
           options={[

@@ -107,9 +107,7 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
                     {(fragment.pctUnder * 100).toFixed(2)}%
                   </StyledTableCell>
                 )}
-                <StyledTableCell>
-                  {(fragment.weight * 100).toFixed(0)}%
-                </StyledTableCell>
+                <StyledTableCell>{fragment.weight.toFixed(0)}%</StyledTableCell>
               </StyledTableRow>
             ))}
             {/* {projection.player.games.map((game) => {

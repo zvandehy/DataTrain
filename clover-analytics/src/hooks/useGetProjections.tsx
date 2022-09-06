@@ -383,23 +383,22 @@ export const useGetProjections = ({
   projectionFilter,
   gameFilter,
   predictionFilter,
-  similarPlayers,
-  similarTeams,
   customModel,
 }: {
   projectionFilter: ProjectionFilter;
   gameFilter: GameFilter;
   predictionFilter: GameFilter;
-  similarPlayers: boolean;
-  similarTeams: boolean;
   customModel: CustomCalculation;
 }): ProjectionQueryResult => {
   let QUERY =
-    similarPlayers && similarTeams
+    customModel.similarPlayers &&
+    customModel.similarPlayers.weight > 0 &&
+    customModel.similarTeams &&
+    customModel.similarTeams.weight > 0
       ? GET_PROJECTIONS_AND_SIMILAR_PLAYERS_AND_TEAMS
-      : similarPlayers
+      : customModel.similarPlayers && customModel.similarPlayers.weight > 0
       ? GET_PROJECTIONS_AND_SIMILAR_PLAYERS
-      : similarTeams
+      : customModel.similarTeams && customModel.similarTeams.weight > 0
       ? GET_PROJECTIONS_AND_SIMILAR_TEAMS
       : GET_PROJECTIONS;
   // QUERY = GET_PROJECTIONS;
@@ -432,7 +431,6 @@ export const useGetProjections = ({
       return { ...projection, player: player };
     });
     projections = CalculatePredictions(projections, gameFilter, customModel);
-    console.table(projections);
     return {
       loading: loadingComponent,
       error: errorComponent,

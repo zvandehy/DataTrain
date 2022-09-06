@@ -63,24 +63,9 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
   const [proposition, setProposition] = useState(
     getProposition(selectedProjection, statType)
   );
-  // const [date, setDate] = useState(moment(new Date()).add(1, "days").toDate()); //Ensure that date without projection/game works
-  const [season, setSeason] = useState("2022-23");
-  const [sportsbook, setSportsbook] = useState("");
-  const [similarPlayersToggle, toggleSimilarPlayers] = useState(false);
-  const [similarTeamsToggle, toggleSimilarTeams] = useState(false);
-
   const onStatSelect = (stat: Stat) => {
     setStatType(stat);
   };
-  //SEASONS
-  const seasons: Option<string>[] = [
-    { label: "2022-23 (Current)", id: "2022-23" },
-    { label: "2021-22", id: "2021-22" },
-  ];
-  const onSeasonChange = (value: string) => {
-    setSeason(value);
-  };
-
   useEffect(() => {
     if (player) {
       if (statType) {
@@ -143,7 +128,7 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
     return moment(b.id).unix() - moment(a.id).unix();
   });
   return (
-    <div className="player-page">
+    <>
       <div id={"games-dropdown"}>
         <AutocompleteFilter
           label="Game"
@@ -155,49 +140,50 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
           value={selectedProjection.date}
         />
       </div>
-      <PlayerContext
-        player={player}
-        selectedDate={moment(selectedProjection.date).toDate()}
-        setDate={setSelectedDate}
-        projection={selectedProjection}
-        game={player.games.find((game) =>
-          moment(game.date).isSame(selectedProjection.date, "day")
+      <div className="player-page">
+        <PlayerContext
+          player={player}
+          selectedDate={moment(selectedProjection.date).toDate()}
+          setDate={setSelectedDate}
+          projection={selectedProjection}
+          game={player.games.find((game) =>
+            moment(game.date).isSame(selectedProjection.date, "day")
+          )}
+        />
+        {/* <PlayerProfileChart player={player} filteredGames={player.games} /> */}
+
+        {proposition ? (
+          <>
+            <StatSelectButtons
+              propositions={selectedProjection.propositions} // TODO: select active proposition for each statType (most recent 'last modified')
+              selectedStat={proposition.statType}
+              selectedProp={proposition}
+              onStatSelect={onStatSelect}
+            />
+            <Prediction
+              projection={selectedProjection}
+              selectedProp={proposition}
+              selectedStat={proposition.statType}
+              onPredictionSelect={setProposition}
+            />
+            <PlayerStatsPreview // TODO: variable similarity metrics
+              // TODO: more in depth table
+              selectedProp={proposition}
+              projection={{ ...selectedProjection, player: player }}
+              customModel={customModel}
+            />
+            <PlayerStatsChart
+              games={filteredGames}
+              selectedProjection={selectedProjection}
+              selectedStat={proposition?.statType}
+              gameFilter={gameFilter}
+            />
+          </>
+        ) : (
+          <></>
         )}
-      />
-      {/* <PlayerProfileChart player={player} filteredGames={player.games} /> */}
 
-      {proposition ? (
-        <>
-          <StatSelectButtons
-            propositions={selectedProjection.propositions} // TODO: select active proposition for each statType (most recent 'last modified')
-            selectedStat={proposition.statType}
-            selectedProp={proposition}
-            onStatSelect={onStatSelect}
-          />
-          <Prediction
-            projection={selectedProjection}
-            selectedProp={proposition}
-            selectedStat={proposition.statType}
-            onPredictionSelect={setProposition}
-          />
-          <PlayerStatsPreview // TODO: variable similarity metrics
-            // TODO: more in depth table
-            selectedProp={proposition}
-            projection={{ ...selectedProjection, player: player }}
-            customModel={customModel}
-          />
-          <PlayerStatsChart
-            games={filteredGames}
-            selectedProjection={selectedProjection}
-            selectedStat={proposition?.statType}
-            gameFilter={gameFilter}
-          />
-        </>
-      ) : (
-        <></>
-      )}
-
-      {/*<PlayerStatsTable
+        {/*<PlayerStatsTable
         predictions={predictions}
         selected={stat}
         matchups={matchups}
@@ -211,7 +197,8 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
           games[games.length - 1].opponent
         }
       /> */}
-    </div>
+      </div>
+    </>
   );
 };
 

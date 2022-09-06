@@ -100,7 +100,7 @@ const SimilarPreview: React.FC<SimilarPreviewProps> = ({
             >
               {sim.playerAvgAdj}
             </StyledTableCell>
-            <StyledTableCell>{(sim.weight * 100).toFixed(0)}%</StyledTableCell>
+            <StyledTableCell>{sim.weight.toFixed(0)}%</StyledTableCell>
           </StyledTableRow>
         </TableBody>
       </Table>
