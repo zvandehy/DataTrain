@@ -19,12 +19,16 @@ import CustomModelDialog from "../../ components/custom-model-dialog/custom-mode
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
 
 const Home: React.FC = () => {
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(
+    localStorage.getObject("date") ?? new Date()
+  );
   const [season, setSeason] = useState("2022-23");
   const [sportsbook, setSportsbook] = useState("");
   const [openCustomModel, setOpenCustomModel] = useState(false);
   const [customPredictionModel, setCustomPredictionModel] =
-    useState<CustomCalculation>(INITIAL_CUSTOM_MODEL_STATE);
+    useState<CustomCalculation>(
+      localStorage.getObject("customModel") ?? INITIAL_CUSTOM_MODEL_STATE
+    );
 
   let projectionFilter: ProjectionFilter = {
     startDate: moment(date).format("YYYY-MM-DD"),
@@ -50,7 +54,9 @@ const Home: React.FC = () => {
     setSeason(value);
   };
   const onDateChange = (newValue: Date | null) => {
-    setDate(newValue || new Date());
+    const newDate: Date = newValue || new Date();
+    setDate(newDate);
+    localStorage.setObject("date", newDate);
   };
 
   let result = useGetProjections({
@@ -62,6 +68,11 @@ const Home: React.FC = () => {
 
   const close = () => {
     setOpenCustomModel(false);
+  };
+
+  const save = (value: CustomCalculation) => {
+    localStorage.setObject("customModel", value);
+    setCustomPredictionModel(value);
   };
   //COMPONENT
 
@@ -80,7 +91,7 @@ const Home: React.FC = () => {
         <CustomModelDialog
           open={openCustomModel}
           closeDialog={close}
-          setCustomModel={setCustomPredictionModel}
+          setCustomModel={save}
         />
 
         <AutocompleteFilter

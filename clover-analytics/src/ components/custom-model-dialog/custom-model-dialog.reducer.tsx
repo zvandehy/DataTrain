@@ -105,7 +105,9 @@ export const customModelReducer = (
         recency: action.payload,
       };
     case CustomModelActionType.RESET:
-      return INITIAL_CUSTOM_MODEL_STATE;
+      return (
+        localStorage.getObject("customModel") ?? INITIAL_CUSTOM_MODEL_STATE
+      );
   }
   return state;
 };

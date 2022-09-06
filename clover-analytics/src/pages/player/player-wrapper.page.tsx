@@ -19,14 +19,27 @@ const PlayerPageWrapper: React.FC = () => {
   const { id } = useParams();
   let playerID = id ? parseInt(id) : 0;
   // TODO: Ensure that date without projection/game works
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(
+    localStorage.getObject("date") ?? new Date()
+  );
+  const onDateChange = (newValue: Date | null) => {
+    const newDate: Date = newValue || new Date();
+    setDate(newDate);
+    localStorage.setObject("date", newDate);
+  };
   const [season, setSeason] = useState("2022-23");
   const [sportsbook, setSportsbook] = useState("");
   const [openCustomModel, setOpenCustomModel] = useState(false);
   const [customPredictionModel, setCustomPredictionModel] =
-    useState<CustomCalculation>(INITIAL_CUSTOM_MODEL_STATE);
+    useState<CustomCalculation>(
+      localStorage.getObject("customModel") ?? INITIAL_CUSTOM_MODEL_STATE
+    );
   const close = () => {
     setOpenCustomModel(false);
+  };
+  const save = (value: CustomCalculation) => {
+    localStorage.setObject("customModel", value);
+    close();
   };
   let projectionFilter: ProjectionFilter = {};
   if (sportsbook) {
@@ -72,12 +85,12 @@ const PlayerPageWrapper: React.FC = () => {
       <CustomModelDialog
         open={openCustomModel}
         closeDialog={close}
-        setCustomModel={setCustomPredictionModel}
+        setCustomModel={save}
       />
       <PlayerPage
         player={player}
         selectedProjection={projection}
-        setSelectedDate={setDate}
+        setSelectedDate={onDateChange}
         gameFilter={gameFilter}
         customModel={customPredictionModel}
       />

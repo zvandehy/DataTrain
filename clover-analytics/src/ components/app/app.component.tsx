@@ -61,6 +61,13 @@ const theme = createTheme({
 });
 
 const App: React.FC = () => {
+  Storage.prototype.setObject = function (key: string, value: Object) {
+    this.setItem(key, JSON.stringify(value));
+  };
+  Storage.prototype.getObject = function (key: string) {
+    let value = this.getItem(key);
+    return value && JSON.parse(value);
+  };
   return (
     <ThemeProvider theme={theme}>
       <ApolloProvider client={client}>
