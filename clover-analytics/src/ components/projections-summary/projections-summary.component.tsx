@@ -353,12 +353,13 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
       </div>
       {countTotal > 0 ? (
         <div id="distribution-summary">
-          <span>All</span>
+          <span>Breakdown All Props by Confidence</span>
           {distribution
             .filter((dist) => dist.correct + dist.incorrect > 0)
             .map((dist) => {
               return (
                 <span
+                  key={`all-${dist.min}-${dist.max}`}
                   className={ColorPct(
                     dist.correct / (dist.correct + dist.incorrect)
                   )}
@@ -378,12 +379,13 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
       )}
       {countMaxTotal > 0 ? (
         <div id="max-distribution-summary">
-          <span>Highest Conf. Prop for each Player</span>
+          <span>Highest Confidence Prop for each Player</span>
           {maxDistribution
             .filter((dist) => dist.correct + dist.incorrect > 0)
             .map((dist) => {
               return (
                 <span
+                  key={`highest-${dist.min}-${dist.max}`}
                   className={ColorPct(
                     dist.correct / (dist.correct + dist.incorrect)
                   )}

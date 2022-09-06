@@ -101,7 +101,7 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
         <ToggleButton value="true">Yes</ToggleButton>
         <ToggleButton value="false">No</ToggleButton>
       </ToggleButtonGroup>
-      <Typography color="black" textAlign="left">
+      {/* <Typography color="black" textAlign="left">
         Include Games on Different Teams?
       </Typography>
       <ToggleButtonGroup
@@ -117,7 +117,7 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
       >
         <ToggleButton value="true">Yes</ToggleButton>
         <ToggleButton value="false">No</ToggleButton>
-      </ToggleButtonGroup>
+      </ToggleButtonGroup> */}
       <Typography color="black" textAlign="left">
         Last X Games Breakdown
       </Typography>
@@ -125,7 +125,7 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
         {customModelForm.recency?.length ? (
           customModelForm.recency.map((fragment: Factor, index: number) => {
             return (
-              <Box>
+              <Box key={"Recency: " + fragment.count}>
                 <TextField
                   id={`recency-count-input-${index}`}
                   label="Last X Games"
