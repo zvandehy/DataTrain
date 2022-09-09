@@ -40,7 +40,12 @@ const ExpandFragmentTable: React.FC<ExpandFragmentTableProps> = ({
       <StyledTableRow
         className={"player-row"}
         key={`${projection.player.name} ${fragment.games.length}`}
-        sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+        sx={{
+          "&:last-child td, &:last-child th": { border: 0 },
+          "& tr:nth-child(even)": {
+            backgroundColor: "rgba(0, 0, 0, 0.2)",
+          },
+        }}
       >
         <StyledTableCell>
           <IconButton
@@ -96,7 +101,7 @@ const ExpandFragmentTable: React.FC<ExpandFragmentTableProps> = ({
         <StyledTableCell>{fragment.weight.toFixed(0)}%</StyledTableCell>
       </StyledTableRow>
       <StyledTableRow>
-        <StyledTableCell colSpan={7} sx={{ borderBottom: "none" }}>
+        <StyledTableCell colSpan={100} sx={{ borderBottom: "none" }}>
           <Collapse in={open} unmountOnExit>
             <Table>
               <TableHead>

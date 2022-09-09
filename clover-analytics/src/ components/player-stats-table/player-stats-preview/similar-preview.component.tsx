@@ -83,7 +83,9 @@ const SimilarPreview: React.FC<SimilarPreviewProps> = ({
             {customModel.includePush ? (
               <StyledTableCell
                 className={`${ColorPct(sim.simOverPct + sim.simPushPct)}`}
-              >{`${sim.simOverPct + sim.simPushPct}%`}</StyledTableCell>
+              >{`${(sim.simOverPct + sim.simPushPct).toFixed(
+                2
+              )}%`}</StyledTableCell>
             ) : (
               <StyledTableCell
                 className={`${ColorPct(sim.simOverPct)}`}
@@ -93,7 +95,9 @@ const SimilarPreview: React.FC<SimilarPreviewProps> = ({
             {customModel.includePush ? (
               <StyledTableCell
                 className={`${ColorPct(sim.simUnderPct + sim.simPushPct)}`}
-              >{`${sim.simUnderPct + sim.simPushPct}%`}</StyledTableCell>
+              >{`${(sim.simUnderPct + sim.simPushPct).toFixed(
+                2
+              )}%`}</StyledTableCell>
             ) : (
               <StyledTableCell
                 className={`${ColorPct(sim.simUnderPct)}`}

@@ -58,8 +58,12 @@ const SimilarTable: React.FC<SimilarTableProps> = ({
               </IconButton>
             </StyledTableCell>
             <StyledTableCell>GAMES</StyledTableCell>
-            <StyledTableCell>AVG</StyledTableCell>
-            <StyledTableCell>AVG/MIN</StyledTableCell>
+            <StyledTableCell>
+              {selectedProp.statType.abbreviation}
+            </StyledTableCell>
+            <StyledTableCell>
+              {selectedProp.statType.abbreviation}/MIN
+            </StyledTableCell>
             {selectedProp.statType.relatedStats?.map((related: Stat) => {
               return (
                 <StyledTableCell key={related.label}>

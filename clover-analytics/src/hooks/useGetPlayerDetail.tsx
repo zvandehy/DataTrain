@@ -70,6 +70,7 @@ export const GET_PLAYER = gql`
           three_point_percentage
           effective_field_goal_percentage
           playoffs
+          home_or_away
           # teamStats {
           #   points
           # }

@@ -170,7 +170,7 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
         <SimilarPreview
           projection={projection}
           selectedProp={selectedProp}
-          header={`${projection.player.name} vs ${projection.opponent.similarTeams?.length} Similar Teams`}
+          header={`${projection.player.name} vs ${selectedProp.customPrediction.vsSimilarTeams.similarCount} Similar Teams`}
           sim={selectedProp.customPrediction.vsSimilarTeams}
           customModel={customModel}
         />
@@ -182,7 +182,7 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
         <SimilarPreview
           projection={projection}
           selectedProp={selectedProp}
-          header={`${projection.player.similarPlayers?.length} Similar Players vs ${projection.opponent.abbreviation}`}
+          header={`${selectedProp.customPrediction.similarPlayersVsOpponent.similarCount} Similar Players vs ${projection.opponent.abbreviation}`}
           sim={selectedProp.customPrediction.similarPlayersVsOpponent}
           customModel={customModel}
         />

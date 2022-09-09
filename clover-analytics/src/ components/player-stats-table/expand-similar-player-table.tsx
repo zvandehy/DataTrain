@@ -22,13 +22,11 @@ const ExpandSimilarPlayers: React.FC<ExpandSimilarPlayersProps> = ({
 }: ExpandSimilarPlayersProps) => {
   return (
     <StyledTableRow>
-      <StyledTableCell colSpan={7} sx={{ borderBottom: "none" }}>
+      <StyledTableCell colSpan={100} sx={{ borderBottom: "none" }}>
         <Collapse in={open} unmountOnExit>
           <Table>
             <TableHead>
-              <StyledTableCell>PLAYER</StyledTableCell>
-              <StyledTableCell>SEASON AVG</StyledTableCell>
-              <StyledTableCell>DATE</StyledTableCell>
+              <StyledTableCell>PLAYER (AVG)</StyledTableCell>
               <StyledTableCell>
                 {selectedProp.statType.abbreviation}
               </StyledTableCell>
@@ -54,65 +52,94 @@ const ExpandSimilarPlayers: React.FC<ExpandSimilarPlayersProps> = ({
               }}
             >
               {selectedProp.customPrediction.similarPlayersVsOpponent?.similarGames.map(
-                (game) => {
+                (game, i) => {
                   const seasonAvg = selectedProp.statType.average(
                     projection.player.similarPlayers!.find(
                       (player) => player.name === game.player.name
                     )!.games
                   );
+
                   return (
-                    <StyledTableRow
-                      key={game.gameID + " " + game.player.playerID}
-                    >
-                      <StyledTableCell>{game.player.name}</StyledTableCell>
-                      <StyledTableCell>{seasonAvg}</StyledTableCell>
-                      <StyledTableCell>{game.date}</StyledTableCell>
-                      <StyledTableCell>
-                        {selectedProp.statType.score(game)}
-                      </StyledTableCell>
-                      <StyledTableCell>
-                        {" "}
-                        {selectedProp.statType.scorePer(game, ScoreType.PerMin)}
-                      </StyledTableCell>
-                      {selectedProp.statType.relatedStats?.map(
-                        (related: Stat) => {
-                          return (
-                            <StyledTableCell key={related.label + "score"}>
-                              {related.score(game)}
-                            </StyledTableCell>
-                          );
-                        }
+                    <>
+                      {i === 0 ||
+                      selectedProp.customPrediction.similarPlayersVsOpponent
+                        ?.similarGames[i - 1].player.name !==
+                        game.player.name ? (
+                        <StyledTableRow
+                          key={
+                            game.gameID + " " + game.player.playerID + " head"
+                          }
+                          sx={{ fontWeight: "bold" }}
+                        >
+                          <StyledTableCell
+                            colSpan={0}
+                            sx={{ fontWeight: "bold" }}
+                          >
+                            {game.player.name} ({seasonAvg})
+                          </StyledTableCell>
+                          <StyledTableCell colSpan={100}></StyledTableCell>
+                        </StyledTableRow>
+                      ) : (
+                        <></>
                       )}
-                      <StyledTableCell>{Minutes.score(game)}</StyledTableCell>
-                      <StyledTableCell
-                        className={ColorCompare(
-                          selectedProp.statType.score(game) - seasonAvg,
-                          0
-                        )}
+                      <StyledTableRow
+                        key={game.gameID + " " + game.player.playerID}
                       >
-                        {`${
-                          +(
-                            selectedProp.statType.score(game) - seasonAvg
-                          ).toFixed(2) > 0
-                            ? "+"
-                            : ""
-                        }${(
-                          selectedProp.statType.score(game) - seasonAvg
-                        ).toFixed(2)}`}
-                      </StyledTableCell>
-                      <StyledTableCell
-                        className={ColorCompare(
-                          selectedProp.statType.score(game) - seasonAvg,
-                          0
+                        <StyledTableCell>
+                          {game.team.abbreviation}{" "}
+                          {game.home_or_away === "home" ? "vs" : "@"}{" "}
+                          {game.opponent.abbreviation} {game.date}
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          {selectedProp.statType.score(game)}
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          {" "}
+                          {selectedProp.statType.scorePer(
+                            game,
+                            ScoreType.PerMin
+                          )}
+                        </StyledTableCell>
+                        {selectedProp.statType.relatedStats?.map(
+                          (related: Stat) => {
+                            return (
+                              <StyledTableCell key={related.label + "score"}>
+                                {related.score(game)}
+                              </StyledTableCell>
+                            );
+                          }
                         )}
-                      >{`${
-                        selectedProp.statType.score(game) > seasonAvg
-                          ? "OVER"
-                          : selectedProp.statType.score(game) < seasonAvg
-                          ? "UNDER"
-                          : "PUSH"
-                      }`}</StyledTableCell>
-                    </StyledTableRow>
+                        <StyledTableCell>{Minutes.score(game)}</StyledTableCell>
+                        <StyledTableCell
+                          className={ColorCompare(
+                            selectedProp.statType.score(game) - seasonAvg,
+                            0
+                          )}
+                        >
+                          {`${
+                            +(
+                              selectedProp.statType.score(game) - seasonAvg
+                            ).toFixed(2) > 0
+                              ? "+"
+                              : ""
+                          }${(
+                            selectedProp.statType.score(game) - seasonAvg
+                          ).toFixed(2)}`}
+                        </StyledTableCell>
+                        <StyledTableCell
+                          className={ColorCompare(
+                            selectedProp.statType.score(game) - seasonAvg,
+                            0
+                          )}
+                        >{`${
+                          selectedProp.statType.score(game) > seasonAvg
+                            ? "OVER"
+                            : selectedProp.statType.score(game) < seasonAvg
+                            ? "UNDER"
+                            : "PUSH"
+                        }`}</StyledTableCell>
+                      </StyledTableRow>
+                    </>
                   );
                 }
               )}

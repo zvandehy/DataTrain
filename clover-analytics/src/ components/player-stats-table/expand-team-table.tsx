@@ -20,7 +20,7 @@ const ExpandTeamTable: React.FC<ExpandTeamTableProps> = ({
 }: ExpandTeamTableProps) => {
   return (
     <StyledTableRow>
-      <StyledTableCell colSpan={7} sx={{ borderBottom: "none" }}>
+      <StyledTableCell colSpan={100} sx={{ borderBottom: "none" }}>
         <Collapse in={open} unmountOnExit>
           <Table>
             <TableHead>
