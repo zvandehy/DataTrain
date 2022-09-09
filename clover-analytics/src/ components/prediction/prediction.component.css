@@ -107,13 +107,13 @@ div.target-input .MuiSelect-icon {
 }
 
 @media (max-width: 885px) {
-  .selected-stat-display {
+  .player-list .selected-stat-display {
     margin: 0;
     font-weight: 600;
     font-size: 1rem;
   }
   .prediction {
-    flex-direction: row;
+    /* flex-direction: row; */
     font-size: 1rem;
   }
 }

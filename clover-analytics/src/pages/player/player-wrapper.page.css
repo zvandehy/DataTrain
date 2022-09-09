@@ -5,31 +5,37 @@
   grid-template-columns: 1fr 1fr;
   padding-top: 1rem;
   gap: 1rem;
+  max-width: 100%;
 }
 
 .player-page {
   background-color: inherit;
   color: inherit;
   display: grid;
-  grid-template-areas: "player-context stat-select" "prediction stat-table" "stat-chart stat-chart";
+  grid-template-areas: "player-context player-context" "stat-select prediction" "stat-table stat-table" "stat-chart stat-chart";
+  /* grid-template-columns: 60% 40%; */
   grid-column: 1/3;
+  max-width: 100%;
 }
 
 .player-page .player-context {
   grid-area: player-context;
   flex-direction: row-reverse;
-  width: max-content;
+  max-width: 100%;
 }
 .player-page .stat-select {
   grid-area: stat-select;
+  max-width: 100%;
 }
 
 .player-page .prediction {
   grid-area: prediction;
+  max-width: 100%;
 }
 
 .player-page .player-stats {
   grid-area: stat-table;
+  max-width: 100%;
 }
 
 .player-page .player-context .player-photo {

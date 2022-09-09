@@ -36,7 +36,7 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
 }: CustomModelDialogProps) => {
   const [customModelForm, dispatch] = useReducer(
     customModelReducer,
-    INITIAL_CUSTOM_MODEL_STATE
+    localStorage.getObject("customModel") ?? INITIAL_CUSTOM_MODEL_STATE
   );
   const dispatchLog = (action: any) => {
     dispatch(action);

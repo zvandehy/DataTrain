@@ -15,9 +15,6 @@ import { StyledTableCell } from "../../styled-table/styled-table-cell.component"
 import { StyledTableRow } from "../../styled-table/styled-table-row.component";
 import SimilarPreview from "./similar-preview.component";
 import "./player-stats-preview.component.css";
-import { ConvertMinutes } from "../../../shared/interfaces/stat.interface";
-import moment from "moment";
-import { ScoreType } from "../../../shared/interfaces/score-type.enum";
 import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
 
 interface PlayerStatsPreviewProps {
@@ -61,10 +58,10 @@ const PlayerStatsPreview: React.FC<PlayerStatsPreviewProps> = ({
             {selectedProp.customPrediction.recencyFragments.map((fragment) => (
               <StyledTableRow
                 className={"player-row"}
-                key={`${projection.player.name} ${fragment.numGames}`}
+                key={`${projection.player.name} ${fragment.games.length}`}
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
               >
-                <StyledTableCell>Last {fragment.numGames}</StyledTableCell>
+                <StyledTableCell>Last {fragment.games.length}</StyledTableCell>
                 <StyledTableCell>{fragment.average}</StyledTableCell>
                 <StyledTableCell>{fragment.avgPerMin}</StyledTableCell>
                 <StyledTableCell>{fragment.minutes}</StyledTableCell>

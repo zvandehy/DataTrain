@@ -430,7 +430,7 @@ export const useGetProjections = ({
       player.games = games;
       return { ...projection, player: player };
     });
-    projections = CalculatePredictions(projections, gameFilter, customModel);
+
     return {
       loading: loadingComponent,
       error: errorComponent,

@@ -13,6 +13,12 @@ const PlayercardContext: React.FC<PlayercardContextProps> = ({
   let league = "wnba";
   return (
     <div className="player-context">
+      <img
+        loading="lazy"
+        className="player-photo"
+        alt={projection.player.name}
+        src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/${league}/latest/260x190/${projection.player.playerID}.png`}
+      ></img>
       <div className="player-info">
         <h2 className="player-name">
           <Link to={`/${league}/players/${projection.player.playerID}`}>
@@ -55,12 +61,6 @@ const PlayercardContext: React.FC<PlayercardContextProps> = ({
           <EventsModal projection={projection} />
         </div>
       </div>
-      <img
-        loading="lazy"
-        className="player-photo"
-        alt={projection.player.name}
-        src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/${league}/latest/260x190/${projection.player.playerID}.png`}
-      ></img>
     </div>
   );
 };

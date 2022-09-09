@@ -8,8 +8,19 @@ interface IStat {
   display: string;
   abbreviation: string;
   label: string;
+  relatedStats?: IStat[];
 }
 
+interface StatOptions {
+  score?: (game: Game) => number;
+  teamScore?: (game: TeamGame) => number;
+  average?: (games: Game[]) => number;
+  teamAverage?: (games: TeamGame[]) => number;
+  median?: (games: Game[]) => number;
+  scorePer?: (games: Game, scoreType: ScoreType) => number;
+  averagePer?: (games: Game[], scoreType: ScoreType) => number;
+  relatedStats?: Stat[];
+}
 export class Stat {
   display: string;
   abbreviation: string;
@@ -21,35 +32,31 @@ export class Stat {
   median: (games: Game[]) => number;
   scorePer: (game: Game, scoreType: ScoreType) => number;
   averagePer: (games: Game[], scoreType: ScoreType) => number;
-  constructor(
-    stat: IStat,
-    score?: (game: Game) => number,
-    teamScore?: (game: TeamGame) => number,
-    average?: (games: Game[]) => number,
-    teamAverage?: (games: TeamGame[]) => number,
-    median?: (games: Game[]) => number,
-    scorePer?: (games: Game, scoreType: ScoreType) => number,
-    averagePer?: (games: Game[], scoreType: ScoreType) => number
-  ) {
+  relatedStats?: Stat[];
+  constructor(stat: IStat, options?: StatOptions) {
     this.display = stat.display;
+    this.relatedStats = options?.relatedStats ?? [];
     this.abbreviation = stat.abbreviation;
     this.label = stat.label;
-    this.score = score || ((game: Game) => defaultScore(this.label)(game));
+    this.score =
+      options?.score || ((game: Game) => defaultScore(this.label)(game));
     this.teamScore =
-      teamScore || ((game: TeamGame) => defaultTeamScore(this.label)(game));
+      options?.teamScore ||
+      ((game: TeamGame) => defaultTeamScore(this.label)(game));
     this.average =
-      average || ((games: Game[]) => defaultAverage(games, this.score));
+      options?.average ||
+      ((games: Game[]) => defaultAverage(games, this.score));
     this.teamAverage =
-      teamAverage ||
+      options?.teamAverage ||
       ((games: TeamGame[]) => defaultTeamAverage(games, this.teamScore));
     this.median =
-      median || ((games: Game[]) => defaultMedian(games, this.score));
+      options?.median || ((games: Game[]) => defaultMedian(games, this.score));
     this.scorePer =
-      scorePer ||
+      options?.scorePer ||
       ((game: Game, scoreType: ScoreType) =>
         defaultScorePer(game, this.score, scoreType));
     this.averagePer =
-      averagePer ||
+      options?.averagePer ||
       ((games: Game[], scoreType: ScoreType) =>
         defaultAveragePer(games, this.scorePer, scoreType));
   }
@@ -124,25 +131,113 @@ function defaultMedian(games: Game[], scoreFn: (game: Game) => number): number {
     .sort((a, b) => a - b)
     [Math.floor(games.length / 2)].toFixed(2);
 }
-
+export const FieldGoalAttempts: Stat = new Stat({
+  display: "FG Attempts",
+  abbreviation: "FGA",
+  label: "field_goals_attempted",
+});
+export const FieldGoalsMade: Stat = new Stat({
+  display: "FG Made",
+  abbreviation: "FGM",
+  label: "field_goals_made",
+});
 export const Points: Stat = new Stat({
   display: "Points",
   abbreviation: "PTS",
   label: "points",
 });
+
+export const PointsPct: Stat = new Stat(
+  {
+    display: "PCT of Team Points",
+    abbreviation: "PTS %",
+    label: "points_pct",
+  },
+  {
+    score: (game: Game) => {
+      return +((game.points / game.teamStats.points) * 100).toFixed(2);
+    },
+    average: (games: Game[]) => {
+      const totalPoints = games
+        .map((game) => game.points)
+        .reduce((prev, cur) => {
+          return prev + cur;
+        }, 0);
+      const totalTeamPoints = games
+        .map((game) => game.teamStats.points)
+        .reduce((prev, cur) => {
+          return prev + cur;
+        }, 0);
+      return +((totalPoints / totalTeamPoints) * 100).toFixed(2);
+    },
+  }
+);
+
 export const Minutes: Stat = new Stat(
   {
     display: "Minutes",
     abbreviation: "MIN",
     label: "minutes",
   },
-  (game: Game) => ConvertMinutes(game.minutes)
+  { score: (game: Game) => ConvertMinutes(game.minutes) }
 );
 export const Rebounds: Stat = new Stat({
   display: "Rebounds",
   abbreviation: "REB",
   label: "rebounds",
 });
+export const ORebPct: Stat = new Stat(
+  {
+    display: "Offensive Rebound Percentage",
+    abbreviation: "OREB %",
+    label: "offensive_rebound_pct",
+  },
+  {
+    score: (game: Game) => {
+      return +(game.offensive_rebound_percentage * 100).toFixed(2);
+    },
+    // TODO: Fix Rebound %
+    // average: (games: Game[]) => {
+    //   const totalPoints = games
+    //     .map((game) => game.points)
+    //     .reduce((prev, cur) => {
+    //       return prev + cur;
+    //     }, 0);
+    //   const totalTeamPoints = games
+    //     .map((game) => game.teamStats.points)
+    //     .reduce((prev, cur) => {
+    //       return prev + cur;
+    //     }, 0);
+    //   return +((totalPoints / totalTeamPoints) * 100).toFixed(2);
+    // },
+  }
+);
+export const DRebPct: Stat = new Stat(
+  {
+    display: "Defensive Rebound Percentage",
+    abbreviation: "DREB %",
+    label: "defensive_rebound_pct",
+  },
+  {
+    score: (game: Game) => {
+      return +(game.defensive_rebound_percentage * 100).toFixed(2);
+    },
+    // TODO: Fix Rebound %
+    // average: (games: Game[]) => {
+    //   const totalPoints = games
+    //     .map((game) => game.points)
+    //     .reduce((prev, cur) => {
+    //       return prev + cur;
+    //     }, 0);
+    //   const totalTeamPoints = games
+    //     .map((game) => game.teamStats.points)
+    //     .reduce((prev, cur) => {
+    //       return prev + cur;
+    //     }, 0);
+    //   return +((totalPoints / totalTeamPoints) * 100).toFixed(2);
+    // },
+  }
+);
 export const Assists: Stat = new Stat({
   display: "Assists",
   abbreviation: "AST",
@@ -169,14 +264,16 @@ export const Fantasy: Stat = new Stat(
     abbreviation: "FAN",
     label: "fantasy_score",
   },
-  (game: Game) =>
-    +(
-      game.points +
-      game.rebounds * 1.2 +
-      game.assists * 1.5 +
-      (game.steals + game.blocks) * 3 -
-      game.turnovers
-    ).toFixed(2)
+  {
+    score: (game: Game) =>
+      +(
+        game.points +
+        game.rebounds * 1.2 +
+        game.assists * 1.5 +
+        (game.steals + game.blocks) * 3 -
+        game.turnovers
+      ).toFixed(2),
+  }
 );
 export const ThreeFGM: Stat = new Stat({
   display: "3-Pointers Made",
@@ -214,7 +311,7 @@ export const BlocksSteals: Stat = new Stat(
     abbreviation: "BLK+STL",
     label: "blks+stls",
   },
-  (game: Game) => game.blocks + game.steals
+  { score: (game: Game) => game.blocks + game.steals }
 );
 export const PointsRebounds: Stat = new Stat(
   {
@@ -222,7 +319,7 @@ export const PointsRebounds: Stat = new Stat(
     abbreviation: "PTS+REB",
     label: "pts+rebs",
   },
-  (game: Game) => game.points + game.rebounds
+  { score: (game: Game) => game.points + game.rebounds }
 );
 export const PointsReboundsAssists: Stat = new Stat(
   {
@@ -230,7 +327,7 @@ export const PointsReboundsAssists: Stat = new Stat(
     abbreviation: "PRA",
     label: "pts+rebs+asts",
   },
-  (game: Game) => game.points + game.rebounds + game.assists
+  { score: (game: Game) => game.points + game.rebounds + game.assists }
 );
 export const PointsAssists: Stat = new Stat(
   {
@@ -238,7 +335,7 @@ export const PointsAssists: Stat = new Stat(
     abbreviation: "PTS+AST",
     label: "pts+asts",
   },
-  (game: Game) => game.points + game.assists
+  { score: (game: Game) => game.points + game.assists }
 );
 export const ReboundsAssists: Stat = new Stat(
   {
@@ -246,7 +343,7 @@ export const ReboundsAssists: Stat = new Stat(
     abbreviation: "REB+AST",
     label: "rebs+asts",
   },
-  (game: Game) => game.rebounds + game.assists
+  { score: (game: Game) => game.rebounds + game.assists }
 );
 export const Unknown: Stat = new Stat(
   {
@@ -254,7 +351,7 @@ export const Unknown: Stat = new Stat(
     abbreviation: "UNKNOWN",
     label: "unknown",
   },
-  (game: Game) => 0
+  { score: (game: Game) => 0 }
 );
 
 export const LookupStats: Record<string, Stat> = {
@@ -283,3 +380,27 @@ export function GetStat(proposition: Proposition): Stat {
   }
   return stat;
 }
+
+Points.relatedStats = [
+  FieldGoalAttempts,
+  FieldGoalsMade,
+  ThreeFGA,
+  ThreeFGM,
+  // PointsPct,
+  Assists,
+];
+
+Rebounds.relatedStats = [
+  OffensiveRebounds,
+  DefensiveRebounds,
+  Blocks,
+  ORebPct, // needs fix
+  DRebPct, // needs fix
+  FieldGoalAttempts,
+];
+
+Assists.relatedStats = [
+  // TODO: potential assists
+  FieldGoalAttempts,
+  Turnovers,
+];

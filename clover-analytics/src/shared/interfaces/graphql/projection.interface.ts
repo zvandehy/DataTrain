@@ -36,7 +36,7 @@ export interface Prediction {
 }
 
 export interface PredictionFragment {
-  numGames: number;
+  games: Game[];
   minutes: number;
   avgPerMin: number;
   weight: number;

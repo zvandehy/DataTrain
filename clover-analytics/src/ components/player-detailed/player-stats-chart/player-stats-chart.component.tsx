@@ -58,6 +58,7 @@ const PlayerStatsChart: React.FC<PlayerStatsChartProps> = ({
   );
   const options: ChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     interaction: {
       mode: "index",
       intersect: false,

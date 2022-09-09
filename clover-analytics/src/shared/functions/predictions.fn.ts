@@ -41,7 +41,8 @@ export function CalculatePredictions(
         },
       };
     }
-    return CalculatePrediction(updatedProjection, gameFilter, customModel);
+    let c = CalculatePrediction(updatedProjection, gameFilter, customModel);
+    return c;
   });
 }
 
@@ -288,76 +289,84 @@ export function SimilarPlayerCalculation(
   selectedProp: Proposition,
   weight: number
 ): SimilarCalculation {
-  // TODO: Verify that results / future games are not used in the calculation
-  let overallOver = 0;
-  let overallUnder = 0;
-  let overallPush = 0;
-  let overallDiff = 0;
-  let overallDiffPerMin = 0;
-  let similarCount = 0;
+  let calculation: SimilarCalculation = {
+    similarCount: 0,
+    similarGames: [],
+    similarAvg: 0,
+    similarAvgPerMin: 0,
+    similarAvgPerMinDiff: 0,
+    similarDiff: 0,
+    similarDiffPct: 0,
+    countSimOver: 0,
+    countSimUnder: 0,
+    countSimPush: 0,
+    simOverPct: 0,
+    simPushPct: 0,
+    simUnderPct: 0,
+    playerAvgAdj: 0,
+    weight: weight,
+  };
   let allGames: Game[] = [];
-  let vsGames: Game[] = [];
   projection.player.similarPlayers.forEach((similarPlayer) => {
     const filteredGames = FilterGames(similarPlayer.games, gameFilter);
+    const targetFromGames = selectedProp.statType.average(filteredGames);
     const simVsGames = filteredGames.filter(
       (game) => game.opponent.abbreviation === projection.opponent.abbreviation
     );
     if (simVsGames.length > 0) {
-      const similarity = CalculateSimilarity(
-        1,
-        filteredGames,
-        simVsGames,
-        selectedProp.statType,
-        weight,
-        selectedProp.statType.average(filteredGames)
-      );
-      overallOver += similarity.countSimOver;
-      overallUnder += similarity.countSimUnder;
-      overallPush += similarity.countSimPush;
-      overallDiff += similarity.similarDiff;
-      overallDiffPerMin += similarity.similarAvgPerMinDiff;
+      calculation.similarCount++;
       allGames.push(...filteredGames);
-      vsGames.push(...simVsGames);
-      similarCount++;
     }
+    simVsGames.forEach((game) => {
+      const gameScore = selectedProp.statType.score(game);
+      if (gameScore > targetFromGames) {
+        calculation.countSimOver++;
+      } else if (gameScore < targetFromGames) {
+        calculation.countSimUnder++;
+      } else {
+        calculation.countSimPush++;
+      }
+      calculation.similarDiff += +(gameScore - targetFromGames).toFixed(1);
+      calculation.similarAvgPerMinDiff +=
+        selectedProp.statType.scorePer(game, ScoreType.PerMin) -
+        selectedProp.statType.averagePer(filteredGames, ScoreType.PerMin);
+    });
+    calculation.similarGames.push(...simVsGames);
   });
-  let average = selectedProp.statType.average(
+  calculation.simOverPct = +(
+    (calculation.countSimOver / calculation.similarGames.length) *
+    100
+  ).toFixed(2);
+  calculation.simUnderPct = +(
+    (calculation.countSimUnder / calculation.similarGames.length) *
+    100
+  ).toFixed(2);
+  calculation.simPushPct = +(
+    (calculation.countSimPush / calculation.similarGames.length) *
+    100
+  ).toFixed(2);
+  calculation.similarDiff = +(
+    calculation.similarDiff / calculation.similarGames.length
+  ).toFixed(2);
+  calculation.similarAvg = selectedProp.statType.average(allGames);
+  calculation.similarAvgPerMin = selectedProp.statType.averagePer(
+    allGames,
+    ScoreType.PerMin
+  );
+  calculation.similarDiffPct = +(
+    calculation.similarDiff / calculation.similarAvg
+  ).toFixed(2);
+  const similarDiffPerMinPct = +(
+    calculation.similarAvgPerMinDiff / calculation.similarAvgPerMin
+  ).toFixed(2);
+  const playerAvg = selectedProp.statType.average(
     FilterGames(projection.player.games, gameFilter)
   );
-  let compoundedSimilarity = CalculateSimilarity(
-    similarCount,
-    allGames,
-    vsGames,
-    selectedProp.statType,
-    weight,
-    selectedProp.statType.average(allGames)
-  );
-  compoundedSimilarity.countSimOver = overallOver;
-  compoundedSimilarity.countSimUnder = overallUnder;
-  compoundedSimilarity.countSimPush = overallPush;
-  compoundedSimilarity.simOverPct = +(
-    (overallOver / vsGames.length) *
-    100
+  calculation.playerAvgAdj = +(
+    playerAvg +
+    calculation.similarDiffPct * playerAvg
   ).toFixed(2);
-  compoundedSimilarity.simUnderPct = +(
-    (overallUnder / vsGames.length) *
-    100
-  ).toFixed(2);
-  compoundedSimilarity.simPushPct = +(
-    (overallPush / vsGames.length) *
-    100
-  ).toFixed(2);
-  compoundedSimilarity.similarDiff = +overallDiff.toFixed(2);
-  compoundedSimilarity.similarAvgPerMinDiff = +overallDiffPerMin.toFixed(2);
-  compoundedSimilarity.similarDiffPct = +(
-    (overallDiff / average) *
-    100
-  ).toFixed(2);
-  compoundedSimilarity.playerAvgAdj = +(
-    (compoundedSimilarity.similarDiffPct / 100) * average +
-    average
-  ).toFixed(2);
-  return compoundedSimilarity;
+  return calculation;
 }
 
 export function SimilarTeamCalculation(
@@ -397,7 +406,7 @@ export function CalculateFragment(
     else numPush++;
   });
   let fragment: PredictionFragment = {
-    numGames: nGames.length,
+    games: nGames,
     weight: item.weight,
     average: stat.average(nGames),
     avgPerMin: stat.averagePer(nGames, ScoreType.PerMin),

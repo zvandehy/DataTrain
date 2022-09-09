@@ -32,6 +32,9 @@ export const GET_PLAYER = gql`
         name
         playerID
         games(input: { season: $season, endDate: $date }) {
+          player {
+            name
+          }
           points
           season
           assists
@@ -67,6 +70,9 @@ export const GET_PLAYER = gql`
           three_point_percentage
           effective_field_goal_percentage
           playoffs
+          # teamStats {
+          #   points
+          # }
         }
       }
       projections(input: {}) {
@@ -96,6 +102,9 @@ export const GET_PLAYER = gql`
           lastModified
         }
         result {
+          player {
+            name
+          }
           points
           season
           assists
@@ -131,9 +140,15 @@ export const GET_PLAYER = gql`
           three_point_percentage
           effective_field_goal_percentage
           playoffs
+          # teamStats {
+          #   points
+          # }
         }
       }
       games(input: { season: $season }) {
+        player {
+          name
+        }
         points
         season
         assists
@@ -189,6 +204,9 @@ export const GET_PLAYER = gql`
         three_point_percentage
         effective_field_goal_percentage
         playoffs
+        # teamStats {
+        #   points
+        # }
       }
     }
   }
@@ -255,7 +273,7 @@ export const useGetPlayerDetails = ({
         return newProjection;
       }
     );
-    projections = CalculatePredictions(projections, gameFilter, customModel);
+    // projections = CalculatePredictions(projections, gameFilter, customModel);
     const player: Player = {
       ...data.player,
       projections: projections,

@@ -13,7 +13,3 @@ div.player-stats {
   display: flex !important;
   flex-direction: column;
 }
-
-.player-stats {
-  font-size: 10%;
-}

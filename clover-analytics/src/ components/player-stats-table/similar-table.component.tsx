@@ -1,6 +1,5 @@
 import { KeyboardArrowUp, KeyboardArrowDown } from "@material-ui/icons";
 import {
-  Collapse,
   IconButton,
   Paper,
   Table,
@@ -8,46 +7,66 @@ import {
   TableContainer,
   TableHead,
 } from "@mui/material";
-import { useState } from "react";
-import { ColorCompare, ColorPct } from "../../../shared/functions/color.fn";
-import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
-import {
-  Projection,
-  Proposition,
-} from "../../../shared/interfaces/graphql/projection.interface";
-import { ScoreType } from "../../../shared/interfaces/score-type.enum";
-import { SimilarCalculation } from "../../../shared/interfaces/similarCalculation.interface";
-import { Minutes, Stat } from "../../../shared/interfaces/stat.interface";
-import { StyledTableCell } from "../../styled-table/styled-table-cell.component";
-import { StyledTableRow } from "../../styled-table/styled-table-row.component";
-import "./similar-preview.component.css";
+import { ColorCompare, ColorPct } from "../../shared/functions/color.fn";
+import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
+import { Proposition } from "../../shared/interfaces/graphql/projection.interface";
+import { SimilarCalculation } from "../../shared/interfaces/similarCalculation.interface";
+import { Minutes, Stat } from "../../shared/interfaces/stat.interface";
+import { StyledTableCell } from "../styled-table/styled-table-cell.component";
+import { StyledTableRow } from "../styled-table/styled-table-row.component";
+import "./player-stats-preview/similar-preview.component.css";
 
-interface SimilarPreviewProps {
-  projection: Projection;
+interface SimilarTableProps {
   selectedProp: Proposition;
   header: string;
   sim: SimilarCalculation;
   customModel: CustomCalculation;
+  children: React.ReactNode;
+  setOpen: (open: boolean) => void;
+  open: boolean;
 }
 
-const SimilarPreview: React.FC<SimilarPreviewProps> = ({
-  projection,
+const SimilarTable: React.FC<SimilarTableProps> = ({
   selectedProp,
   header,
   sim,
   customModel,
-}: SimilarPreviewProps) => {
+  children,
+  setOpen,
+  open,
+}: SimilarTableProps) => {
   return (
     <TableContainer className={"player-stats"} component={Paper}>
       <Table aria-label="similar teams table">
         <TableHead>
           <StyledTableRow>
-            <StyledTableCell colSpan={10}>{header}</StyledTableCell>
+            <StyledTableCell
+              colSpan={11 + (selectedProp.statType.relatedStats?.length ?? 0)}
+            >
+              {header}
+            </StyledTableCell>
           </StyledTableRow>
           <StyledTableRow>
+            <StyledTableCell rowSpan={2}>
+              <IconButton
+                aria-label="expand row"
+                size="small"
+                onClick={() => setOpen(!open)}
+                color={"secondary"}
+              >
+                {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+              </IconButton>
+            </StyledTableCell>
             <StyledTableCell>GAMES</StyledTableCell>
             <StyledTableCell>AVG</StyledTableCell>
             <StyledTableCell>AVG/MIN</StyledTableCell>
+            {selectedProp.statType.relatedStats?.map((related: Stat) => {
+              return (
+                <StyledTableCell key={related.label}>
+                  {related.abbreviation}
+                </StyledTableCell>
+              );
+            })}
             <StyledTableCell>MINS</StyledTableCell>
             <StyledTableCell>DIFF</StyledTableCell>
             <StyledTableCell>O-U-P</StyledTableCell>
@@ -68,9 +87,17 @@ const SimilarPreview: React.FC<SimilarPreviewProps> = ({
         </TableHead>
         <TableBody>
           <StyledTableRow>
+            <StyledTableCell></StyledTableCell>
             <StyledTableCell>{`${sim.similarGames.length}`}</StyledTableCell>
             <StyledTableCell>{sim.similarAvg}</StyledTableCell>
             <StyledTableCell>{sim.similarAvgPerMin}</StyledTableCell>
+            {selectedProp.statType.relatedStats?.map((related: Stat) => {
+              return (
+                <StyledTableCell key={related.label + "score"}>
+                  {related.average(sim.similarGames)}
+                </StyledTableCell>
+              );
+            })}
             <StyledTableCell>
               {Minutes.average(sim.similarGames)}
             </StyledTableCell>
@@ -107,10 +134,11 @@ const SimilarPreview: React.FC<SimilarPreviewProps> = ({
             </StyledTableCell>
             <StyledTableCell>{sim.weight.toFixed(0)}%</StyledTableCell>
           </StyledTableRow>
+          {children}
         </TableBody>
       </Table>
     </TableContainer>
   );
 };
 
-export default SimilarPreview;
+export default SimilarTable;

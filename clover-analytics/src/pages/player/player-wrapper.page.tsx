@@ -1,12 +1,13 @@
 import { Button } from "@mui/material";
 import moment from "moment";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import CustomModelDialog from "../../ components/custom-model-dialog/custom-model-dialog.component";
 import { INITIAL_CUSTOM_MODEL_STATE } from "../../ components/custom-model-dialog/custom-model-dialog.reducer";
 import PlayerPage from "../../ components/player-detailed/player/player.page";
 import { useGetPlayerDetails } from "../../hooks/useGetPlayerDetail";
 import { FindProjectionByDate } from "../../shared/functions/findProjection.fn";
+import { CalculatePredictions } from "../../shared/functions/predictions.fn";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
 import {
   GameFilter,
@@ -39,6 +40,7 @@ const PlayerPageWrapper: React.FC = () => {
   };
   const save = (value: CustomCalculation) => {
     localStorage.setObject("customModel", value);
+    setCustomPredictionModel(value);
     close();
   };
   let projectionFilter: ProjectionFilter = {};
@@ -51,7 +53,7 @@ const PlayerPageWrapper: React.FC = () => {
   };
   const gameFilter: GameFilter = {
     endDate: moment(date).format("YYYY-MM-DD"),
-    statFilters: [{ stat: Minutes, min: 10 }],
+    // statFilters: [{ stat: Minutes, min: 10 }],
   };
 
   const {
@@ -68,7 +70,7 @@ const PlayerPageWrapper: React.FC = () => {
   if (loading) return <div>{loading}</div>;
   if (error) return <div>{error}</div>;
   if (!player) return <div>No player found</div>;
-  const projection = FindProjectionByDate(date, player.projections, player);
+
   return (
     <div className="player-wrapper">
       <Button
@@ -89,7 +91,7 @@ const PlayerPageWrapper: React.FC = () => {
       />
       <PlayerPage
         player={player}
-        selectedProjection={projection}
+        projection={FindProjectionByDate(date, player.projections, player)}
         setSelectedDate={onDateChange}
         gameFilter={gameFilter}
         customModel={customPredictionModel}

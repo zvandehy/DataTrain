@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import PlayerCardList from "../../ components/playercard-list/playercard-list.component";
 import "./home.page.css";
 
@@ -17,6 +17,8 @@ import { INITIAL_CUSTOM_MODEL_STATE } from "../../ components/custom-model-dialo
 import moment from "moment";
 import CustomModelDialog from "../../ components/custom-model-dialog/custom-model-dialog.component";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
+import { CalculatePredictions } from "../../shared/functions/predictions.fn";
+import PlayerListFilters from "../../ components/playercard-list/list-filters/list-filters.component";
 
 const Home: React.FC = () => {
   const [date, setDate] = useState(
@@ -58,14 +60,6 @@ const Home: React.FC = () => {
     setDate(newDate);
     localStorage.setObject("date", newDate);
   };
-
-  let result = useGetProjections({
-    projectionFilter,
-    gameFilter,
-    predictionFilter,
-    customModel: customPredictionModel,
-  });
-
   const close = () => {
     setOpenCustomModel(false);
   };
@@ -74,7 +68,20 @@ const Home: React.FC = () => {
     localStorage.setObject("customModel", value);
     setCustomPredictionModel(value);
   };
-  //COMPONENT
+
+  const { loading, error, data } = useGetProjections({
+    projectionFilter,
+    gameFilter,
+    predictionFilter,
+    customModel: customPredictionModel,
+  });
+
+  if (loading) {
+    return <>{loading}</>;
+  }
+  if (error) {
+    return <>{error}</>;
+  }
 
   return (
     <div id="home-page">
@@ -111,7 +118,7 @@ const Home: React.FC = () => {
           <DesktopDatePicker
             label="Date"
             inputFormat="M-D-YY"
-            value={date}
+            value={moment(date)}
             onChange={onDateChange}
             PaperProps={{
               style: {
@@ -127,15 +134,11 @@ const Home: React.FC = () => {
           />
         </LocalizationProvider>
       </div>
-      {result.data ? (
-        <PlayerCardList
-          projectionQueryResult={result}
-          customModel={customPredictionModel}
-          gameFilter={gameFilter}
-        />
-      ) : (
-        <></>
-      )}
+      <PlayerCardList
+        projections={data}
+        customModel={customPredictionModel}
+        gameFilter={gameFilter}
+      />
     </div>
   );
 };

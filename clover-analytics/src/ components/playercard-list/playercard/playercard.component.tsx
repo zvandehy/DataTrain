@@ -87,19 +87,21 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   };
   return (
     <div className="playercard">
-      <PlayercardContext projection={projection} />
-      <StatSelectButtons
-        propositions={projection.propositions}
-        selectedStat={stat}
-        selectedProp={selectedProp}
-        onStatSelect={onStatSelect}
-      />
+      <div className="player-context-wrapper">
+        <PlayercardContext projection={projection} />
+        <StatSelectButtons
+          propositions={projection.propositions}
+          selectedStat={stat}
+          selectedProp={selectedProp}
+          onStatSelect={onStatSelect}
+        />
+      </div>
       <Prediction
         projection={projection}
         selectedProp={selectedProp}
         selectedStat={stat}
         onPredictionSelect={onPropSelect}
-      ></Prediction>
+      />
       <PlayerStatsPreview
         selectedProp={selectedProp}
         projection={projection}

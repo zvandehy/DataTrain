@@ -6,6 +6,11 @@
     "dist dist"
     "max-dist max-dist"
     "list list";
+  max-width: 100%;
+}
+
+#home-page th {
+  font-size: max(0.75rem, 1vw) !important;
 }
 
 h1,
@@ -50,6 +55,10 @@ p {
 }
 .MuiCalendarPicker-root button {
   color: var(--color-black);
+}
+
+#home-page > * {
+  max-width: 100%;
 }
 
 @media (max-width: 885px) {

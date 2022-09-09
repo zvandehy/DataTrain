@@ -1,30 +1,26 @@
 import moment from "moment";
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  CalculatePredictions,
   GetMaxConfidence,
   UpdatePropositionWithPrediction,
 } from "../../../shared/functions/predictions.fn";
 import { GetImpliedTarget } from "../../../shared/functions/target.fn";
-import {
-  GameFilter,
-  ProjectionFilter,
-} from "../../../shared/interfaces/graphql/filters.interface";
+import { GameFilter } from "../../../shared/interfaces/graphql/filters.interface";
 import { Player } from "../../../shared/interfaces/graphql/player.interface";
 import {
   Projection,
   Proposition,
 } from "../../../shared/interfaces/graphql/projection.interface";
-import { Points, Stat } from "../../../shared/interfaces/stat.interface";
-import { Option } from "../../../shared/interfaces/option.interface";
+import { Stat } from "../../../shared/interfaces/stat.interface";
 import "./player.page.css";
 import AutocompleteFilter from "../../autocomplete-filter/autocomplete-filter.component";
 import PlayerContext from "../player-context/player-context.component";
 import StatSelectButtons from "../../playercard-list/playercard/stat-select-buttons/stat-select-buttons.component";
-import PlayerStatsPreview from "../../player-stats-table/player-stats-preview/player-stats-preview.component";
 import Prediction from "../../prediction/prediction.component";
 import PlayerStatsChart from "../player-stats-chart/player-stats-chart.component";
 import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
+import PlayerStatsTable from "../../player-stats-table/player-stats-table.component";
 import { FindProjectionByDate } from "../../../shared/functions/findProjection.fn";
 
 function getProposition(
@@ -45,7 +41,7 @@ function getProposition(
 
 interface PlayerPageProps {
   player: Player;
-  selectedProjection: Projection;
+  projection: Projection;
   setSelectedDate: (date: Date) => void;
   gameFilter: GameFilter;
   customModel: CustomCalculation;
@@ -54,11 +50,15 @@ let league = "wnba";
 
 const PlayerPage: React.FC<PlayerPageProps> = ({
   player,
-  selectedProjection,
+  projection,
   setSelectedDate,
   gameFilter,
   customModel,
 }: PlayerPageProps) => {
+  const selectedProjection = useMemo(() => {
+    return CalculatePredictions([projection], gameFilter, customModel)[0];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customModel]);
   const [statType, setStatType] = useState(undefined as Stat | undefined);
   const [proposition, setProposition] = useState(
     getProposition(selectedProjection, statType)
@@ -166,8 +166,7 @@ const PlayerPage: React.FC<PlayerPageProps> = ({
               selectedStat={proposition.statType}
               onPredictionSelect={setProposition}
             />
-            <PlayerStatsPreview // TODO: variable similarity metrics
-              // TODO: more in depth table
+            <PlayerStatsTable
               selectedProp={proposition}
               projection={{ ...selectedProjection, player: player }}
               customModel={customModel}

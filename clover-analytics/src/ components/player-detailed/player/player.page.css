@@ -1,8 +1,6 @@
 .player-page {
   background-color: var(--color-primary);
   color: var(--color-black);
-  display: grid;
-  grid-template-columns: auto 1fr;
 }
 
 .player-page > * {
@@ -26,4 +24,9 @@
 }
 .player-page .player-position {
   margin-left: 10px;
+}
+
+td,
+th {
+  padding: 0.5rem;
 }
