@@ -124,7 +124,6 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
       <Box>
         {customModelForm.recency?.length ? (
           customModelForm.recency.map((fragment: Factor, index: number) => {
-            console.log(index, fragment);
             return (
               <Box key={"Recency: " + index}>
                 <TextField
