@@ -124,8 +124,9 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
       <Box>
         {customModelForm.recency?.length ? (
           customModelForm.recency.map((fragment: Factor, index: number) => {
+            console.log(index, fragment);
             return (
-              <Box key={"Recency: " + fragment.count}>
+              <Box key={"Recency: " + index}>
                 <TextField
                   id={`recency-count-input-${index}`}
                   label="Last X Games"
@@ -138,7 +139,7 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
                       payload: newRecency,
                     });
                   }}
-                  value={fragment.count ?? 0 * -1}
+                  value={fragment.count ?? 0}
                   sx={{
                     "& .MuiInputBase-input": { color: "black" },
                   }}
