@@ -12,16 +12,9 @@ import {
   Projection,
   Proposition,
 } from "../interfaces/graphql/projection.interface";
-import { ListFilterOptions } from "../interfaces/listFilter.interface";
 import { ScoreType } from "../interfaces/score-type.enum";
 import { SimilarCalculation } from "../interfaces/similarCalculation.interface";
-import {
-  ConvertMinutes,
-  GetStat,
-  Minutes,
-  Points,
-  ReboundsAssists,
-} from "../interfaces/stat.interface";
+import { ConvertMinutes, GetStat } from "../interfaces/stat.interface";
 import { FilterGames } from "./filters.fn";
 import { AdjustConfidence, CalculateSimilarity } from "./similarity.fn";
 
@@ -114,13 +107,13 @@ export function UpdatePropositionWithPrediction(
     );
 
     if (
+      // TODO: This is skipping count of 0 (all games)
       projection.player.games.slice(item.count! * -1).length < item.count! ||
       filteredGames.length === item.count
     ) {
       skipped_weight_sum += item.weight;
       return;
     }
-
     let fragment = CalculateFragment(nGames, proposition, item);
     prediction.recencyFragments.push(fragment);
   });
@@ -405,6 +398,7 @@ export function CalculateFragment(
     else if (score < proposition.target) numUnder++;
     else numPush++;
   });
+
   let fragment: PredictionFragment = {
     games: nGames,
     weight: item.weight,

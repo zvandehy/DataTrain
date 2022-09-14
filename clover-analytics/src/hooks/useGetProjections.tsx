@@ -1,9 +1,7 @@
-import { ApolloQueryResult, gql, useQuery } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import moment from "moment";
-import React from "react";
-import { CalculatePredictions } from "../shared/functions/predictions.fn";
 import { CustomCalculation } from "../shared/interfaces/custom-prediction.interface";
 import {
   GameFilter,
@@ -390,6 +388,7 @@ export const useGetProjections = ({
   predictionFilter: GameFilter;
   customModel: CustomCalculation;
 }): ProjectionQueryResult => {
+  // console.log("Get projections for: ", projectionFilter, gameFilter);
   let QUERY =
     customModel.similarPlayers &&
     customModel.similarPlayers.weight > 0 &&

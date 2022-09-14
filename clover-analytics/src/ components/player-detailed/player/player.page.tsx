@@ -1,5 +1,5 @@
 import moment from "moment";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   CalculatePredictions,
   GetMaxConfidence,
@@ -21,7 +21,6 @@ import Prediction from "../../prediction/prediction.component";
 import PlayerStatsChart from "../player-stats-chart/player-stats-chart.component";
 import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
 import PlayerStatsTable from "../../player-stats-table/player-stats-table.component";
-import { FindProjectionByDate } from "../../../shared/functions/findProjection.fn";
 
 function getProposition(
   projection: Projection | undefined,

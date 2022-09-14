@@ -1,12 +1,12 @@
+import moment from "moment";
 import { useMemo, useState } from "react";
-import { ProjectionQueryResult } from "../../hooks/useGetProjections";
 import { Match, SortProjections } from "../../shared/functions/filters.fn";
 import { CalculatePredictions } from "../../shared/functions/predictions.fn";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
 import { GameFilter } from "../../shared/interfaces/graphql/filters.interface";
 import { Projection } from "../../shared/interfaces/graphql/projection.interface";
-import { ScoreType } from "../../shared/interfaces/score-type.enum";
 import { Stat } from "../../shared/interfaces/stat.interface";
+import ModelAccuracyHistory from "../projections-summary/history-summary.component";
 import ProjectionsSummary from "../projections-summary/projections-summary.component";
 import PlayerListFilters from "./list-filters/list-filters.component";
 import "./playercard-list.component.css";
@@ -42,6 +42,17 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
     statType: statType,
   });
 
+  let accuracy = useMemo(() => {
+    return (
+      <ModelAccuracyHistory
+        date={gameFilter.endDate ?? moment(new Date()).format("YYYY-MM-DD")}
+        customModel={customModel}
+        filteredStat={statType}
+        lookup={lookup}
+      />
+    );
+  }, [customModel.includePush, gameFilter.endDate]);
+
   return (
     <>
       <PlayerListFilters
@@ -49,6 +60,7 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
         onSortSelect={setSortType}
         onStatSelect={setStatType}
       />
+      {accuracy}
       <ProjectionsSummary
         projections={filteredProjections}
         filteredStat={statType}

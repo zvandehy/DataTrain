@@ -3,6 +3,7 @@ import React from "react";
 import { BETTING_CATEGORIES } from "../../shared/constants";
 import { ColorPct } from "../../shared/functions/color.fn";
 import { GetMaxConfidence } from "../../shared/functions/predictions.fn";
+import { DistributionItem } from "../../shared/interfaces/distribution.interface";
 import { Projection } from "../../shared/interfaces/graphql/projection.interface";
 import { Stat } from "../../shared/interfaces/stat.interface";
 import "./projections-summary.component.css";
@@ -31,13 +32,6 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
   let countMaxCorrect = 0;
   let countMaxIncorrect = 0;
   let countMaxPush = 0;
-
-  interface DistributionItem {
-    min: number;
-    max: number;
-    correct: number;
-    incorrect: number;
-  }
 
   let distribution: DistributionItem[] = [];
   let maxDistribution: DistributionItem[] = [];
@@ -236,6 +230,11 @@ const ProjectionsSummary: React.FC<ProjectionsSummaryProps> = ({
   return (
     <>
       <div id="projection-summary">
+        {projections.length > 0 ? (
+          <span>{moment(projections[0].date).format("YYYY-MM-DD")}</span>
+        ) : (
+          <></>
+        )}
         <span id="count-teams">{uniqueTeams.length} Teams</span>
         <span id="count-teams">
           {countMaxTotal} Players{" "}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import PlayerCardList from "../../ components/playercard-list/playercard-list.component";
 import "./home.page.css";
 
@@ -17,8 +17,6 @@ import { INITIAL_CUSTOM_MODEL_STATE } from "../../ components/custom-model-dialo
 import moment from "moment";
 import CustomModelDialog from "../../ components/custom-model-dialog/custom-model-dialog.component";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
-import { CalculatePredictions } from "../../shared/functions/predictions.fn";
-import PlayerListFilters from "../../ components/playercard-list/list-filters/list-filters.component";
 
 const Home: React.FC = () => {
   const [date, setDate] = useState(
