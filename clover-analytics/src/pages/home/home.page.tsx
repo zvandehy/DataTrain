@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import PlayerCardList from "../../ components/playercard-list/playercard-list.component";
+import React, { useState } from "react";
+import PlayerCardList from "../../components/playercard-list/playercard-list.component";
 import "./home.page.css";
 
 import {
@@ -7,18 +7,16 @@ import {
   ProjectionFilter,
 } from "../../shared/interfaces/graphql/filters.interface";
 import { Option } from "../../shared/interfaces/option.interface";
-import AutocompleteFilter from "../../ components/autocomplete-filter/autocomplete-filter.component";
+import AutocompleteFilter from "../../components/autocomplete-filter/autocomplete-filter.component";
 import { useGetProjections } from "../../hooks/useGetProjections";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { Button, TextField } from "@mui/material";
-import { INITIAL_CUSTOM_MODEL_STATE } from "../../ components/custom-model-dialog/custom-model-dialog.reducer";
+import { INITIAL_CUSTOM_MODEL_STATE } from "../../components/custom-model-dialog/custom-model-dialog.reducer";
 import moment from "moment";
-import CustomModelDialog from "../../ components/custom-model-dialog/custom-model-dialog.component";
+import CustomModelDialog from "../../components/custom-model-dialog/custom-model-dialog.component";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
-import { CalculatePredictions } from "../../shared/functions/predictions.fn";
-import PlayerListFilters from "../../ components/playercard-list/list-filters/list-filters.component";
 
 const Home: React.FC = () => {
   const [date, setDate] = useState(
