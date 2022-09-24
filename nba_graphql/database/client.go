@@ -64,9 +64,9 @@ func (c *NBADatabaseClient) GetTeamsByAbr(ctx context.Context, abbreviations []s
 	}
 	cur, err := teamsDB.Find(ctx, filter)
 	if len(abbreviations) < 5 {
-		logrus.Printf("Query Teams By Abbreviations: %v\tTook %v", abbreviations, time.Since(start))
+		logrus.Printf("[%v] Query Teams By Abbreviations: %v\tTook %v", time.Now().Format(util.TIMENOW), abbreviations, time.Since(start))
 	} else {
-		logrus.Printf("Query %d Teams By Abbreviation\tTook %v", len(abbreviations), time.Since(start))
+		logrus.Printf("[%v] Query %d Teams By Abbreviation\tTook %v", time.Now().Format(util.TIMENOW), len(abbreviations), time.Since(start))
 	}
 	return cur, err
 }
@@ -80,9 +80,9 @@ func (c *NBADatabaseClient) GetTeamsById(ctx context.Context, teamIDs []int) (*m
 	}
 	cur, err := teamsDB.Find(ctx, filter)
 	if len(teamIDs) < 5 {
-		logrus.Printf("Query Teams By IDs: %v\tTook %v", teamIDs, time.Since(start))
+		logrus.Printf("[%v] Query Teams By IDs: %v\tTook %v", time.Now().Format(util.TIMENOW), teamIDs, time.Since(start))
 	} else {
-		logrus.Printf("Query %d Teams By IDs\tTook %v", len(teamIDs), time.Since(start))
+		logrus.Printf("[%v] Query %d Teams By IDs\tTook %v", time.Now().Format(util.TIMENOW), len(teamIDs), time.Since(start))
 	}
 	return cur, err
 }
@@ -108,7 +108,7 @@ func (c *NBADatabaseClient) GetTeamGames(ctx context.Context, inputs []model.Gam
 	}
 	cur, err := teamGamesDB.Find(ctx, filter)
 
-	logrus.Printf("Query %d TeamGames\tTook %v", len(inputs), time.Since(start))
+	logrus.Printf("[%v] Query %d TeamGames\tTook %v", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
 	return cur, err
 }
 
@@ -119,9 +119,9 @@ func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.G
 	filter := createGameFilter(inputs)
 	cur, err := playerGamesDB.Find(ctx, filter)
 	if len(inputs) < 5 {
-		logrus.Printf("Query PlayerGames From: %v\tTook %v", inputs, time.Since(start))
+		logrus.Printf("[%v] Query PlayerGames From: %v\tTook %v", time.Now().Format(util.TIMENOW), inputs, time.Since(start))
 	} else {
-		logrus.Printf("Query %d PlayerGames\tTook %v", len(inputs), time.Since(start))
+		logrus.Printf("[%v] Query %d PlayerGames\tTook %v", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
 	}
 	return cur, err
 }
@@ -209,7 +209,7 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.Playe
 		}
 	}
 	cur, err := playersDB.Find(ctx, filter)
-	logrus.Printf("Query %d Players\tTook %v", len(inputs), time.Since(start))
+	logrus.Printf("[%v] Query %d Players\tTook %v", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
 	return cur, err
 }
 
@@ -236,7 +236,7 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 		filter["date"] = bson.M{"$lte": *input.EndDate}
 	}
 	cur, err := projectionDB.Find(ctx, filter, options.Find().SetSort(bson.M{"date": 1}))
-	logrus.Printf("Query Projections From: %v \tTook %v", input, time.Since(start))
+	logrus.Printf("[%v] Query Projections From: %v \tTook %v", time.Now().Format(util.TIMENOW), input, time.Since(start))
 	return cur, err
 }
 
@@ -300,7 +300,7 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 			i--
 		}
 	}
-	logrus.Printf("Query %d Player Averages\tTook %v\n", len(inputs), time.Since(start))
+	logrus.Printf("[%v] Query %d Player Averages\tTook %v\n", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
 	return &averages, nil
 
 }
@@ -353,8 +353,7 @@ func (c *NBADatabaseClient) GetTeamAverages(ctx context.Context, inputs []model.
 		averages[i].GamesLost = losses
 	}
 
-	logrus.Printf("Query %d Team Averages\tTook %v\n", len(inputs), time.Since(start))
-	logrus.Warnf("%d Team Averages", len(averages))
+	logrus.Printf("[%v] Query %d Team Averages\tTook %v\n", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
 	return &averages, nil
 
 }

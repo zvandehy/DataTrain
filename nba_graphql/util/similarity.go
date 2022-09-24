@@ -39,12 +39,12 @@ func SimilarPlayers(players []model.PlayerAverage, toPlayer model.PlayerAverage)
 		distances = append(distances, k)
 	}
 	sort.Float64s(distances)
-	limit := 15
+	limit := 5
 	var closestPlayers []*model.Player = make([]*model.Player, 0, limit)
 	for i, distance := range distances {
 		player := playerDistances[distance]
 		closestPlayers = append(closestPlayers, &player)
-		if i >= limit-1 {
+		if i >= limit {
 			break
 		}
 	}
@@ -79,10 +79,11 @@ func SimilarTeams(teams []model.TeamAverage, toTeam model.TeamAverage) []*model.
 	sort.Float64s(distances)
 	//TODO: add a limit to the filter
 	var closestTeams []*model.Team = make([]*model.Team, 0, 4)
+	limit := 3
 	for i, distance := range distances {
 		team := teamDistances[distance]
 		closestTeams = append(closestTeams, &team)
-		if i == 3 {
+		if i >= limit {
 			break
 		}
 	}

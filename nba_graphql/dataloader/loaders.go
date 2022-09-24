@@ -17,7 +17,7 @@ type LoadersKey string
 
 const loadersKey LoadersKey = "dataloaders"
 
-const waitTime = 100 * time.Millisecond
+const waitTime = 150 * time.Millisecond
 const maxBatch = 50
 
 type Loaders struct {
@@ -307,7 +307,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 			),
 			PlayerGameByFilter: *NewPlayerGameLoader(
 				PlayerGameLoaderConfig{
-					MaxBatch: maxBatch,
+					MaxBatch: maxBatch * 10,
 					Wait:     waitTime,
 					Fetch: func(keys []model.GameFilter) ([][]*model.PlayerGame, []error) {
 						games := make([][]*model.PlayerGame, len(keys))
@@ -339,7 +339,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 			),
 			SimilarPlayerLoader: *NewSimilarPlayerLoader(
 				SimilarPlayerLoaderConfig{
-					MaxBatch: maxBatch,
+					MaxBatch: maxBatch * 2,
 					Wait:     waitTime,
 					Fetch: func(keys []model.GameFilter) ([][]*model.Player, []error) {
 						similarPlayers := make([][]*model.Player, len(keys))
@@ -367,10 +367,9 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 			),
 			SimilarTeamLoader: *NewSimilarTeamLoader(
 				SimilarTeamLoaderConfig{
-					MaxBatch: maxBatch,
+					MaxBatch: maxBatch * 2,
 					Wait:     waitTime,
 					Fetch: func(keys []model.GameFilter) ([][]*model.Team, []error) {
-						logrus.Infof("SimilarTeamLoader: %+v", keys)
 						similarTeams := make([][]*model.Team, len(keys))
 						errs := make([]error, len(keys))
 						createFilterWithoutIDs := make([]model.GameFilter, len(keys))

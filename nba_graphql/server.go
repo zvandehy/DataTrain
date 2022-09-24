@@ -16,6 +16,7 @@ import (
 	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
+	"github.com/zvandehy/DataTrain/nba_graphql/util"
 )
 
 const defaultPort = "8080"
@@ -75,6 +76,6 @@ func timer(h http.Handler, db *database.NBADatabaseClient) http.Handler {
 		startTime := time.Now()
 		h.ServeHTTP(w, r)
 		duration := time.Since(startTime)
-		logrus.Printf("Request took %v to resolve %v queries.", duration, db.Queries)
+		logrus.Printf("[%v] Request took %v to resolve %v queries.", time.Now().Format(util.TIMENOW), duration, db.Queries)
 	})
 }

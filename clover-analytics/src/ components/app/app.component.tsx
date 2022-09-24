@@ -8,7 +8,7 @@ import PlayerPage from "../../pages/player/player-wrapper.page";
 import "../../shared/styles";
 import "./app.component.css";
 import "../../shared/fonts/Oswald-Regular.ttf";
-import client from "../../shared/apollo-client";
+import apolloClient from "../../shared/apollo-client";
 
 const theme = createTheme({
   palette: {
@@ -70,7 +70,7 @@ const App: React.FC = () => {
   };
   return (
     <ThemeProvider theme={theme}>
-      <ApolloProvider client={client}>
+      <ApolloProvider client={apolloClient}>
         <Router>
           <Routes>
             <Route path="/nba/players/:id" element={<PlayerPage />}></Route>

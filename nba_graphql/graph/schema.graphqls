@@ -126,7 +126,17 @@ type Projection {
   result: PlayerGame
   startTime: String!
   date: String!
+  # playerOpponentMatchup: PlayerOpponentMatchup
 }
+
+# type PlayerOpponentMatchup {
+#   similarPlayers(parent.player) {
+#     games(parent.opponent)
+#   }
+#   similarTeams(parent.opponent) {
+#     playerGamesVsTeam(parent.player) #game[]
+#   }
+# }
 
 type Proposition {
   target: Float!
@@ -206,3 +216,39 @@ input GameFilter {
   startDate: String
   endDate: String
 }
+
+# TESTING What a schema to calculate custom models on the server might look like.
+# This would move the weighted calculations from the browser to the backend.
+
+# input ModelWeights {
+#   numGames: [Int]
+#   matchup: Int
+#   similarPlayersVsOpp: Int
+#   playerVsSimilarTeam: Int
+#   homeOrAway: Int
+#   playoffs: Int
+#   allowPush: boolean
+# }
+
+# type ProjectionBreakdown { #(model: ModelWeights)
+#   numGames: [[Game]]
+#   matchup: Game[]
+#   similarPlayersMatchup: Game[]
+#   matchupSimilarTeams: Game[]
+#   homeOrAway: Game[]
+#   playoffs: Game[]
+# }
+
+# type PredictionBreakdown { # (projection, games)
+#   numOver: Int!
+#   numUnder: Int!
+#   numPush: Int!
+#   pctOver: Float!
+#   pctUnder: Float!
+#   pctOverOrPush: Float!
+#   pctUnderOrPush: Float!
+# }
+
+# games({numGames: [10,20,30,0]}) {
+
+# }

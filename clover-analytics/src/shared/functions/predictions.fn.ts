@@ -35,6 +35,9 @@ export function CalculatePredictions(
       };
     }
     let c = CalculatePrediction(updatedProjection, gameFilter, customModel);
+    c.propositions = c.propositions.sort(
+      (prop) => prop.customPrediction.confidence
+    );
     return c;
   });
 }

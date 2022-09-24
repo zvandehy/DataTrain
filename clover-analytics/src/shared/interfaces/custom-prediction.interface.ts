@@ -1,3 +1,5 @@
+import { HitCriteria } from "./accuracy.interface";
+
 export interface CustomCalculation {
   includePush: boolean;
   includeOnDifferentTeam: boolean;
@@ -8,6 +10,7 @@ export interface CustomCalculation {
   homeAwayWeight?: number;
   opponentWeight?: number;
   playoffs?: Factor;
+  hitCriteria: HitCriteria;
 }
 
 export interface Factor {

@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { DocumentNode, gql, useQuery } from "@apollo/client";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import moment from "moment";
@@ -62,6 +62,7 @@ export const GET_PROJECTIONS = gql`
       }
       startTime
       result {
+        date
         points
         assists
         rebounds
@@ -165,6 +166,7 @@ export const GET_PROJECTIONS_AND_SIMILAR_PLAYERS = gql`
       }
       startTime
       result {
+        date
         points
         assists
         rebounds
@@ -240,6 +242,7 @@ export const GET_PROJECTIONS_AND_SIMILAR_TEAMS = gql`
       }
       startTime
       result {
+        date
         points
         assists
         rebounds
@@ -349,6 +352,7 @@ export const GET_PROJECTIONS_AND_SIMILAR_PLAYERS_AND_TEAMS = gql`
       }
       startTime
       result {
+        date
         points
         assists
         rebounds
@@ -388,7 +392,7 @@ export const useGetProjections = ({
   predictionFilter: GameFilter;
   customModel: CustomCalculation;
 }): ProjectionQueryResult => {
-  // console.log("Get projections for: ", projectionFilter, gameFilter);
+  // console.log("Get projections for: ", projectionFilter.endDate);
   let QUERY =
     customModel.similarPlayers &&
     customModel.similarPlayers.weight > 0 &&
@@ -441,4 +445,21 @@ export const useGetProjections = ({
     error: errorComponent,
     data: [],
   };
+};
+
+export const getQuery = ({
+  customModel,
+}: {
+  customModel: CustomCalculation;
+}): DocumentNode => {
+  return customModel.similarPlayers &&
+    customModel.similarPlayers.weight > 0 &&
+    customModel.similarTeams &&
+    customModel.similarTeams.weight > 0
+    ? GET_PROJECTIONS_AND_SIMILAR_PLAYERS_AND_TEAMS
+    : customModel.similarPlayers && customModel.similarPlayers.weight > 0
+    ? GET_PROJECTIONS_AND_SIMILAR_PLAYERS
+    : customModel.similarTeams && customModel.similarTeams.weight > 0
+    ? GET_PROJECTIONS_AND_SIMILAR_TEAMS
+    : GET_PROJECTIONS;
 };

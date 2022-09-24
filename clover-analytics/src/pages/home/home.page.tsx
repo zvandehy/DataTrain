@@ -17,6 +17,7 @@ import { INITIAL_CUSTOM_MODEL_STATE } from "../../ components/custom-model-dialo
 import moment from "moment";
 import CustomModelDialog from "../../ components/custom-model-dialog/custom-model-dialog.component";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
+import { Projection } from "../../shared/interfaces/graphql/projection.interface";
 
 const Home: React.FC = () => {
   const [date, setDate] = useState(

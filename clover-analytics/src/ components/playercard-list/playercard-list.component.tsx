@@ -1,16 +1,18 @@
 import moment from "moment";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Match, SortProjections } from "../../shared/functions/filters.fn";
 import { CalculatePredictions } from "../../shared/functions/predictions.fn";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
+import { DateRange } from "../../shared/interfaces/dateRange.interface";
+import { Accuracy } from "../../shared/interfaces/accuracy.interface";
 import { GameFilter } from "../../shared/interfaces/graphql/filters.interface";
 import { Projection } from "../../shared/interfaces/graphql/projection.interface";
 import { Stat } from "../../shared/interfaces/stat.interface";
-import ModelAccuracyHistory from "../projections-summary/history-summary.component";
-import ProjectionsSummary from "../projections-summary/projections-summary.component";
+import CalendarSummary from "../projections-summary/calendar-summary/calendar-summary.component";
 import PlayerListFilters from "./list-filters/list-filters.component";
 import "./playercard-list.component.css";
 import PlayerCard from "./playercard/playercard.component";
+import OverallAccuracyBreakdownTable from "../projections-summary/breakdown-table/overall-accuracy-breakdown.component";
 
 interface PlayerCardListProps {
   projections: Projection[];
@@ -42,16 +44,82 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
     statType: statType,
   });
 
-  let accuracy = useMemo(() => {
+  const [dateRange, setDateRange] = useState(
+    filteredProjections.length > 0
+      ? ({
+          start: moment(filteredProjections[0].startTime)
+            .subtract(7, "days")
+            .format("YYYY-MM-DD"),
+          end: moment(filteredProjections[0].startTime).format("YYYY-MM-DD"),
+        } as DateRange)
+      : {
+          start: moment(new Date()).subtract(7, "days").format("YYYY-MM-DD"),
+          end: moment(new Date()).format("YYYY-MM-DD"),
+        }
+  );
+
+  const onSetDates = (date: string) => {
+    if (moment(date).isBefore(dateRange.start)) {
+      setDateRange((prev) => ({
+        ...prev,
+        start: moment(date).format("YYYY-MM-DD"),
+      }));
+    }
+    if (moment(date).isAfter(dateRange.end)) {
+      setDateRange((prev) => ({
+        ...prev,
+        end: moment(date).format("YYYY-MM-DD"),
+      }));
+    }
+  };
+
+  // const [accuracies, setAccuracies] = useState([] as Accuracy[]);
+  // const [totalAccuracy, setTotalAccuracy] = useState(new Accuracy());
+
+  // useEffect(() => {
+  //   setTotalAccuracy(new Accuracy());
+  //   setDateRange(
+  //     filteredProjections.length > 0
+  //       ? ({
+  //           start: moment(filteredProjections[0].startTime)
+  //             .add(-1, "days")
+  //             .format("YYYY-MM-DD"),
+  //           end: moment(filteredProjections[0].startTime).format("YYYY-MM-DD"),
+  //         } as DateRange)
+  //       : {
+  //           start: moment(new Date()).add(-1, "days").format("YYYY-MM-DD"),
+  //           end: moment(new Date()).format("YYYY-MM-DD"),
+  //         }
+  //   );
+  // }, [customModel, statType]);
+
+  // const calendarSummary = useMemo(() => {
+  //   console.log("reload calendar summary");
+  //   return (
+  //     // <CalendarSummary
+  //     //   accuracy={totalAccuracy}
+  //     //   dateRange={dateRange}
+  //     //   setDates={onSetDates}
+  //     //   setAccuracy={setTotalAccuracy}
+  //     //   customModel={customModel}
+  //     //   statType={statType}
+  //     //   lookup={lookup}
+  //     // ></CalendarSummary>
+  //   );
+  // }, [totalAccuracy.allProps, dateRange.start]);
+
+  const totalTable = useMemo(() => {
+    console.log("Reload table");
     return (
-      <ModelAccuracyHistory
-        date={gameFilter.endDate ?? moment(new Date()).format("YYYY-MM-DD")}
+      <OverallAccuracyBreakdownTable
         customModel={customModel}
-        filteredStat={statType}
         lookup={lookup}
+        dateRange={dateRange}
+        setDates={setDateRange}
+        hitCriteria={customModel.hitCriteria}
       />
     );
-  }, [customModel.includePush, gameFilter.endDate]);
+  }, [customModel, dateRange]);
 
   return (
     <>
@@ -60,17 +128,14 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
         onSortSelect={setSortType}
         onStatSelect={setStatType}
       />
-      {accuracy}
-      <ProjectionsSummary
-        projections={filteredProjections}
-        filteredStat={statType}
-      />
+      {/* {calendarSummary} */}
+      {totalTable}
       <div id="player-list">
         {filteredProjections.length > 0 ? (
           filteredProjections.map((projection) => {
             return (
               <PlayerCard
-                key={`${projection.player.playerID} ${projection.date}`}
+                key={`${projection.player.playerID} ${projection.startTime}`}
                 projection={projection}
                 filteredStatType={statType}
                 gameFilter={gameFilter}

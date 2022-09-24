@@ -17,6 +17,7 @@ import (
 	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
+	"github.com/zvandehy/DataTrain/nba_graphql/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -664,7 +665,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 			}
 		}
 		cancel()
-		logrus.Printf("DONE retrieving NBA prizepicks projections\tTook %v", time.Since(start))
+		logrus.Printf("[%v] DONE  retrieving NBA prizepicks projections\tTook %v", time.Now().Format(util.TIMENOW), time.Since(start))
 	}()
 	go func() {
 		start := time.Now()
@@ -744,7 +745,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 			}
 		}
 		cancel()
-		logrus.Printf("DONE retrieving WNBA prizepicks projections\tTook %v", time.Since(start))
+		logrus.Printf("[%v] DONE  retrieving WNBA prizepicks projections\tTook %v", time.Now().Format(util.TIMENOW), time.Since(start))
 	}()
 	go func() {
 		start := time.Now()
@@ -818,7 +819,7 @@ func (r *queryResolver) Projections(ctx context.Context, input model.ProjectionF
 			}
 		}
 		cancel()
-		logrus.Printf("DONE retrieving WNBA prizepicks projections\tTook %v", time.Since(start))
+		logrus.Printf("[%v] DONE  retrieving WNBA prizepicks projections\tTook %v", time.Now().Format(util.TIMENOW), time.Since(start))
 	}()
 
 	start := time.Now()
