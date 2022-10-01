@@ -341,12 +341,16 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 				SimilarPlayerLoaderConfig{
 					MaxBatch: maxBatch * 2,
 					Wait:     waitTime,
-					Fetch: func(keys []model.GameFilter) ([][]*model.Player, []error) {
+					Fetch: func(keys []model.SimilarPlayerInput) ([][]*model.Player, []error) {
 						similarPlayers := make([][]*model.Player, len(keys))
 						errs := make([]error, len(keys))
 						createFilterWithoutIDs := make([]model.GameFilter, len(keys))
 						for i, filter := range keys {
-							createFilterWithoutIDs[i] = model.GameFilter{Season: filter.Season} //TODO: add other filters if applicable
+							newFilter := *filter.GameFilter
+							newFilter.OpponentID = nil
+							newFilter.GameID = nil
+							newFilter.PlayerID = nil
+							createFilterWithoutIDs[i] = newFilter
 						}
 						playerAverages, err := conn.GetAverages(r.Context(), createFilterWithoutIDs)
 						if err != nil || len(*playerAverages) == 0 {
@@ -355,7 +359,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 						for i, filter := range keys {
 							targetPlayer := (*playerAverages)[0]
 							for _, p := range *playerAverages {
-								if p.Player.PlayerID == *filter.PlayerID {
+								if p.Player.PlayerID == *filter.GameFilter.PlayerID {
 									targetPlayer = p
 								}
 							}
@@ -369,12 +373,17 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 				SimilarTeamLoaderConfig{
 					MaxBatch: maxBatch * 2,
 					Wait:     waitTime,
-					Fetch: func(keys []model.GameFilter) ([][]*model.Team, []error) {
+					Fetch: func(keys []model.SimilarTeamInput) ([][]*model.Team, []error) {
 						similarTeams := make([][]*model.Team, len(keys))
 						errs := make([]error, len(keys))
 						createFilterWithoutIDs := make([]model.GameFilter, len(keys))
 						for i, filter := range keys {
-							createFilterWithoutIDs[i] = model.GameFilter{Season: filter.Season} //TODO: add other filters if applicable
+							newFilter := *filter.GameFilter
+							newFilter.OpponentID = nil
+							newFilter.GameID = nil
+							newFilter.PlayerID = nil
+							createFilterWithoutIDs[i] = newFilter
+
 						}
 						teamAverages, err := conn.GetTeamAverages(r.Context(), createFilterWithoutIDs)
 						if err != nil || len(*teamAverages) == 0 {
@@ -383,7 +392,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 						for i, filter := range keys {
 							targetTeam := (*teamAverages)[0]
 							for _, t := range *teamAverages {
-								if t.Team.TeamID == *filter.TeamID {
+								if t.Team.TeamID == *filter.GameFilter.TeamID {
 									targetTeam = t
 								}
 							}

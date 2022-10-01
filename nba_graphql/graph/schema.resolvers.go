@@ -176,8 +176,12 @@ func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, inp
 
 // SimilarPlayers is the resolver for the similarPlayers field.
 func (r *playerResolver) SimilarPlayers(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.Player, error) {
+	// TODO:  REFACTOR player.SimilarPlayers to use SimilarPlayerInput
 	input.PlayerID = &obj.PlayerID
-	return dataloader.For(ctx).SimilarPlayerLoader.Load(input)
+	similarPlayerInput := model.SimilarPlayerInput{
+		GameFilter: &input,
+	}
+	return dataloader.For(ctx).SimilarPlayerLoader.Load(similarPlayerInput)
 }
 
 // Opponent is the resolver for the opponent field.
@@ -299,6 +303,57 @@ func (r *playerGameResolver) Projections(ctx context.Context, obj *model.PlayerG
 	return projections, nil
 }
 
+// SimilarPlayerGames is the resolver for the similarPlayerGames field.
+func (r *playerOpponentMatchupResolver) SimilarPlayerGames(ctx context.Context, obj *model.PlayerOpponentMatchup, similarity model.SimilarPlayerInput) ([]*model.PlayerGame, error) {
+	similarity.GameFilter = &model.GameFilter{
+		// TODO: SEASONS
+		PlayerID: &obj.PlayerID,
+		EndDate:  &obj.Date,
+	}
+	players, err := dataloader.For(ctx).SimilarPlayerLoader.Load(similarity)
+	if err != nil {
+		return nil, err
+	}
+	var games []*model.PlayerGame = make([]*model.PlayerGame, 0)
+	for _, player := range players {
+		gameFilter := model.GameFilter{
+			PlayerID:   &player.PlayerID,
+			OpponentID: &obj.OpponentID,
+			EndDate:    &obj.Date,
+		}
+		pGames, err := dataloader.For(ctx).PlayerGameByFilter.Load(gameFilter)
+		if err != nil {
+			continue
+		}
+		games = append(games, pGames...)
+	}
+	return games, err
+}
+
+// SimilarTeamGames is the resolver for the similarTeamGames field.
+func (r *playerOpponentMatchupResolver) SimilarTeamGames(ctx context.Context, obj *model.PlayerOpponentMatchup, similarity model.SimilarTeamInput) ([]*model.PlayerGame, error) {
+	similarity.GameFilter = &model.GameFilter{
+		// TODO: Seasons
+		TeamID:  &obj.OpponentID,
+		EndDate: &obj.Date,
+	}
+	similarOpponents, err := dataloader.For(ctx).SimilarTeamLoader.Load(similarity)
+	var games []*model.PlayerGame = make([]*model.PlayerGame, 0)
+	for _, opp := range similarOpponents {
+		gameFilter := model.GameFilter{
+			PlayerID:   &obj.PlayerID,
+			OpponentID: &opp.TeamID,
+			EndDate:    &obj.Date,
+		}
+		pGames, err := dataloader.For(ctx).PlayerGameByFilter.Load(gameFilter)
+		if err != nil {
+			continue
+		}
+		games = append(games, pGames...)
+	}
+	return games, err
+}
+
 // Team is the resolver for the team field.
 func (r *playersInGameResolver) Team(ctx context.Context, obj *model.PlayersInGame) ([]*model.Player, error) {
 	return obj.TeamPlayers, nil
@@ -385,6 +440,19 @@ func (r *projectionResolver) Result(ctx context.Context, obj *model.Projection) 
 		return nil, err
 	}
 	return &game, nil
+}
+
+// PlayerOpponentMatchup is the resolver for the playerOpponentMatchup field.
+func (r *projectionResolver) PlayerOpponentMatchup(ctx context.Context, obj *model.Projection) (*model.PlayerOpponentMatchup, error) {
+	player, err := r.Player(ctx, obj)
+	if err != nil {
+		return nil, err
+	}
+	opponent, err := r.Opponent(ctx, obj)
+	if err != nil {
+		return nil, err
+	}
+	return &model.PlayerOpponentMatchup{PlayerID: player.PlayerID, OpponentID: opponent.TeamID, Date: obj.StartTime}, nil
 }
 
 // LastModified is the resolver for the lastModified field.
@@ -938,8 +1006,25 @@ func (r *teamResolver) Injuries(ctx context.Context, obj *model.Team) ([]*model.
 
 // SimilarTeams is the resolver for the similarTeams field.
 func (r *teamResolver) SimilarTeams(ctx context.Context, obj *model.Team, input model.GameFilter) ([]*model.Team, error) {
+	// TODO:  REFACTOR player.SimilarPlayers to use SimilarPlayerInput
+	similarTeamInput := model.SimilarTeamInput{
+		GameFilter: &input,
+	}
 	input.TeamID = &obj.TeamID
-	return dataloader.For(ctx).SimilarTeamLoader.Load(input)
+	return dataloader.For(ctx).SimilarTeamLoader.Load(similarTeamInput)
+}
+
+// PlayerGamesVsTeam is the resolver for the playerGamesVsTeam field.
+func (r *teamResolver) PlayerGamesVsTeam(ctx context.Context, obj *model.Team, input model.PlayerFilter) ([]*model.PlayerGame, error) {
+	player, err := dataloader.For(ctx).PlayerByFilter.Load(input)
+	if err != nil {
+		return []*model.PlayerGame{}, nil
+	}
+	gameFilter := model.GameFilter{
+		OpponentID: &obj.TeamID,
+		PlayerID:   &player.PlayerID,
+	}
+	return dataloader.For(ctx).PlayerGameByFilter.Load(gameFilter)
 }
 
 // Opponent is the resolver for the opponent field.
@@ -1008,6 +1093,11 @@ func (r *Resolver) Player() generated.PlayerResolver { return &playerResolver{r}
 // PlayerGame returns generated.PlayerGameResolver implementation.
 func (r *Resolver) PlayerGame() generated.PlayerGameResolver { return &playerGameResolver{r} }
 
+// PlayerOpponentMatchup returns generated.PlayerOpponentMatchupResolver implementation.
+func (r *Resolver) PlayerOpponentMatchup() generated.PlayerOpponentMatchupResolver {
+	return &playerOpponentMatchupResolver{r}
+}
+
 // PlayersInGame returns generated.PlayersInGameResolver implementation.
 func (r *Resolver) PlayersInGame() generated.PlayersInGameResolver { return &playersInGameResolver{r} }
 
@@ -1029,6 +1119,7 @@ func (r *Resolver) TeamGame() generated.TeamGameResolver { return &teamGameResol
 type injuryResolver struct{ *Resolver }
 type playerResolver struct{ *Resolver }
 type playerGameResolver struct{ *Resolver }
+type playerOpponentMatchupResolver struct{ *Resolver }
 type playersInGameResolver struct{ *Resolver }
 type projectionResolver struct{ *Resolver }
 type propositionResolver struct{ *Resolver }

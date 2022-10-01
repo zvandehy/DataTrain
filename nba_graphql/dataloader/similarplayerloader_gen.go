@@ -12,7 +12,7 @@ import (
 // SimilarPlayerLoaderConfig captures the config to create a new SimilarPlayerLoader
 type SimilarPlayerLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []model.GameFilter) ([][]*model.Player, []error)
+	Fetch func(keys []model.SimilarPlayerInput) ([][]*model.Player, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -33,7 +33,7 @@ func NewSimilarPlayerLoader(config SimilarPlayerLoaderConfig) *SimilarPlayerLoad
 // SimilarPlayerLoader batches and caches requests
 type SimilarPlayerLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []model.GameFilter) ([][]*model.Player, []error)
+	fetch func(keys []model.SimilarPlayerInput) ([][]*model.Player, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -44,7 +44,7 @@ type SimilarPlayerLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[model.GameFilter][]*model.Player
+	cache map[model.SimilarPlayerInput][]*model.Player
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -55,7 +55,7 @@ type SimilarPlayerLoader struct {
 }
 
 type similarPlayerLoaderBatch struct {
-	keys    []model.GameFilter
+	keys    []model.SimilarPlayerInput
 	data    [][]*model.Player
 	error   []error
 	closing bool
@@ -63,14 +63,14 @@ type similarPlayerLoaderBatch struct {
 }
 
 // Load a Player by key, batching and caching will be applied automatically
-func (l *SimilarPlayerLoader) Load(key model.GameFilter) ([]*model.Player, error) {
+func (l *SimilarPlayerLoader) Load(key model.SimilarPlayerInput) ([]*model.Player, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a Player.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *SimilarPlayerLoader) LoadThunk(key model.GameFilter) func() ([]*model.Player, error) {
+func (l *SimilarPlayerLoader) LoadThunk(key model.SimilarPlayerInput) func() ([]*model.Player, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
@@ -113,7 +113,7 @@ func (l *SimilarPlayerLoader) LoadThunk(key model.GameFilter) func() ([]*model.P
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *SimilarPlayerLoader) LoadAll(keys []model.GameFilter) ([][]*model.Player, []error) {
+func (l *SimilarPlayerLoader) LoadAll(keys []model.SimilarPlayerInput) ([][]*model.Player, []error) {
 	results := make([]func() ([]*model.Player, error), len(keys))
 
 	for i, key := range keys {
@@ -131,7 +131,7 @@ func (l *SimilarPlayerLoader) LoadAll(keys []model.GameFilter) ([][]*model.Playe
 // LoadAllThunk returns a function that when called will block waiting for a Players.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *SimilarPlayerLoader) LoadAllThunk(keys []model.GameFilter) func() ([][]*model.Player, []error) {
+func (l *SimilarPlayerLoader) LoadAllThunk(keys []model.SimilarPlayerInput) func() ([][]*model.Player, []error) {
 	results := make([]func() ([]*model.Player, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
@@ -149,7 +149,7 @@ func (l *SimilarPlayerLoader) LoadAllThunk(keys []model.GameFilter) func() ([][]
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *SimilarPlayerLoader) Prime(key model.GameFilter, value []*model.Player) bool {
+func (l *SimilarPlayerLoader) Prime(key model.SimilarPlayerInput, value []*model.Player) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
@@ -164,22 +164,22 @@ func (l *SimilarPlayerLoader) Prime(key model.GameFilter, value []*model.Player)
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *SimilarPlayerLoader) Clear(key model.GameFilter) {
+func (l *SimilarPlayerLoader) Clear(key model.SimilarPlayerInput) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *SimilarPlayerLoader) unsafeSet(key model.GameFilter, value []*model.Player) {
+func (l *SimilarPlayerLoader) unsafeSet(key model.SimilarPlayerInput, value []*model.Player) {
 	if l.cache == nil {
-		l.cache = map[model.GameFilter][]*model.Player{}
+		l.cache = map[model.SimilarPlayerInput][]*model.Player{}
 	}
 	l.cache[key] = value
 }
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *similarPlayerLoaderBatch) keyIndex(l *SimilarPlayerLoader, key model.GameFilter) int {
+func (b *similarPlayerLoaderBatch) keyIndex(l *SimilarPlayerLoader, key model.SimilarPlayerInput) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i

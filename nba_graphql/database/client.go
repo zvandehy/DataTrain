@@ -127,53 +127,100 @@ func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.G
 }
 
 func createGameFilter(inputs []model.GameFilter) bson.M {
-	applyFilters := make(map[string]bson.M, 4)
-	var gameIDs []string
-	var teamIDs []int
-	var playerIDs []int
-	var seasons []string
-	for _, in := range inputs {
-		if in.GameID != nil {
-			gameIDs = append(gameIDs, *in.GameID)
+	filters := bson.A{}
+	for _, input := range inputs {
+		inputAsFilter := bson.M{}
+		if input.GameID != nil {
+			inputAsFilter["gameID"] = *input.GameID
 		}
-		if in.PlayerID != nil {
-			playerIDs = append(playerIDs, *in.PlayerID)
+		if input.TeamID != nil {
+			inputAsFilter["teamID"] = *input.TeamID
 		}
-		if in.TeamID != nil {
-			teamIDs = append(teamIDs, *in.TeamID)
+		if input.OpponentID != nil {
+			inputAsFilter["opponent"] = *input.OpponentID
 		}
-		if in.Season != nil {
-			seasons = append(seasons, *in.Season)
+		if input.PlayerID != nil {
+			inputAsFilter["playerID"] = *input.PlayerID
 		}
+		if input.Season != nil {
+			inputAsFilter["season"] = *input.Season
+		}
+		if input.GameID != nil {
+			inputAsFilter["gameID"] = *input.GameID
+		}
+		if input.StartDate != nil && input.EndDate != nil {
+			if *input.StartDate == *input.EndDate {
+				inputAsFilter["date"] = *input.StartDate
+			} else {
+				inputAsFilter["date"] = bson.M{"$gte": *input.StartDate, "$lt": *input.EndDate}
+			}
+		} else if input.StartDate != nil {
+			inputAsFilter["date"] = bson.M{"$gte": *input.StartDate}
+		} else if input.EndDate != nil {
+			inputAsFilter["date"] = bson.M{"$lt": *input.EndDate}
+		}
+		filters = append(filters, inputAsFilter)
 	}
-	if len(gameIDs) == 0 {
-		applyFilters["gameID"] = bson.M{"$nin": []string{""}}
-	} else {
-		applyFilters["gameID"] = bson.M{"$in": gameIDs}
-	}
-	if len(playerIDs) == 0 {
-		applyFilters["playerID"] = bson.M{"$nin": []string{""}}
-	} else {
-		applyFilters["playerID"] = bson.M{"$in": playerIDs}
-	}
-	if len(teamIDs) == 0 {
-		applyFilters["teamID"] = bson.M{"$nin": []string{""}}
-	} else {
-		applyFilters["teamID"] = bson.M{"$in": teamIDs}
-	}
-	if len(seasons) == 0 {
-		applyFilters["season"] = bson.M{"$nin": []string{""}}
-	} else {
-		applyFilters["season"] = bson.M{"$in": seasons}
-	}
-	//get all the players from this game
-	filter := bson.M{
-		"gameID": applyFilters["gameID"],
-		"player": applyFilters["playerID"],
-		"teamID": applyFilters["teamID"],
-		"season": applyFilters["season"],
-	}
-	return filter
+	return bson.M{"$or": filters}
+
+	// applyFilters := make(map[string]bson.M, 4)
+	// var gameIDs []string
+	// var teamIDs []int
+	// var opponentIDs []int
+	// var playerIDs []int
+	// var seasons []string
+	// for _, in := range inputs {
+	// 	if in.GameID != nil {
+	// 		gameIDs = append(gameIDs, *in.GameID)
+	// 	}
+	// 	if in.PlayerID != nil {
+	// 		playerIDs = append(playerIDs, *in.PlayerID)
+	// 	}
+	// 	if in.TeamID != nil {
+	// 		teamIDs = append(teamIDs, *in.TeamID)
+	// 	}
+	// 	if in.OpponentID != nil {
+	// 		opponentIDs = append(opponentIDs, *in.OpponentID)
+	// 	}
+	// 	if in.Season != nil {
+	// 		seasons = append(seasons, *in.Season)
+	// 	}
+
+	// }
+	// if len(gameIDs) == 0 {
+	// 	applyFilters["gameID"] = bson.M{"$nin": []string{""}}
+	// } else {
+	// 	applyFilters["gameID"] = bson.M{"$in": gameIDs}
+	// }
+	// if len(playerIDs) == 0 {
+	// 	applyFilters["playerID"] = bson.M{"$nin": []string{""}}
+	// } else {
+	// 	applyFilters["playerID"] = bson.M{"$in": playerIDs}
+	// }
+	// if len(teamIDs) == 0 {
+	// 	applyFilters["teamID"] = bson.M{"$nin": []string{""}}
+	// } else {
+	// 	applyFilters["teamID"] = bson.M{"$in": teamIDs}
+	// }
+	// if len(opponentIDs) == 0 {
+	// 	applyFilters["opponent"] = bson.M{"$nin": []string{""}}
+	// } else {
+	// 	applyFilters["opponent"] = bson.M{"$in": opponentIDs}
+	// }
+	// if len(seasons) == 0 {
+	// 	applyFilters["season"] = bson.M{"$nin": []string{""}}
+	// } else {
+	// 	applyFilters["season"] = bson.M{"$in": seasons}
+	// }
+	// //get all the players from this game
+	// filter := bson.M{
+	// 	"gameID":   applyFilters["gameID"],
+	// 	"player":   applyFilters["playerID"],
+	// 	"teamID":   applyFilters["teamID"],
+	// 	"season":   applyFilters["season"],
+	// 	"opponent": applyFilters["opponent"],
+	// }
+	// return filter
 }
 
 func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.PlayerFilter) (*mongo.Cursor, error) {
@@ -228,12 +275,12 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 		if *input.StartDate == *input.EndDate {
 			filter["date"] = *input.StartDate
 		} else {
-			filter["date"] = bson.M{"$gte": *input.StartDate, "$lte": *input.EndDate}
+			filter["date"] = bson.M{"$gte": *input.StartDate, "$lt": *input.EndDate}
 		}
 	} else if input.StartDate != nil {
 		filter["date"] = bson.M{"$gte": *input.StartDate}
 	} else if input.EndDate != nil {
-		filter["date"] = bson.M{"$lte": *input.EndDate}
+		filter["date"] = bson.M{"$lt": *input.EndDate}
 	}
 	cur, err := projectionDB.Find(ctx, filter, options.Find().SetSort(bson.M{"date": 1}))
 	logrus.Printf("[%v] Query Projections From: %v \tTook %v", time.Now().Format(util.TIMENOW), input, time.Since(start))
@@ -244,9 +291,8 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 	start := time.Now()
 	c.Queries++
 	filter := createGameFilter(inputs)
-
 	matchGames := bson.M{"$match": filter}
-	averageStats := bson.M{"$group": bson.M{"_id": "$player",
+	averageStats := bson.M{"$group": bson.M{"_id": "$playerID",
 		"games_played":             bson.M{"$count": bson.M{}},
 		"points":                   bson.M{"$avg": "$points"},
 		"assists":                  bson.M{"$avg": "$assists"},

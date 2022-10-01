@@ -63,3 +63,18 @@ func (f TeamFilter) String() string {
 func (f ProjectionFilter) String() string {
 	return Print(f)
 }
+
+type SimilarPlayerInput struct {
+	GameFilter      *GameFilter `json:"gameFilter" bson:"gameFilter"`
+	Euclidean       *bool       `json:"euclidean" bson:"euclidean"`
+	NumPlayers      *int        `json:"numPlayers" bson:"numPlayers"`
+	StatsOfInterest *[]string   `json:"statsOfInterest" bson:"statsOfInterest"`
+	PositionStrict  *bool       `json:"positionStrict" bson:"positionStrict"`
+	PositionSoft    *bool       `json:"positionSoft" bson:"positionSoft"`
+}
+
+type SimilarTeamInput struct {
+	GameFilter      *GameFilter `json:"gameFilter"`
+	NumTeams        *int        `json:"numTeams" bson:"numTeams"`
+	StatsOfInterest *[]string   `json:"statsOfInterest" bson:"statsOfInterest"`
+}

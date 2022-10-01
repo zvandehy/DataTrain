@@ -47,7 +47,7 @@ type PlayerGame struct {
 	PersonalFoulsDrawn           int     `json:"personal_fouls_drawn" bson:"personal_fouls_drawn"`
 	PersonalFouls                int     `json:"personal_fouls" bson:"personal_fouls"`
 	Points                       int     `json:"points" bson:"points"`
-	PlayerID                     int     `json:"player" bson:"player"`
+	PlayerID                     int     `json:"playerID" bson:"playerID"`
 	Playoffs                     bool    `json:"playoffs" bson:"playoffs"`
 	Season                       string  `json:"season" bson:"season"`
 	ThreePointPercentage         float64 `json:"three_point_percentage" bson:"three_point_percentage"`
@@ -64,6 +64,12 @@ type PlayerGame struct {
 
 func (p PlayerGame) String() string {
 	return Print(p)
+}
+
+type PlayerOpponentMatchup struct {
+	PlayerID   int    `json:"playerID" bson:"playerID"`
+	OpponentID int    `json:"opponent" bson:"opponent"`
+	Date       string `json:"date" bson:"date"`
 }
 
 type PlayerAverage struct {

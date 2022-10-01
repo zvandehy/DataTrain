@@ -31,6 +31,7 @@ type Team {
   players: [Player!]!
   injuries: [Injury!]
   similarTeams(input: GameFilter!): [Team!]!
+  playerGamesVsTeam(input: PlayerFilter!): [PlayerGame!]!
 }
 
 type TeamGame {
@@ -119,6 +120,36 @@ type PlayerGame {
   projections: [Projection]!
 }
 
+type Stats {
+  assist_percentage: Float!
+  assists: Int!
+  defensive_rebound_percentage: Float!
+  defensive_rebounds: Int!
+  effective_field_goal_percentage: Float!
+  field_goal_percentage: Float!
+  field_goals_attempted: Int!
+  field_goals_made: Int!
+  free_throws_attempted: Int!
+  free_throws_made: Int!
+  free_throws_percentage: Float!
+  margin: Int!
+  minutes: String!
+  offensive_rebound_percentage: Float!
+  offensive_rebounds: Int!
+  personal_fouls_drawn: Int!
+  personal_fouls: Int!
+  points: Int!
+  three_point_percentage: Float!
+  three_pointers_attempted: Int!
+  three_pointers_made: Int!
+  rebounds: Int!
+  true_shooting_percentage: Float!
+  turnovers: Int!
+  usage: Float!
+  blocks: Int!
+  steals: Int!
+}
+
 type Projection {
   player: Player!
   opponent: Team!
@@ -126,22 +157,21 @@ type Projection {
   result: PlayerGame
   startTime: String!
   date: String!
-  # playerOpponentMatchup: PlayerOpponentMatchup
+  playerOpponentMatchup: PlayerOpponentMatchup
 }
 
-# type PlayerOpponentMatchup {
-#   similarPlayers(parent.player) {
-#     games(parent.opponent)
-#   }
-#   similarTeams(parent.opponent) {
-#     playerGamesVsTeam(parent.player) #game[]
-#   }
-# }
+type PlayerOpponentMatchup {
+  # List of PlayerGames where a similar player played against the same opponent
+  similarPlayerGames(similarity: SimilarPlayerInput!): [PlayerGame!]!
+  # List of PlayerGames where the same player played against similar opponents
+  similarTeamGames(similarity: SimilarTeamInput!): [PlayerGame!]!
+}
 
 type Proposition {
   target: Float!
   type: String!
   sportsbook: String!
+  # prediction(model: ModelWeights): Prediction!
   predictions: [Prediction!]!
   lastModified: String!
 }
@@ -149,8 +179,34 @@ type Proposition {
 type Prediction {
   model: String!
   overUnderPrediction: String!
+  # confidence: Float
   totalPrediction: Float
+  # recencyFragments: [PredictionFragment]
+  # vsOpponent: PredictionFragment
+  # vsSimilarTeams: PredictionFragment
+  # similarPlayersVsOpponent: PredictionFragment
 }
+
+# type PredictionFragment {
+#   count: Int
+#   games: [PlayerGame]
+#   minutes: Float
+#   avgPerMin: Float
+#   weight: Float
+#   average: Float
+#   diff: Float
+#   pctDiff: Float
+#   diffPerMin: Float
+#   pctDiffPerMin: Float
+#   median: Float
+#   numOver: Float
+#   numUnder: Float
+#   numPush: Float
+#   pctOver: Float
+#   pctUnder: Float
+#   pctPushOrMore: Float
+#   pctPushOrLess: Float
+# }
 
 # add injuries to games
 type Injury {
@@ -182,6 +238,19 @@ type Query {
   projections(input: ProjectionFilter!): [Projection!]!
 }
 
+input SimilarPlayerInput {
+  euclidean: Boolean
+  numPlayers: Int
+  statsOfInterest: [String!] # TODO: we might want Stat objects and/or enums
+  positionStrict: Boolean
+  positionSoft: Boolean
+}
+
+input SimilarTeamInput {
+  numTeams: Int
+  statsOfInterest: [String!] # TODO: we might want Stat objects and/or enums
+}
+
 input ProjectionFilter {
   sportsbook: String
   playerName: String
@@ -210,6 +279,7 @@ input TeamFilter {
 # TODO: Add a date filter
 input GameFilter {
   teamID: Int
+  opponentID: Int
   playerID: Int
   gameID: String
   season: String
@@ -221,13 +291,18 @@ input GameFilter {
 # This would move the weighted calculations from the browser to the backend.
 
 # input ModelWeights {
-#   numGames: [Int]
-#   matchup: Int
-#   similarPlayersVsOpp: Int
-#   playerVsSimilarTeam: Int
-#   homeOrAway: Int
-#   playoffs: Int
-#   allowPush: boolean
+#   lastGames: [CountWeight]
+#   matchupWeight: Int
+#   similarPlayersVsOppWeight: Int
+#   playerVsSimilarTeamsWeight: Int
+#   homeOrAwayWeight: Int
+#   playoffsWeight: Int
+#   allowPush: Boolean
+# }
+
+# input CountWeight {
+#   count: Int!
+#   weight: Int!
 # }
 
 # type ProjectionBreakdown { #(model: ModelWeights)

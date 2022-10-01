@@ -264,7 +264,7 @@ func getAppearanceIDForPlayer(playerID string, appearances []UnderdogAppearance)
 			return appearance.AppearanceID, nil
 		}
 	}
-	return "", fmt.Errorf("Couldn't find appearance for playerID: %s", playerID)
+	return "", fmt.Errorf("Couldn't find appearance for playerID: '%s'", playerID)
 }
 
 func getOpponent(underdogGames []UnderdogGame, teamID string) (string, *UnderdogGame, error) {
@@ -276,7 +276,7 @@ func getOpponent(underdogGames []UnderdogGame, teamID string) (string, *Underdog
 			return strings.SplitN(game.Title, " @ ", 2)[0], &game, nil
 		}
 	}
-	return "", nil, fmt.Errorf("Couldn't find opponent for team %s", teamID)
+	return "", nil, fmt.Errorf("Couldn't find opponent for team: '%s'", teamID)
 }
 
 func GetBestProjection(projections []*Projection) *Projection {
