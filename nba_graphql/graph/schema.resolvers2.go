@@ -105,6 +105,18 @@ func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input mod
 	return games, err
 }
 
+// Average is the resolver for the average field.
+func (r *playerResolver) Average(ctx context.Context, obj *model.Player, input model.GameFilter) (*model.AverageStats, error) {
+	gameFilter := input
+	gameFilter.PlayerID = &obj.PlayerID
+	playerAverages, err := dataloader.For(ctx).PlayerAverageLoader.Load(gameFilter)
+	if err != nil {
+		return nil, err
+	}
+	return playerAverages.ToAverageStats(), nil
+
+}
+
 // Injuries is the resolver for the injuries field.
 func (r *playerResolver) Injuries(ctx context.Context, obj *model.Player) ([]*model.Injury, error) {
 	return dataloader.For(ctx).PlayerInjuryLoader.Load(obj.PlayerID)
@@ -324,6 +336,11 @@ func (r *playerOpponentMatchupResolver) SimilarPlayerGames(ctx context.Context, 
 		pGames, err := dataloader.For(ctx).PlayerGameByFilter.Load(gameFilter)
 		if err != nil {
 			continue
+		}
+		for _, game := range pGames {
+			if game.OpponentID != obj.OpponentID {
+				logrus.Warnf("PlayerGame OpponentID '%v' does not match PlayerOpponentMatchup OpponentID '%v'", game.OpponentID, obj.OpponentID)
+			}
 		}
 		games = append(games, pGames...)
 	}

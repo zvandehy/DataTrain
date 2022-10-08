@@ -52,6 +52,26 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AverageStats struct {
+		Assists                func(childComplexity int) int
+		Blocks                 func(childComplexity int) int
+		DefensiveRebounds      func(childComplexity int) int
+		FieldGoalsAttempted    func(childComplexity int) int
+		FieldGoalsMade         func(childComplexity int) int
+		FreeThrowsAttempted    func(childComplexity int) int
+		FreeThrowsMade         func(childComplexity int) int
+		Minutes                func(childComplexity int) int
+		OffensiveRebounds      func(childComplexity int) int
+		PersonalFouls          func(childComplexity int) int
+		PersonalFoulsDrawn     func(childComplexity int) int
+		Points                 func(childComplexity int) int
+		Rebounds               func(childComplexity int) int
+		Steals                 func(childComplexity int) int
+		ThreePointersAttempted func(childComplexity int) int
+		ThreePointersMade      func(childComplexity int) int
+		Turnovers              func(childComplexity int) int
+	}
+
 	Injury struct {
 		Player     func(childComplexity int) int
 		ReturnDate func(childComplexity int) int
@@ -60,6 +80,7 @@ type ComplexityRoot struct {
 	}
 
 	Player struct {
+		Average        func(childComplexity int, input model.GameFilter) int
 		CurrentTeam    func(childComplexity int) int
 		Games          func(childComplexity int, input model.GameFilter) int
 		Height         func(childComplexity int) int
@@ -231,6 +252,7 @@ type InjuryResolver interface {
 type PlayerResolver interface {
 	CurrentTeam(ctx context.Context, obj *model.Player) (*model.Team, error)
 	Games(ctx context.Context, obj *model.Player, input model.GameFilter) ([]*model.PlayerGame, error)
+	Average(ctx context.Context, obj *model.Player, input model.GameFilter) (*model.AverageStats, error)
 	Injuries(ctx context.Context, obj *model.Player) ([]*model.Injury, error)
 	Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error)
 
@@ -305,6 +327,125 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AverageStats.assists":
+		if e.complexity.AverageStats.Assists == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.Assists(childComplexity), true
+
+	case "AverageStats.blocks":
+		if e.complexity.AverageStats.Blocks == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.Blocks(childComplexity), true
+
+	case "AverageStats.defensive_rebounds":
+		if e.complexity.AverageStats.DefensiveRebounds == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.DefensiveRebounds(childComplexity), true
+
+	case "AverageStats.field_goals_attempted":
+		if e.complexity.AverageStats.FieldGoalsAttempted == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.FieldGoalsAttempted(childComplexity), true
+
+	case "AverageStats.field_goals_made":
+		if e.complexity.AverageStats.FieldGoalsMade == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.FieldGoalsMade(childComplexity), true
+
+	case "AverageStats.free_throws_attempted":
+		if e.complexity.AverageStats.FreeThrowsAttempted == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.FreeThrowsAttempted(childComplexity), true
+
+	case "AverageStats.free_throws_made":
+		if e.complexity.AverageStats.FreeThrowsMade == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.FreeThrowsMade(childComplexity), true
+
+	case "AverageStats.minutes":
+		if e.complexity.AverageStats.Minutes == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.Minutes(childComplexity), true
+
+	case "AverageStats.offensive_rebounds":
+		if e.complexity.AverageStats.OffensiveRebounds == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.OffensiveRebounds(childComplexity), true
+
+	case "AverageStats.personal_fouls":
+		if e.complexity.AverageStats.PersonalFouls == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.PersonalFouls(childComplexity), true
+
+	case "AverageStats.personal_fouls_drawn":
+		if e.complexity.AverageStats.PersonalFoulsDrawn == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.PersonalFoulsDrawn(childComplexity), true
+
+	case "AverageStats.points":
+		if e.complexity.AverageStats.Points == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.Points(childComplexity), true
+
+	case "AverageStats.rebounds":
+		if e.complexity.AverageStats.Rebounds == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.Rebounds(childComplexity), true
+
+	case "AverageStats.steals":
+		if e.complexity.AverageStats.Steals == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.Steals(childComplexity), true
+
+	case "AverageStats.three_pointers_attempted":
+		if e.complexity.AverageStats.ThreePointersAttempted == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.ThreePointersAttempted(childComplexity), true
+
+	case "AverageStats.three_pointers_made":
+		if e.complexity.AverageStats.ThreePointersMade == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.ThreePointersMade(childComplexity), true
+
+	case "AverageStats.turnovers":
+		if e.complexity.AverageStats.Turnovers == nil {
+			break
+		}
+
+		return e.complexity.AverageStats.Turnovers(childComplexity), true
+
 	case "Injury.player":
 		if e.complexity.Injury.Player == nil {
 			break
@@ -332,6 +473,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Injury.Status(childComplexity), true
+
+	case "Player.average":
+		if e.complexity.Player.Average == nil {
+			break
+		}
+
+		args, err := ec.field_Player_average_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Player.Average(childComplexity, args["input"].(model.GameFilter)), true
 
 	case "Player.currentTeam":
 		if e.complexity.Player.CurrentTeam == nil {
@@ -1406,6 +1559,7 @@ type Player {
   # TODO: change 'currentTeam' to 'team'
   currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
+  average(input: GameFilter!): AverageStats!
   injuries: [Injury!]
   projections(input: ProjectionFilter!): [Projection!]!
   height: String!
@@ -1511,6 +1665,26 @@ type PlayerGame {
   steals: Int!
   playersInGame: PlayersInGame!
   projections: [Projection]!
+}
+
+type AverageStats {
+  assists: Float!
+  defensive_rebounds: Float!
+  field_goals_attempted: Float!
+  field_goals_made: Float!
+  free_throws_attempted: Float!
+  free_throws_made: Float!
+  minutes: String!
+  offensive_rebounds: Float!
+  personal_fouls_drawn: Float!
+  personal_fouls: Float!
+  points: Float!
+  three_pointers_attempted: Float!
+  three_pointers_made: Float!
+  rebounds: Float!
+  turnovers: Float!
+  blocks: Float!
+  steals: Float!
 }
 
 type Projection {
@@ -1725,6 +1899,21 @@ func (ec *executionContext) field_PlayerOpponentMatchup_similarTeamGames_args(ct
 		}
 	}
 	args["similarity"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Player_average_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.GameFilter
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNGameFilter2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐGameFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1976,6 +2165,754 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _AverageStats_assists(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_assists(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Assists, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_assists(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_defensive_rebounds(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_defensive_rebounds(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DefensiveRebounds, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_defensive_rebounds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_field_goals_attempted(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_field_goals_attempted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FieldGoalsAttempted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_field_goals_attempted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_field_goals_made(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_field_goals_made(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FieldGoalsMade, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_field_goals_made(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_free_throws_attempted(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_free_throws_attempted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FreeThrowsAttempted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_free_throws_attempted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_free_throws_made(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_free_throws_made(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FreeThrowsMade, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_free_throws_made(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_minutes(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_minutes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Minutes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_minutes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_offensive_rebounds(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_offensive_rebounds(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OffensiveRebounds, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_offensive_rebounds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_personal_fouls_drawn(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_personal_fouls_drawn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PersonalFoulsDrawn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_personal_fouls_drawn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_personal_fouls(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_personal_fouls(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PersonalFouls, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_personal_fouls(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_points(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_points(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Points, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_points(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_three_pointers_attempted(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_three_pointers_attempted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ThreePointersAttempted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_three_pointers_attempted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_three_pointers_made(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_three_pointers_made(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ThreePointersMade, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_three_pointers_made(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_rebounds(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_rebounds(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Rebounds, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_rebounds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_turnovers(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_turnovers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Turnovers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_turnovers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_blocks(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_blocks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Blocks, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_blocks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AverageStats_steals(ctx context.Context, field graphql.CollectedField, obj *model.AverageStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AverageStats_steals(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Steals, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AverageStats_steals(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AverageStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Injury_startDate(ctx context.Context, field graphql.CollectedField, obj *model.Injury) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Injury_startDate(ctx, field)
 	if err != nil {
@@ -2159,6 +3096,8 @@ func (ec *executionContext) fieldContext_Injury_player(ctx context.Context, fiel
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -2557,6 +3496,97 @@ func (ec *executionContext) fieldContext_Player_games(ctx context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Player_average(ctx context.Context, field graphql.CollectedField, obj *model.Player) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Player_average(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Player().Average(rctx, obj, fc.Args["input"].(model.GameFilter))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AverageStats)
+	fc.Result = res
+	return ec.marshalNAverageStats2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Player_average(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Player",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "assists":
+				return ec.fieldContext_AverageStats_assists(ctx, field)
+			case "defensive_rebounds":
+				return ec.fieldContext_AverageStats_defensive_rebounds(ctx, field)
+			case "field_goals_attempted":
+				return ec.fieldContext_AverageStats_field_goals_attempted(ctx, field)
+			case "field_goals_made":
+				return ec.fieldContext_AverageStats_field_goals_made(ctx, field)
+			case "free_throws_attempted":
+				return ec.fieldContext_AverageStats_free_throws_attempted(ctx, field)
+			case "free_throws_made":
+				return ec.fieldContext_AverageStats_free_throws_made(ctx, field)
+			case "minutes":
+				return ec.fieldContext_AverageStats_minutes(ctx, field)
+			case "offensive_rebounds":
+				return ec.fieldContext_AverageStats_offensive_rebounds(ctx, field)
+			case "personal_fouls_drawn":
+				return ec.fieldContext_AverageStats_personal_fouls_drawn(ctx, field)
+			case "personal_fouls":
+				return ec.fieldContext_AverageStats_personal_fouls(ctx, field)
+			case "points":
+				return ec.fieldContext_AverageStats_points(ctx, field)
+			case "three_pointers_attempted":
+				return ec.fieldContext_AverageStats_three_pointers_attempted(ctx, field)
+			case "three_pointers_made":
+				return ec.fieldContext_AverageStats_three_pointers_made(ctx, field)
+			case "rebounds":
+				return ec.fieldContext_AverageStats_rebounds(ctx, field)
+			case "turnovers":
+				return ec.fieldContext_AverageStats_turnovers(ctx, field)
+			case "blocks":
+				return ec.fieldContext_AverageStats_blocks(ctx, field)
+			case "steals":
+				return ec.fieldContext_AverageStats_steals(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AverageStats", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Player_average_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Player_injuries(ctx context.Context, field graphql.CollectedField, obj *model.Player) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Player_injuries(ctx, field)
 	if err != nil {
@@ -2818,6 +3848,8 @@ func (ec *executionContext) fieldContext_Player_similarPlayers(ctx context.Conte
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -4253,6 +5285,8 @@ func (ec *executionContext) fieldContext_PlayerGame_player(ctx context.Context, 
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -5189,6 +6223,8 @@ func (ec *executionContext) fieldContext_PlayersInGame_team(ctx context.Context,
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -5257,6 +6293,8 @@ func (ec *executionContext) fieldContext_PlayersInGame_opponent(ctx context.Cont
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -5454,6 +6492,8 @@ func (ec *executionContext) fieldContext_Projection_player(ctx context.Context, 
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -6132,6 +7172,8 @@ func (ec *executionContext) fieldContext_Query_players(ctx context.Context, fiel
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -6200,6 +7242,8 @@ func (ec *executionContext) fieldContext_Query_filterPlayers(ctx context.Context
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -6279,6 +7323,8 @@ func (ec *executionContext) fieldContext_Query_player(ctx context.Context, field
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -7547,6 +8593,8 @@ func (ec *executionContext) fieldContext_Team_players(ctx context.Context, field
 				return ec.fieldContext_Player_currentTeam(ctx, field)
 			case "games":
 				return ec.fieldContext_Player_games(ctx, field)
+			case "average":
+				return ec.fieldContext_Player_average(ctx, field)
 			case "injuries":
 				return ec.fieldContext_Player_injuries(ctx, field)
 			case "projections":
@@ -11762,6 +12810,146 @@ func (ec *executionContext) unmarshalInputTeamFilter(ctx context.Context, obj in
 
 // region    **************************** object.gotpl ****************************
 
+var averageStatsImplementors = []string{"AverageStats"}
+
+func (ec *executionContext) _AverageStats(ctx context.Context, sel ast.SelectionSet, obj *model.AverageStats) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, averageStatsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AverageStats")
+		case "assists":
+
+			out.Values[i] = ec._AverageStats_assists(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "defensive_rebounds":
+
+			out.Values[i] = ec._AverageStats_defensive_rebounds(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "field_goals_attempted":
+
+			out.Values[i] = ec._AverageStats_field_goals_attempted(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "field_goals_made":
+
+			out.Values[i] = ec._AverageStats_field_goals_made(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "free_throws_attempted":
+
+			out.Values[i] = ec._AverageStats_free_throws_attempted(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "free_throws_made":
+
+			out.Values[i] = ec._AverageStats_free_throws_made(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "minutes":
+
+			out.Values[i] = ec._AverageStats_minutes(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "offensive_rebounds":
+
+			out.Values[i] = ec._AverageStats_offensive_rebounds(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "personal_fouls_drawn":
+
+			out.Values[i] = ec._AverageStats_personal_fouls_drawn(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "personal_fouls":
+
+			out.Values[i] = ec._AverageStats_personal_fouls(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "points":
+
+			out.Values[i] = ec._AverageStats_points(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "three_pointers_attempted":
+
+			out.Values[i] = ec._AverageStats_three_pointers_attempted(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "three_pointers_made":
+
+			out.Values[i] = ec._AverageStats_three_pointers_made(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "rebounds":
+
+			out.Values[i] = ec._AverageStats_rebounds(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "turnovers":
+
+			out.Values[i] = ec._AverageStats_turnovers(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "blocks":
+
+			out.Values[i] = ec._AverageStats_blocks(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "steals":
+
+			out.Values[i] = ec._AverageStats_steals(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var injuryImplementors = []string{"Injury"}
 
 func (ec *executionContext) _Injury(ctx context.Context, sel ast.SelectionSet, obj *model.Injury) graphql.Marshaler {
@@ -11892,6 +13080,26 @@ func (ec *executionContext) _Player(ctx context.Context, sel ast.SelectionSet, o
 					}
 				}()
 				res = ec._Player_games(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "average":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Player_average(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -13810,6 +15018,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNAverageStats2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx context.Context, sel ast.SelectionSet, v model.AverageStats) graphql.Marshaler {
+	return ec._AverageStats(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAverageStats2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx context.Context, sel ast.SelectionSet, v *model.AverageStats) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AverageStats(ctx, sel, v)
+}
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)

@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 
@@ -294,20 +293,23 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 	matchGames := bson.M{"$match": filter}
 	averageStats := bson.M{"$group": bson.M{"_id": "$playerID",
 		"games_played":             bson.M{"$count": bson.M{}},
-		"points":                   bson.M{"$avg": "$points"},
+		"all_minutes":              bson.M{"$push": "$minutes"},
 		"assists":                  bson.M{"$avg": "$assists"},
+		"blocks":                   bson.M{"$avg": "$blocks"},
+		"field_goals_attempted":    bson.M{"$avg": "$field_goals_attempted"},
+		"field_goals_made":         bson.M{"$avg": "$field_goals_made"},
+		"free_throws_attempted":    bson.M{"$avg": "$free_throws_attempted"},
+		"free_throws_made":         bson.M{"$avg": "$free_throws_made"},
+		"offensive_rebounds":       bson.M{"$avg": "$offensive_rebounds"},
+		"defensive_rebounds":       bson.M{"$avg": "$defensive_rebounds"},
+		"personal_fouls":           bson.M{"$avg": "$personal_fouls"},
+		"personal_fouls_drawn":     bson.M{"$avg": "$personal_fouls_drawn"},
+		"points":                   bson.M{"$avg": "$points"},
 		"rebounds":                 bson.M{"$avg": "$total_rebounds"},
 		"steals":                   bson.M{"$avg": "$steals"},
-		"blocks":                   bson.M{"$avg": "$blocks"},
-		"turnovers":                bson.M{"$avg": "$turnovers"},
-		"usage":                    bson.M{"$avg": "$usage"},
-		"all_minutes":              bson.M{"$push": "$minutes"},
-		"field_goals_made":         bson.M{"$avg": "$field_goals_made"},
-		"field_goals_attempted":    bson.M{"$avg": "$field_goals_attempted"},
-		"three_pointers_made":      bson.M{"$avg": "$three_pointers_made"},
 		"three_pointers_attempted": bson.M{"$avg": "$three_pointers_attempted"},
-		"free_throws_made":         bson.M{"$avg": "$free_throws_made"},
-		"free_throws_attempted":    bson.M{"$avg": "$free_throws_attempted"},
+		"three_pointers_made":      bson.M{"$avg": "$three_pointers_made"},
+		"turnovers":                bson.M{"$avg": "$turnovers"},
 	}}
 	lookupPlayer := bson.M{"$lookup": bson.M{"from": "players", "localField": "_id", "foreignField": "playerID", "as": "player"}}
 	unwindPlayer := bson.M{"$unwind": "$player"}
@@ -325,19 +327,9 @@ func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.Game
 	}
 	for i := 0; i < len(averages); i++ {
 		avg := averages[i]
-		var minutes float64
-		for _, a := range avg.AllMinutes {
-			//convert "mm:ss" to minutes
-			min, err := strconv.ParseFloat(a[:len(a)-3], 64)
-			if err != nil {
-				return nil, err
-			}
-			sec, err := strconv.ParseFloat(a[len(a)-2:], 64)
-			if err != nil {
-				return nil, err
-			}
-			minutes += min
-			minutes += sec / 60
+		minutes, err := avg.AverageMinutes()
+		if err != nil {
+			return nil, err
 		}
 		averages[i].Minutes = minutes
 		if averages[i].Minutes < 5 {

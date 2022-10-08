@@ -10,14 +10,15 @@ type Player {
   seasons: [String!]!
   #G, F, or C
   position: String!
-  team: Team!
+  # TODO: change 'currentTeam' to 'team'
+  currentTeam: Team!
   games(input: GameFilter!): [PlayerGame!]!
   average(input: GameFilter!): AverageStats!
-  # injuries: [Injury!]
+  injuries: [Injury!]
   projections(input: ProjectionFilter!): [Projection!]!
   height: String!
   weight: Int!
-  # similarPlayers(input: GameFilter!): [Player!]!
+  similarPlayers(input: GameFilter!): [Player!]!
 }
 
 type Team {
@@ -27,11 +28,11 @@ type Team {
   location: String!
   numWins: Int! #TODO
   numLoss: Int! #TODO
-  # games(input: GameFilter!): [TeamGame!]!
+  games(input: GameFilter!): [TeamGame!]!
   players: [Player!]!
-  # injuries: [Injury!]
-  # similarTeams(input: GameFilter!): [Team!]!
-  # playerGamesVsTeam(input: PlayerFilter!): [PlayerGame!]!
+  injuries: [Injury!]
+  similarTeams(input: GameFilter!): [Team!]!
+  playerGamesVsTeam(input: PlayerFilter!): [PlayerGame!]!
 }
 
 type TeamGame {
@@ -74,7 +75,7 @@ type TeamGame {
   personal_fouls_drawn: Int!
   season: String!
   win_or_loss: String!
-  # playersInGame: PlayersInGame!
+  playersInGame: PlayersInGame!
 }
 
 type PlayerGame {
@@ -116,8 +117,28 @@ type PlayerGame {
   usage: Float!
   blocks: Int!
   steals: Int!
-  # playersInGame: PlayersInGame!
-  # projections: [Projection]!
+  playersInGame: PlayersInGame!
+  projections: [Projection]!
+}
+
+type AverageStats {
+  assists: Float!
+  defensive_rebounds: Float!
+  field_goals_attempted: Float!
+  field_goals_made: Float!
+  free_throws_attempted: Float!
+  free_throws_made: Float!
+  minutes: String!
+  offensive_rebounds: Float!
+  personal_fouls_drawn: Float!
+  personal_fouls: Float!
+  points: Float!
+  three_pointers_attempted: Float!
+  three_pointers_made: Float!
+  rebounds: Float!
+  turnovers: Float!
+  blocks: Float!
+  steals: Float!
 }
 
 type Projection {
@@ -127,22 +148,30 @@ type Projection {
   result: PlayerGame
   startTime: String!
   date: String!
+  playerOpponentMatchup: PlayerOpponentMatchup
+}
+
+type PlayerOpponentMatchup {
+  # List of PlayerGames where a similar player played against the same opponent
+  similarPlayerGames(similarity: SimilarPlayerInput!): [PlayerGame!]!
+  # List of PlayerGames where the same player played against similar opponents
+  similarTeamGames(similarity: SimilarTeamInput!): [PlayerGame!]!
 }
 
 type Proposition {
   target: Float!
   type: String!
   sportsbook: String!
-  prediction: Prediction!
-  # predictions: [Prediction!]!
+  # prediction(model: ModelWeights): Prediction!
+  predictions: [Prediction!]!
   lastModified: String!
 }
 
 type Prediction {
   model: String!
   overUnderPrediction: String!
-  confidence: Float
-  estimation: Float
+  # confidence: Float
+  totalPrediction: Float
   # recencyFragments: [PredictionFragment]
   # vsOpponent: PredictionFragment
   # vsSimilarTeams: PredictionFragment

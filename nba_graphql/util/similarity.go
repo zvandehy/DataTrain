@@ -104,7 +104,6 @@ func EuclideanDistance(player1 model.PlayerAverage, player2 model.PlayerAverage)
 		distance("ThreePointersAttempted", player1.ThreePointersAttempted, player2.ThreePointersAttempted) +
 		distance("FreeThrowsMade", player1.FreeThrowsMade, player2.FreeThrowsMade) +
 		distance("FreeThrowsAttempted", player1.FreeThrowsAttempted, player2.FreeThrowsAttempted) +
-		distance("Usage", player1.Usage, player2.Usage) +
 		distance("Height", player1.Height, player2.Height) +
 		distance("Weight", player1.Weight, player2.Weight)
 	// fmt.Println(sumDistance)
@@ -207,7 +206,6 @@ func normalizePlayer(players []model.PlayerAverage) []model.PlayerAverage {
 		threePointersAttempts = append(threePointersAttempts, player.ThreePointersAttempted)
 		freeThrowsMakes = append(freeThrowsMakes, player.FreeThrowsMade)
 		freeThrowsAttempts = append(freeThrowsAttempts, player.FreeThrowsAttempted)
-		usages = append(usages, player.Usage)
 		heights = append(heights, heightInches(player.Player.Height))
 		weights = append(weights, float64(player.Player.Weight))
 	}
@@ -243,7 +241,6 @@ func normalizePlayer(players []model.PlayerAverage) []model.PlayerAverage {
 		players[i].ThreePointersAttempted = threePointersAttempts[i]
 		players[i].FreeThrowsMade = freeThrowsMakes[i]
 		players[i].FreeThrowsAttempted = freeThrowsAttempts[i]
-		players[i].Usage = usages[i]
 		players[i].Height = heights[i]
 		players[i].Weight = weights[i]
 	}

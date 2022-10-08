@@ -2,6 +2,26 @@
 
 package model
 
+type AverageStats struct {
+	Assists                float64 `json:"assists"`
+	DefensiveRebounds      float64 `json:"defensive_rebounds"`
+	FieldGoalsAttempted    float64 `json:"field_goals_attempted"`
+	FieldGoalsMade         float64 `json:"field_goals_made"`
+	FreeThrowsAttempted    float64 `json:"free_throws_attempted"`
+	FreeThrowsMade         float64 `json:"free_throws_made"`
+	Minutes                string  `json:"minutes"`
+	OffensiveRebounds      float64 `json:"offensive_rebounds"`
+	PersonalFoulsDrawn     float64 `json:"personal_fouls_drawn"`
+	PersonalFouls          float64 `json:"personal_fouls"`
+	Points                 float64 `json:"points"`
+	ThreePointersAttempted float64 `json:"three_pointers_attempted"`
+	ThreePointersMade      float64 `json:"three_pointers_made"`
+	Rebounds               float64 `json:"rebounds"`
+	Turnovers              float64 `json:"turnovers"`
+	Blocks                 float64 `json:"blocks"`
+	Steals                 float64 `json:"steals"`
+}
+
 type GameFilter struct {
 	TeamID     *int    `json:"teamID"`
 	OpponentID *int    `json:"opponentID"`
