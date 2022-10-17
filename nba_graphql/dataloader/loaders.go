@@ -9,7 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
-	"github.com/zvandehy/DataTrain/nba_graphql/util"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -21,18 +20,18 @@ const waitTime = 150 * time.Millisecond
 const maxBatch = 50
 
 type Loaders struct {
-	TeamByAbr                TeamLoaderABR
-	TeamByID                 TeamLoaderID
-	PlayerByID               PlayerLoaderID
+	TeamByAbr TeamLoaderABR
+	TeamByID  TeamLoaderID
+	// PlayerByID               PlayerLoaderID
 	PlayerByFilter           PlayerLoader
 	PlayerGameByFilter       PlayerGameLoader
 	TeamGameByPlayerGame     TeamGameLoader
 	OpponentGameByPlayerGame TeamGameLoader
 	PlayerAverageLoader      PlayerAverageLoader
-	SimilarPlayerLoader      SimilarPlayerLoader
-	SimilarTeamLoader        SimilarTeamLoader
-	PlayerInjuryLoader       PlayerInjuryLoader
-	TeamInjuryLoader         TeamInjuryLoader
+	// SimilarPlayerLoader      SimilarPlayerLoader
+	// SimilarTeamLoader        SimilarTeamLoader
+	PlayerInjuryLoader PlayerInjuryLoader
+	TeamInjuryLoader   TeamInjuryLoader
 }
 
 func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handler {
@@ -111,43 +110,43 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 					},
 				},
 			),
-			//TODO: Replace this with PlayerByFilter
-			PlayerByID: *NewPlayerLoaderID(
-				PlayerLoaderIDConfig{
-					MaxBatch: maxBatch,
-					Wait:     waitTime,
-					Fetch: func(keys []int) ([]*model.Player, []error) {
-						players := make([]*model.Player, len(keys))
-						playersById := make(map[int]*model.Player, len(keys))
-						errs := make([]error, len(keys))
-						filters := make([]model.PlayerFilter, len(keys))
-						for i := range keys {
-							filters = append(filters, model.PlayerFilter{PlayerID: &keys[i]})
-						}
-						cur, err := conn.GetPlayers(r.Context(), filters)
-						if err != nil {
-							return nil, []error{err}
-						}
-						defer cur.Close(r.Context())
+			// //TODO: Replace this with PlayerByFilter
+			// PlayerByID: *NewPlayerLoaderID(
+			// 	PlayerLoaderIDConfig{
+			// 		MaxBatch: maxBatch,
+			// 		Wait:     waitTime,
+			// 		Fetch: func(keys []int) ([]*model.Player, []error) {
+			// 			players := make([]*model.Player, len(keys))
+			// 			playersById := make(map[int]*model.Player, len(keys))
+			// 			errs := make([]error, len(keys))
+			// 			filters := make([]model.PlayerFilter, len(keys))
+			// 			for i := range keys {
+			// 				filters = append(filters, model.PlayerFilter{PlayerID: &keys[i]})
+			// 			}
+			// 			cur, err := conn.GetPlayers(r.Context(), filters)
+			// 			if err != nil {
+			// 				return nil, []error{err}
+			// 			}
+			// 			defer cur.Close(r.Context())
 
-						for cur.Next(r.Context()) {
-							player := &model.Player{}
-							err := cur.Decode(&player)
-							if err != nil {
-								return nil, []error{err}
-							}
-							playersById[player.PlayerID] = player
-						}
-						if err := cur.Err(); err != nil {
-							return nil, []error{err}
-						}
-						for i, player := range keys {
-							players[i] = playersById[player]
-						}
-						return players, errs
-					},
-				},
-			),
+			// 			for cur.Next(r.Context()) {
+			// 				player := &model.Player{}
+			// 				err := cur.Decode(&player)
+			// 				if err != nil {
+			// 					return nil, []error{err}
+			// 				}
+			// 				playersById[player.PlayerID] = player
+			// 			}
+			// 			if err := cur.Err(); err != nil {
+			// 				return nil, []error{err}
+			// 			}
+			// 			for i, player := range keys {
+			// 				players[i] = playersById[player]
+			// 			}
+			// 			return players, errs
+			// 		},
+			// 	},
+			// ),
 			PlayerByFilter: *NewPlayerLoader(
 				PlayerLoaderConfig{
 					MaxBatch: maxBatch,
@@ -156,7 +155,7 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 						players := make([]*model.Player, len(keys))
 						playersByName := make(map[string]*model.Player, len(keys))
 						errs := make([]error, len(keys))
-						cur, err := conn.GetPlayers(r.Context(), keys)
+						cur, err := conn.GetPlayersCursor(r.Context(), keys)
 						if err != nil {
 							return nil, []error{err}
 						}
@@ -370,71 +369,71 @@ func Middleware(conn *database.NBADatabaseClient, next http.Handler) http.Handle
 					},
 				},
 			),
-			SimilarPlayerLoader: *NewSimilarPlayerLoader(
-				SimilarPlayerLoaderConfig{
-					MaxBatch: maxBatch * 2,
-					Wait:     waitTime,
-					Fetch: func(keys []model.SimilarPlayerInput) ([][]*model.Player, []error) {
-						similarPlayers := make([][]*model.Player, len(keys))
-						errs := make([]error, len(keys))
-						createFilterWithoutIDs := make([]model.GameFilter, len(keys))
-						for i, filter := range keys {
-							newFilter := *filter.GameFilter
-							newFilter.OpponentID = nil
-							newFilter.GameID = nil
-							newFilter.PlayerID = nil
-							createFilterWithoutIDs[i] = newFilter
-						}
-						playerAverages, err := conn.GetAverages(r.Context(), createFilterWithoutIDs)
-						if err != nil || len(*playerAverages) == 0 {
-							return nil, []error{err}
-						}
-						for i, filter := range keys {
-							targetPlayer := (*playerAverages)[0]
-							for _, p := range *playerAverages {
-								if p.Player.PlayerID == *filter.GameFilter.PlayerID {
-									targetPlayer = p
-								}
-							}
-							similarPlayers[i] = util.SimilarPlayers(*playerAverages, targetPlayer)
-						}
-						return similarPlayers, errs
-					},
-				},
-			),
-			SimilarTeamLoader: *NewSimilarTeamLoader(
-				SimilarTeamLoaderConfig{
-					MaxBatch: maxBatch * 2,
-					Wait:     waitTime,
-					Fetch: func(keys []model.SimilarTeamInput) ([][]*model.Team, []error) {
-						similarTeams := make([][]*model.Team, len(keys))
-						errs := make([]error, len(keys))
-						createFilterWithoutIDs := make([]model.GameFilter, len(keys))
-						for i, filter := range keys {
-							newFilter := *filter.GameFilter
-							newFilter.OpponentID = nil
-							newFilter.GameID = nil
-							newFilter.PlayerID = nil
-							createFilterWithoutIDs[i] = newFilter
+			// SimilarPlayerLoader: *NewSimilarPlayerLoader(
+			// 	SimilarPlayerLoaderConfig{
+			// 		MaxBatch: maxBatch * 2,
+			// 		Wait:     waitTime,
+			// 		Fetch: func(keys []model.SimilarPlayerInput) ([][]*model.Player, []error) {
+			// 			similarPlayers := make([][]*model.Player, len(keys))
+			// 			errs := make([]error, len(keys))
+			// 			createFilterWithoutIDs := make([]model.GameFilter, len(keys))
+			// 			for i, filter := range keys {
+			// 				newFilter := *filter.GameFilter
+			// 				newFilter.OpponentID = nil
+			// 				newFilter.GameID = nil
+			// 				newFilter.PlayerID = nil
+			// 				createFilterWithoutIDs[i] = newFilter
+			// 			}
+			// 			playerAverages, err := conn.GetAverages(r.Context(), createFilterWithoutIDs)
+			// 			if err != nil || len(*playerAverages) == 0 {
+			// 				return nil, []error{err}
+			// 			}
+			// 			for i, filter := range keys {
+			// 				targetPlayer := (*playerAverages)[0]
+			// 				for _, p := range *playerAverages {
+			// 					if p.Player.PlayerID == *filter.GameFilter.PlayerID {
+			// 						targetPlayer = p
+			// 					}
+			// 				}
+			// 				similarPlayers[i] = util.SimilarPlayers(*playerAverages, targetPlayer)
+			// 			}
+			// 			return similarPlayers, errs
+			// 		},
+			// 	},
+			// ),
+			// SimilarTeamLoader: *NewSimilarTeamLoader(
+			// 	SimilarTeamLoaderConfig{
+			// 		MaxBatch: maxBatch * 2,
+			// 		Wait:     waitTime,
+			// 		Fetch: func(keys []model.SimilarTeamInput) ([][]*model.Team, []error) {
+			// 			similarTeams := make([][]*model.Team, len(keys))
+			// 			errs := make([]error, len(keys))
+			// 			createFilterWithoutIDs := make([]model.GameFilter, len(keys))
+			// 			for i, filter := range keys {
+			// 				newFilter := *filter.GameFilter
+			// 				newFilter.OpponentID = nil
+			// 				newFilter.GameID = nil
+			// 				newFilter.PlayerID = nil
+			// 				createFilterWithoutIDs[i] = newFilter
 
-						}
-						teamAverages, err := conn.GetTeamAverages(r.Context(), createFilterWithoutIDs)
-						if err != nil || len(*teamAverages) == 0 {
-							return nil, []error{err}
-						}
-						for i, filter := range keys {
-							targetTeam := (*teamAverages)[0]
-							for _, t := range *teamAverages {
-								if t.Team.TeamID == *filter.GameFilter.TeamID {
-									targetTeam = t
-								}
-							}
-							similarTeams[i] = util.SimilarTeams(*teamAverages, targetTeam)
-						}
-						return similarTeams, errs
-					},
-				},
-			),
+			// 			}
+			// 			teamAverages, err := conn.GetTeamAverages(r.Context(), createFilterWithoutIDs)
+			// 			if err != nil || len(*teamAverages) == 0 {
+			// 				return nil, []error{err}
+			// 			}
+			// 			for i, filter := range keys {
+			// 				targetTeam := (*teamAverages)[0]
+			// 				for _, t := range *teamAverages {
+			// 					if t.Team.TeamID == *filter.GameFilter.TeamID {
+			// 						targetTeam = t
+			// 					}
+			// 				}
+			// 				similarTeams[i] = util.SimilarTeams(*teamAverages, targetTeam)
+			// 			}
+			// 			return similarTeams, errs
+			// 		},
+			// 	},
+			// ),
 		})
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)

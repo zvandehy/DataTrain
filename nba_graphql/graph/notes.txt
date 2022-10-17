@@ -255,3 +255,10 @@ StatFilter {
     max: Float
     lookup: String
 }
+
+
+
+
+Querying by position:
+    PositionStrict(X) => get players whose position is exactly X
+    PositionLoose(X) => players that are exactly X, or X-Y

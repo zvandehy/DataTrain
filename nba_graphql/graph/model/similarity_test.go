@@ -53,9 +53,9 @@ func TestPlayerSimilarityMatrix_AddPlayer(t *testing.T) {
 					1: SimilarityVector{
 						Comparisons: map[int]PlayerDiff{
 							2: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 1,
-									Assists:  1,
-									Rebounds: 1},
+								Points:   1,
+								Assists:  1,
+								Rebounds: 1,
 							},
 						},
 						Average: PlayerAverage{
@@ -67,9 +67,9 @@ func TestPlayerSimilarityMatrix_AddPlayer(t *testing.T) {
 					2: SimilarityVector{
 						Comparisons: map[int]PlayerDiff{
 							1: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -1,
-									Assists:  -1,
-									Rebounds: -1},
+								Points:   -1,
+								Assists:  -1,
+								Rebounds: -1,
 							},
 						},
 						Average: PlayerAverage{
@@ -95,15 +95,15 @@ func TestPlayerSimilarityMatrix_AddPlayer(t *testing.T) {
 					Comparisons: map[int]PlayerDiff{
 						// Player 1 averages +1 points, +1 assists, and +1 rebounds from player 2
 						2: PlayerDiff{
-							PlayerAverage: PlayerAverage{Points: 1,
-								Assists:  1,
-								Rebounds: 1},
+							Points:   1,
+							Assists:  1,
+							Rebounds: 1,
 						},
 						// Player 1 averages -1 points, +1 assists, and +0 rebounds from player 3
 						3: PlayerDiff{
-							PlayerAverage: PlayerAverage{Points: -1,
-								Assists:  1,
-								Rebounds: 0},
+							Points:   -1,
+							Assists:  1,
+							Rebounds: 0,
 						},
 					},
 					// Player 1 Averages 10 points, 5 assists, and 6 rebounds
@@ -116,14 +116,14 @@ func TestPlayerSimilarityMatrix_AddPlayer(t *testing.T) {
 				2: SimilarityVector{
 					Comparisons: map[int]PlayerDiff{
 						1: PlayerDiff{
-							PlayerAverage: PlayerAverage{Points: -1,
-								Assists:  -1,
-								Rebounds: -1},
+							Points:   -1,
+							Assists:  -1,
+							Rebounds: -1,
 						},
 						3: PlayerDiff{
-							PlayerAverage: PlayerAverage{Points: -2,
-								Assists:  0,
-								Rebounds: -1},
+							Points:   -2,
+							Assists:  0,
+							Rebounds: -1,
 						},
 					},
 					Average: PlayerAverage{
@@ -135,14 +135,14 @@ func TestPlayerSimilarityMatrix_AddPlayer(t *testing.T) {
 				3: SimilarityVector{
 					Comparisons: map[int]PlayerDiff{
 						1: PlayerDiff{
-							PlayerAverage: PlayerAverage{Points: 1,
-								Assists:  -1,
-								Rebounds: 0},
+							Points:   1,
+							Assists:  -1,
+							Rebounds: 0,
 						},
 						2: PlayerDiff{
-							PlayerAverage: PlayerAverage{Points: 2,
-								Assists:  0,
-								Rebounds: 1},
+							Points:   2,
+							Assists:  0,
+							Rebounds: 1,
 						},
 					},
 					Average: PlayerAverage{
@@ -343,16 +343,16 @@ func TestPlayerSimilarityMatrix_AddNormalizedPlayers(t *testing.T) {
 					1: SimilarityVector{
 						Comparisons: map[int]PlayerDiff{
 							2: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 2.06},
+								Points: 2.06,
 							},
 							3: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 0},
+								Points: 0,
 							},
 							4: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -0.41},
+								Points: -0.41,
 							},
 							5: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 1.65},
+								Points: 1.65,
 							},
 						},
 						Average: PlayerAverage{
@@ -363,16 +363,16 @@ func TestPlayerSimilarityMatrix_AddNormalizedPlayers(t *testing.T) {
 					2: SimilarityVector{
 						Comparisons: map[int]PlayerDiff{
 							1: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -2.06},
+								Points: -2.06,
 							},
 							3: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -2.06},
+								Points: -2.06,
 							},
 							4: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -2.47},
+								Points: -2.47,
 							},
 							5: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -0.41},
+								Points: -0.41,
 							},
 						},
 						Average: PlayerAverage{
@@ -383,16 +383,16 @@ func TestPlayerSimilarityMatrix_AddNormalizedPlayers(t *testing.T) {
 					3: SimilarityVector{
 						Comparisons: map[int]PlayerDiff{
 							1: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 0},
+								Points: 0,
 							},
 							2: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 2.06},
+								Points: 2.06,
 							},
 							4: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -0.41},
+								Points: -0.41,
 							},
 							5: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 1.65},
+								Points: 1.65,
 							},
 						},
 						Average: PlayerAverage{
@@ -403,16 +403,16 @@ func TestPlayerSimilarityMatrix_AddNormalizedPlayers(t *testing.T) {
 					4: SimilarityVector{
 						Comparisons: map[int]PlayerDiff{
 							1: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 0.41},
+								Points: 0.41,
 							},
 							2: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 2.47},
+								Points: 2.47,
 							},
 							3: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 0.41},
+								Points: 0.41,
 							},
 							5: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 2.06},
+								Points: 2.06,
 							},
 						},
 						Average: PlayerAverage{
@@ -423,16 +423,16 @@ func TestPlayerSimilarityMatrix_AddNormalizedPlayers(t *testing.T) {
 					5: SimilarityVector{
 						Comparisons: map[int]PlayerDiff{
 							1: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -1.65},
+								Points: -1.65,
 							},
 							2: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 0.41},
+								Points: 0.41,
 							},
 							3: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -1.65},
+								Points: -1.65,
 							},
 							4: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -2.06},
+								Points: -2.06,
 							},
 						},
 						Average: PlayerAverage{
@@ -525,26 +525,26 @@ func TestPlayerSimilarityMatrix_AddNormalizedPlayers(t *testing.T) {
 					1: SimilarityVector{
 						Comparisons: map[int]PlayerDiff{
 							2: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: 2,
-									Rebounds:               2,
-									Assists:                2,
-									Steals:                 2,
-									Blocks:                 2,
-									Turnovers:              2,
-									DefensiveRebounds:      2,
-									OffensiveRebounds:      2,
-									ThreePointersMade:      2,
-									ThreePointersAttempted: 2,
-									FieldGoalsMade:         2,
-									FieldGoalsAttempted:    2,
-									FreeThrowsMade:         2,
-									FreeThrowsAttempted:    2,
-									Height:                 2,
-									Weight:                 2,
-									GamesPlayed:            2,
-									PersonalFoulsDrawn:     2,
-									PersonalFouls:          2,
-									Minutes:                2},
+								Points:                 2,
+								Rebounds:               2,
+								Assists:                2,
+								Steals:                 2,
+								Blocks:                 2,
+								Turnovers:              2,
+								DefensiveRebounds:      2,
+								OffensiveRebounds:      2,
+								ThreePointersMade:      2,
+								ThreePointersAttempted: 2,
+								FieldGoalsMade:         2,
+								FieldGoalsAttempted:    2,
+								FreeThrowsMade:         2,
+								FreeThrowsAttempted:    2,
+								Height:                 2,
+								Weight:                 2,
+								GamesPlayed:            2,
+								PersonalFoulsDrawn:     2,
+								PersonalFouls:          2,
+								Minutes:                2,
 							},
 						},
 						Average: PlayerAverage{
@@ -574,26 +574,26 @@ func TestPlayerSimilarityMatrix_AddNormalizedPlayers(t *testing.T) {
 					2: SimilarityVector{
 						Comparisons: map[int]PlayerDiff{
 							1: PlayerDiff{
-								PlayerAverage: PlayerAverage{Points: -2,
-									Rebounds:               -2,
-									Assists:                -2,
-									Steals:                 -2,
-									Blocks:                 -2,
-									Turnovers:              -2,
-									DefensiveRebounds:      -2,
-									OffensiveRebounds:      -2,
-									ThreePointersMade:      -2,
-									ThreePointersAttempted: -2,
-									FieldGoalsMade:         -2,
-									FieldGoalsAttempted:    -2,
-									FreeThrowsMade:         -2,
-									FreeThrowsAttempted:    -2,
-									Height:                 -2,
-									Weight:                 -2,
-									GamesPlayed:            -2,
-									PersonalFoulsDrawn:     -2,
-									PersonalFouls:          -2,
-									Minutes:                -2},
+								Points:                 -2,
+								Rebounds:               -2,
+								Assists:                -2,
+								Steals:                 -2,
+								Blocks:                 -2,
+								Turnovers:              -2,
+								DefensiveRebounds:      -2,
+								OffensiveRebounds:      -2,
+								ThreePointersMade:      -2,
+								ThreePointersAttempted: -2,
+								FieldGoalsMade:         -2,
+								FieldGoalsAttempted:    -2,
+								FreeThrowsMade:         -2,
+								FreeThrowsAttempted:    -2,
+								Height:                 -2,
+								Weight:                 -2,
+								GamesPlayed:            -2,
+								PersonalFoulsDrawn:     -2,
+								PersonalFouls:          -2,
+								Minutes:                -2,
 							},
 						},
 						Average: PlayerAverage{
@@ -629,7 +629,7 @@ func TestPlayerSimilarityMatrix_AddNormalizedPlayers(t *testing.T) {
 			m := &PlayerSimilarityMatrix{
 				Matrix: tt.fields.Matrix,
 			}
-			m.AddNormalizedPlayers(tt.args.players, tt.args.statsOfInterest...)
+			m.AddNormalizedPlayers(tt.args.players)
 			for i, row := range m.Matrix {
 				if !reflect.DeepEqual(row, tt.want.Matrix[i]) {
 					t.Errorf("Got Player Similarity Vector [%d] = \n%v, but want \n%v", i, m.Matrix[i], tt.want.Matrix[i])

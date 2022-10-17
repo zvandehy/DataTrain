@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 	"github.com/zvandehy/DataTrain/nba_graphql/util"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -20,9 +22,10 @@ var instance *mongo.Client
 type NBADatabaseClient struct {
 	Name string
 	*mongo.Database
-	conn    string
-	Queries int
-	Client  *mongo.Client
+	conn             string
+	Queries          int
+	Client           *mongo.Client
+	PlayerSimilarity model.Snapshots
 }
 
 func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
@@ -50,6 +53,7 @@ func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
 	nbaClient.Name = db
 	nbaClient.Client = instance
 	nbaClient.Database = nbaClient.Client.Database(nbaClient.Name)
+	nbaClient.PlayerSimilarity = *model.NewSnapshots()
 	logrus.Infof("Connected to DB: '%v/%v'", config.DBSource, nbaClient.Name)
 	return nbaClient, nil
 }
@@ -96,9 +100,9 @@ func (c *NBADatabaseClient) GetTeamGames(ctx context.Context, inputs []model.Gam
 		if in.TeamID != nil {
 			teamIDs = append(teamIDs, *in.TeamID)
 		}
-		if in.Season != nil {
-			seasons = append(seasons, *in.Season)
-		}
+		// if in.Season != nil {
+		// 	seasons = append(seasons, *in.Season)
+		// }
 	}
 	//TODO: I think this isn't quite right
 	filter := bson.M{
@@ -112,55 +116,49 @@ func (c *NBADatabaseClient) GetTeamGames(ctx context.Context, inputs []model.Gam
 }
 
 func (c *NBADatabaseClient) GetPlayerGames(ctx context.Context, inputs []model.GameFilter) (*mongo.Cursor, error) {
-	start := time.Now()
-	c.Queries++
-	playerGamesDB := c.Collection("games")
-	filter := createGameFilter(inputs)
-	cur, err := playerGamesDB.Find(ctx, filter)
-	if len(inputs) < 5 {
-		logrus.Printf("[%v] Query PlayerGames From: %v\tTook %v", time.Now().Format(util.TIMENOW), inputs, time.Since(start))
-	} else {
-		logrus.Printf("[%v] Query %d PlayerGames\tTook %v", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
-	}
-	return cur, err
+	// start := time.Now()
+	// c.Queries++
+	// playerGamesDB := c.Collection("games")
+	// filter := createGameFilter(inputs)
+	// cur, err := playerGamesDB.Find(ctx, filter)
+	// if len(inputs) < 5 {
+	// 	logrus.Printf("[%v] Query PlayerGames From: %v\tTook %v", time.Now().Format(util.TIMENOW), inputs, time.Since(start))
+	// } else {
+	// 	logrus.Printf("[%v] Query %d PlayerGames\tTook %v", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
+	// }
+	// return cur, err
+	panic("not implemented")
 }
 
-func createGameFilter(inputs []model.GameFilter) bson.M {
-	filters := bson.A{}
-	for _, input := range inputs {
-		inputAsFilter := bson.M{}
-		if input.GameID != nil {
-			inputAsFilter["gameID"] = *input.GameID
-		}
-		if input.TeamID != nil {
-			inputAsFilter["teamID"] = *input.TeamID
-		}
-		if input.OpponentID != nil {
-			inputAsFilter["opponent"] = *input.OpponentID
-		}
-		if input.PlayerID != nil {
-			inputAsFilter["playerID"] = *input.PlayerID
-		}
-		if input.Season != nil {
-			inputAsFilter["season"] = *input.Season
-		}
-		if input.GameID != nil {
-			inputAsFilter["gameID"] = *input.GameID
-		}
-		if input.StartDate != nil && input.EndDate != nil {
-			if *input.StartDate == *input.EndDate {
-				inputAsFilter["date"] = *input.StartDate
-			} else {
-				inputAsFilter["date"] = bson.M{"$gte": *input.StartDate, "$lt": *input.EndDate}
-			}
-		} else if input.StartDate != nil {
-			inputAsFilter["date"] = bson.M{"$gte": *input.StartDate}
-		} else if input.EndDate != nil {
-			inputAsFilter["date"] = bson.M{"$lt": *input.EndDate}
-		}
-		filters = append(filters, inputAsFilter)
+func createGameFilter(input model.GameFilter) bson.M {
+	inputAsFilter := bson.M{}
+	if input.GameID != nil {
+		inputAsFilter["gameID"] = *input.GameID
 	}
-	return bson.M{"$or": filters}
+	if input.TeamID != nil {
+		inputAsFilter["teamID"] = *input.TeamID
+	}
+	if input.OpponentID != nil {
+		inputAsFilter["opponent"] = *input.OpponentID
+	}
+	if input.PlayerID != nil {
+		inputAsFilter["playerID"] = *input.PlayerID
+	}
+	if input.Seasons != nil {
+		inputAsFilter["season"] = bson.M{"$in": *input.Seasons}
+	}
+	if input.StartDate != nil && input.EndDate != nil {
+		if *input.StartDate == *input.EndDate {
+			inputAsFilter["date"] = *input.StartDate
+		} else {
+			inputAsFilter["date"] = bson.M{"$gte": *input.StartDate, "$lt": *input.EndDate}
+		}
+	} else if input.StartDate != nil {
+		inputAsFilter["date"] = bson.M{"$gte": *input.StartDate}
+	} else if input.EndDate != nil {
+		inputAsFilter["date"] = bson.M{"$lt": *input.EndDate}
+	}
+	return inputAsFilter
 
 	// applyFilters := make(map[string]bson.M, 4)
 	// var gameIDs []string
@@ -222,7 +220,104 @@ func createGameFilter(inputs []model.GameFilter) bson.M {
 	// return filter
 }
 
-func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.PlayerFilter) (*mongo.Cursor, error) {
+func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input model.PlayerFilter) ([]*model.Player, error) {
+	defer logrus.Info(util.TimeLog(fmt.Sprintf("Query Players:\n\t%v", input), time.Now()))
+	c.Queries++
+	playersDB := c.Collection("players")
+	pipeline := input.MongoPipeline()
+	cur, err := playersDB.Aggregate(ctx, pipeline)
+	if err != nil {
+		logrus.Errorf("Error getting players: %v", err)
+		return nil, fmt.Errorf("error querying players: %v", err)
+	}
+	defer cur.Close(ctx)
+	players := []*model.Player{}
+	err = cur.All(ctx, &players)
+	if err != nil {
+		logrus.Errorf("Error getting players: %v", err)
+		return nil, fmt.Errorf("error unmarshalling players: %v", err)
+	}
+	// remove players that do not match all of input.StatFilters
+	if input.StatFilters != nil && len(*input.StatFilters) > 0 {
+		players = input.FilterPlayerStats(players)
+	}
+	// set each PlayerGame.PlayerRef to the player, so that predictions can be calculated using their gamelog history
+	for i := range players {
+		games := players[i].GamesCache
+		// sort games from most recent to least recent
+		sort.Slice(games, func(i, j int) bool {
+			a, err := time.Parse("2006-01-02", games[i].Date)
+			if err != nil {
+				logrus.Errorf("Error parsing game date %v", games[i].Date)
+				return false
+			}
+			b, err := time.Parse("2006-01-02", games[j].Date)
+			if err != nil {
+				logrus.Errorf("Error parsing game date %v", games[j].Date)
+				return false
+			}
+			return a.After(b)
+		})
+		players[i].GamesCache = games
+		for j := range players[i].GamesCache {
+			players[i].GamesCache[j].PlayerRef = players[i]
+		}
+	}
+	return players, nil
+
+}
+
+func containsSeason(seasons []model.SeasonOption, season model.SeasonOption) bool {
+	for _, s := range seasons {
+		if s == season {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *NBADatabaseClient) GetSimilarPlayersFromMatrix(ctx context.Context, toPlayerID int, input model.SimilarPlayerInput, endDate string) ([]model.Player, error) {
+	defer logrus.Info(util.TimeLog(fmt.Sprintf("Query Similar Players:\n\t%v, %v", toPlayerID, endDate), time.Now()))
+
+	startDate := util.SEASON_START_2020_21
+	if input.PlayerPoolFilter.Seasons != nil {
+		if containsSeason(*input.PlayerPoolFilter.Seasons, model.SEASON_2020_21) {
+			startDate = util.SEASON_START_2020_21
+		} else if containsSeason(*input.PlayerPoolFilter.Seasons, model.SEASON_2021_22) {
+			startDate = util.SEASON_START_2021_22
+		} else if containsSeason(*input.PlayerPoolFilter.Seasons, model.SEASON_2022_23) {
+			startDate = util.SEASON_START_2022_23
+		}
+	}
+
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		logrus.Errorf("Error parsing game date %v", startDate)
+		return nil, fmt.Errorf("error parsing game date %v", startDate)
+	}
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		logrus.Errorf("Error parsing game date %v", endDate)
+		return nil, fmt.Errorf("error parsing game date %v", endDate)
+	}
+	matrixID := fmt.Sprintf("%v-%v", startDate, endDate)
+	if _, ok := c.PlayerSimilarity[matrixID]; !ok {
+		players, err := c.GetPlayers(ctx, *input.PlayerPoolFilter)
+		if err != nil {
+			return nil, fmt.Errorf("error getting players: %v", err)
+		}
+		players = input.PlayerPoolFilter.FilterPlayerStats(players)
+		statsOfInterest := []string{}
+		for _, stat := range input.StatsOfInterest {
+			statsOfInterest = append(statsOfInterest, string(stat))
+		}
+		c.PlayerSimilarity.AddSnapshot(start, end, statsOfInterest, players)
+	}
+	similarPlayers := c.PlayerSimilarity.GetSimilarPlayers(toPlayerID, *input.Limit, startDate, endDate, input.StatsOfInterest)
+	return similarPlayers, nil
+}
+
+func (c *NBADatabaseClient) GetPlayersCursor(ctx context.Context, inputs []model.PlayerFilter) (*mongo.Cursor, error) {
 	start := time.Now()
 	c.Queries++
 	playersDB := c.Collection("players")
@@ -259,7 +354,71 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, inputs []model.Playe
 	return cur, err
 }
 
-func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.ProjectionFilter) (*mongo.Cursor, error) {
+func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.ProjectionFilter) ([]*model.Projection, error) {
+	defer logrus.Info(util.TimeLog(fmt.Sprintf("Query Projections:\n\t%v", input), time.Now()))
+	c.Queries++
+	projectionDB := c.Collection("projections")
+	filter := createProjectionFilter(input)
+	lookupPlayer := bson.M{
+		"from":         "players",
+		"localField":   "playerName",
+		"foreignField": "name",
+		"as":           "playerCache",
+	}
+	lookupOpponent := bson.M{
+		"from":         "teams",
+		"localField":   "opponent",
+		"foreignField": "abbreviation",
+		"as":           "opponentTeam",
+	}
+	lookupGames := bson.M{
+		"from":         "games",
+		"localField":   "playerCache.playerID",
+		"foreignField": "playerID",
+		"as":           "playerCache.gamesCache",
+	}
+	cur, err := projectionDB.Aggregate(ctx, mongo.Pipeline{
+		bson.D{primitive.E{Key: "$match", Value: filter}},
+		bson.D{primitive.E{Key: "$lookup", Value: lookupPlayer}},
+		bson.D{primitive.E{Key: "$unwind", Value: bson.M{"path": "$playerCache"}}},
+		bson.D{primitive.E{Key: "$lookup", Value: lookupGames}},
+		bson.D{primitive.E{Key: "$lookup", Value: lookupOpponent}},
+		bson.D{primitive.E{Key: "$unwind", Value: bson.M{"path": "$opponentTeam"}}},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error querying projections: %v", err)
+	}
+	var projections []*model.Projection
+	err = cur.All(ctx, &projections)
+	if err != nil {
+		return []*model.Projection{}, fmt.Errorf("error unmarshalling projections: %v", err)
+	}
+	return projections, nil
+}
+
+func createProjectionFilter(input model.ProjectionFilter) bson.M {
+	filter := bson.M{}
+	if input.PlayerName != nil {
+		filter["playerName"] = *input.PlayerName
+	}
+	if input.OpponentAbr != nil {
+		filter["opponentAbr"] = bson.M{"regex": *input.OpponentAbr, "options": "i"}
+	}
+	if input.StartDate != nil && input.EndDate != nil {
+		if *input.StartDate == *input.EndDate {
+			filter["date"] = *input.StartDate
+		} else {
+			filter["date"] = bson.M{"$gte": *input.StartDate, "$lt": *input.EndDate}
+		}
+	} else if input.StartDate != nil {
+		filter["date"] = bson.M{"$gte": *input.StartDate}
+	} else if input.EndDate != nil {
+		filter["date"] = bson.M{"$lt": *input.EndDate}
+	}
+	return filter
+}
+
+func (c *NBADatabaseClient) GetProjectionsCursor(ctx context.Context, input model.ProjectionFilter) (*mongo.Cursor, error) {
 	start := time.Now()
 	c.Queries++
 	projectionDB := c.Collection("projections")
@@ -287,113 +446,113 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 }
 
 func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.GameFilter) (*[]model.PlayerAverage, error) {
-	start := time.Now()
-	c.Queries++
-	filter := createGameFilter(inputs)
-	matchGames := bson.M{"$match": filter}
-	averageStats := bson.M{"$group": bson.M{"_id": "$playerID",
-		"games_played":             bson.M{"$count": bson.M{}},
-		"all_minutes":              bson.M{"$push": "$minutes"},
-		"assists":                  bson.M{"$avg": "$assists"},
-		"blocks":                   bson.M{"$avg": "$blocks"},
-		"field_goals_attempted":    bson.M{"$avg": "$field_goals_attempted"},
-		"field_goals_made":         bson.M{"$avg": "$field_goals_made"},
-		"free_throws_attempted":    bson.M{"$avg": "$free_throws_attempted"},
-		"free_throws_made":         bson.M{"$avg": "$free_throws_made"},
-		"offensive_rebounds":       bson.M{"$avg": "$offensive_rebounds"},
-		"defensive_rebounds":       bson.M{"$avg": "$defensive_rebounds"},
-		"personal_fouls":           bson.M{"$avg": "$personal_fouls"},
-		"personal_fouls_drawn":     bson.M{"$avg": "$personal_fouls_drawn"},
-		"points":                   bson.M{"$avg": "$points"},
-		"rebounds":                 bson.M{"$avg": "$total_rebounds"},
-		"steals":                   bson.M{"$avg": "$steals"},
-		"three_pointers_attempted": bson.M{"$avg": "$three_pointers_attempted"},
-		"three_pointers_made":      bson.M{"$avg": "$three_pointers_made"},
-		"turnovers":                bson.M{"$avg": "$turnovers"},
-	}}
-	lookupPlayer := bson.M{"$lookup": bson.M{"from": "players", "localField": "_id", "foreignField": "playerID", "as": "player"}}
-	unwindPlayer := bson.M{"$unwind": "$player"}
-	// must have played more than 1 game and average more than 5 minutes per game
-	// and must have a height and weight
-	matchPlayersWhoPlay := bson.M{"$match": bson.M{"games_played": bson.M{"$gt": 0}, "player.height": bson.M{"$ne": ""}, "player.weight": bson.M{"$gt": 0}}}
+	// start := time.Now()
+	// c.Queries++
+	// filter := createGameFilter(inputs)
+	// matchGames := bson.M{"$match": filter}
+	// averageStats := bson.M{"$group": bson.M{"_id": "$playerID",
+	// 	"games_played":             bson.M{"$count": bson.M{}},
+	// 	"all_minutes":              bson.M{"$push": "$minutes"},
+	// 	"assists":                  bson.M{"$avg": "$assists"},
+	// 	"blocks":                   bson.M{"$avg": "$blocks"},
+	// 	"field_goals_attempted":    bson.M{"$avg": "$field_goals_attempted"},
+	// 	"field_goals_made":         bson.M{"$avg": "$field_goals_made"},
+	// 	"free_throws_attempted":    bson.M{"$avg": "$free_throws_attempted"},
+	// 	"free_throws_made":         bson.M{"$avg": "$free_throws_made"},
+	// 	"offensive_rebounds":       bson.M{"$avg": "$offensive_rebounds"},
+	// 	"defensive_rebounds":       bson.M{"$avg": "$defensive_rebounds"},
+	// 	"personal_fouls":           bson.M{"$avg": "$personal_fouls"},
+	// 	"personal_fouls_drawn":     bson.M{"$avg": "$personal_fouls_drawn"},
+	// 	"points":                   bson.M{"$avg": "$points"},
+	// 	"rebounds":                 bson.M{"$avg": "$total_rebounds"},
+	// 	"steals":                   bson.M{"$avg": "$steals"},
+	// 	"three_pointers_attempted": bson.M{"$avg": "$three_pointers_attempted"},
+	// 	"three_pointers_made":      bson.M{"$avg": "$three_pointers_made"},
+	// 	"turnovers":                bson.M{"$avg": "$turnovers"},
+	// }}
+	// lookupPlayer := bson.M{"$lookup": bson.M{"from": "players", "localField": "_id", "foreignField": "playerID", "as": "player"}}
+	// unwindPlayer := bson.M{"$unwind": "$player"}
+	// // must have played more than 1 game and average more than 5 minutes per game
+	// // and must have a height and weight
+	// matchPlayersWhoPlay := bson.M{"$match": bson.M{"games_played": bson.M{"$gt": 0}, "player.height": bson.M{"$ne": ""}, "player.weight": bson.M{"$gt": 0}}}
 
-	cur, err := c.Collection("games").Aggregate(ctx, bson.A{matchGames, averageStats, lookupPlayer, unwindPlayer, matchPlayersWhoPlay})
-	if err != nil {
-		return nil, err
-	}
-	var averages []model.PlayerAverage
-	if err = cur.All(ctx, &averages); err != nil {
-		return nil, err
-	}
-	for i := 0; i < len(averages); i++ {
-		avg := averages[i]
-		minutes, err := avg.AverageMinutes()
-		if err != nil {
-			return nil, err
-		}
-		averages[i].Minutes = minutes
-		if averages[i].Minutes < 5 {
-			// remove
-			averages = append(averages[:i], averages[i+1:]...)
-			i--
-		}
-	}
-	logrus.Printf("[%v] Query %d Player Averages\tTook %v\n", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
-	return &averages, nil
-
+	// cur, err := c.Collection("games").Aggregate(ctx, bson.A{matchGames, averageStats, lookupPlayer, unwindPlayer, matchPlayersWhoPlay})
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// var averages []model.PlayerAverage
+	// if err = cur.All(ctx, &averages); err != nil {
+	// 	return nil, err
+	// }
+	// for i := 0; i < len(averages); i++ {
+	// 	avg := averages[i]
+	// 	minutes, err := avg.AverageMinutes()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	averages[i].Minutes = minutes
+	// 	if averages[i].Minutes < 5 {
+	// 		// remove
+	// 		averages = append(averages[:i], averages[i+1:]...)
+	// 		i--
+	// 	}
+	// }
+	// logrus.Printf("[%v] Query %d Player Averages\tTook %v\n", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
+	// return &averages, nil
+	panic("not implemented")
 }
 
 func (c *NBADatabaseClient) GetTeamAverages(ctx context.Context, inputs []model.GameFilter) (*[]model.TeamAverage, error) {
-	start := time.Now()
-	c.Queries++
-	filter := createGameFilter(inputs)
+	// start := time.Now()
+	// c.Queries++
+	// filter := createGameFilter(inputs)
 
-	matchGames := bson.M{"$match": filter}
-	averageStats := bson.M{"$group": bson.M{"_id": "$teamID",
-		"wins_and_losses":      bson.M{"$push": "$win_or_loss"},
-		"points":               bson.M{"$avg": "$points"},
-		"opponent_points":      bson.M{"$avg": "$opponent_points"},
-		"assists":              bson.M{"$avg": "$assists"},
-		"opponent_assists":     bson.M{"$avg": "$opponent_assists"},
-		"rebounds":             bson.M{"$avg": "$rebounds"},
-		"opponent_rebounds":    bson.M{"$avg": "$opponent_rebounds"},
-		"steals":               bson.M{"$avg": "$steals"},
-		"blocks":               bson.M{"$avg": "$blocks"},
-		"turnovers":            bson.M{"$avg": "$turnovers"},
-		"three_pointers_made":  bson.M{"$avg": "$three_pointers_made"},
-		"personal_fouls_drawn": bson.M{"$avg": "$personal_fouls_drawn"},
-		"personal_fouls":       bson.M{"$avg": "$personal_fouls"},
-	}}
-	lookupTeam := bson.M{"$lookup": bson.M{"from": "teams", "localField": "_id", "foreignField": "teamID", "as": "team"}}
-	unwindTeam := bson.M{"$unwind": "$team"}
+	// matchGames := bson.M{"$match": filter}
+	// averageStats := bson.M{"$group": bson.M{"_id": "$teamID",
+	// 	"wins_and_losses":      bson.M{"$push": "$win_or_loss"},
+	// 	"points":               bson.M{"$avg": "$points"},
+	// 	"opponent_points":      bson.M{"$avg": "$opponent_points"},
+	// 	"assists":              bson.M{"$avg": "$assists"},
+	// 	"opponent_assists":     bson.M{"$avg": "$opponent_assists"},
+	// 	"rebounds":             bson.M{"$avg": "$rebounds"},
+	// 	"opponent_rebounds":    bson.M{"$avg": "$opponent_rebounds"},
+	// 	"steals":               bson.M{"$avg": "$steals"},
+	// 	"blocks":               bson.M{"$avg": "$blocks"},
+	// 	"turnovers":            bson.M{"$avg": "$turnovers"},
+	// 	"three_pointers_made":  bson.M{"$avg": "$three_pointers_made"},
+	// 	"personal_fouls_drawn": bson.M{"$avg": "$personal_fouls_drawn"},
+	// 	"personal_fouls":       bson.M{"$avg": "$personal_fouls"},
+	// }}
+	// lookupTeam := bson.M{"$lookup": bson.M{"from": "teams", "localField": "_id", "foreignField": "teamID", "as": "team"}}
+	// unwindTeam := bson.M{"$unwind": "$team"}
 
-	cur, err := c.Collection("teamgames").Aggregate(ctx, bson.A{matchGames, averageStats, lookupTeam, unwindTeam})
-	if err != nil {
-		return nil, err
-	}
-	var averages []model.TeamAverage
-	if err = cur.All(ctx, &averages); err != nil {
-		return nil, err
-	}
-	//count wins and losses
-	for i := 0; i < len(averages); i++ {
-		avg := averages[i]
-		wins := 0.0
-		losses := 0.0
-		for _, a := range avg.WinsAndLosses {
-			if a == "win" {
-				wins++
-			} else if a == "loss" {
-				losses++
-			}
-		}
-		averages[i].GamesWon = wins
-		averages[i].GamesLost = losses
-	}
+	// cur, err := c.Collection("teamgames").Aggregate(ctx, bson.A{matchGames, averageStats, lookupTeam, unwindTeam})
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// var averages []model.TeamAverage
+	// if err = cur.All(ctx, &averages); err != nil {
+	// 	return nil, err
+	// }
+	// //count wins and losses
+	// for i := 0; i < len(averages); i++ {
+	// 	avg := averages[i]
+	// 	wins := 0.0
+	// 	losses := 0.0
+	// 	for _, a := range avg.WinsAndLosses {
+	// 		if a == "win" {
+	// 			wins++
+	// 		} else if a == "loss" {
+	// 			losses++
+	// 		}
+	// 	}
+	// 	averages[i].GamesWon = wins
+	// 	averages[i].GamesLost = losses
+	// }
 
-	logrus.Printf("[%v] Query %d Team Averages\tTook %v\n", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
-	return &averages, nil
-
+	// logrus.Printf("[%v] Query %d Team Averages\tTook %v\n", time.Now().Format(util.TIMENOW), len(inputs), time.Since(start))
+	// return &averages, nil
+	panic("not implemented")
 }
 
 func (c *NBADatabaseClient) GetPlayerInjuries(ctx context.Context, playerIDs []int) ([]*model.Injury, error) {
@@ -401,7 +560,6 @@ func (c *NBADatabaseClient) GetPlayerInjuries(ctx context.Context, playerIDs []i
 	c.Queries++
 	cur, err := c.Collection("injuries").Find(ctx, bson.M{"playerID": bson.M{"$in": playerIDs}})
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	var injuries []*model.Injury

@@ -1,0 +1,56 @@
+type Team {
+  name: String!
+  teamID: Int!
+  abbreviation: String!
+  location: String!
+  numWins: Int! #TODO
+  numLoss: Int! #TODO
+  # games(input: GameFilter!): [TeamGame!]!
+  players: [Player!]!
+  # injuries: [Injury!]
+  # similarTeams(input: GameFilter!): [Team!]!
+  # playerGamesVsTeam(input: PlayerFilter!): [PlayerGame!]!
+}
+
+type TeamGame {
+  date: String!
+  margin: Int!
+  points: Int!
+  assists: Int!
+  rebounds: Int!
+  offensive_rebounds: Int!
+  defensive_rebounds: Int!
+  turnovers: Int!
+  steals: Int!
+  blocks: Int!
+  three_pointers_attempted: Int!
+  three_pointers_made: Int!
+  defensive_rating: Float!
+  defensive_rebound_percentage: Float!
+  field_goal_percentage: Float!
+  field_goals_attempted: Int!
+  gameID: String!
+  home_or_away: String!
+  field_goals_made: Int!
+  free_throws_attempted: Int!
+  free_throws_made: Int!
+  free_throws_percentage: Float!
+  offensive_rebound_percentage: Float!
+  opponent: Team!
+  opponent_assists: Int!
+  opponent_effective_field_goal_percentage: Float!
+  opponent_field_goals_attempted: Int!
+  opponent_free_throws_attempted: Int!
+  opponent_points: Int!
+  opponent_rebounds: Int!
+  opponent_three_pointers_attempted: Int!
+  opponent_three_pointers_made: Int!
+  plus_minus_per_hundred: Float!
+  possessions: Int!
+  playoffs: Boolean!
+  personal_fouls: Int!
+  personal_fouls_drawn: Int!
+  season: String!
+  win_or_loss: String!
+  # playersInGame: PlayersInGame!
+}

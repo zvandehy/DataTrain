@@ -1,320 +1,320 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
+# # GraphQL schema example
+# #
+# # https://gqlgen.com/getting-started/
 
-type Player {
-  #firstName lastName
-  name: String!
-  #playerID of NBA stats
-  playerID: Int!
-  seasons: [String!]!
-  #G, F, or C
-  position: String!
-  # TODO: change 'currentTeam' to 'team'
-  currentTeam: Team!
-  games(input: GameFilter!): [PlayerGame!]!
-  average(input: GameFilter!): AverageStats!
-  injuries: [Injury!]
-  projections(input: ProjectionFilter!): [Projection!]!
-  height: String!
-  weight: Int!
-  similarPlayers(input: GameFilter!): [Player!]!
-}
-
-type Team {
-  name: String!
-  teamID: Int!
-  abbreviation: String!
-  location: String!
-  numWins: Int! #TODO
-  numLoss: Int! #TODO
-  games(input: GameFilter!): [TeamGame!]!
-  players: [Player!]!
-  injuries: [Injury!]
-  similarTeams(input: GameFilter!): [Team!]!
-  playerGamesVsTeam(input: PlayerFilter!): [PlayerGame!]!
-}
-
-type TeamGame {
-  date: String!
-  margin: Int!
-  points: Int!
-  assists: Int!
-  rebounds: Int!
-  offensive_rebounds: Int!
-  defensive_rebounds: Int!
-  turnovers: Int!
-  steals: Int!
-  blocks: Int!
-  three_pointers_attempted: Int!
-  three_pointers_made: Int!
-  defensive_rating: Float!
-  defensive_rebound_percentage: Float!
-  field_goal_percentage: Float!
-  field_goals_attempted: Int!
-  gameID: String!
-  home_or_away: String!
-  field_goals_made: Int!
-  free_throws_attempted: Int!
-  free_throws_made: Int!
-  free_throws_percentage: Float!
-  offensive_rebound_percentage: Float!
-  opponent: Team!
-  opponent_assists: Int!
-  opponent_effective_field_goal_percentage: Float!
-  opponent_field_goals_attempted: Int!
-  opponent_free_throws_attempted: Int!
-  opponent_points: Int!
-  opponent_rebounds: Int!
-  opponent_three_pointers_attempted: Int!
-  opponent_three_pointers_made: Int!
-  plus_minus_per_hundred: Float!
-  possessions: Int!
-  playoffs: Boolean!
-  personal_fouls: Int!
-  personal_fouls_drawn: Int!
-  season: String!
-  win_or_loss: String!
-  playersInGame: PlayersInGame!
-}
-
-type PlayerGame {
-  assist_percentage: Float!
-  assists: Int!
-  date: String!
-  defensive_rebound_percentage: Float!
-  defensive_rebounds: Int!
-  effective_field_goal_percentage: Float!
-  field_goal_percentage: Float!
-  field_goals_attempted: Int!
-  field_goals_made: Int!
-  free_throws_attempted: Int!
-  free_throws_made: Int!
-  free_throws_percentage: Float!
-  gameID: String!
-  home_or_away: String!
-  win_or_loss: String!
-  margin: Int!
-  minutes: String!
-  offensive_rebound_percentage: Float!
-  offensive_rebounds: Int!
-  opponent: Team!
-  opponentStats: TeamGame!
-  team: Team!
-  teamStats: TeamGame!
-  personal_fouls_drawn: Int!
-  personal_fouls: Int!
-  points: Int!
-  player: Player!
-  playoffs: Boolean!
-  season: String!
-  three_point_percentage: Float!
-  three_pointers_attempted: Int!
-  three_pointers_made: Int!
-  rebounds: Int!
-  true_shooting_percentage: Float!
-  turnovers: Int!
-  usage: Float!
-  blocks: Int!
-  steals: Int!
-  playersInGame: PlayersInGame!
-  projections: [Projection]!
-}
-
-type AverageStats {
-  assists: Float!
-  defensive_rebounds: Float!
-  field_goals_attempted: Float!
-  field_goals_made: Float!
-  free_throws_attempted: Float!
-  free_throws_made: Float!
-  minutes: String!
-  offensive_rebounds: Float!
-  personal_fouls_drawn: Float!
-  personal_fouls: Float!
-  points: Float!
-  three_pointers_attempted: Float!
-  three_pointers_made: Float!
-  rebounds: Float!
-  turnovers: Float!
-  blocks: Float!
-  steals: Float!
-}
-
-type Projection {
-  player: Player!
-  opponent: Team!
-  propositions: [Proposition]!
-  result: PlayerGame
-  startTime: String!
-  date: String!
-  playerOpponentMatchup: PlayerOpponentMatchup
-}
-
-type PlayerOpponentMatchup {
-  # List of PlayerGames where a similar player played against the same opponent
-  similarPlayerGames(similarity: SimilarPlayerInput!): [PlayerGame!]!
-  # List of PlayerGames where the same player played against similar opponents
-  similarTeamGames(similarity: SimilarTeamInput!): [PlayerGame!]!
-}
-
-type Proposition {
-  target: Float!
-  type: String!
-  sportsbook: String!
-  # prediction(model: ModelWeights): Prediction!
-  predictions: [Prediction!]!
-  lastModified: String!
-}
-
-type Prediction {
-  model: String!
-  overUnderPrediction: String!
-  # confidence: Float
-  totalPrediction: Float
-  # recencyFragments: [PredictionFragment]
-  # vsOpponent: PredictionFragment
-  # vsSimilarTeams: PredictionFragment
-  # similarPlayersVsOpponent: PredictionFragment
-}
-
-# type PredictionFragment {
-#   count: Int
-#   games: [PlayerGame]
-#   minutes: Float
-#   avgPerMin: Float
-#   weight: Float
-#   average: Float
-#   diff: Float
-#   pctDiff: Float
-#   diffPerMin: Float
-#   pctDiffPerMin: Float
-#   median: Float
-#   numOver: Float
-#   numUnder: Float
-#   numPush: Float
-#   pctOver: Float
-#   pctUnder: Float
-#   pctPushOrMore: Float
-#   pctPushOrLess: Float
-# }
-
-# add injuries to games
-type Injury {
-  startDate: String!
-  returnDate: String!
-  status: String!
-  player: Player!
-}
-
-type Target {
-  target: Float!
-  type: String!
-}
-
-type PlayersInGame {
-  team: [Player!]!
-  opponent: [Player!]!
-}
-
-type Query {
-  players: [Player!]!
-  filterPlayers(input: PlayerFilter!): [Player!]!
-  player(input: PlayerFilter!): Player!
-  teams: [Team!]!
-  filterTeams(input: TeamFilter!): [Team!]!
-  team(input: TeamFilter!): Team!
-  teamGames(input: GameFilter!): [TeamGame!]!
-  playerGames(input: GameFilter!): [PlayerGame!]!
-  projections(input: ProjectionFilter!): [Projection!]!
-}
-
-input SimilarPlayerInput {
-  euclidean: Boolean
-  numPlayers: Int
-  statsOfInterest: [String!] # TODO: we might want Stat objects and/or enums
-  positionStrict: Boolean
-  positionSoft: Boolean
-}
-
-input SimilarTeamInput {
-  numTeams: Int
-  statsOfInterest: [String!] # TODO: we might want Stat objects and/or enums
-}
-
-input ProjectionFilter {
-  sportsbook: String
-  playerName: String
-  playerID: Int
-  startDate: String
-  endDate: String
-  teamID: Int
-  opponentID: Int
-}
-
-input PlayerFilter {
-  name: String
-  playerID: Int
-  season: String
-  position: String
-  teamABR: String
-  teamID: Int
-}
-
-input TeamFilter {
-  name: String
-  teamID: Int
-  abbreviation: String
-}
-
-# TODO: Add a date filter
-input GameFilter {
-  teamID: Int
-  opponentID: Int
-  playerID: Int
-  gameID: String
-  season: String
-  startDate: String
-  endDate: String
-}
-
-# TESTING What a schema to calculate custom models on the server might look like.
-# This would move the weighted calculations from the browser to the backend.
-
-# input ModelWeights {
-#   lastGames: [CountWeight]
-#   matchupWeight: Int
-#   similarPlayersVsOppWeight: Int
-#   playerVsSimilarTeamsWeight: Int
-#   homeOrAwayWeight: Int
-#   playoffsWeight: Int
-#   allowPush: Boolean
-# }
-
-# input CountWeight {
-#   count: Int!
+# type Player {
+#   #firstName lastName
+#   name: String!
+#   #playerID of NBA stats
+#   playerID: Int!
+#   seasons: [String!]!
+#   #G, F, or C
+#   position: String!
+#   # TODO: change 'currentTeam' to 'team'
+#   currentTeam: Team!
+#   games(input: GameFilter!): [PlayerGame!]!
+#   average(input: GameFilter!): AverageStats!
+#   injuries: [Injury!]
+#   projections(input: ProjectionFilter!): [Projection!]!
+#   height: String!
 #   weight: Int!
+#   similarPlayers(input: GameFilter!): [Player!]!
 # }
 
-# type ProjectionBreakdown { #(model: ModelWeights)
-#   numGames: [[Game]]
-#   matchup: Game[]
-#   similarPlayersMatchup: Game[]
-#   matchupSimilarTeams: Game[]
-#   homeOrAway: Game[]
-#   playoffs: Game[]
+# type Team {
+#   name: String!
+#   teamID: Int!
+#   abbreviation: String!
+#   location: String!
+#   numWins: Int! #TODO
+#   numLoss: Int! #TODO
+#   games(input: GameFilter!): [TeamGame!]!
+#   players: [Player!]!
+#   injuries: [Injury!]
+#   similarTeams(input: GameFilter!): [Team!]!
+#   playerGamesVsTeam(input: PlayerFilter!): [PlayerGame!]!
 # }
 
-# type PredictionBreakdown { # (projection, games)
-#   numOver: Int!
-#   numUnder: Int!
-#   numPush: Int!
-#   pctOver: Float!
-#   pctUnder: Float!
-#   pctOverOrPush: Float!
-#   pctUnderOrPush: Float!
+# type TeamGame {
+#   date: String!
+#   margin: Int!
+#   points: Int!
+#   assists: Int!
+#   rebounds: Int!
+#   offensive_rebounds: Int!
+#   defensive_rebounds: Int!
+#   turnovers: Int!
+#   steals: Int!
+#   blocks: Int!
+#   three_pointers_attempted: Int!
+#   three_pointers_made: Int!
+#   defensive_rating: Float!
+#   defensive_rebound_percentage: Float!
+#   field_goal_percentage: Float!
+#   field_goals_attempted: Int!
+#   gameID: String!
+#   home_or_away: String!
+#   field_goals_made: Int!
+#   free_throws_attempted: Int!
+#   free_throws_made: Int!
+#   free_throws_percentage: Float!
+#   offensive_rebound_percentage: Float!
+#   opponent: Team!
+#   opponent_assists: Int!
+#   opponent_effective_field_goal_percentage: Float!
+#   opponent_field_goals_attempted: Int!
+#   opponent_free_throws_attempted: Int!
+#   opponent_points: Int!
+#   opponent_rebounds: Int!
+#   opponent_three_pointers_attempted: Int!
+#   opponent_three_pointers_made: Int!
+#   plus_minus_per_hundred: Float!
+#   possessions: Int!
+#   playoffs: Boolean!
+#   personal_fouls: Int!
+#   personal_fouls_drawn: Int!
+#   season: String!
+#   win_or_loss: String!
+#   playersInGame: PlayersInGame!
 # }
 
-# games({numGames: [10,20,30,0]}) {
-
+# type PlayerGame {
+#   assist_percentage: Float!
+#   assists: Int!
+#   date: String!
+#   defensive_rebound_percentage: Float!
+#   defensive_rebounds: Int!
+#   effective_field_goal_percentage: Float!
+#   field_goal_percentage: Float!
+#   field_goals_attempted: Int!
+#   field_goals_made: Int!
+#   free_throws_attempted: Int!
+#   free_throws_made: Int!
+#   free_throws_percentage: Float!
+#   gameID: String!
+#   home_or_away: String!
+#   win_or_loss: String!
+#   margin: Int!
+#   minutes: String!
+#   offensive_rebound_percentage: Float!
+#   offensive_rebounds: Int!
+#   opponent: Team!
+#   opponentStats: TeamGame!
+#   team: Team!
+#   teamStats: TeamGame!
+#   personal_fouls_drawn: Int!
+#   personal_fouls: Int!
+#   points: Int!
+#   player: Player!
+#   playoffs: Boolean!
+#   season: String!
+#   three_point_percentage: Float!
+#   three_pointers_attempted: Int!
+#   three_pointers_made: Int!
+#   rebounds: Int!
+#   true_shooting_percentage: Float!
+#   turnovers: Int!
+#   usage: Float!
+#   blocks: Int!
+#   steals: Int!
+#   playersInGame: PlayersInGame!
+#   projections: [Projection]!
 # }
+
+# type AverageStats {
+#   assists: Float!
+#   defensive_rebounds: Float!
+#   field_goals_attempted: Float!
+#   field_goals_made: Float!
+#   free_throws_attempted: Float!
+#   free_throws_made: Float!
+#   minutes: String!
+#   offensive_rebounds: Float!
+#   personal_fouls_drawn: Float!
+#   personal_fouls: Float!
+#   points: Float!
+#   three_pointers_attempted: Float!
+#   three_pointers_made: Float!
+#   rebounds: Float!
+#   turnovers: Float!
+#   blocks: Float!
+#   steals: Float!
+# }
+
+# type Projection {
+#   player: Player!
+#   opponent: Team!
+#   propositions: [Proposition]!
+#   result: PlayerGame
+#   startTime: String!
+#   date: String!
+#   playerOpponentMatchup: PlayerOpponentMatchup
+# }
+
+# type PlayerOpponentMatchup {
+#   # List of PlayerGames where a similar player played against the same opponent
+#   similarPlayerGames(similarity: SimilarPlayerInput!): [PlayerGame!]!
+#   # List of PlayerGames where the same player played against similar opponents
+#   similarTeamGames(similarity: SimilarTeamInput!): [PlayerGame!]!
+# }
+
+# type Proposition {
+#   target: Float!
+#   type: String!
+#   sportsbook: String!
+#   # prediction(model: ModelWeights): Prediction!
+#   predictions: [Prediction!]!
+#   lastModified: String!
+# }
+
+# type Prediction {
+#   model: String!
+#   overUnderPrediction: String!
+#   # confidence: Float
+#   totalPrediction: Float
+#   # recencyFragments: [PredictionFragment]
+#   # vsOpponent: PredictionFragment
+#   # vsSimilarTeams: PredictionFragment
+#   # similarPlayersVsOpponent: PredictionFragment
+# }
+
+# # type PredictionFragment {
+# #   count: Int
+# #   games: [PlayerGame]
+# #   minutes: Float
+# #   avgPerMin: Float
+# #   weight: Float
+# #   average: Float
+# #   diff: Float
+# #   pctDiff: Float
+# #   diffPerMin: Float
+# #   pctDiffPerMin: Float
+# #   median: Float
+# #   numOver: Float
+# #   numUnder: Float
+# #   numPush: Float
+# #   pctOver: Float
+# #   pctUnder: Float
+# #   pctPushOrMore: Float
+# #   pctPushOrLess: Float
+# # }
+
+# # add injuries to games
+# type Injury {
+#   startDate: String!
+#   returnDate: String!
+#   status: String!
+#   player: Player!
+# }
+
+# type Target {
+#   target: Float!
+#   type: String!
+# }
+
+# type PlayersInGame {
+#   team: [Player!]!
+#   opponent: [Player!]!
+# }
+
+# type Query {
+#   players: [Player!]!
+#   filterPlayers(input: PlayerFilter!): [Player!]!
+#   player(input: PlayerFilter!): Player!
+#   teams: [Team!]!
+#   filterTeams(input: TeamFilter!): [Team!]!
+#   team(input: TeamFilter!): Team!
+#   teamGames(input: GameFilter!): [TeamGame!]!
+#   playerGames(input: GameFilter!): [PlayerGame!]!
+#   projections(input: ProjectionFilter!): [Projection!]!
+# }
+
+# input SimilarPlayerInput {
+#   euclidean: Boolean
+#   numPlayers: Int
+#   statsOfInterest: [String!] # TODO: we might want Stat objects and/or enums
+#   positionStrict: Boolean
+#   positionSoft: Boolean
+# }
+
+# input SimilarTeamInput {
+#   numTeams: Int
+#   statsOfInterest: [String!] # TODO: we might want Stat objects and/or enums
+# }
+
+# input ProjectionFilter {
+#   sportsbook: String
+#   playerName: String
+#   playerID: Int
+#   startDate: String
+#   endDate: String
+#   teamID: Int
+#   opponentID: Int
+# }
+
+# input PlayerFilter {
+#   name: String
+#   playerID: Int
+#   season: String
+#   position: String
+#   teamABR: String
+#   teamID: Int
+# }
+
+# input TeamFilter {
+#   name: String
+#   teamID: Int
+#   abbreviation: String
+# }
+
+# # TODO: Add a date filter
+# input GameFilter {
+#   teamID: Int
+#   opponentID: Int
+#   playerID: Int
+#   gameID: String
+#   season: String
+#   startDate: String
+#   endDate: String
+# }
+
+# # TESTING What a schema to calculate custom models on the server might look like.
+# # This would move the weighted calculations from the browser to the backend.
+
+# # input ModelWeights {
+# #   lastGames: [CountWeight]
+# #   matchupWeight: Int
+# #   similarPlayersVsOppWeight: Int
+# #   playerVsSimilarTeamsWeight: Int
+# #   homeOrAwayWeight: Int
+# #   playoffsWeight: Int
+# #   allowPush: Boolean
+# # }
+
+# # input CountWeight {
+# #   count: Int!
+# #   weight: Int!
+# # }
+
+# # type ProjectionBreakdown { #(model: ModelWeights)
+# #   numGames: [[Game]]
+# #   matchup: Game[]
+# #   similarPlayersMatchup: Game[]
+# #   matchupSimilarTeams: Game[]
+# #   homeOrAway: Game[]
+# #   playoffs: Game[]
+# # }
+
+# # type PredictionBreakdown { # (projection, games)
+# #   numOver: Int!
+# #   numUnder: Int!
+# #   numPush: Int!
+# #   pctOver: Float!
+# #   pctUnder: Float!
+# #   pctOverOrPush: Float!
+# #   pctUnderOrPush: Float!
+# # }
+
+# # games({numGames: [10,20,30,0]}) {
+
+# # }

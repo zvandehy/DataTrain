@@ -1,5 +1,7 @@
 package model
 
+import "github.com/zvandehy/DataTrain/nba_graphql/util"
+
 type Team struct {
 	Name         string `json:"name" bson:"name"`
 	TeamID       int    `json:"teamID" bson:"teamID"`
@@ -10,7 +12,7 @@ type Team struct {
 }
 
 func (t Team) String() string {
-	return Print(t)
+	return util.Print(t)
 }
 
 type TeamGame struct {
@@ -57,7 +59,7 @@ type TeamGame struct {
 }
 
 func (t TeamGame) String() string {
-	return Print(t)
+	return util.Print(t)
 }
 
 type PlayersInGame struct {

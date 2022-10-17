@@ -1,32 +1,29 @@
-import "./overall-accuracy-breakdown.component.css";
 import { Button, Table, TableBody, TableHead } from "@mui/material";
+import moment from "moment";
+import { getQuery, useGetProjections } from "../../../hooks/useGetProjections";
+import apolloClient from "../../../shared/apollo-client";
 import { BETTING_CATEGORIES } from "../../../shared/constants";
+import { ColorCompare } from "../../../shared/functions/color.fn";
+import { Match } from "../../../shared/functions/filters.fn";
+import { CalculatePredictions } from "../../../shared/functions/predictions.fn";
 import {
   Accuracy,
   BreakdownFilter,
   GetHitRate,
   HitCriteria,
-  HitRate,
   PredictionResultEnum,
 } from "../../../shared/interfaces/accuracy.interface";
+import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
+import { DateRange } from "../../../shared/interfaces/dateRange.interface";
+import {
+  GameFilter,
+  ProjectionFilter,
+} from "../../../shared/interfaces/graphql/filters.interface";
+import { Projection } from "../../../shared/interfaces/graphql/projection.interface";
 import { Stat } from "../../../shared/interfaces/stat.interface";
 import { StyledTableCell } from "../../styled-table/styled-table-cell.component";
 import { StyledTableRow } from "../../styled-table/styled-table-row.component";
-import { ColorCompare } from "../../../shared/functions/color.fn";
-import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
-import moment from "moment";
-import { getQuery, useGetProjections } from "../../../hooks/useGetProjections";
-import { Match } from "../../../shared/functions/filters.fn";
-import { CalculatePredictions } from "../../../shared/functions/predictions.fn";
-import {
-  ProjectionFilter,
-  GameFilter,
-} from "../../../shared/interfaces/graphql/filters.interface";
-import { DateRange } from "../../../shared/interfaces/dateRange.interface";
-import { start } from "repl";
-import { Projection } from "../../../shared/interfaces/graphql/projection.interface";
-import apolloClient from "../../../shared/apollo-client";
-import { useEffect, useMemo, useState } from "react";
+import "./overall-accuracy-breakdown.component.css";
 
 interface OverallAccuracyBreakdownTableProps {
   // totalAccuracy: Accuracy;

@@ -14,43 +14,55 @@ import (
 // The value is a matrix that holds the average stats of players and comparisons between them.
 type Snapshots map[string]PlayerSimilarityMatrix
 
+func NewSnapshots() *Snapshots {
+	s := make(Snapshots)
+	return &s
+}
+
 // PlayerSimilarityMatrix holds the average stats of players and comparisons between them over a date range.
 // startDate and endDate require a format of "2006-01-02".
 // stats is a list of stats to compare players on.
 // players is a list of Player structs with basic player information and all of their games that will be deliminated by startDate and endDate.
-func NewSnapshots(startDate, endDate string, stats []string, players []Player) *Snapshots {
-	s := make(Snapshots)
+func (s *Snapshots) AddSnapshots(startDate, endDate string, stats []string, players []*Player) {
 	// for each day in the range, parse the date string and create a snapshot
 	start, err := time.Parse("2006-01-02", startDate)
 	if err != nil {
 		logrus.Errorf("error parsing start date: %v", err)
-		return &s
 	}
 	end, err := time.Parse("2006-01-02", endDate)
 	if err != nil {
 		logrus.Errorf("error parsing end date: %v", err)
-		return &s
 	}
 
 	for start.Before(end) {
 		s.AddSnapshot(start, end, stats, players)
 		start = start.AddDate(0, 0, 1)
 	}
-
-	return &s
 }
 
-func (s *Snapshots) AddSnapshot(startDate, endDate time.Time, stats []string, players []Player) {
-	averages := make([]PlayerAverage, len(players))
-	for i, player := range players {
-		averages[i] = player.AverageStats(startDate, endDate)
+func (s *Snapshots) AddSnapshot(startDate, endDate time.Time, stats []string, players []*Player) {
+	averages := []PlayerAverage{}
+	for _, player := range players {
+		var games []*PlayerGame
+		for _, game := range player.GamesCache {
+			date, err := time.Parse("2006-01-02", game.Date)
+			if err != nil {
+				logrus.Errorf("error parsing game date: %v", err)
+			}
+			if date.After(startDate) && date.Before(endDate) {
+				games = append(games, game)
+			}
+		}
+		if len(games) > 0 {
+			averages = append(averages, NewPlayerAverage(games, player))
+		}
 	}
 	(*s)[fmt.Sprintf("%s-%s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))] = *NewPlayerSimilarityMatrix(averages, stats)
 }
 
-func (s *Snapshots) GetSimilarPlayers(playerID, limit int, startDate, endDate string) []Player {
+func (s *Snapshots) GetSimilarPlayers(playerID, limit int, startDate, endDate string, statsOfInterest []Stat) []Player {
 	if snapshot, ok := (*s)[fmt.Sprintf("%s-%s", startDate, endDate)]; ok {
-		similarPlayers, err := snapshot.GetNearestPlayers(playerID, limit)
+		similarPlayers, err := snapshot.GetNearestPlayers(playerID, limit, statsOfInterest)
 		if err != nil {
 			logrus.Errorf("error getting similar players: %v", err)
 			return []Player{}
@@ -71,15 +83,19 @@ type SimilarityVector struct {
 	Average PlayerAverage
 }
 
-func (v *SimilarityVector) GetNearest(limit int) []PlayerDiff {
+func (v *SimilarityVector) GetNearest(limit int, statsOfInterest []Stat) []PlayerDiff {
+	fmt.Println("Distance to: ", v.Average.Player.Name)
 	// get limit number of nearest players using EuclideanDistance
 	nearest := make([]PlayerDiff, 0, len(v.Comparisons))
 	for _, diff := range v.Comparisons {
 		nearest = append(nearest, diff)
 	}
 	sort.Slice(nearest, func(i, j int) bool {
-		return nearest[i].Distance < nearest[j].Distance
+		return EuclideanDistance(nearest[i], statsOfInterest) < EuclideanDistance(nearest[j], statsOfInterest)
 	})
+	for _, diff := range nearest {
+		fmt.Printf("%20.20s: (%v)\t[Pts:%v\tRebs: %v\tAsts: %v\t3PM: %v\tFGA: %v\tMIN: %v\tHeight: %v]\n", diff.Player.Name, EuclideanDistance(diff, statsOfInterest), diff.Points, diff.Rebounds, diff.Assists, diff.ThreePointersMade, diff.FieldGoalsAttempted, diff.Minutes, diff.Height)
+	}
 	if len(v.Comparisons) <= limit {
 		return nearest
 	}
@@ -119,10 +135,11 @@ func (s *StatOfInterest) ZScore(playerAverage PlayerAverage) float64 {
 	return similarity.ZScore(playerAverage.Score(s.Stat), s.Mean, s.StdDev)
 }
 
-func (m *PlayerSimilarityMatrix) AddNormalizedPlayers(players []PlayerAverage, statsOfInterest ...string) {
+func (m *PlayerSimilarityMatrix) AddNormalizedPlayers(players []PlayerAverage) {
+	statsOfInterest := PlayerAverageStats()
 	stats := make([]StatOfInterest, len(statsOfInterest))
 	for i, input := range statsOfInterest {
-		stat := NewStat(input)
+		stat := NewStat(string(input))
 		if stat == "" {
 			logrus.Warning("Stat of interest not found: ", stat)
 			continue
@@ -144,7 +161,7 @@ func NewPlayerSimilarityMatrix(players []PlayerAverage, stats []string) *PlayerS
 	m := &PlayerSimilarityMatrix{
 		Matrix: make(map[int]SimilarityVector),
 	}
-	m.AddNormalizedPlayers(players, stats...)
+	m.AddNormalizedPlayers(players)
 	return m
 }
 
@@ -175,12 +192,12 @@ func (m *PlayerSimilarityMatrix) CompareAverages(in int, averageIn PlayerAverage
 	return comparisons
 }
 
-func (m *PlayerSimilarityMatrix) GetNearestPlayers(toPlayer int, limit int) (similarPlayerIDs []Player, err error) {
+func (m *PlayerSimilarityMatrix) GetNearestPlayers(toPlayer int, limit int, statsOfInterest []Stat) (similarPlayers []Player, err error) {
 	if vector, ok := m.Matrix[toPlayer]; ok {
-		for _, player := range vector.GetNearest(limit) {
-			similarPlayerIDs = append(similarPlayerIDs, player.Player)
+		for _, player := range vector.GetNearest(limit, statsOfInterest) {
+			similarPlayers = append(similarPlayers, player.Player)
 		}
-		return similarPlayerIDs, nil
+		return similarPlayers, nil
 	}
 	return nil, fmt.Errorf("player %d not found in matrix", toPlayer)
 }

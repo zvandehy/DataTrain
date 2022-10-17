@@ -1,0 +1,55 @@
+type Projection {
+  player: Player!
+  opponent: Team!
+  propositions(input: PropositionFilter): [Proposition]!
+  result: PlayerGame
+  startTime: String!
+  date: String!
+}
+
+type Proposition {
+  target: Float!
+  type: Stat!
+  sportsbook: SportsbookOption!
+  prediction(input: ModelInput!): Prediction!
+  # predictions: [Prediction!]!
+  lastModified: String!
+}
+
+input ModelInput {
+  model: String
+  gameBreakdowns: [GameBreakdownInput!]
+  similarPlayerInput: SimilarPlayerInput
+}
+
+input GameBreakdownInput {
+  filter: GameFilter!
+  weight: Float!
+}
+
+input SimilarPlayerInput {
+  limit: Int
+  statsOfInterest: [Stat!]
+  playerPoolFilter: PlayerFilter #TODO: be able to filter based on "this" player's position
+  weight: Float!
+}
+
+input SimilarTeamInput {
+  numTeams: Int
+  statsOfInterest: [StatFilter!]
+}
+
+type Prediction {
+  model: String
+  overUnderPrediction: Output
+  confidence: Float
+  estimation: Float
+  # recencyFragments: [PredictionFragment]
+  # vsOpponent: PredictionFragment
+  # vsSimilarTeams: PredictionFragment
+  # similarPlayersVsOpponent: PredictionFragment
+}
+enum Output {
+  OVER
+  UNDER
+}

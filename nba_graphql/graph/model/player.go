@@ -3,9 +3,10 @@ package model
 import (
 	"fmt"
 	"math"
-	"time"
 
+	"github.com/sirupsen/logrus"
 	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
+	"github.com/zvandehy/DataTrain/nba_graphql/util"
 )
 
 // If key is found, use the value.
@@ -27,28 +28,17 @@ type Player struct {
 	Height      string   `json:"height" bson:"height"`
 	Weight      int      `json:"weight" bson:"weight"`
 	// When retrieving a player, also retrieve all of the games they've played within the minimum start date and maximum end date.
-	Games []PlayerGame `json:"games" bson:"games"`
+	GamesCache []*PlayerGame `json:"gamesCache" bson:"gamesCache"`
 }
 
-// TODO: Provide filters other than the dateRange
-func (p *Player) AverageStats(startDate, endDate time.Time) PlayerAverage {
+func NewPlayerAverage(games []*PlayerGame, player *Player) PlayerAverage {
 	average := PlayerAverage{}
-	var filteredGames []PlayerGame
-	for _, game := range p.Games {
-		gameDate, err := time.Parse("2006-01-02", game.Date)
-		if err != nil {
-			continue
-		}
-		if gameDate.After(startDate) && gameDate.Before(endDate) {
-			filteredGames = append(filteredGames, game)
-		}
-	}
-	average.GamesPlayed = float64(len(filteredGames))
-	average.Player = *p
-	average.Height = float64(p.HeightInInches())
-	average.Weight = float64(p.Weight)
+	average.GamesPlayed = float64(len(games))
+	average.Player = *player
+	average.Height = float64(player.HeightInInches())
+	average.Weight = float64(player.Weight)
 
-	for _, game := range filteredGames {
+	for _, game := range games {
 		min, err := ConvertMinutesToFloat(game.Minutes)
 		if err != nil {
 			min = 0
@@ -72,45 +62,39 @@ func (p *Player) AverageStats(startDate, endDate time.Time) PlayerAverage {
 		average.Turnovers += float64(game.Turnovers)
 	}
 
-	average.Assists /= float64(len(filteredGames))
-	average.Blocks /= float64(len(filteredGames))
-	average.DefensiveRebounds /= float64(len(filteredGames))
-	average.FieldGoalsAttempted /= float64(len(filteredGames))
-	average.FieldGoalsMade /= float64(len(filteredGames))
-	average.FreeThrowsAttempted /= float64(len(filteredGames))
-	average.FreeThrowsMade /= float64(len(filteredGames))
-	average.Minutes /= float64(len(filteredGames))
-	average.OffensiveRebounds /= float64(len(filteredGames))
-	average.PersonalFoulsDrawn /= float64(len(filteredGames))
-	average.PersonalFouls /= float64(len(filteredGames))
-	average.Points /= float64(len(filteredGames))
-	average.Rebounds /= float64(len(filteredGames))
-	average.Steals /= float64(len(filteredGames))
-	average.ThreePointersAttempted /= float64(len(filteredGames))
-	average.ThreePointersMade /= float64(len(filteredGames))
-	average.Turnovers /= float64(len(filteredGames))
+	average.Assists /= float64(len(games))
+	average.Blocks /= float64(len(games))
+	average.DefensiveRebounds /= float64(len(games))
+	average.FieldGoalsAttempted /= float64(len(games))
+	average.FieldGoalsMade /= float64(len(games))
+	average.FreeThrowsAttempted /= float64(len(games))
+	average.FreeThrowsMade /= float64(len(games))
+	average.Minutes /= float64(len(games))
+	average.OffensiveRebounds /= float64(len(games))
+	average.PersonalFoulsDrawn /= float64(len(games))
+	average.PersonalFouls /= float64(len(games))
+	average.Points /= float64(len(games))
+	average.Rebounds /= float64(len(games))
+	average.Steals /= float64(len(games))
+	average.ThreePointersAttempted /= float64(len(games))
+	average.ThreePointersMade /= float64(len(games))
+	average.Turnovers /= float64(len(games))
 
 	return average
 }
 
 func (p *Player) HeightInInches() int {
 	var feet, inches int
-	fmt.Sscanf(p.Height, "%d'%d", &feet, &inches)
+	fmt.Sscanf(p.Height, "%d-%d", &feet, &inches)
 	return feet*12 + inches
 }
 
 func (p Player) String() string {
-	return Print(p)
+	return util.Print(p)
 }
 
 func (p PlayerGame) String() string {
-	return Print(p)
-}
-
-type PlayerOpponentMatchup struct {
-	PlayerID   int    `json:"playerID" bson:"playerID"`
-	OpponentID int    `json:"opponent" bson:"opponent"`
-	Date       string `json:"date" bson:"date"`
+	return util.Print(p)
 }
 
 // TODO: To add a new stat to player similarity, add it to all of: ... // TODO: look into this, see if there is a more maintainable way to do this
@@ -188,10 +172,12 @@ func (p *PlayerAverage) Normalize(stats ...StatOfInterest) PlayerAverage {
 	return normalized
 }
 
-type PlayerDiff struct {
-	PlayerAverage
-	Distance float64
-}
+type PlayerDiff PlayerAverage
+
+// type PlayerDiff struct {
+// 	PlayerAverage
+// 	Distance float64
+// }
 
 func (p *PlayerAverage) AverageMinutes() (float64, error) {
 	var minutes float64
@@ -205,87 +191,92 @@ func (p *PlayerAverage) AverageMinutes() (float64, error) {
 	return minutes, nil
 }
 
-func (p *PlayerAverage) ToAverageStats() *AverageStats {
-	mins := fmt.Sprintf("%d", int(p.Minutes))
-	secs := fmt.Sprintf("%02d", int((p.Minutes-float64(int(p.Minutes)))*60))
-	return &AverageStats{
-		Assists:                p.Assists,
-		Blocks:                 p.Blocks,
-		DefensiveRebounds:      p.DefensiveRebounds,
-		FieldGoalsAttempted:    p.FieldGoalsAttempted,
-		FieldGoalsMade:         p.FieldGoalsMade,
-		FreeThrowsAttempted:    p.FreeThrowsAttempted,
-		FreeThrowsMade:         p.FreeThrowsMade,
-		Minutes:                fmt.Sprintf("%s:%s", mins, secs),
-		OffensiveRebounds:      p.OffensiveRebounds,
-		PersonalFoulsDrawn:     p.PersonalFoulsDrawn,
-		PersonalFouls:          p.PersonalFouls,
-		Points:                 p.Points,
-		Rebounds:               p.Rebounds,
-		Steals:                 p.Steals,
-		ThreePointersAttempted: p.ThreePointersAttempted,
-		ThreePointersMade:      p.ThreePointersMade,
-		Turnovers:              p.Turnovers,
-	}
-}
-
 func (p *PlayerAverage) Difference(fromPlayer PlayerAverage) PlayerDiff {
 	d := PlayerDiff{
-		PlayerAverage: PlayerAverage{Assists: similarity.RoundFloat(fromPlayer.Assists-p.Assists, 2),
-			Blocks:                 similarity.RoundFloat(fromPlayer.Blocks-p.Blocks, 2),
-			DefensiveRebounds:      similarity.RoundFloat(fromPlayer.DefensiveRebounds-p.DefensiveRebounds, 2),
-			FieldGoalsAttempted:    similarity.RoundFloat(fromPlayer.FieldGoalsAttempted-p.FieldGoalsAttempted, 2),
-			FieldGoalsMade:         similarity.RoundFloat(fromPlayer.FieldGoalsMade-p.FieldGoalsMade, 2),
-			FreeThrowsAttempted:    similarity.RoundFloat(fromPlayer.FreeThrowsAttempted-p.FreeThrowsAttempted, 2),
-			FreeThrowsMade:         similarity.RoundFloat(fromPlayer.FreeThrowsMade-p.FreeThrowsMade, 2),
-			GamesPlayed:            similarity.RoundFloat(fromPlayer.GamesPlayed-p.GamesPlayed, 2),
-			Height:                 similarity.RoundFloat(fromPlayer.Height-p.Height, 2),
-			Minutes:                similarity.RoundFloat(fromPlayer.Minutes-p.Minutes, 2),
-			OffensiveRebounds:      similarity.RoundFloat(fromPlayer.OffensiveRebounds-p.OffensiveRebounds, 2),
-			Points:                 similarity.RoundFloat(fromPlayer.Points-p.Points, 2),
-			Rebounds:               similarity.RoundFloat(fromPlayer.Rebounds-p.Rebounds, 2),
-			Steals:                 similarity.RoundFloat(fromPlayer.Steals-p.Steals, 2),
-			ThreePointersAttempted: similarity.RoundFloat(fromPlayer.ThreePointersAttempted-p.ThreePointersAttempted, 2),
-			ThreePointersMade:      similarity.RoundFloat(fromPlayer.ThreePointersMade-p.ThreePointersMade, 2),
-			Turnovers:              similarity.RoundFloat(fromPlayer.Turnovers-p.Turnovers, 2),
-			Weight:                 similarity.RoundFloat(fromPlayer.Weight-p.Weight, 2),
-			PersonalFoulsDrawn:     similarity.RoundFloat(fromPlayer.PersonalFoulsDrawn-p.PersonalFoulsDrawn, 2),
-			PersonalFouls:          similarity.RoundFloat(fromPlayer.PersonalFouls-p.PersonalFouls, 2)},
-	}
-	d.Distance = EuclideanDistance(d)
+		Assists:                similarity.RoundFloat(fromPlayer.Assists-p.Assists, 2),
+		Blocks:                 similarity.RoundFloat(fromPlayer.Blocks-p.Blocks, 2),
+		DefensiveRebounds:      similarity.RoundFloat(fromPlayer.DefensiveRebounds-p.DefensiveRebounds, 2),
+		FieldGoalsAttempted:    similarity.RoundFloat(fromPlayer.FieldGoalsAttempted-p.FieldGoalsAttempted, 2),
+		FieldGoalsMade:         similarity.RoundFloat(fromPlayer.FieldGoalsMade-p.FieldGoalsMade, 2),
+		FreeThrowsAttempted:    similarity.RoundFloat(fromPlayer.FreeThrowsAttempted-p.FreeThrowsAttempted, 2),
+		FreeThrowsMade:         similarity.RoundFloat(fromPlayer.FreeThrowsMade-p.FreeThrowsMade, 2),
+		GamesPlayed:            similarity.RoundFloat(fromPlayer.GamesPlayed-p.GamesPlayed, 2),
+		Height:                 similarity.RoundFloat(fromPlayer.Height-p.Height, 2),
+		Minutes:                similarity.RoundFloat(fromPlayer.Minutes-p.Minutes, 2),
+		OffensiveRebounds:      similarity.RoundFloat(fromPlayer.OffensiveRebounds-p.OffensiveRebounds, 2),
+		Points:                 similarity.RoundFloat(fromPlayer.Points-p.Points, 2),
+		Rebounds:               similarity.RoundFloat(fromPlayer.Rebounds-p.Rebounds, 2),
+		Steals:                 similarity.RoundFloat(fromPlayer.Steals-p.Steals, 2),
+		ThreePointersAttempted: similarity.RoundFloat(fromPlayer.ThreePointersAttempted-p.ThreePointersAttempted, 2),
+		ThreePointersMade:      similarity.RoundFloat(fromPlayer.ThreePointersMade-p.ThreePointersMade, 2),
+		Turnovers:              similarity.RoundFloat(fromPlayer.Turnovers-p.Turnovers, 2),
+		Weight:                 similarity.RoundFloat(fromPlayer.Weight-p.Weight, 2),
+		PersonalFoulsDrawn:     similarity.RoundFloat(fromPlayer.PersonalFoulsDrawn-p.PersonalFoulsDrawn, 2),
+		PersonalFouls:          similarity.RoundFloat(fromPlayer.PersonalFouls-p.PersonalFouls, 2),
+		Player:                 p.Player}
 	return d
 }
 
-// EuclideanDistance is the distance between two PlayerDiff vectors. If a stat should not be used in the distance calculation, set it to 0.
-func EuclideanDistance(diff PlayerDiff) float64 {
+// EuclideanDistance calculates the euclidean distance of a PlayerDiff object that stores the difference between two players' averages.
+func EuclideanDistance(diff PlayerDiff, statsOfInterest []Stat) float64 {
 	// TODO: could add user-inputed weights for different stats
-	sum :=
-		math.Pow(diff.Assists, 2) +
-			math.Pow(diff.Blocks, 2) +
-			math.Pow(diff.DefensiveRebounds, 2) +
-			math.Pow(diff.FieldGoalsAttempted, 2) +
-			math.Pow(diff.FieldGoalsMade, 2) +
-			math.Pow(diff.FreeThrowsAttempted, 2) +
-			math.Pow(diff.FreeThrowsMade, 2) +
-			math.Pow(diff.GamesPlayed, 2) +
-			math.Pow(diff.Height, 2) +
-			math.Pow(diff.Minutes, 2) +
-			math.Pow(diff.OffensiveRebounds, 2) +
-			math.Pow(diff.PersonalFoulsDrawn, 2) +
-			math.Pow(diff.PersonalFouls, 2) +
-			math.Pow(diff.Points, 2) +
-			math.Pow(diff.Rebounds, 2) +
-			math.Pow(diff.Steals, 2) +
-			math.Pow(diff.ThreePointersAttempted, 2) +
-			math.Pow(diff.ThreePointersMade, 2) +
-			math.Pow(diff.Turnovers, 2) +
-			math.Pow(diff.Weight, 2)
+	sum := 0.0
+	for _, stat := range statsOfInterest {
+		switch stat {
+		// math.Pow(diff.Assists, 2) +
+		case Assists:
+			sum += math.Pow(diff.Assists, 2)
+		// math.Pow(diff.Blocks, 2) +
+		case Blocks:
+			sum += math.Pow(diff.Blocks, 2)
+		// math.Pow(diff.DefensiveRebounds, 2) +
+		case DefensiveRebounds:
+			sum += math.Pow(diff.DefensiveRebounds, 2)
+		case FieldGoalsAttempted:
+			sum += math.Pow(diff.FieldGoalsAttempted, 2)
+		case FieldGoalsMade:
+			sum += math.Pow(diff.FieldGoalsMade, 2)
+		case FreeThrowsAttempted:
+			sum += math.Pow(diff.FreeThrowsAttempted, 2)
+		// math.Pow(diff.FreeThrowsMade, 2) +
+		case FreeThrowsMade:
+			sum += math.Pow(diff.FreeThrowsMade, 2)
+		case GamesPlayed:
+			sum += math.Pow(diff.GamesPlayed, 2)
+		case Height:
+			sum += math.Pow(diff.Height, 2)
+		case Minutes:
+			sum += math.Pow(diff.Minutes, 2)
+		case OffensiveRebounds:
+			sum += math.Pow(diff.OffensiveRebounds, 2)
+		case PersonalFoulsDrawn:
+			sum += math.Pow(diff.PersonalFoulsDrawn, 2)
+		case PersonalFouls:
+			sum += math.Pow(diff.PersonalFouls, 2)
+		case Points:
+			sum += math.Pow(diff.Points, 2)
+		case Rebounds:
+			sum += math.Pow(diff.Rebounds, 2)
+		case Steals:
+			sum += math.Pow(diff.Steals, 2)
+		case ThreePointersAttempted:
+			sum += math.Pow(diff.ThreePointersAttempted, 2)
+		case ThreePointersMade:
+			sum += math.Pow(diff.ThreePointersMade, 2)
+		case Turnovers:
+			sum += math.Pow(diff.Turnovers, 2)
+		case Weight:
+			sum += math.Pow(diff.Weight, 2)
+		default:
+			sum += 0.0
+		}
+	}
 	return math.Sqrt(sum)
 
 }
 
 func (p *PlayerAverage) Score(stat Stat) float64 {
-	switch stat {
+	switch NewStat(string(stat)) {
 	case Points:
 		return float64(p.Points)
 	case Assists:
@@ -339,6 +330,7 @@ func (p *PlayerAverage) Score(stat Stat) float64 {
 	case GamesPlayed:
 		return float64(p.GamesPlayed)
 	default:
+		logrus.Warnf("Unknown stat: %s", stat)
 		return 0
 	}
 }
