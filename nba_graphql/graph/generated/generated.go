@@ -141,11 +141,12 @@ type ComplexityRoot struct {
 	}
 
 	PredictionFragment struct {
-		Base      func(childComplexity int) int
-		Derived   func(childComplexity int) int
-		Name      func(childComplexity int) int
-		PctChange func(childComplexity int) int
-		Weight    func(childComplexity int) int
+		Base         func(childComplexity int) int
+		Derived      func(childComplexity int) int
+		Name         func(childComplexity int) int
+		PctChange    func(childComplexity int) int
+		Propositions func(childComplexity int, input *model.PropositionFilter) int
+		Weight       func(childComplexity int) int
 	}
 
 	Projection struct {
@@ -158,11 +159,20 @@ type ComplexityRoot struct {
 	}
 
 	Proposition struct {
+		Analysis     func(childComplexity int) int
 		LastModified func(childComplexity int) int
-		Prediction   func(childComplexity int, input model.ModelInput) int
 		Sportsbook   func(childComplexity int) int
 		Target       func(childComplexity int) int
 		Type         func(childComplexity int) int
+	}
+
+	PropositionSummary struct {
+		NumOver  func(childComplexity int) int
+		NumPush  func(childComplexity int) int
+		NumUnder func(childComplexity int) int
+		PctOver  func(childComplexity int) int
+		PctPush  func(childComplexity int) int
+		PctUnder func(childComplexity int) int
 	}
 
 	Query struct {
@@ -249,7 +259,6 @@ type ProjectionResolver interface {
 	Result(ctx context.Context, obj *model.Projection) (*model.PlayerGame, error)
 }
 type PropositionResolver interface {
-	Prediction(ctx context.Context, obj *model.Proposition, input model.ModelInput) (*model.Prediction, error)
 	LastModified(ctx context.Context, obj *model.Proposition) (string, error)
 }
 type QueryResolver interface {
@@ -846,6 +855,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PredictionFragment.PctChange(childComplexity), true
 
+	case "PredictionFragment.propositions":
+		if e.complexity.PredictionFragment.Propositions == nil {
+			break
+		}
+
+		args, err := ec.field_PredictionFragment_propositions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.PredictionFragment.Propositions(childComplexity, args["input"].(*model.PropositionFilter)), true
+
 	case "PredictionFragment.weight":
 		if e.complexity.PredictionFragment.Weight == nil {
 			break
@@ -900,24 +921,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Projection.StartTime(childComplexity), true
 
+	case "Proposition.analysis":
+		if e.complexity.Proposition.Analysis == nil {
+			break
+		}
+
+		return e.complexity.Proposition.Analysis(childComplexity), true
+
 	case "Proposition.lastModified":
 		if e.complexity.Proposition.LastModified == nil {
 			break
 		}
 
 		return e.complexity.Proposition.LastModified(childComplexity), true
-
-	case "Proposition.prediction":
-		if e.complexity.Proposition.Prediction == nil {
-			break
-		}
-
-		args, err := ec.field_Proposition_prediction_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Proposition.Prediction(childComplexity, args["input"].(model.ModelInput)), true
 
 	case "Proposition.sportsbook":
 		if e.complexity.Proposition.Sportsbook == nil {
@@ -939,6 +955,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Proposition.Type(childComplexity), true
+
+	case "PropositionSummary.numOver":
+		if e.complexity.PropositionSummary.NumOver == nil {
+			break
+		}
+
+		return e.complexity.PropositionSummary.NumOver(childComplexity), true
+
+	case "PropositionSummary.numPush":
+		if e.complexity.PropositionSummary.NumPush == nil {
+			break
+		}
+
+		return e.complexity.PropositionSummary.NumPush(childComplexity), true
+
+	case "PropositionSummary.numUnder":
+		if e.complexity.PropositionSummary.NumUnder == nil {
+			break
+		}
+
+		return e.complexity.PropositionSummary.NumUnder(childComplexity), true
+
+	case "PropositionSummary.pctOver":
+		if e.complexity.PropositionSummary.PctOver == nil {
+			break
+		}
+
+		return e.complexity.PropositionSummary.PctOver(childComplexity), true
+
+	case "PropositionSummary.pctPush":
+		if e.complexity.PropositionSummary.PctPush == nil {
+			break
+		}
+
+		return e.complexity.PropositionSummary.PctPush(childComplexity), true
+
+	case "PropositionSummary.pctUnder":
+		if e.complexity.PropositionSummary.PctUnder == nil {
+			break
+		}
+
+		return e.complexity.PropositionSummary.PctUnder(childComplexity), true
 
 	case "Query.players":
 		if e.complexity.Query.Players == nil {
@@ -1514,6 +1572,7 @@ input PlayerFilter {
 enum SeasonOption {
   SEASON_2022_23
   SEASON_2021_22
+  SEASON_2020_21
 }
 
 input StatFilter {
@@ -1693,6 +1752,7 @@ type PlayerGame {
   # playersInGame: PlayersInGame!
   # projections: [Projection]!
   prediction(input: ModelInput!): PredictionBreakdown!
+  # projection: Projection
 }
 
 type PredictionBreakdown {
@@ -1706,6 +1766,24 @@ type PredictionFragment {
   base: AverageStats!
   pctChange: AverageStats!
   weight: Float!
+  propositions(input: PropositionFilter): [Proposition!]!
+}
+
+type Proposition {
+  target: Float!
+  type: Stat!
+  sportsbook: SportsbookOption!
+  analysis: PropositionSummary
+  lastModified: String!
+}
+
+type PropositionSummary {
+  numOver: Int!
+  numUnder: Int!
+  numPush: Int!
+  pctOver: Float!
+  pctUnder: Float!
+  pctPush: Float!
 }
 
 type AverageStats {
@@ -1739,15 +1817,6 @@ type AverageStats {
   result: PlayerGame
   startTime: String!
   date: String!
-}
-
-type Proposition {
-  target: Float!
-  type: Stat!
-  sportsbook: SportsbookOption!
-  prediction(input: ModelInput!): Prediction!
-  # predictions: [Prediction!]!
-  lastModified: String!
 }
 
 input ModelInput {
@@ -2239,7 +2308,7 @@ func (ec *executionContext) field_Player_projections_args(ctx context.Context, r
 	return args, nil
 }
 
-func (ec *executionContext) field_Projection_propositions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_PredictionFragment_propositions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *model.PropositionFilter
@@ -2254,13 +2323,13 @@ func (ec *executionContext) field_Projection_propositions_args(ctx context.Conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Proposition_prediction_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Projection_propositions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.ModelInput
+	var arg0 *model.PropositionFilter
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNModelInput2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐModelInput(ctx, tmp)
+		arg0, err = ec.unmarshalOPropositionFilter2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPropositionFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6019,6 +6088,8 @@ func (ec *executionContext) fieldContext_PredictionBreakdown_fragments(ctx conte
 				return ec.fieldContext_PredictionFragment_pctChange(ctx, field)
 			case "weight":
 				return ec.fieldContext_PredictionFragment_weight(ctx, field)
+			case "propositions":
+				return ec.fieldContext_PredictionFragment_propositions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PredictionFragment", field.Name)
 		},
@@ -6372,6 +6443,73 @@ func (ec *executionContext) fieldContext_PredictionFragment_weight(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _PredictionFragment_propositions(ctx context.Context, field graphql.CollectedField, obj *model.PredictionFragment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PredictionFragment_propositions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Propositions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Proposition)
+	fc.Result = res
+	return ec.marshalNProposition2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPropositionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PredictionFragment_propositions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PredictionFragment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "target":
+				return ec.fieldContext_Proposition_target(ctx, field)
+			case "type":
+				return ec.fieldContext_Proposition_type(ctx, field)
+			case "sportsbook":
+				return ec.fieldContext_Proposition_sportsbook(ctx, field)
+			case "analysis":
+				return ec.fieldContext_Proposition_analysis(ctx, field)
+			case "lastModified":
+				return ec.fieldContext_Proposition_lastModified(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Proposition", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_PredictionFragment_propositions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Projection_player(ctx context.Context, field graphql.CollectedField, obj *model.Projection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Projection_player(ctx, field)
 	if err != nil {
@@ -6541,8 +6679,8 @@ func (ec *executionContext) fieldContext_Projection_propositions(ctx context.Con
 				return ec.fieldContext_Proposition_type(ctx, field)
 			case "sportsbook":
 				return ec.fieldContext_Proposition_sportsbook(ctx, field)
-			case "prediction":
-				return ec.fieldContext_Proposition_prediction(ctx, field)
+			case "analysis":
+				return ec.fieldContext_Proposition_analysis(ctx, field)
 			case "lastModified":
 				return ec.fieldContext_Proposition_lastModified(ctx, field)
 			}
@@ -6904,8 +7042,8 @@ func (ec *executionContext) fieldContext_Proposition_sportsbook(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Proposition_prediction(ctx context.Context, field graphql.CollectedField, obj *model.Proposition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Proposition_prediction(ctx, field)
+func (ec *executionContext) _Proposition_analysis(ctx context.Context, field graphql.CollectedField, obj *model.Proposition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Proposition_analysis(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6918,53 +7056,43 @@ func (ec *executionContext) _Proposition_prediction(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Proposition().Prediction(rctx, obj, fc.Args["input"].(model.ModelInput))
+		return obj.Analysis, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Prediction)
+	res := resTmp.(*model.PropositionSummary)
 	fc.Result = res
-	return ec.marshalNPrediction2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPrediction(ctx, field.Selections, res)
+	return ec.marshalOPropositionSummary2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPropositionSummary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Proposition_prediction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Proposition_analysis(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Proposition",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "model":
-				return ec.fieldContext_Prediction_model(ctx, field)
-			case "overUnderPrediction":
-				return ec.fieldContext_Prediction_overUnderPrediction(ctx, field)
-			case "confidence":
-				return ec.fieldContext_Prediction_confidence(ctx, field)
-			case "estimation":
-				return ec.fieldContext_Prediction_estimation(ctx, field)
+			case "numOver":
+				return ec.fieldContext_PropositionSummary_numOver(ctx, field)
+			case "numUnder":
+				return ec.fieldContext_PropositionSummary_numUnder(ctx, field)
+			case "numPush":
+				return ec.fieldContext_PropositionSummary_numPush(ctx, field)
+			case "pctOver":
+				return ec.fieldContext_PropositionSummary_pctOver(ctx, field)
+			case "pctUnder":
+				return ec.fieldContext_PropositionSummary_pctUnder(ctx, field)
+			case "pctPush":
+				return ec.fieldContext_PropositionSummary_pctPush(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Prediction", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PropositionSummary", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Proposition_prediction_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }
@@ -7008,6 +7136,270 @@ func (ec *executionContext) fieldContext_Proposition_lastModified(ctx context.Co
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PropositionSummary_numOver(ctx context.Context, field graphql.CollectedField, obj *model.PropositionSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropositionSummary_numOver(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NumOver, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropositionSummary_numOver(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropositionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PropositionSummary_numUnder(ctx context.Context, field graphql.CollectedField, obj *model.PropositionSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropositionSummary_numUnder(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NumUnder, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropositionSummary_numUnder(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropositionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PropositionSummary_numPush(ctx context.Context, field graphql.CollectedField, obj *model.PropositionSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropositionSummary_numPush(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NumPush, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropositionSummary_numPush(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropositionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PropositionSummary_pctOver(ctx context.Context, field graphql.CollectedField, obj *model.PropositionSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropositionSummary_pctOver(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PctOver, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropositionSummary_pctOver(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropositionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PropositionSummary_pctUnder(ctx context.Context, field graphql.CollectedField, obj *model.PropositionSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropositionSummary_pctUnder(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PctUnder, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropositionSummary_pctUnder(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropositionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PropositionSummary_pctPush(ctx context.Context, field graphql.CollectedField, obj *model.PropositionSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropositionSummary_pctPush(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PctPush, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropositionSummary_pctPush(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropositionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -12758,6 +13150,13 @@ func (ec *executionContext) _PredictionFragment(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "propositions":
+
+			out.Values[i] = ec._PredictionFragment_propositions(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12886,26 +13285,10 @@ func (ec *executionContext) _Proposition(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "prediction":
-			field := field
+		case "analysis":
 
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Proposition_prediction(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
+			out.Values[i] = ec._Proposition_analysis(ctx, field, obj)
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "lastModified":
 			field := field
 
@@ -12926,6 +13309,69 @@ func (ec *executionContext) _Proposition(ctx context.Context, sel ast.SelectionS
 				return innerFunc(ctx)
 
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var propositionSummaryImplementors = []string{"PropositionSummary"}
+
+func (ec *executionContext) _PropositionSummary(ctx context.Context, sel ast.SelectionSet, obj *model.PropositionSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, propositionSummaryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PropositionSummary")
+		case "numOver":
+
+			out.Values[i] = ec._PropositionSummary_numOver(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "numUnder":
+
+			out.Values[i] = ec._PropositionSummary_numUnder(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "numPush":
+
+			out.Values[i] = ec._PropositionSummary_numPush(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pctOver":
+
+			out.Values[i] = ec._PropositionSummary_pctOver(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pctUnder":
+
+			out.Values[i] = ec._PropositionSummary_pctUnder(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pctPush":
+
+			out.Values[i] = ec._PropositionSummary_pctPush(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14006,20 +14452,6 @@ func (ec *executionContext) marshalNPlayerGame2ᚖgithubᚗcomᚋzvandehyᚋData
 	return ec._PlayerGame(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPrediction2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPrediction(ctx context.Context, sel ast.SelectionSet, v model.Prediction) graphql.Marshaler {
-	return ec._Prediction(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNPrediction2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPrediction(ctx context.Context, sel ast.SelectionSet, v *model.Prediction) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Prediction(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNPredictionBreakdown2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPredictionBreakdown(ctx context.Context, sel ast.SelectionSet, v model.PredictionBreakdown) graphql.Marshaler {
 	return ec._PredictionBreakdown(ctx, sel, &v)
 }
@@ -14183,6 +14615,60 @@ func (ec *executionContext) marshalNProposition2ᚕᚖgithubᚗcomᚋzvandehyᚋ
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNProposition2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPropositionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Proposition) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNProposition2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProposition(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNProposition2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐProposition(ctx context.Context, sel ast.SelectionSet, v *model.Proposition) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Proposition(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNSeasonOption2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐSeasonOption(ctx context.Context, v interface{}) (model.SeasonOption, error) {
@@ -14792,6 +15278,13 @@ func (ec *executionContext) unmarshalOPropositionFilter2ᚖgithubᚗcomᚋzvande
 	}
 	res, err := ec.unmarshalInputPropositionFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPropositionSummary2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPropositionSummary(ctx context.Context, sel ast.SelectionSet, v *model.PropositionSummary) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PropositionSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOSeasonOption2ᚕgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐSeasonOptionᚄ(ctx context.Context, v interface{}) ([]model.SeasonOption, error) {

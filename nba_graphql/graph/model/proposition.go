@@ -8,12 +8,13 @@ import (
 )
 
 type Proposition struct {
-	Sportsbook    SportsbookOption `json:"sportsbook" bson:"sportsbook"`
-	Target        float64          `json:"target" bson:"target"`
-	TypeRaw       string           `json:"type" bson:"type"`
-	Type          Stat             `json:"propType" bson:"propType"`
-	LastModified  *time.Time       `json:"lastModified" bson:"lastModified"`
-	ProjectionRef *Projection      `json:"projectionRef" bson:"projectionRef"`
+	Sportsbook    SportsbookOption    `json:"sportsbook" bson:"sportsbook"`
+	Target        float64             `json:"target" bson:"target"`
+	TypeRaw       string              `json:"type" bson:"type"`
+	Type          Stat                `json:"propType" bson:"propType"`
+	LastModified  *time.Time          `json:"lastModified" bson:"lastModified"`
+	ProjectionRef *Projection         `json:"projectionRef" bson:"projectionRef"`
+	Analysis      *PropositionSummary `json:"analysis" bson:"analysis"`
 }
 
 func (p *Proposition) UnmarshalBSON(data []byte) error {

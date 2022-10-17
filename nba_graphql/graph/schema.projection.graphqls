@@ -7,15 +7,6 @@ type Projection {
   date: String!
 }
 
-type Proposition {
-  target: Float!
-  type: Stat!
-  sportsbook: SportsbookOption!
-  prediction(input: ModelInput!): Prediction!
-  # predictions: [Prediction!]!
-  lastModified: String!
-}
-
 input ModelInput {
   model: String
   gameBreakdowns: [GameBreakdownInput!]

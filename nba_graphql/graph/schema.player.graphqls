@@ -56,8 +56,6 @@ type PlayerGame {
   usage: Float!
   blocks: Int!
   steals: Int!
-  # playersInGame: PlayersInGame!
-  # projections: [Projection]!
   prediction(input: ModelInput!): PredictionBreakdown!
 }
 
@@ -72,6 +70,24 @@ type PredictionFragment {
   base: AverageStats!
   pctChange: AverageStats!
   weight: Float!
+  propositions(input: PropositionFilter): [Proposition!]!
+}
+
+type Proposition {
+  target: Float!
+  type: Stat!
+  sportsbook: SportsbookOption!
+  analysis: PropositionSummary
+  lastModified: String!
+}
+
+type PropositionSummary {
+  numOver: Int!
+  numUnder: Int!
+  numPush: Int!
+  pctOver: Float!
+  pctUnder: Float!
+  pctPush: Float!
 }
 
 type AverageStats {

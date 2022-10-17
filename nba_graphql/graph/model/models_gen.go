@@ -49,11 +49,12 @@ type PredictionBreakdown struct {
 }
 
 type PredictionFragment struct {
-	Name      string        `json:"name"`
-	Derived   *AverageStats `json:"derived"`
-	Base      *AverageStats `json:"base"`
-	PctChange *AverageStats `json:"pctChange"`
-	Weight    float64       `json:"weight"`
+	Name         string         `json:"name"`
+	Derived      *AverageStats  `json:"derived"`
+	Base         *AverageStats  `json:"base"`
+	PctChange    *AverageStats  `json:"pctChange"`
+	Weight       float64        `json:"weight"`
+	Propositions []*Proposition `json:"propositions"`
 }
 
 type ProjectionFilter struct {
@@ -69,6 +70,15 @@ type ProjectionFilter struct {
 type PropositionFilter struct {
 	Sportsbook      *SportsbookOption `json:"sportsbook"`
 	PropositionType *Stat             `json:"propositionType"`
+}
+
+type PropositionSummary struct {
+	NumOver  int     `json:"numOver"`
+	NumUnder int     `json:"numUnder"`
+	NumPush  int     `json:"numPush"`
+	PctOver  float64 `json:"pctOver"`
+	PctUnder float64 `json:"pctUnder"`
+	PctPush  float64 `json:"pctPush"`
 }
 
 type SimilarPlayerInput struct {

@@ -136,6 +136,7 @@ input PlayerFilter {
 enum SeasonOption {
   SEASON_2022_23
   SEASON_2021_22
+  SEASON_2020_21
 }
 
 input StatFilter {

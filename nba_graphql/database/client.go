@@ -612,3 +612,29 @@ func (c *NBADatabaseClient) GetTeamInjuries(ctx context.Context, teamIDs []int) 
 	return injuries, nil
 
 }
+
+func (c *NBADatabaseClient) GetPropositionsByGame(ctx context.Context, game *model.PlayerGame) ([]*model.Proposition, error) {
+	start := time.Now()
+	c.Queries++
+	if game.PlayerRef == nil || game.PlayerRef.Name == "" {
+		return nil, fmt.Errorf("game must have a player reference")
+	}
+
+	// TODO: handle playernames with differences
+	cur, err := c.Collection("projections").Find(ctx, bson.M{"playername": game.PlayerRef.Name, "date": game.Date})
+	if err != nil {
+		return nil, err
+	}
+	// TODO: handle filtering propositions
+	var propositions []*model.Proposition
+	for cur.Next(ctx) {
+		var p model.Projection
+		err := cur.Decode(&p)
+		if err != nil {
+			return nil, err
+		}
+		propositions = append(propositions, p.Props...)
+	}
+	logrus.Infof("Received %d propositions for {%s, %s} \tTook %v", len(propositions), game.PlayerRef.Name, game.Date, time.Since(start))
+	return propositions, nil
+}

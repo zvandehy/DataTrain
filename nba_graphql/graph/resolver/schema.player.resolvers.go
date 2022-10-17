@@ -90,6 +90,12 @@ func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) 
 
 // Prediction is the resolver for the prediction field.
 func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGame, input model.ModelInput) (*model.PredictionBreakdown, error) {
+	propositions, err := r.Db.GetPropositionsByGame(ctx, obj)
+	if err != nil {
+		logrus.Errorf("Error loading propositions for game %v", obj)
+		return nil, err
+	}
+
 	startDate, err := input.SimilarPlayerInput.PlayerPoolFilter.GetEarliestSeasonStartDate()
 	if err != nil {
 		logrus.Errorf("Error getting earliest season start date: %v", err)
@@ -145,13 +151,35 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 			input.GameBreakdowns[i].Weight = 0
 		} else {
 			derived := pAvg.AverageStats()
-			gameBreakdownFragments = append(gameBreakdownFragments, &model.PredictionFragment{
+			frag := &model.PredictionFragment{
 				Name:      input.GameBreakdowns[i].Name,
 				Derived:   derived,
 				Base:      playerBase,
 				PctChange: playerBase.PercentChange(derived),
 				Weight:    input.GameBreakdowns[i].Weight,
-			})
+			}
+			for _, proposition := range propositions {
+				analysis := model.PropositionSummary{}
+				for _, game := range games {
+					propScore := game.Score(proposition.Type)
+					if propScore > proposition.Target {
+						analysis.NumOver++
+					}
+					if propScore < proposition.Target {
+						analysis.NumUnder++
+					}
+					if propScore == proposition.Target {
+						analysis.NumPush++
+					}
+				}
+				analysis.PctOver = float64(analysis.NumOver) / float64(len(games))
+				analysis.PctUnder = float64(analysis.NumUnder) / float64(len(games))
+				analysis.PctPush = float64(analysis.NumPush) / float64(len(games))
+				prop := *proposition
+				prop.Analysis = &analysis
+				frag.Propositions = append(frag.Propositions, &prop)
+			}
+			gameBreakdownFragments = append(gameBreakdownFragments, frag)
 		}
 	}
 
@@ -327,11 +355,23 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 	return breakdown, nil
 }
 
+// LastModified is the resolver for the lastModified field.
+func (r *propositionResolver) LastModified(ctx context.Context, obj *model.Proposition) (string, error) {
+	if obj.LastModified == nil {
+		return "", nil
+	}
+	return obj.LastModified.Format("2006-01-02"), nil
+}
+
 // Player returns generated.PlayerResolver implementation.
 func (r *Resolver) Player() generated.PlayerResolver { return &playerResolver{r} }
 
 // PlayerGame returns generated.PlayerGameResolver implementation.
 func (r *Resolver) PlayerGame() generated.PlayerGameResolver { return &playerGameResolver{r} }
 
+// Proposition returns generated.PropositionResolver implementation.
+func (r *Resolver) Proposition() generated.PropositionResolver { return &propositionResolver{r} }
+
 type playerResolver struct{ *Resolver }
 type playerGameResolver struct{ *Resolver }
+type propositionResolver struct{ *Resolver }
