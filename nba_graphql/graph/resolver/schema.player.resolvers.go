@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
@@ -47,6 +48,11 @@ func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, inp
 	panic(fmt.Errorf("(r *playerResolver) Projections not implemented"))
 }
 
+// Image is the resolver for the image field.
+func (r *playerResolver) Image(ctx context.Context, obj *model.Player) (string, error) {
+	return fmt.Sprintf("https://ak-static.cms.nba.com/wp-content/uploads/headshots/%s/latest/260x190/%d.png", strings.ToLower(obj.League), obj.PlayerID), nil
+}
+
 // Opponent is the resolver for the opponent field.
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
 	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
@@ -85,7 +91,37 @@ func (r *playerGameResolver) TeamStats(ctx context.Context, obj *model.PlayerGam
 
 // Player is the resolver for the player field.
 func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error) {
-	panic(fmt.Errorf("(r *playerGameResolver) Player not implemented"))
+	return obj.PlayerRef, nil
+}
+
+// PointsRebounds is the resolver for the points_rebounds field.
+func (r *playerGameResolver) PointsRebounds(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	return obj.Points + obj.Rebounds, nil
+}
+
+// PointsAssists is the resolver for the points_assists field.
+func (r *playerGameResolver) PointsAssists(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	return obj.Points + obj.Assists, nil
+}
+
+// PointsReboundsAssists is the resolver for the points_rebounds_assists field.
+func (r *playerGameResolver) PointsReboundsAssists(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	return obj.Points + obj.Rebounds + obj.Assists, nil
+}
+
+// ReboundsAssists is the resolver for the rebounds_assists field.
+func (r *playerGameResolver) ReboundsAssists(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	return obj.Rebounds + obj.Assists, nil
+}
+
+// BlocksSteals is the resolver for the blocks_steals field.
+func (r *playerGameResolver) BlocksSteals(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	return obj.Blocks + obj.Steals, nil
+}
+
+// FantasyScore is the resolver for the fantasy_score field.
+func (r *playerGameResolver) FantasyScore(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return float64(obj.Points) + float64(obj.Rebounds)*1.2 + float64(obj.Assists)*1.5 + float64(obj.Steals)*3.0 + float64(obj.Blocks)*3.0 - float64(obj.Turnovers), nil
 }
 
 // Prediction is the resolver for the prediction field.
@@ -96,6 +132,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 		return nil, err
 	}
 
+	// TODO: Get earliest season for gamebreakdowns... separately? (currently crashes if no similar player input provided)
 	startDate, err := input.SimilarPlayerInput.PlayerPoolFilter.GetEarliestSeasonStartDate()
 	if err != nil {
 		logrus.Errorf("Error getting earliest season start date: %v", err)
@@ -119,8 +156,11 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 			playerBaseGames = append(playerBaseGames, game)
 		}
 	}
-	b := model.NewPlayerAverage(playerBaseGames, obj.PlayerRef)
-	playerBase := b.AverageStats()
+	playerBase := &model.AverageStats{}
+	if len(playerBaseGames) > 0 {
+		b := model.NewPlayerAverage(playerBaseGames, obj.PlayerRef)
+		playerBase = b.AverageStats()
+	}
 
 	distributeExtraWeight := 0.0
 	for i := range input.GameBreakdowns {

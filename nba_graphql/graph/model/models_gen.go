@@ -58,13 +58,8 @@ type PredictionFragment struct {
 }
 
 type ProjectionFilter struct {
-	PlayerName  *string `json:"playerName"`
-	PlayerID    *int    `json:"playerID"`
-	StartDate   *string `json:"startDate"`
-	EndDate     *string `json:"endDate"`
-	TeamID      *int    `json:"teamID"`
-	OpponentID  *int    `json:"opponentID"`
-	OpponentAbr *string `json:"opponentAbr"`
+	Period            *Period            `json:"period"`
+	PropositionFilter *PropositionFilter `json:"propositionFilter"`
 }
 
 type PropositionFilter struct {

@@ -13,16 +13,17 @@ import (
 )
 
 type PlayerFilter struct {
-	Name           *string         `json:"name"`
-	PlayerID       *int            `json:"playerID"`
-	Seasons        *[]SeasonOption `json:"seasons"`
-	PositionStrict *Position       `json:"positionStrict"`
-	PositionLoose  *Position       `json:"positionLoose"`
-	TeamAbr        *string         `json:"teamABR"`
-	TeamID         *int            `json:"teamID"`
-	StartDate      *string         `json:"startDate"`
-	EndDate        *string         `json:"endDate"`
-	StatFilters    *[]*StatFilter  `json:"statFilters"`
+	Name             *string           `json:"name"`
+	PlayerID         *int              `json:"playerID"`
+	Seasons          *[]SeasonOption   `json:"seasons"`
+	PositionStrict   *Position         `json:"positionStrict"`
+	PositionLoose    *Position         `json:"positionLoose"`
+	TeamAbr          *string           `json:"teamABR"`
+	TeamID           *int              `json:"teamID"`
+	StartDate        *string           `json:"startDate"`
+	EndDate          *string           `json:"endDate"`
+	StatFilters      *[]*StatFilter    `json:"statFilters"`
+	WithPropositions *ProjectionFilter `json:"withPropositions"`
 }
 
 func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
@@ -88,8 +89,13 @@ func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
 		andFilters = append(andFilters, bson.M{"$or": orFilters})
 	}
 
-	filter := bson.M{
-		"$and": andFilters,
+	var filter bson.M
+	if len(andFilters) > 0 {
+		filter = bson.M{
+			"$and": andFilters,
+		}
+	} else {
+		filter = bson.M{}
 	}
 
 	lookupGames := bson.M{
@@ -105,6 +111,19 @@ func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
 		// if the player has many games from previous seasons that the query doesn't care about,
 		// then this might be unnecessarily slow
 		bson.D{primitive.E{Key: "$lookup", Value: lookupGames}},
+	}
+	if input.WithPropositions != nil {
+		projectionFilter := input.WithPropositions.MongoFilter()
+		projectionFilter["projections.date"] = projectionFilter["date"]
+		projectionFilter["date"] = nil
+		lookupProjections := bson.M{
+			"from":         "projections",
+			"localField":   "name",
+			"foreignField": "playername",
+			"as":           "projections",
+		}
+		pipeline = append(pipeline, bson.D{primitive.E{Key: "$lookup", Value: lookupProjections}})
+		pipeline = append(pipeline, bson.D{primitive.E{Key: "$match", Value: projectionFilter}})
 	}
 	return pipeline
 }

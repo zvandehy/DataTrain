@@ -39,7 +39,11 @@ func StdDevMean(x []float64) (float64, float64) {
 
 func RoundFloat(val float64, precision uint) float64 {
 	ratio := math.Pow(10, float64(precision))
-	return math.Round(val*ratio) / ratio
+	x := math.Round(val*ratio) / ratio
+	if math.IsNaN(x) || math.IsInf(x, 0) {
+		return 0
+	}
+	return x
 }
 
 func ZScore(x, mean, stdDev float64) float64 {

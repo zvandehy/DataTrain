@@ -14,6 +14,8 @@ type Player {
   projections(input: ProjectionFilter!): [Projection!]!
   height: String!
   weight: Int!
+  image: String!
+  league: String!
   # similarPlayers(input: GameFilter!): [Player!]!
 }
 
@@ -56,6 +58,12 @@ type PlayerGame {
   usage: Float!
   blocks: Int!
   steals: Int!
+  points_rebounds: Int!
+  points_assists: Int!
+  points_rebounds_assists: Int!
+  rebounds_assists: Int!
+  blocks_steals: Int!
+  fantasy_score: Float!
   prediction(input: ModelInput!): PredictionBreakdown!
 }
 

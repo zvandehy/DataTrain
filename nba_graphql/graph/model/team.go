@@ -9,6 +9,7 @@ type Team struct {
 	Location     string `json:"location" bson:"city"`
 	NumWins      int    `json:"numWins" bson:"numWins"`
 	NumLoss      int    `json:"numLoss" bson:"numLoss"`
+	League       string `json:"league" bson:"league"`
 }
 
 func (t Team) String() string {

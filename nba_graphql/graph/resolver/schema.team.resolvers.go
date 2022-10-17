@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
@@ -14,6 +15,14 @@ import (
 // Players is the resolver for the players field.
 func (r *teamResolver) Players(ctx context.Context, obj *model.Team) ([]*model.Player, error) {
 	panic(fmt.Errorf("(r *teamResolver) Players not implemented"))
+}
+
+// LogoImage is the resolver for the logoImage field.
+func (r *teamResolver) LogoImage(ctx context.Context, obj *model.Team) (string, error) {
+	if obj.League == "NBA" {
+		return fmt.Sprintf("https://cdn.nba.com/logos/nba/%d/primary/D/logo.svg", obj.TeamID), nil
+	}
+	return fmt.Sprintf("https://%s.wnba.com/wp-content/themes/wnba-parent/img/logos/%s-primary-logo.svg", strings.ToLower(obj.Name), strings.ToLower(obj.Name)), nil
 }
 
 // Opponent is the resolver for the opponent field.

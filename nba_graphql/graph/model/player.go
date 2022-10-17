@@ -29,6 +29,7 @@ type Player struct {
 	Weight      int      `json:"weight" bson:"weight"`
 	// When retrieving a player, also retrieve all of the games they've played within the minimum start date and maximum end date.
 	GamesCache []*PlayerGame `json:"gamesCache" bson:"gamesCache"`
+	League     string        `json:"league" bson:"league"`
 }
 
 func NewPlayerAverage(games []*PlayerGame, player *Player) PlayerAverage {
@@ -173,11 +174,6 @@ func (p *PlayerAverage) Normalize(stats ...StatOfInterest) PlayerAverage {
 }
 
 type PlayerDiff PlayerAverage
-
-// type PlayerDiff struct {
-// 	PlayerAverage
-// 	Distance float64
-// }
 
 func (p *PlayerAverage) AverageMinutes() (float64, error) {
 	var minutes float64
@@ -330,7 +326,7 @@ func (p *PlayerAverage) Score(stat Stat) float64 {
 	case GamesPlayed:
 		return float64(p.GamesPlayed)
 	default:
-		logrus.Warnf("Unknown stat: %s", stat)
+		logrus.Warnf("Unknown stat: '%s'", stat)
 		return 0
 	}
 }

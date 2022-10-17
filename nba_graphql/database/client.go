@@ -243,9 +243,9 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input *model.PlayerF
 	startTime := time.Now()
 	c.Queries++
 	players := []*model.Player{}
-	playersDB := c.Collection("players")
+	db := c.Collection("players")
 	pipeline := input.MongoPipeline()
-	cur, err := playersDB.Aggregate(ctx, pipeline)
+	cur, err := db.Aggregate(ctx, pipeline)
 	if err != nil {
 		logrus.Errorf("Error getting players: %v", err)
 		return nil, fmt.Errorf("error querying players: %v", err)
@@ -260,6 +260,7 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input *model.PlayerF
 	if input.StatFilters != nil && len(*input.StatFilters) > 0 {
 		players = input.FilterPlayerStats(players)
 	}
+	fmt.Println(len(players))
 	// set each PlayerGame.PlayerRef to the player, so that predictions can be calculated using their gamelog history
 	for i := range players {
 		games := players[i].GamesCache
@@ -361,7 +362,7 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 	defer logrus.Info(util.TimeLog(fmt.Sprintf("Query Projections:\n\t%v", input), time.Now()))
 	c.Queries++
 	projectionDB := c.Collection("projections")
-	filter := createProjectionFilter(input)
+	filter := input.MongoFilter()
 	lookupPlayer := bson.M{
 		"from":         "players",
 		"localField":   "playerName",
@@ -399,54 +400,32 @@ func (c *NBADatabaseClient) GetProjections(ctx context.Context, input model.Proj
 	return projections, nil
 }
 
-func createProjectionFilter(input model.ProjectionFilter) bson.M {
-	filter := bson.M{}
-	if input.PlayerName != nil {
-		filter["playerName"] = *input.PlayerName
-	}
-	if input.OpponentAbr != nil {
-		filter["opponentAbr"] = bson.M{"regex": *input.OpponentAbr, "options": "i"}
-	}
-	if input.StartDate != nil && input.EndDate != nil {
-		if *input.StartDate == *input.EndDate {
-			filter["date"] = *input.StartDate
-		} else {
-			filter["date"] = bson.M{"$gte": *input.StartDate, "$lt": *input.EndDate}
-		}
-	} else if input.StartDate != nil {
-		filter["date"] = bson.M{"$gte": *input.StartDate}
-	} else if input.EndDate != nil {
-		filter["date"] = bson.M{"$lt": *input.EndDate}
-	}
-	return filter
-}
+// func (c *NBADatabaseClient) GetProjectionsCursor(ctx context.Context, input model.ProjectionFilter) (*mongo.Cursor, error) {
+// 	start := time.Now()
+// 	c.Queries++
+// 	projectionDB := c.Collection("projections")
+// 	filter := bson.M{}
 
-func (c *NBADatabaseClient) GetProjectionsCursor(ctx context.Context, input model.ProjectionFilter) (*mongo.Cursor, error) {
-	start := time.Now()
-	c.Queries++
-	projectionDB := c.Collection("projections")
-	filter := bson.M{}
+// 	if input.PlayerName != nil && *input.PlayerName != "" {
+// 		filter["playername"] = *input.PlayerName
+// 	}
 
-	if input.PlayerName != nil && *input.PlayerName != "" {
-		filter["playername"] = *input.PlayerName
-	}
-
-	//filter date between input.StartDate and input.EndDate if they are set
-	if input.StartDate != nil && input.EndDate != nil {
-		if *input.StartDate == *input.EndDate {
-			filter["date"] = *input.StartDate
-		} else {
-			filter["date"] = bson.M{"$gte": *input.StartDate, "$lt": *input.EndDate}
-		}
-	} else if input.StartDate != nil {
-		filter["date"] = bson.M{"$gte": *input.StartDate}
-	} else if input.EndDate != nil {
-		filter["date"] = bson.M{"$lt": *input.EndDate}
-	}
-	cur, err := projectionDB.Find(ctx, filter, options.Find().SetSort(bson.M{"date": 1}))
-	logrus.Printf("[%v] Query Projections From: %v \tTook %v", time.Now().Format(util.TIMENOW), input, time.Since(start))
-	return cur, err
-}
+// 	//filter date between input.StartDate and input.EndDate if they are set
+// 	if input.StartDate != nil && input.EndDate != nil {
+// 		if *input.StartDate == *input.EndDate {
+// 			filter["date"] = *input.StartDate
+// 		} else {
+// 			filter["date"] = bson.M{"$gte": *input.StartDate, "$lt": *input.EndDate}
+// 		}
+// 	} else if input.StartDate != nil {
+// 		filter["date"] = bson.M{"$gte": *input.StartDate}
+// 	} else if input.EndDate != nil {
+// 		filter["date"] = bson.M{"$lt": *input.EndDate}
+// 	}
+// 	cur, err := projectionDB.Find(ctx, filter, options.Find().SetSort(bson.M{"date": 1}))
+// 	logrus.Printf("[%v] Query Projections From: %v \tTook %v", time.Now().Format(util.TIMENOW), input, time.Since(start))
+// 	return cur, err
+// }
 
 func (c *NBADatabaseClient) GetAverages(ctx context.Context, inputs []model.GameFilter) (*[]model.PlayerAverage, error) {
 	// start := time.Now()

@@ -7,6 +7,8 @@ type Team {
   numLoss: Int! #TODO
   # games(input: GameFilter!): [TeamGame!]!
   players: [Player!]!
+  logoImage: String!
+  league: String!
   # injuries: [Injury!]
   # similarTeams(input: GameFilter!): [Team!]!
   # playerGamesVsTeam(input: PlayerFilter!): [PlayerGame!]!

@@ -15,7 +15,7 @@ func (f *StatFilter) MatchPlayer(player *Player) bool {
 	}
 	var games []*PlayerGame
 	for _, game := range player.GamesCache {
-		if f.Period == nil || f.Period.Match(game) {
+		if f.Period == nil || f.Period.MatchGame(game) {
 			games = append(games, game)
 		}
 	}
@@ -43,7 +43,7 @@ func (f *StatFilter) MatchPlayer(player *Player) bool {
 }
 
 func (f *StatFilter) MatchGame(game *PlayerGame) bool {
-	if f.Period != nil && !f.Period.Match(game) {
+	if f.Period != nil && !f.Period.MatchGame(game) {
 		return false
 	}
 	switch f.Mode {

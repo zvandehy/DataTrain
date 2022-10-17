@@ -23,42 +23,17 @@ type Projection struct {
 }
 
 func (p *Projection) Match(projectionFilter ProjectionFilter) bool {
-	if projectionFilter.PlayerName != nil && *projectionFilter.PlayerName != p.PlayerName {
+	if !projectionFilter.Period.MatchProjection(p) {
 		return false
 	}
-	if projectionFilter.OpponentID != nil && projectionFilter.OpponentID != &p.Opponent.TeamID {
-		return false
-	}
-	if projectionFilter.StartDate != nil {
-		date, err := time.Parse("2006-01-02", p.Date)
-		if err != nil {
-			logrus.Warning("error parsing projection date: ", err)
-			return false
-		}
-		start, err := time.Parse("2006-01-02", *projectionFilter.StartDate)
-		if err != nil {
-			logrus.Warning("error parsing projection date: ", err)
-			return false
-		}
-		if date.Before(start) {
-			return false
-		}
-	}
-	if projectionFilter.EndDate != nil {
-		date, err := time.Parse("2006-01-02", p.Date)
-		if err != nil {
-			logrus.Warning("error parsing projection date: ", err)
-			return false
-		}
-		end, err := time.Parse("2006-01-02", *projectionFilter.EndDate)
-		if err != nil {
-			logrus.Warning("error parsing projection date: ", err)
-			return false
-		}
-		if date.Before(end) {
-			return false
-		}
-	}
+	// if projectionFilter.PropositionFilter != nil {
+	// 	for _, prop := range p.Props {
+	// 		if prop.Match(projectionFilter.PropositionFilter) {
+	// 			return true
+	// 		}
+	// 	}
+	// 	return false
+	// }
 	return true
 }
 

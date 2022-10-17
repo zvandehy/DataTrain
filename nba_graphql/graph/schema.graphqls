@@ -1,46 +1,7 @@
-# type PredictionFragment {
-#   count: Int
-#   games: [PlayerGame]
-#   minutes: Float
-#   avgPerMin: Float
-#   weight: Float
-#   average: Float
-#   diff: Float
-#   pctDiff: Float
-#   diffPerMin: Float
-#   pctDiffPerMin: Float
-#   median: Float
-#   numOver: Float
-#   numUnder: Float
-#   numPush: Float
-#   pctOver: Float
-#   pctUnder: Float
-#   pctPushOrMore: Float
-#   pctPushOrLess: Float
-# }
-
-# add injuries to games
-# type Injury {
-#   startDate: String!
-#   returnDate: String!
-#   status: String!
-#   player: Player!
-# }
-
-# type Target {
-#   target: Float!
-#   type: String!
-# }
-
-# type PlayersInGame {
-#   team: [Player!]!
-#   opponent: [Player!]!
-# }
-
 type Query {
-  players(input: PlayerFilter!): [Player!]!
+  players(input: PlayerFilter): [Player!]!
   teams(input: TeamFilter!): [Team!]!
-  projections(input: ProjectionFilter!): [Projection!]!
+  # projections(input: ProjectionFilter!): [Projection!]!
 }
 
 enum Stat {
@@ -82,13 +43,8 @@ enum Stat {
 }
 
 input ProjectionFilter {
-  playerName: String
-  playerID: Int
-  startDate: String
-  endDate: String
-  teamID: Int
-  opponentID: Int
-  opponentAbr: String
+  period: Period!
+  propositionFilter: PropositionFilter
 }
 
 input PropositionFilter {
@@ -100,23 +56,6 @@ enum SportsbookOption {
   PrizePicks
   UnderdogFantasy
 }
-
-# enum PropositionType {
-#   Points
-#   Rebounds
-#   Assists
-#   Steals
-#   Blocks
-#   Turnovers
-#   FantasyScore
-#   ThreePointersMade
-#   FreeThrowsMade
-#   PointsReboundsAssists
-#   PointsRebounds
-#   PointsAssists
-#   ReboundsAssists
-#   BlocksSteals
-# }
 
 input PlayerFilter {
   name: String
@@ -131,6 +70,7 @@ input PlayerFilter {
   startDate: String
   endDate: String
   statFilters: [StatFilter!]
+  withPropositions: ProjectionFilter
 }
 
 enum SeasonOption {
@@ -213,44 +153,3 @@ enum HomeOrAway {
   HOME
   AWAY
 }
-
-# TESTING What a schema to calculate custom models on the server might look like.
-# This would move the weighted calculations from the browser to the backend.
-
-# input ModelWeights {
-#   lastGames: [CountWeight]
-#   matchupWeight: Int
-#   similarPlayersVsOppWeight: Int
-#   playerVsSimilarTeamsWeight: Int
-#   homeOrAwayWeight: Int
-#   playoffsWeight: Int
-#   allowPush: Boolean
-# }
-
-# input CountWeight {
-#   count: Int!
-#   weight: Int!
-# }
-
-# type ProjectionBreakdown { #(model: ModelWeights)
-#   numGames: [[Game]]
-#   matchup: Game[]
-#   similarPlayersMatchup: Game[]
-#   matchupSimilarTeams: Game[]
-#   homeOrAway: Game[]
-#   playoffs: Game[]
-# }
-
-# type PredictionBreakdown { # (projection, games)
-#   numOver: Int!
-#   numUnder: Int!
-#   numPush: Int!
-#   pctOver: Float!
-#   pctUnder: Float!
-#   pctOverOrPush: Float!
-#   pctUnderOrPush: Float!
-# }
-
-# games({numGames: [10,20,30,0]}) {
-
-# }

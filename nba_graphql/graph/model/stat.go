@@ -62,6 +62,9 @@ func NewStat(stat string) Stat {
 		return Rebounds
 	case "steals":
 		return Steals
+	// TODO: This might actually be blocks against
+	case "blocked_shots":
+		fallthrough
 	case "blocks":
 		return Blocks
 	case "three_pointers_made":
@@ -187,7 +190,7 @@ func NewStat(stat string) Stat {
 	case "weight":
 		return Weight
 	default:
-		logrus.Errorf("Unknown stat: %s", stat)
+		logrus.Errorf("Unknown stat: '%s'", stat)
 		return ""
 	}
 }
@@ -347,7 +350,7 @@ func (s Stat) MarshalGQL(w io.Writer) {
 	case "weight":
 		io.WriteString(w, `"Weight"`)
 	default:
-		logrus.Warnf("Stat.MarshalGQL: unknown Stat %s", s)
+		logrus.Errorf("Stat.MarshalGQL: unknown Stat: '%s'", s)
 		io.WriteString(w, string(s))
 	}
 }

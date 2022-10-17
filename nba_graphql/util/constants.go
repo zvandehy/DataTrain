@@ -22,6 +22,11 @@ func TIME_MAXIMUM() time.Time {
 	return max
 }
 
+func SEASON_DATE(seasonDate string) time.Time {
+	season, _ := time.Parse("2006-01-02", seasonDate)
+	return season
+}
+
 const (
 	SEASON_START_2022_23 = "2022-10-18"
 	SEASON_END_2022_23   = "2023-04-10"
