@@ -32,7 +32,7 @@ const (
 )
 
 func TimeLog(msg string, start time.Time) string {
-	return fmt.Sprintf("[%v] %s\n\tElapsed: %v", time.Now().Format(TIMENOW), msg, time.Since(start))
+	return fmt.Sprintf("Elapsed [%v] %s", time.Since(start), msg)
 }
 
 var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9 ]+`)

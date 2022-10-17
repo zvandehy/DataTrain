@@ -14,7 +14,7 @@ import (
 
 // Players is the resolver for the players field.
 func (r *queryResolver) Players(ctx context.Context, input model.PlayerFilter) ([]*model.Player, error) {
-	players, err := r.Db.GetPlayers(ctx, input)
+	players, err := r.Db.GetPlayers(ctx, &input)
 	if err != nil {
 		return []*model.Player{}, err
 	}

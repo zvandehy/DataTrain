@@ -67,8 +67,11 @@ type PredictionBreakdown {
 }
 
 type PredictionFragment {
-  player: Player!
-  stats: AverageStats!
+  name: String!
+  derived: AverageStats!
+  base: AverageStats!
+  pctChange: AverageStats!
+  weight: Float!
 }
 
 type AverageStats {

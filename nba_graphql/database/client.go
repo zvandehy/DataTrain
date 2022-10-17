@@ -26,6 +26,7 @@ type NBADatabaseClient struct {
 	Queries          int
 	Client           *mongo.Client
 	PlayerSimilarity model.Snapshots
+	PlayerCache      map[string][]*model.Player
 }
 
 func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
@@ -53,6 +54,24 @@ func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
 	nbaClient.Name = db
 	nbaClient.Client = instance
 	nbaClient.Database = nbaClient.Client.Database(nbaClient.Name)
+	nbaClient.PlayerCache = make(map[string][]*model.Player)
+	// TODO: After automating game data collection, the cache should be updated
+	caches := [][]model.SeasonOption{
+		{model.SEASON_2020_21},
+		{model.SEASON_2021_22},
+		{model.SEASON_2022_23},
+		{model.SEASON_2020_21, model.SEASON_2021_22},
+		{model.SEASON_2021_22, model.SEASON_2022_23},
+		{model.SEASON_2020_21, model.SEASON_2021_22, model.SEASON_2022_23},
+	}
+	for _, cache := range caches {
+		players, err := nbaClient.GetPlayers(ctx, &model.PlayerFilter{Seasons: &cache})
+		if err != nil {
+			logrus.Errorf("Error getting players for cache: %v", err)
+		}
+		nbaClient.PlayerCache[fmt.Sprintf("%v", cache)] = players
+		logrus.Info("Cached players for: ", cache)
+	}
 	nbaClient.PlayerSimilarity = *model.NewSnapshots()
 	logrus.Infof("Connected to DB: '%v/%v'", config.DBSource, nbaClient.Name)
 	return nbaClient, nil
@@ -220,9 +239,10 @@ func createGameFilter(input model.GameFilter) bson.M {
 	// return filter
 }
 
-func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input model.PlayerFilter) ([]*model.Player, error) {
-	defer logrus.Info(util.TimeLog(fmt.Sprintf("Query Players:\n\t%v", input), time.Now()))
+func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input *model.PlayerFilter) ([]*model.Player, error) {
+	startTime := time.Now()
 	c.Queries++
+	players := []*model.Player{}
 	playersDB := c.Collection("players")
 	pipeline := input.MongoPipeline()
 	cur, err := playersDB.Aggregate(ctx, pipeline)
@@ -231,7 +251,6 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input model.PlayerFi
 		return nil, fmt.Errorf("error querying players: %v", err)
 	}
 	defer cur.Close(ctx)
-	players := []*model.Player{}
 	err = cur.All(ctx, &players)
 	if err != nil {
 		logrus.Errorf("Error getting players: %v", err)
@@ -263,57 +282,41 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input model.PlayerFi
 			players[i].GamesCache[j].PlayerRef = players[i]
 		}
 	}
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query Players: %v", input), startTime))
 	return players, nil
 
 }
 
-func containsSeason(seasons []model.SeasonOption, season model.SeasonOption) bool {
-	for _, s := range seasons {
-		if s == season {
-			return true
-		}
-	}
-	return false
-}
-
-func (c *NBADatabaseClient) GetSimilarPlayersFromMatrix(ctx context.Context, toPlayerID int, input model.SimilarPlayerInput, endDate string) ([]model.Player, error) {
-	defer logrus.Info(util.TimeLog(fmt.Sprintf("Query Similar Players:\n\t%v, %v", toPlayerID, endDate), time.Now()))
-
-	startDate := util.SEASON_START_2020_21
-	if input.PlayerPoolFilter.Seasons != nil {
-		if containsSeason(*input.PlayerPoolFilter.Seasons, model.SEASON_2020_21) {
-			startDate = util.SEASON_START_2020_21
-		} else if containsSeason(*input.PlayerPoolFilter.Seasons, model.SEASON_2021_22) {
-			startDate = util.SEASON_START_2021_22
-		} else if containsSeason(*input.PlayerPoolFilter.Seasons, model.SEASON_2022_23) {
-			startDate = util.SEASON_START_2022_23
-		}
-	}
-
-	start, err := time.Parse("2006-01-02", startDate)
+func (c *NBADatabaseClient) GetSimilarPlayersFromMatrix(ctx context.Context, toPlayerID int, input *model.SimilarPlayerInput, endDate string) ([]model.Player, error) {
+	start, err := input.PlayerPoolFilter.GetEarliestSeasonStartDate()
 	if err != nil {
-		logrus.Errorf("Error parsing game date %v", startDate)
-		return nil, fmt.Errorf("error parsing game date %v", startDate)
+		return nil, fmt.Errorf("error getting earliest season start date: %v", err)
 	}
 	end, err := time.Parse("2006-01-02", endDate)
 	if err != nil {
 		logrus.Errorf("Error parsing game date %v", endDate)
 		return nil, fmt.Errorf("error parsing game date %v", endDate)
 	}
-	matrixID := fmt.Sprintf("%v-%v", startDate, endDate)
-	if _, ok := c.PlayerSimilarity[matrixID]; !ok {
-		players, err := c.GetPlayers(ctx, *input.PlayerPoolFilter)
-		if err != nil {
-			return nil, fmt.Errorf("error getting players: %v", err)
+	matrixID := fmt.Sprintf("%v-%v", start.Format("2006-01-02"), endDate)
+	if _, matrixOK := c.PlayerSimilarity[matrixID]; !matrixOK {
+		seasons := input.PlayerPoolFilter.Seasons
+		var players []*model.Player
+		if p, cacheOK := c.PlayerCache[fmt.Sprintf("%v", *seasons)]; !cacheOK {
+			players, err = c.GetPlayers(ctx, input.PlayerPoolFilter)
+			if err != nil {
+				return nil, fmt.Errorf("error getting players: %v", err)
+			}
+		} else {
+			players = p
 		}
 		players = input.PlayerPoolFilter.FilterPlayerStats(players)
 		statsOfInterest := []string{}
 		for _, stat := range input.StatsOfInterest {
 			statsOfInterest = append(statsOfInterest, string(stat))
 		}
-		c.PlayerSimilarity.AddSnapshot(start, end, statsOfInterest, players)
+		c.PlayerSimilarity.AddSnapshot(*start, end, statsOfInterest, players)
 	}
-	similarPlayers := c.PlayerSimilarity.GetSimilarPlayers(toPlayerID, *input.Limit, startDate, endDate, input.StatsOfInterest)
+	similarPlayers := c.PlayerSimilarity.GetSimilarPlayers(toPlayerID, *input.Limit, start.Format("2006-01-02"), endDate, input.StatsOfInterest)
 	return similarPlayers, nil
 }
 

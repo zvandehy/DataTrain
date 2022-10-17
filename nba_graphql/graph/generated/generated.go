@@ -141,8 +141,11 @@ type ComplexityRoot struct {
 	}
 
 	PredictionFragment struct {
-		Player func(childComplexity int) int
-		Stats  func(childComplexity int) int
+		Base      func(childComplexity int) int
+		Derived   func(childComplexity int) int
+		Name      func(childComplexity int) int
+		PctChange func(childComplexity int) int
+		Weight    func(childComplexity int) int
 	}
 
 	Projection struct {
@@ -239,7 +242,7 @@ type PlayerGameResolver interface {
 
 	Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error)
 
-	Prediction(ctx context.Context, obj *model.PlayerGame, input model.ModelInput) (*model.AverageStats, error)
+	Prediction(ctx context.Context, obj *model.PlayerGame, input model.ModelInput) (*model.PredictionBreakdown, error)
 }
 type ProjectionResolver interface {
 	Propositions(ctx context.Context, obj *model.Projection, input *model.PropositionFilter) ([]*model.Proposition, error)
@@ -815,19 +818,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PredictionBreakdown.WeightedTotal(childComplexity), true
 
-	case "PredictionFragment.player":
-		if e.complexity.PredictionFragment.Player == nil {
+	case "PredictionFragment.base":
+		if e.complexity.PredictionFragment.Base == nil {
 			break
 		}
 
-		return e.complexity.PredictionFragment.Player(childComplexity), true
+		return e.complexity.PredictionFragment.Base(childComplexity), true
 
-	case "PredictionFragment.stats":
-		if e.complexity.PredictionFragment.Stats == nil {
+	case "PredictionFragment.derived":
+		if e.complexity.PredictionFragment.Derived == nil {
 			break
 		}
 
-		return e.complexity.PredictionFragment.Stats(childComplexity), true
+		return e.complexity.PredictionFragment.Derived(childComplexity), true
+
+	case "PredictionFragment.name":
+		if e.complexity.PredictionFragment.Name == nil {
+			break
+		}
+
+		return e.complexity.PredictionFragment.Name(childComplexity), true
+
+	case "PredictionFragment.pctChange":
+		if e.complexity.PredictionFragment.PctChange == nil {
+			break
+		}
+
+		return e.complexity.PredictionFragment.PctChange(childComplexity), true
+
+	case "PredictionFragment.weight":
+		if e.complexity.PredictionFragment.Weight == nil {
+			break
+		}
+
+		return e.complexity.PredictionFragment.Weight(childComplexity), true
 
 	case "Projection.date":
 		if e.complexity.Projection.Date == nil {
@@ -1668,7 +1692,7 @@ type PlayerGame {
   steals: Int!
   # playersInGame: PlayersInGame!
   # projections: [Projection]!
-  prediction(input: ModelInput!): AverageStats!
+  prediction(input: ModelInput!): PredictionBreakdown!
 }
 
 type PredictionBreakdown {
@@ -1677,8 +1701,11 @@ type PredictionBreakdown {
 }
 
 type PredictionFragment {
-  player: Player!
-  stats: AverageStats!
+  name: String!
+  derived: AverageStats!
+  base: AverageStats!
+  pctChange: AverageStats!
+  weight: Float!
 }
 
 type AverageStats {
@@ -1730,6 +1757,7 @@ input ModelInput {
 }
 
 input GameBreakdownInput {
+  name: String!
   filter: GameFilter!
   weight: Float!
 }
@@ -5657,9 +5685,9 @@ func (ec *executionContext) _PlayerGame_prediction(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.AverageStats)
+	res := resTmp.(*model.PredictionBreakdown)
 	fc.Result = res
-	return ec.marshalNAverageStats2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx, field.Selections, res)
+	return ec.marshalNPredictionBreakdown2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPredictionBreakdown(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PlayerGame_prediction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5670,48 +5698,12 @@ func (ec *executionContext) fieldContext_PlayerGame_prediction(ctx context.Conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "assists":
-				return ec.fieldContext_AverageStats_assists(ctx, field)
-			case "blocks":
-				return ec.fieldContext_AverageStats_blocks(ctx, field)
-			case "defensive_rebounds":
-				return ec.fieldContext_AverageStats_defensive_rebounds(ctx, field)
-			case "field_goals_attempted":
-				return ec.fieldContext_AverageStats_field_goals_attempted(ctx, field)
-			case "field_goals_made":
-				return ec.fieldContext_AverageStats_field_goals_made(ctx, field)
-			case "free_throws_attempted":
-				return ec.fieldContext_AverageStats_free_throws_attempted(ctx, field)
-			case "free_throws_made":
-				return ec.fieldContext_AverageStats_free_throws_made(ctx, field)
-			case "games_played":
-				return ec.fieldContext_AverageStats_games_played(ctx, field)
-			case "height":
-				return ec.fieldContext_AverageStats_height(ctx, field)
-			case "minutes":
-				return ec.fieldContext_AverageStats_minutes(ctx, field)
-			case "offensive_rebounds":
-				return ec.fieldContext_AverageStats_offensive_rebounds(ctx, field)
-			case "personal_fouls_drawn":
-				return ec.fieldContext_AverageStats_personal_fouls_drawn(ctx, field)
-			case "personal_fouls":
-				return ec.fieldContext_AverageStats_personal_fouls(ctx, field)
-			case "points":
-				return ec.fieldContext_AverageStats_points(ctx, field)
-			case "rebounds":
-				return ec.fieldContext_AverageStats_rebounds(ctx, field)
-			case "steals":
-				return ec.fieldContext_AverageStats_steals(ctx, field)
-			case "three_pointers_attempted":
-				return ec.fieldContext_AverageStats_three_pointers_attempted(ctx, field)
-			case "three_pointers_made":
-				return ec.fieldContext_AverageStats_three_pointers_made(ctx, field)
-			case "turnovers":
-				return ec.fieldContext_AverageStats_turnovers(ctx, field)
-			case "weight":
-				return ec.fieldContext_AverageStats_weight(ctx, field)
+			case "weightedTotal":
+				return ec.fieldContext_PredictionBreakdown_weightedTotal(ctx, field)
+			case "fragments":
+				return ec.fieldContext_PredictionBreakdown_fragments(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type AverageStats", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PredictionBreakdown", field.Name)
 		},
 	}
 	defer func() {
@@ -6017,10 +6009,16 @@ func (ec *executionContext) fieldContext_PredictionBreakdown_fragments(ctx conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "player":
-				return ec.fieldContext_PredictionFragment_player(ctx, field)
-			case "stats":
-				return ec.fieldContext_PredictionFragment_stats(ctx, field)
+			case "name":
+				return ec.fieldContext_PredictionFragment_name(ctx, field)
+			case "derived":
+				return ec.fieldContext_PredictionFragment_derived(ctx, field)
+			case "base":
+				return ec.fieldContext_PredictionFragment_base(ctx, field)
+			case "pctChange":
+				return ec.fieldContext_PredictionFragment_pctChange(ctx, field)
+			case "weight":
+				return ec.fieldContext_PredictionFragment_weight(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PredictionFragment", field.Name)
 		},
@@ -6028,8 +6026,8 @@ func (ec *executionContext) fieldContext_PredictionBreakdown_fragments(ctx conte
 	return fc, nil
 }
 
-func (ec *executionContext) _PredictionFragment_player(ctx context.Context, field graphql.CollectedField, obj *model.PredictionFragment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PredictionFragment_player(ctx, field)
+func (ec *executionContext) _PredictionFragment_name(ctx context.Context, field graphql.CollectedField, obj *model.PredictionFragment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PredictionFragment_name(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6042,7 +6040,7 @@ func (ec *executionContext) _PredictionFragment_player(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Player, nil
+		return obj.Name, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6054,46 +6052,26 @@ func (ec *executionContext) _PredictionFragment_player(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Player)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNPlayer2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayer(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PredictionFragment_player(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PredictionFragment_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PredictionFragment",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext_Player_name(ctx, field)
-			case "playerID":
-				return ec.fieldContext_Player_playerID(ctx, field)
-			case "seasons":
-				return ec.fieldContext_Player_seasons(ctx, field)
-			case "position":
-				return ec.fieldContext_Player_position(ctx, field)
-			case "team":
-				return ec.fieldContext_Player_team(ctx, field)
-			case "games":
-				return ec.fieldContext_Player_games(ctx, field)
-			case "projections":
-				return ec.fieldContext_Player_projections(ctx, field)
-			case "height":
-				return ec.fieldContext_Player_height(ctx, field)
-			case "weight":
-				return ec.fieldContext_Player_weight(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Player", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _PredictionFragment_stats(ctx context.Context, field graphql.CollectedField, obj *model.PredictionFragment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PredictionFragment_stats(ctx, field)
+func (ec *executionContext) _PredictionFragment_derived(ctx context.Context, field graphql.CollectedField, obj *model.PredictionFragment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PredictionFragment_derived(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6106,7 +6084,7 @@ func (ec *executionContext) _PredictionFragment_stats(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Stats, nil
+		return obj.Derived, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6123,7 +6101,7 @@ func (ec *executionContext) _PredictionFragment_stats(ctx context.Context, field
 	return ec.marshalNAverageStats2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PredictionFragment_stats(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PredictionFragment_derived(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PredictionFragment",
 		Field:      field,
@@ -6173,6 +6151,222 @@ func (ec *executionContext) fieldContext_PredictionFragment_stats(ctx context.Co
 				return ec.fieldContext_AverageStats_weight(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AverageStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PredictionFragment_base(ctx context.Context, field graphql.CollectedField, obj *model.PredictionFragment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PredictionFragment_base(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Base, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AverageStats)
+	fc.Result = res
+	return ec.marshalNAverageStats2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PredictionFragment_base(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PredictionFragment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "assists":
+				return ec.fieldContext_AverageStats_assists(ctx, field)
+			case "blocks":
+				return ec.fieldContext_AverageStats_blocks(ctx, field)
+			case "defensive_rebounds":
+				return ec.fieldContext_AverageStats_defensive_rebounds(ctx, field)
+			case "field_goals_attempted":
+				return ec.fieldContext_AverageStats_field_goals_attempted(ctx, field)
+			case "field_goals_made":
+				return ec.fieldContext_AverageStats_field_goals_made(ctx, field)
+			case "free_throws_attempted":
+				return ec.fieldContext_AverageStats_free_throws_attempted(ctx, field)
+			case "free_throws_made":
+				return ec.fieldContext_AverageStats_free_throws_made(ctx, field)
+			case "games_played":
+				return ec.fieldContext_AverageStats_games_played(ctx, field)
+			case "height":
+				return ec.fieldContext_AverageStats_height(ctx, field)
+			case "minutes":
+				return ec.fieldContext_AverageStats_minutes(ctx, field)
+			case "offensive_rebounds":
+				return ec.fieldContext_AverageStats_offensive_rebounds(ctx, field)
+			case "personal_fouls_drawn":
+				return ec.fieldContext_AverageStats_personal_fouls_drawn(ctx, field)
+			case "personal_fouls":
+				return ec.fieldContext_AverageStats_personal_fouls(ctx, field)
+			case "points":
+				return ec.fieldContext_AverageStats_points(ctx, field)
+			case "rebounds":
+				return ec.fieldContext_AverageStats_rebounds(ctx, field)
+			case "steals":
+				return ec.fieldContext_AverageStats_steals(ctx, field)
+			case "three_pointers_attempted":
+				return ec.fieldContext_AverageStats_three_pointers_attempted(ctx, field)
+			case "three_pointers_made":
+				return ec.fieldContext_AverageStats_three_pointers_made(ctx, field)
+			case "turnovers":
+				return ec.fieldContext_AverageStats_turnovers(ctx, field)
+			case "weight":
+				return ec.fieldContext_AverageStats_weight(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AverageStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PredictionFragment_pctChange(ctx context.Context, field graphql.CollectedField, obj *model.PredictionFragment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PredictionFragment_pctChange(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PctChange, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AverageStats)
+	fc.Result = res
+	return ec.marshalNAverageStats2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PredictionFragment_pctChange(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PredictionFragment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "assists":
+				return ec.fieldContext_AverageStats_assists(ctx, field)
+			case "blocks":
+				return ec.fieldContext_AverageStats_blocks(ctx, field)
+			case "defensive_rebounds":
+				return ec.fieldContext_AverageStats_defensive_rebounds(ctx, field)
+			case "field_goals_attempted":
+				return ec.fieldContext_AverageStats_field_goals_attempted(ctx, field)
+			case "field_goals_made":
+				return ec.fieldContext_AverageStats_field_goals_made(ctx, field)
+			case "free_throws_attempted":
+				return ec.fieldContext_AverageStats_free_throws_attempted(ctx, field)
+			case "free_throws_made":
+				return ec.fieldContext_AverageStats_free_throws_made(ctx, field)
+			case "games_played":
+				return ec.fieldContext_AverageStats_games_played(ctx, field)
+			case "height":
+				return ec.fieldContext_AverageStats_height(ctx, field)
+			case "minutes":
+				return ec.fieldContext_AverageStats_minutes(ctx, field)
+			case "offensive_rebounds":
+				return ec.fieldContext_AverageStats_offensive_rebounds(ctx, field)
+			case "personal_fouls_drawn":
+				return ec.fieldContext_AverageStats_personal_fouls_drawn(ctx, field)
+			case "personal_fouls":
+				return ec.fieldContext_AverageStats_personal_fouls(ctx, field)
+			case "points":
+				return ec.fieldContext_AverageStats_points(ctx, field)
+			case "rebounds":
+				return ec.fieldContext_AverageStats_rebounds(ctx, field)
+			case "steals":
+				return ec.fieldContext_AverageStats_steals(ctx, field)
+			case "three_pointers_attempted":
+				return ec.fieldContext_AverageStats_three_pointers_attempted(ctx, field)
+			case "three_pointers_made":
+				return ec.fieldContext_AverageStats_three_pointers_made(ctx, field)
+			case "turnovers":
+				return ec.fieldContext_AverageStats_turnovers(ctx, field)
+			case "weight":
+				return ec.fieldContext_AverageStats_weight(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AverageStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PredictionFragment_weight(ctx context.Context, field graphql.CollectedField, obj *model.PredictionFragment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PredictionFragment_weight(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Weight, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PredictionFragment_weight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PredictionFragment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11092,13 +11286,21 @@ func (ec *executionContext) unmarshalInputGameBreakdownInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"filter", "weight"}
+	fieldsInOrder := [...]string{"name", "filter", "weight"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "filter":
 			var err error
 
@@ -12521,16 +12723,37 @@ func (ec *executionContext) _PredictionFragment(ctx context.Context, sel ast.Sel
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PredictionFragment")
-		case "player":
+		case "name":
 
-			out.Values[i] = ec._PredictionFragment_player(ctx, field, obj)
+			out.Values[i] = ec._PredictionFragment_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "stats":
+		case "derived":
 
-			out.Values[i] = ec._PredictionFragment_stats(ctx, field, obj)
+			out.Values[i] = ec._PredictionFragment_derived(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "base":
+
+			out.Values[i] = ec._PredictionFragment_base(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pctChange":
+
+			out.Values[i] = ec._PredictionFragment_pctChange(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "weight":
+
+			out.Values[i] = ec._PredictionFragment_weight(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -13581,10 +13804,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAverageStats2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx context.Context, sel ast.SelectionSet, v model.AverageStats) graphql.Marshaler {
-	return ec._AverageStats(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNAverageStats2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx context.Context, sel ast.SelectionSet, v *model.AverageStats) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -13799,6 +14018,20 @@ func (ec *executionContext) marshalNPrediction2ᚖgithubᚗcomᚋzvandehyᚋData
 		return graphql.Null
 	}
 	return ec._Prediction(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPredictionBreakdown2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPredictionBreakdown(ctx context.Context, sel ast.SelectionSet, v model.PredictionBreakdown) graphql.Marshaler {
+	return ec._PredictionBreakdown(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPredictionBreakdown2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPredictionBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.PredictionBreakdown) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PredictionBreakdown(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPredictionFragment2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPredictionFragmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PredictionFragment) graphql.Marshaler {

@@ -23,6 +23,7 @@ input ModelInput {
 }
 
 input GameBreakdownInput {
+  name: String!
   filter: GameFilter!
   weight: Float!
 }

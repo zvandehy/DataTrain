@@ -335,6 +335,56 @@ func (p *PlayerAverage) Score(stat Stat) float64 {
 	}
 }
 
+func (p *PlayerAverage) AverageStats() *AverageStats {
+	return &AverageStats{
+		Points:                 similarity.RoundFloat(p.Points, 2),
+		Assists:                similarity.RoundFloat(p.Assists, 2),
+		Rebounds:               similarity.RoundFloat(p.Rebounds, 2),
+		Steals:                 similarity.RoundFloat(p.Steals, 2),
+		Blocks:                 similarity.RoundFloat(p.Blocks, 2),
+		ThreePointersMade:      similarity.RoundFloat(p.ThreePointersMade, 2),
+		ThreePointersAttempted: similarity.RoundFloat(p.ThreePointersAttempted, 2),
+		FreeThrowsMade:         similarity.RoundFloat(p.FreeThrowsMade, 2),
+		FreeThrowsAttempted:    similarity.RoundFloat(p.FreeThrowsAttempted, 2),
+		FieldGoalsMade:         similarity.RoundFloat(p.FieldGoalsMade, 2),
+		FieldGoalsAttempted:    similarity.RoundFloat(p.FieldGoalsAttempted, 2),
+		Minutes:                similarity.RoundFloat(p.Minutes, 2),
+		OffensiveRebounds:      similarity.RoundFloat(p.OffensiveRebounds, 2),
+		DefensiveRebounds:      similarity.RoundFloat(p.DefensiveRebounds, 2),
+		Turnovers:              similarity.RoundFloat(p.Turnovers, 2),
+		PersonalFouls:          similarity.RoundFloat(p.PersonalFouls, 2),
+		PersonalFoulsDrawn:     similarity.RoundFloat(p.PersonalFoulsDrawn, 2),
+		Weight:                 similarity.RoundFloat(p.Weight, 2),
+		Height:                 similarity.RoundFloat(p.Height, 2),
+		GamesPlayed:            similarity.RoundFloat(p.GamesPlayed, 2),
+	}
+}
+
+func (startValue *AverageStats) PercentChange(finalValue *AverageStats) *AverageStats {
+	return &AverageStats{
+		Points:                 similarity.RoundFloat(((finalValue.Points-startValue.Points)/startValue.Points)*100, 2),
+		Assists:                similarity.RoundFloat(((finalValue.Assists-startValue.Assists)/startValue.Assists)*100, 2),
+		Rebounds:               similarity.RoundFloat(((finalValue.Rebounds-startValue.Rebounds)/startValue.Rebounds)*100, 2),
+		Steals:                 similarity.RoundFloat(((finalValue.Steals-startValue.Steals)/startValue.Steals)*100, 2),
+		Blocks:                 similarity.RoundFloat(((finalValue.Blocks-startValue.Blocks)/startValue.Blocks)*100, 2),
+		ThreePointersMade:      similarity.RoundFloat(((finalValue.ThreePointersMade-startValue.ThreePointersMade)/startValue.ThreePointersMade)*100, 2),
+		ThreePointersAttempted: similarity.RoundFloat(((finalValue.ThreePointersAttempted-startValue.ThreePointersAttempted)/startValue.ThreePointersAttempted)*100, 2),
+		FreeThrowsMade:         similarity.RoundFloat(((finalValue.FreeThrowsMade-startValue.FreeThrowsMade)/startValue.FreeThrowsMade)*100, 2),
+		FreeThrowsAttempted:    similarity.RoundFloat(((finalValue.FreeThrowsAttempted-startValue.FreeThrowsAttempted)/startValue.FreeThrowsAttempted)*100, 2),
+		FieldGoalsMade:         similarity.RoundFloat(((finalValue.FieldGoalsMade-startValue.FieldGoalsMade)/startValue.FieldGoalsMade)*100, 2),
+		FieldGoalsAttempted:    similarity.RoundFloat(((finalValue.FieldGoalsAttempted-startValue.FieldGoalsAttempted)/startValue.FieldGoalsAttempted)*100, 2),
+		Minutes:                similarity.RoundFloat(((finalValue.Minutes-startValue.Minutes)/startValue.Minutes)*100, 2),
+		OffensiveRebounds:      similarity.RoundFloat(((finalValue.OffensiveRebounds-startValue.OffensiveRebounds)/startValue.OffensiveRebounds)*100, 2),
+		DefensiveRebounds:      similarity.RoundFloat(((finalValue.DefensiveRebounds-startValue.DefensiveRebounds)/startValue.DefensiveRebounds)*100, 2),
+		Turnovers:              similarity.RoundFloat(((finalValue.Turnovers-startValue.Turnovers)/startValue.Turnovers)*100, 2),
+		PersonalFouls:          similarity.RoundFloat(((finalValue.PersonalFouls-startValue.PersonalFouls)/startValue.PersonalFouls)*100, 2),
+		PersonalFoulsDrawn:     similarity.RoundFloat(((finalValue.PersonalFoulsDrawn-startValue.PersonalFoulsDrawn)/startValue.PersonalFoulsDrawn)*100, 2),
+		Weight:                 similarity.RoundFloat(((finalValue.Weight-startValue.Weight)/startValue.Weight)*100, 2),
+		Height:                 similarity.RoundFloat(((finalValue.Height-startValue.Height)/startValue.Height)*100, 2),
+		GamesPlayed:            similarity.RoundFloat(((finalValue.GamesPlayed-startValue.GamesPlayed)/startValue.GamesPlayed)*100, 2),
+	}
+}
+
 type TeamAverage struct {
 	WinsAndLosses      []string `json:"wins_and_losses" bson:"wins_and_losses"`
 	GamesWon           float64  `json:"games_won" bson:"games_won"`

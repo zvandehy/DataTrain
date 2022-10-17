@@ -1,6 +1,11 @@
 package model
 
 import (
+	"fmt"
+	"strconv"
+	"time"
+
+	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -105,6 +110,7 @@ func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
 }
 
 func (input PlayerFilter) FilterPlayerStats(players []*Player) []*Player {
+	// TODO: Filter other PlayerFilter fields...
 	if input.StatFilters != nil && len(*input.StatFilters) > 0 {
 		filteredPlayers := []*Player{}
 		for _, player := range players {
@@ -126,4 +132,85 @@ func (input PlayerFilter) FilterPlayerStats(players []*Player) []*Player {
 
 func (f PlayerFilter) String() string {
 	return util.Print(f)
+}
+
+func (f PlayerFilter) Key() string {
+	name := ""
+	if f.Name != nil {
+		name = *f.Name
+	}
+	playerID := ""
+	if f.PlayerID != nil {
+		playerID = strconv.Itoa(*f.PlayerID)
+	}
+	seasons := fmt.Sprintf("%v", f.Seasons)
+	positionStrict := ""
+	if f.PositionStrict != nil {
+		positionStrict = string(*f.PositionStrict)
+	}
+	positionLoose := ""
+	if f.PositionLoose != nil {
+		positionLoose = string(*f.PositionLoose)
+	}
+	teamAbr := ""
+	if f.TeamAbr != nil {
+		teamAbr = *f.TeamAbr
+	}
+	teamID := ""
+	if f.TeamID != nil {
+		teamID = strconv.Itoa(*f.TeamID)
+	}
+	start := ""
+	if f.StartDate != nil {
+		start = *f.StartDate
+	}
+	end := ""
+	if f.EndDate != nil {
+		end = *f.EndDate
+	}
+	// statFilters := ""
+	// if f.StatFilters != nil {
+	// 	for _, statFilter := range *f.StatFilters {
+	// 		statFilters += fmt.Sprintf("per:%v,stat:%v,mode:%v,op:%v,val:%v", statFilter.Period, statFilter.Stat, statFilter.Mode, statFilter.Operator, statFilter.Value)
+	// 	}
+	// }
+	return fmt.Sprintf("Name:%v,PlayerID:%v,Seasons:%v,PositionStrict:%v,PositionLoose:%v,TeamAbr:%v,TeamID:%v,StartDate:%v,EndDate:%v",
+		name,
+		playerID,
+		seasons,
+		positionStrict,
+		positionLoose,
+		teamAbr,
+		teamID,
+		start,
+		end,
+	)
+}
+
+func containsSeason(seasons *[]SeasonOption, season SeasonOption) bool {
+	for _, s := range *seasons {
+		if s == season {
+			return true
+		}
+	}
+	return false
+}
+
+func (f PlayerFilter) GetEarliestSeasonStartDate() (*time.Time, error) {
+	startDate := util.SEASON_START_2020_21
+	if f.Seasons != nil {
+		if containsSeason(f.Seasons, SEASON_2020_21) {
+			startDate = util.SEASON_START_2020_21
+		} else if containsSeason(f.Seasons, SEASON_2021_22) {
+			startDate = util.SEASON_START_2021_22
+		} else if containsSeason(f.Seasons, SEASON_2022_23) {
+			startDate = util.SEASON_START_2022_23
+		}
+	}
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		logrus.Errorf("Error parsing game date %v", startDate)
+		return nil, fmt.Errorf("error parsing game date %v", startDate)
+	}
+	return &start, nil
 }

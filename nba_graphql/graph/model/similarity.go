@@ -61,10 +61,11 @@ func (s *Snapshots) AddSnapshot(startDate, endDate time.Time, stats []string, pl
 }
 
 func (s *Snapshots) GetSimilarPlayers(playerID, limit int, startDate, endDate string, statsOfInterest []Stat) []Player {
-	if snapshot, ok := (*s)[fmt.Sprintf("%s-%s", startDate, endDate)]; ok {
+	key := fmt.Sprintf("%s-%s", startDate, endDate)
+	if snapshot, ok := (*s)[key]; ok {
 		similarPlayers, err := snapshot.GetNearestPlayers(playerID, limit, statsOfInterest)
 		if err != nil {
-			logrus.Errorf("error getting similar players: %v", err)
+			logrus.Errorf("error getting similar players from matrix '%v': %v", key, err)
 			return []Player{}
 		}
 		return similarPlayers
@@ -84,7 +85,6 @@ type SimilarityVector struct {
 }
 
 func (v *SimilarityVector) GetNearest(limit int, statsOfInterest []Stat) []PlayerDiff {
-	fmt.Println("Distance to: ", v.Average.Player.Name)
 	// get limit number of nearest players using EuclideanDistance
 	nearest := make([]PlayerDiff, 0, len(v.Comparisons))
 	for _, diff := range v.Comparisons {
@@ -93,9 +93,10 @@ func (v *SimilarityVector) GetNearest(limit int, statsOfInterest []Stat) []Playe
 	sort.Slice(nearest, func(i, j int) bool {
 		return EuclideanDistance(nearest[i], statsOfInterest) < EuclideanDistance(nearest[j], statsOfInterest)
 	})
-	for _, diff := range nearest {
-		fmt.Printf("%20.20s: (%v)\t[Pts:%v\tRebs: %v\tAsts: %v\t3PM: %v\tFGA: %v\tMIN: %v\tHeight: %v]\n", diff.Player.Name, EuclideanDistance(diff, statsOfInterest), diff.Points, diff.Rebounds, diff.Assists, diff.ThreePointersMade, diff.FieldGoalsAttempted, diff.Minutes, diff.Height)
-	}
+	// fmt.Println("Distance to: ", v.Average.Player.Name)
+	// for _, diff := range nearest {
+	// 	fmt.Printf("%20.20s: (%v)\t[Pts:%v\tRebs: %v\tAsts: %v\t3PM: %v\tFGA: %v\tMIN: %v\tHeight: %v]\n", diff.Player.Name, EuclideanDistance(diff, statsOfInterest), diff.Points, diff.Rebounds, diff.Assists, diff.ThreePointersMade, diff.FieldGoalsAttempted, diff.Minutes, diff.Height)
+	// }
 	if len(v.Comparisons) <= limit {
 		return nearest
 	}

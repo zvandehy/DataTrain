@@ -32,6 +32,7 @@ type AverageStats struct {
 }
 
 type GameBreakdownInput struct {
+	Name   string      `json:"name"`
 	Filter *GameFilter `json:"filter"`
 	Weight float64     `json:"weight"`
 }
@@ -48,8 +49,11 @@ type PredictionBreakdown struct {
 }
 
 type PredictionFragment struct {
-	Player *Player       `json:"player"`
-	Stats  *AverageStats `json:"stats"`
+	Name      string        `json:"name"`
+	Derived   *AverageStats `json:"derived"`
+	Base      *AverageStats `json:"base"`
+	PctChange *AverageStats `json:"pctChange"`
+	Weight    float64       `json:"weight"`
 }
 
 type ProjectionFilter struct {
