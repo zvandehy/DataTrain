@@ -41,6 +41,11 @@ enum Stat {
   Height
   Weight
   DoubleDouble
+  GamesWon
+  GamesLost
+  OppPoints
+  OppAssists
+  OppRebounds
 }
 
 input ProjectionFilter {

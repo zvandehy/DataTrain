@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	TIMENOW = "15:04:05.000"
+	TIMENOW          = "15:04:05.000"
+	DATE_FORMAT      = "2006-01-02"
+	DATE_TIME_FORMAT = "2006-01-02T15:04:05" // TODO: TeamGame.Date is in DATE_TIME FORMAT
 )
 
 var min, _ = time.Parse(time.RFC3339, "2000-01-01T00:00:00Z")
@@ -23,7 +25,7 @@ func TIME_MAXIMUM() time.Time {
 }
 
 func SEASON_DATE(seasonDate string) time.Time {
-	season, _ := time.Parse("2006-01-02", seasonDate)
+	season, _ := time.Parse(DATE_FORMAT, seasonDate)
 	return season
 }
 

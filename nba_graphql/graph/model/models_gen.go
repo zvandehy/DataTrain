@@ -48,6 +48,7 @@ type ModelInput struct {
 	Model              *string               `json:"model"`
 	GameBreakdowns     []*GameBreakdownInput `json:"gameBreakdowns"`
 	SimilarPlayerInput *SimilarPlayerInput   `json:"similarPlayerInput"`
+	SimilarTeamInput   *SimilarTeamInput     `json:"similarTeamInput"`
 }
 
 type PredictionBreakdown struct {
@@ -58,6 +59,7 @@ type PredictionBreakdown struct {
 type PredictionFragment struct {
 	Name         string         `json:"name"`
 	Derived      *AverageStats  `json:"derived"`
+	DerivedGames []*PlayerGame  `json:"derivedGames"`
 	Base         *AverageStats  `json:"base"`
 	PctChange    *AverageStats  `json:"pctChange"`
 	Weight       float64        `json:"weight"`
@@ -84,15 +86,18 @@ type PropositionSummary struct {
 }
 
 type SimilarPlayerInput struct {
-	Limit            *int          `json:"limit"`
+	Limit            int           `json:"limit"`
 	StatsOfInterest  []Stat        `json:"statsOfInterest"`
 	PlayerPoolFilter *PlayerFilter `json:"playerPoolFilter"`
 	Weight           float64       `json:"weight"`
 }
 
 type SimilarTeamInput struct {
-	NumTeams        *int          `json:"numTeams"`
-	StatsOfInterest []*StatFilter `json:"statsOfInterest"`
+	Limit           int           `json:"limit"`
+	StatsOfInterest []Stat        `json:"statsOfInterest"`
+	TeamPoolFilter  []*TeamFilter `json:"teamPoolFilter"`
+	Period          *Period       `json:"period"`
+	Weight          float64       `json:"weight"`
 }
 
 type StatFilter struct {

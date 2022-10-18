@@ -157,6 +157,7 @@ type ComplexityRoot struct {
 	PredictionFragment struct {
 		Base         func(childComplexity int) int
 		Derived      func(childComplexity int) int
+		DerivedGames func(childComplexity int) int
 		Name         func(childComplexity int) int
 		PctChange    func(childComplexity int) int
 		Propositions func(childComplexity int, input *model.PropositionFilter) int
@@ -965,6 +966,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PredictionFragment.Derived(childComplexity), true
 
+	case "PredictionFragment.derivedGames":
+		if e.complexity.PredictionFragment.DerivedGames == nil {
+			break
+		}
+
+		return e.complexity.PredictionFragment.DerivedGames(childComplexity), true
+
 	case "PredictionFragment.name":
 		if e.complexity.PredictionFragment.Name == nil {
 			break
@@ -1603,6 +1611,11 @@ enum Stat {
   Height
   Weight
   DoubleDouble
+  GamesWon
+  GamesLost
+  OppPoints
+  OppAssists
+  OppRebounds
 }
 
 input ProjectionFilter {
@@ -1802,6 +1815,7 @@ type PredictionBreakdown {
 type PredictionFragment {
   name: String!
   derived: AverageStats!
+  derivedGames: [PlayerGame!]!
   base: AverageStats!
   pctChange: AverageStats!
   weight: Float!
@@ -1869,6 +1883,7 @@ input ModelInput {
   model: String
   gameBreakdowns: [GameBreakdownInput!]
   similarPlayerInput: SimilarPlayerInput
+  similarTeamInput: SimilarTeamInput
 }
 
 input GameBreakdownInput {
@@ -1878,15 +1893,18 @@ input GameBreakdownInput {
 }
 
 input SimilarPlayerInput {
-  limit: Int
+  limit: Int!
   statsOfInterest: [Stat!]
-  playerPoolFilter: PlayerFilter #TODO: be able to filter based on "this" player's position
+  playerPoolFilter: PlayerFilter
   weight: Float!
 }
 
 input SimilarTeamInput {
-  numTeams: Int
-  statsOfInterest: [StatFilter!]
+  limit: Int!
+  statsOfInterest: [Stat!]
+  teamPoolFilter: [TeamFilter!]
+  period: Period!
+  weight: Float!
 }
 
 type Prediction {
@@ -1894,10 +1912,6 @@ type Prediction {
   overUnderPrediction: Output
   confidence: Float
   estimation: Float
-  # recencyFragments: [PredictionFragment]
-  # vsOpponent: PredictionFragment
-  # vsSimilarTeams: PredictionFragment
-  # similarPlayersVsOpponent: PredictionFragment
 }
 enum Output {
   OVER
@@ -6817,6 +6831,8 @@ func (ec *executionContext) fieldContext_PredictionBreakdown_fragments(ctx conte
 				return ec.fieldContext_PredictionFragment_name(ctx, field)
 			case "derived":
 				return ec.fieldContext_PredictionFragment_derived(ctx, field)
+			case "derivedGames":
+				return ec.fieldContext_PredictionFragment_derivedGames(ctx, field)
 			case "base":
 				return ec.fieldContext_PredictionFragment_base(ctx, field)
 			case "pctChange":
@@ -6971,6 +6987,142 @@ func (ec *executionContext) fieldContext_PredictionFragment_derived(ctx context.
 				return ec.fieldContext_AverageStats_double_double(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AverageStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PredictionFragment_derivedGames(ctx context.Context, field graphql.CollectedField, obj *model.PredictionFragment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PredictionFragment_derivedGames(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DerivedGames, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.PlayerGame)
+	fc.Result = res
+	return ec.marshalNPlayerGame2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPlayerGameᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PredictionFragment_derivedGames(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PredictionFragment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "assist_percentage":
+				return ec.fieldContext_PlayerGame_assist_percentage(ctx, field)
+			case "assists":
+				return ec.fieldContext_PlayerGame_assists(ctx, field)
+			case "date":
+				return ec.fieldContext_PlayerGame_date(ctx, field)
+			case "defensive_rebound_percentage":
+				return ec.fieldContext_PlayerGame_defensive_rebound_percentage(ctx, field)
+			case "defensive_rebounds":
+				return ec.fieldContext_PlayerGame_defensive_rebounds(ctx, field)
+			case "effective_field_goal_percentage":
+				return ec.fieldContext_PlayerGame_effective_field_goal_percentage(ctx, field)
+			case "field_goal_percentage":
+				return ec.fieldContext_PlayerGame_field_goal_percentage(ctx, field)
+			case "field_goals_attempted":
+				return ec.fieldContext_PlayerGame_field_goals_attempted(ctx, field)
+			case "field_goals_made":
+				return ec.fieldContext_PlayerGame_field_goals_made(ctx, field)
+			case "free_throws_attempted":
+				return ec.fieldContext_PlayerGame_free_throws_attempted(ctx, field)
+			case "free_throws_made":
+				return ec.fieldContext_PlayerGame_free_throws_made(ctx, field)
+			case "free_throws_percentage":
+				return ec.fieldContext_PlayerGame_free_throws_percentage(ctx, field)
+			case "gameID":
+				return ec.fieldContext_PlayerGame_gameID(ctx, field)
+			case "home_or_away":
+				return ec.fieldContext_PlayerGame_home_or_away(ctx, field)
+			case "outcome":
+				return ec.fieldContext_PlayerGame_outcome(ctx, field)
+			case "margin":
+				return ec.fieldContext_PlayerGame_margin(ctx, field)
+			case "minutes":
+				return ec.fieldContext_PlayerGame_minutes(ctx, field)
+			case "offensive_rebound_percentage":
+				return ec.fieldContext_PlayerGame_offensive_rebound_percentage(ctx, field)
+			case "offensive_rebounds":
+				return ec.fieldContext_PlayerGame_offensive_rebounds(ctx, field)
+			case "opponent":
+				return ec.fieldContext_PlayerGame_opponent(ctx, field)
+			case "opponentStats":
+				return ec.fieldContext_PlayerGame_opponentStats(ctx, field)
+			case "team":
+				return ec.fieldContext_PlayerGame_team(ctx, field)
+			case "teamStats":
+				return ec.fieldContext_PlayerGame_teamStats(ctx, field)
+			case "personal_fouls_drawn":
+				return ec.fieldContext_PlayerGame_personal_fouls_drawn(ctx, field)
+			case "personal_fouls":
+				return ec.fieldContext_PlayerGame_personal_fouls(ctx, field)
+			case "points":
+				return ec.fieldContext_PlayerGame_points(ctx, field)
+			case "player":
+				return ec.fieldContext_PlayerGame_player(ctx, field)
+			case "playoffs":
+				return ec.fieldContext_PlayerGame_playoffs(ctx, field)
+			case "season":
+				return ec.fieldContext_PlayerGame_season(ctx, field)
+			case "three_point_percentage":
+				return ec.fieldContext_PlayerGame_three_point_percentage(ctx, field)
+			case "three_pointers_attempted":
+				return ec.fieldContext_PlayerGame_three_pointers_attempted(ctx, field)
+			case "three_pointers_made":
+				return ec.fieldContext_PlayerGame_three_pointers_made(ctx, field)
+			case "rebounds":
+				return ec.fieldContext_PlayerGame_rebounds(ctx, field)
+			case "true_shooting_percentage":
+				return ec.fieldContext_PlayerGame_true_shooting_percentage(ctx, field)
+			case "turnovers":
+				return ec.fieldContext_PlayerGame_turnovers(ctx, field)
+			case "usage":
+				return ec.fieldContext_PlayerGame_usage(ctx, field)
+			case "blocks":
+				return ec.fieldContext_PlayerGame_blocks(ctx, field)
+			case "steals":
+				return ec.fieldContext_PlayerGame_steals(ctx, field)
+			case "points_rebounds":
+				return ec.fieldContext_PlayerGame_points_rebounds(ctx, field)
+			case "points_assists":
+				return ec.fieldContext_PlayerGame_points_assists(ctx, field)
+			case "points_rebounds_assists":
+				return ec.fieldContext_PlayerGame_points_rebounds_assists(ctx, field)
+			case "rebounds_assists":
+				return ec.fieldContext_PlayerGame_rebounds_assists(ctx, field)
+			case "blocks_steals":
+				return ec.fieldContext_PlayerGame_blocks_steals(ctx, field)
+			case "fantasy_score":
+				return ec.fieldContext_PlayerGame_fantasy_score(ctx, field)
+			case "prediction":
+				return ec.fieldContext_PlayerGame_prediction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PlayerGame", field.Name)
 		},
 	}
 	return fc, nil
@@ -12694,7 +12846,7 @@ func (ec *executionContext) unmarshalInputModelInput(ctx context.Context, obj in
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"model", "gameBreakdowns", "similarPlayerInput"}
+	fieldsInOrder := [...]string{"model", "gameBreakdowns", "similarPlayerInput", "similarTeamInput"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -12722,6 +12874,14 @@ func (ec *executionContext) unmarshalInputModelInput(ctx context.Context, obj in
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("similarPlayerInput"))
 			it.SimilarPlayerInput, err = ec.unmarshalOSimilarPlayerInput2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐSimilarPlayerInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "similarTeamInput":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("similarTeamInput"))
+			it.SimilarTeamInput, err = ec.unmarshalOSimilarTeamInput2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐSimilarTeamInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13005,7 +13165,7 @@ func (ec *executionContext) unmarshalInputSimilarPlayerInput(ctx context.Context
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-			it.Limit, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			it.Limit, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13046,18 +13206,18 @@ func (ec *executionContext) unmarshalInputSimilarTeamInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"numTeams", "statsOfInterest"}
+	fieldsInOrder := [...]string{"limit", "statsOfInterest", "teamPoolFilter", "period", "weight"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "numTeams":
+		case "limit":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("numTeams"))
-			it.NumTeams, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			it.Limit, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13065,7 +13225,31 @@ func (ec *executionContext) unmarshalInputSimilarTeamInput(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statsOfInterest"))
-			it.StatsOfInterest, err = ec.unmarshalOStatFilter2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐStatFilterᚄ(ctx, v)
+			it.StatsOfInterest, err = ec.unmarshalOStat2ᚕgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐStatᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "teamPoolFilter":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamPoolFilter"))
+			it.TeamPoolFilter, err = ec.unmarshalOTeamFilter2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamFilterᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "period":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+			it.Period, err = ec.unmarshalNPeriod2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐPeriod(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "weight":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weight"))
+			it.Weight, err = ec.unmarshalNFloat2float64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14144,6 +14328,13 @@ func (ec *executionContext) _PredictionFragment(ctx context.Context, sel ast.Sel
 		case "derived":
 
 			out.Values[i] = ec._PredictionFragment_derived(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "derivedGames":
+
+			out.Values[i] = ec._PredictionFragment_derivedGames(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -15859,6 +16050,11 @@ func (ec *executionContext) unmarshalNTeamFilter2githubᚗcomᚋzvandehyᚋDataT
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNTeamFilter2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamFilter(ctx context.Context, v interface{}) (*model.TeamFilter, error) {
+	res, err := ec.unmarshalInputTeamFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNTeamGame2githubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamGame(ctx context.Context, sel ast.SelectionSet, v model.TeamGame) graphql.Marshaler {
 	return ec._TeamGame(ctx, sel, &v)
 }
@@ -16439,6 +16635,14 @@ func (ec *executionContext) unmarshalOSimilarPlayerInput2ᚖgithubᚗcomᚋzvand
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOSimilarTeamInput2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐSimilarTeamInput(ctx context.Context, v interface{}) (*model.SimilarTeamInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputSimilarTeamInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOSportsbookOption2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐSportsbookOption(ctx context.Context, v interface{}) (*model.SportsbookOption, error) {
 	if v == nil {
 		return nil, nil
@@ -16590,6 +16794,26 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOTeamFilter2ᚕᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamFilterᚄ(ctx context.Context, v interface{}) ([]*model.TeamFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.TeamFilter, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNTeamFilter2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐTeamFilter(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

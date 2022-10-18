@@ -75,6 +75,7 @@ type PredictionBreakdown {
 type PredictionFragment {
   name: String!
   derived: AverageStats!
+  derivedGames: [PlayerGame!]!
   base: AverageStats!
   pctChange: AverageStats!
   weight: Float!

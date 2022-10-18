@@ -25,7 +25,8 @@ type NBADatabaseClient struct {
 	conn             string
 	Queries          int
 	Client           *mongo.Client
-	PlayerSimilarity model.Snapshots
+	PlayerSimilarity model.PlayerSnapshots
+	TeamSimilarity   model.TeamSnapshots
 	PlayerCache      map[string][]*model.Player
 }
 
@@ -73,7 +74,8 @@ func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
 		nbaClient.PlayerCache[fmt.Sprintf("%v", cache)] = players
 		logrus.Info("Cached players for: ", cache)
 	}
-	nbaClient.PlayerSimilarity = *model.NewSnapshots()
+	nbaClient.PlayerSimilarity = *model.NewPlayerSnapshots()
+	nbaClient.TeamSimilarity = *model.NewTeamSnapshots()
 	logrus.Infof("Connected to DB: '%v/%v'", config.DBSource, nbaClient.Name)
 	return nbaClient, nil
 }
@@ -271,12 +273,12 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input *model.PlayerF
 		games := players[i].GamesCache
 		// sort games from most recent to least recent
 		sort.Slice(games, func(i, j int) bool {
-			a, err := time.Parse("2006-01-02", games[i].Date)
+			a, err := time.Parse(util.DATE_FORMAT, games[i].Date)
 			if err != nil {
 				logrus.Errorf("Error parsing game date %v", games[i].Date)
 				return false
 			}
-			b, err := time.Parse("2006-01-02", games[j].Date)
+			b, err := time.Parse(util.DATE_FORMAT, games[j].Date)
 			if err != nil {
 				logrus.Errorf("Error parsing game date %v", games[j].Date)
 				return false
@@ -298,12 +300,12 @@ func (c *NBADatabaseClient) GetSimilarPlayersFromMatrix(ctx context.Context, toP
 	if err != nil {
 		return nil, fmt.Errorf("error getting earliest season start date: %v", err)
 	}
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := time.Parse(util.DATE_FORMAT, endDate)
 	if err != nil {
 		logrus.Errorf("Error parsing game date %v", endDate)
 		return nil, fmt.Errorf("error parsing game date %v", endDate)
 	}
-	matrixID := fmt.Sprintf("%v-%v-%s", start.Format("2006-01-02"), endDate, input.PlayerPoolFilter.Key())
+	matrixID := c.PlayerSimilarity.Key(start.Format(util.DATE_FORMAT), endDate, *input.PlayerPoolFilter)
 	if _, matrixOK := c.PlayerSimilarity[matrixID]; !matrixOK {
 		seasons := input.PlayerPoolFilter.Seasons
 		var players []*model.Player
@@ -322,13 +324,117 @@ func (c *NBADatabaseClient) GetSimilarPlayersFromMatrix(ctx context.Context, toP
 				break
 			}
 		}
-		fmt.Println(len(players))
 		players = input.PlayerPoolFilter.FilterPlayerStats(players, toPlayer)
-		fmt.Println(len(players))
 		c.PlayerSimilarity.AddSnapshot(*start, end, input.PlayerPoolFilter, players)
 	}
-	similarPlayers := c.PlayerSimilarity.GetSimilarPlayers(toPlayerID, *input.Limit, start.Format("2006-01-02"), endDate, input.PlayerPoolFilter, input.StatsOfInterest)
+	similarPlayers := c.PlayerSimilarity.GetSimilarPlayers(toPlayerID, input.Limit, start.Format(util.DATE_FORMAT), endDate, input.PlayerPoolFilter, input.StatsOfInterest)
 	return similarPlayers, nil
+}
+
+func (c *NBADatabaseClient) GetTeams(ctx context.Context, inputs *[]*model.TeamFilter) ([]*model.Team, error) {
+	startTime := time.Now()
+	c.Queries++
+	teams := []*model.Team{}
+	matchFilter := bson.M{}
+	if inputs != nil {
+		orFilter := bson.A{}
+		for _, input := range *inputs {
+			orFilter = append(orFilter, input.MongoFilter())
+		}
+		matchFilter["$or"] = orFilter
+	}
+	pipeline := mongo.Pipeline{
+		bson.D{primitive.E{Key: "$match", Value: matchFilter}},
+		bson.D{primitive.E{Key: "$lookup", Value: bson.M{
+			"from":         "teamgames",
+			"localField":   "teamID",
+			"foreignField": "teamID",
+			"as":           "gamesCache",
+		}}},
+	}
+	db := c.Collection("teams")
+	cur, err := db.Aggregate(ctx, pipeline)
+	if err != nil {
+		logrus.Errorf("Error getting teams: %v", err)
+		return nil, fmt.Errorf("error querying teams: %v", err)
+	}
+	defer cur.Close(ctx)
+	err = cur.All(ctx, &teams)
+	if err != nil {
+		logrus.Errorf("Error getting teams: %v", err)
+		return nil, fmt.Errorf("error unmarshalling teams: %v", err)
+	}
+	// // set each TeamGame.TeamRef to the player, so that predictions can be calculated using their gamelog history
+	// for i := range players {
+	// 	games := players[i].GamesCache
+	// 	// sort games from most recent to least recent
+	// 	sort.Slice(games, func(i, j int) bool {
+	// 		a, err := time.Parse(util.DATE_FORMAT, games[i].Date)
+	// 		if err != nil {
+	// 			logrus.Errorf("Error parsing game date %v", games[i].Date)
+	// 			return false
+	// 		}
+	// 		b, err := time.Parse(util.DATE_FORMAT, games[j].Date)
+	// 		if err != nil {
+	// 			logrus.Errorf("Error parsing game date %v", games[j].Date)
+	// 			return false
+	// 		}
+	// 		return a.After(b)
+	// 	})
+	// 	players[i].GamesCache = games
+	// 	for j := range players[i].GamesCache {
+	// 		players[i].GamesCache[j].PlayerRef = players[i]
+	// 	}
+	// }
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Teams: %v", len(teams), inputs), startTime))
+	return teams, nil
+
+}
+
+func (c *NBADatabaseClient) GetSimilarTeams(ctx context.Context, toTeamID int, input *model.SimilarTeamInput, endDate string) ([]model.Team, error) {
+	start := util.SEASON_DATE(util.SEASON_START_2022_23)
+	if input.Period != nil && input.Period.StartDate != nil {
+		s, err := time.Parse(util.DATE_FORMAT, *input.Period.StartDate)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing start date: %v", err)
+		}
+		start = s
+	} else {
+		if input.Period != nil && input.Period.Seasons != nil {
+			for _, season := range *input.Period.Seasons {
+				var s time.Time
+				switch season {
+				case model.SEASON_2020_21:
+					s = util.SEASON_DATE(util.SEASON_START_2020_21)
+				case model.SEASON_2021_22:
+					s = util.SEASON_DATE(util.SEASON_START_2021_22)
+				case model.SEASON_2022_23:
+					s = util.SEASON_DATE(util.SEASON_START_2022_23)
+				}
+				if !s.IsZero() && s.Before(start) {
+					start = s
+				}
+			}
+		}
+	}
+	end, err := time.Parse(util.DATE_FORMAT, endDate)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing end date: %v", err)
+	}
+	var teams []*model.Team
+	// TODO: Add teamFilters to Snapshot key
+	matrixID := c.TeamSimilarity.Key(start.Format(util.DATE_FORMAT), endDate)
+	if _, matrixOK := c.TeamSimilarity[matrixID]; !matrixOK {
+		// teams, err := c.GetTeams(ctx, &input.TeamPoolFilter)
+		// TODO: use the teamPoolfilter
+		teams, err = c.GetTeams(ctx, nil)
+		if err != nil {
+			return nil, fmt.Errorf("error getting teams: %v", err)
+		}
+		c.TeamSimilarity.AddSnapshot(start, end, teams)
+	}
+	similarTeams := c.TeamSimilarity.GetSimilarTeams(toTeamID, input.Limit, start.Format(util.DATE_FORMAT), endDate, input.StatsOfInterest)
+	return similarTeams, nil
 }
 
 func (c *NBADatabaseClient) GetPlayersCursor(ctx context.Context, inputs []model.PlayerFilter) (*mongo.Cursor, error) {

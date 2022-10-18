@@ -43,30 +43,36 @@ func (p *Period) MongoFilter() bson.M {
 
 func (p *Period) MatchGame(game *PlayerGame) bool {
 	if p.StartDate != nil {
-		startDate, err := time.Parse("2006-01-02", *p.StartDate)
+		startDate, err := time.Parse(util.DATE_FORMAT, *p.StartDate)
 		if err != nil {
 			logrus.Error("Period.Match: invalid start date")
 			return false
 		}
-		date, err := time.Parse("2006-01-02", game.Date)
+		date, err := time.Parse(util.DATE_FORMAT, game.Date)
 		if err != nil {
-			logrus.Error("Period.Match: invalid game date")
-			return false
+			date, err = time.Parse(util.DATE_TIME_FORMAT, game.Date)
+			if err != nil {
+				logrus.Error("Period.Match: invalid game date")
+				return false
+			}
 		}
 		if date.Before(startDate) {
 			return false
 		}
 	}
 	if p.EndDate != nil {
-		endDate, err := time.Parse("2006-01-02", *p.EndDate)
+		endDate, err := time.Parse(util.DATE_FORMAT, *p.EndDate)
 		if err != nil {
 			logrus.Error("Period.Match: invalid end date")
 			return false
 		}
-		date, err := time.Parse("2006-01-02", game.Date)
+		date, err := time.Parse(util.DATE_FORMAT, game.Date)
 		if err != nil {
-			logrus.Error("Period.Match: invalid game date")
-			return false
+			date, err = time.Parse(util.DATE_TIME_FORMAT, game.Date)
+			if err != nil {
+				logrus.Error("Period.Match: invalid game date")
+				return false
+			}
 		}
 		if date.After(endDate) {
 			return false
@@ -88,13 +94,16 @@ func (p *Period) MatchGame(game *PlayerGame) bool {
 }
 
 func (p *Period) MatchProjection(projection *Projection) bool {
-	date, err := time.Parse("2006-01-02", projection.Date)
+	date, err := time.Parse(util.DATE_FORMAT, projection.Date)
 	if err != nil {
-		logrus.Error("Period.Match: invalid projection date")
-		return false
+		date, err = time.Parse(util.DATE_TIME_FORMAT, projection.Date)
+		if err != nil {
+			logrus.Error("Period.Match: invalid game date")
+			return false
+		}
 	}
 	if p.StartDate != nil {
-		startDate, err := time.Parse("2006-01-02", *p.StartDate)
+		startDate, err := time.Parse(util.DATE_FORMAT, *p.StartDate)
 		if err != nil {
 			logrus.Error("Period.Match: invalid start date")
 			return false
@@ -104,7 +113,7 @@ func (p *Period) MatchProjection(projection *Projection) bool {
 		}
 	}
 	if p.EndDate != nil {
-		endDate, err := time.Parse("2006-01-02", *p.EndDate)
+		endDate, err := time.Parse(util.DATE_FORMAT, *p.EndDate)
 		if err != nil {
 			logrus.Error("Period.Match: invalid end date")
 			return false

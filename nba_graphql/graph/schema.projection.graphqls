@@ -11,6 +11,7 @@ input ModelInput {
   model: String
   gameBreakdowns: [GameBreakdownInput!]
   similarPlayerInput: SimilarPlayerInput
+  similarTeamInput: SimilarTeamInput
 }
 
 input GameBreakdownInput {
@@ -20,15 +21,18 @@ input GameBreakdownInput {
 }
 
 input SimilarPlayerInput {
-  limit: Int
+  limit: Int!
   statsOfInterest: [Stat!]
-  playerPoolFilter: PlayerFilter #TODO: be able to filter based on "this" player's position
+  playerPoolFilter: PlayerFilter
   weight: Float!
 }
 
 input SimilarTeamInput {
-  numTeams: Int
-  statsOfInterest: [StatFilter!]
+  limit: Int!
+  statsOfInterest: [Stat!]
+  teamPoolFilter: [TeamFilter!]
+  period: Period!
+  weight: Float!
 }
 
 type Prediction {
@@ -36,10 +40,6 @@ type Prediction {
   overUnderPrediction: Output
   confidence: Float
   estimation: Float
-  # recencyFragments: [PredictionFragment]
-  # vsOpponent: PredictionFragment
-  # vsSimilarTeams: PredictionFragment
-  # similarPlayersVsOpponent: PredictionFragment
 }
 enum Output {
   OVER

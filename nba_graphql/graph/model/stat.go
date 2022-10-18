@@ -47,6 +47,13 @@ const (
 	Height                       Stat = "height"
 	Weight                       Stat = "weight"
 	DoubleDouble                 Stat = "double_double"
+
+	//TeamStats
+	GamesWon    Stat = "games_won"
+	GamesLost   Stat = "games_lost"
+	OppPoints   Stat = "opponent_points"
+	OppAssists  Stat = "opponent_assists"
+	OppRebounds Stat = "opponent_rebounds"
 )
 
 func NewStat(stat string) Stat {
@@ -197,8 +204,41 @@ func NewStat(stat string) Stat {
 		fallthrough
 	case "doubledouble":
 		return DoubleDouble
+	// Team Stats
+	case "games_won":
+		fallthrough
+	case "gameswon":
+		return GamesWon
+	case "games_lost":
+		fallthrough
+	case "gameslost":
+		return GamesLost
+	case "opponent_points":
+		fallthrough
+	case "opponentpoints":
+		fallthrough
+	case "opppoints":
+		fallthrough
+	case "opp_points":
+		return OppPoints
+	case "opponent_assists":
+		fallthrough
+	case "opponentassists":
+		fallthrough
+	case "oppassists":
+		fallthrough
+	case "opp_assists":
+		return OppAssists
+	case "opponent_rebounds":
+		fallthrough
+	case "opponentrebounds":
+		fallthrough
+	case "opprebounds":
+		fallthrough
+	case "opp_rebounds":
+		return OppRebounds
 	default:
-		logrus.Errorf("Unknown stat: '%s'", stat)
+		logrus.Errorf("Unknown new stat: '%s'", stat)
 		return ""
 	}
 }
@@ -361,77 +401,29 @@ func (s Stat) MarshalGQL(w io.Writer) {
 		fallthrough
 	case "doubledouble":
 		io.WriteString(w, `"double_double"`)
+	// Team Stats
+	case "games_won":
+		fallthrough
+	case "gameswon":
+		io.WriteString(w, `"games_won"`)
+	case "games_lost":
+		fallthrough
+	case "gameslost":
+		io.WriteString(w, `"games_lost"`)
+	case "opponent_points":
+		fallthrough
+	case "opponentpoints":
+		io.WriteString(w, `"opponent_points"`)
+	case "opponent_assists":
+		fallthrough
+	case "opponentassists":
+		io.WriteString(w, `"opponent_assists"`)
+	case "opponent_rebounds":
+		fallthrough
+	case "opponentrebounds":
+		io.WriteString(w, `"opponent_rebounds"`)
 	default:
 		logrus.Errorf("Stat.MarshalGQL: unknown Stat: '%s'", s)
 		io.WriteString(w, string(s))
-	}
-}
-
-func PlayerAverageStats() []Stat {
-	return []Stat{
-		Assists,
-		Blocks,
-		DefensiveRebounds,
-		FieldGoalsAttempted,
-		FieldGoalsMade,
-		FreeThrowsAttempted,
-		FreeThrowsMade,
-		GamesPlayed,
-		Height,
-		Minutes,
-		OffensiveRebounds,
-		PersonalFoulsDrawn,
-		PersonalFouls,
-		Points,
-		Rebounds,
-		Steals,
-		ThreePointersAttempted,
-		ThreePointersMade,
-		Turnovers,
-		Weight,
-		FantasyScore,
-		PointsRebounds,
-		PointsAssists,
-		PointsReboundsAssists,
-		ReboundsAssists,
-		BlocksSteals,
-	}
-}
-
-func AllStats() []Stat {
-	return []Stat{
-		Points,
-		Assists,
-		Rebounds,
-		Steals,
-		Blocks,
-		ThreePointersMade,
-		ThreePointersAttempted,
-		ThreePointPercentage,
-		FreeThrowsMade,
-		FreeThrowsAttempted,
-		FreeThrowsPercentage,
-		FieldGoalsMade,
-		FieldGoalsAttempted,
-		FieldGoalPercentage,
-		EffectiveFieldGoalPercentage,
-		TrueShootingPercentage,
-		Minutes,
-		OffensiveRebounds,
-		DefensiveRebounds,
-		AssistPercentage,
-		OffensiveReboundPercentage,
-		DefensiveReboundPercentage,
-		Usage,
-		Turnovers,
-		GamesPlayed,
-		PersonalFouls,
-		PersonalFoulsDrawn,
-		PointsReboundsAssists,
-		PointsRebounds,
-		PointsAssists,
-		ReboundsAssists,
-		BlocksSteals,
-		FantasyScore,
 	}
 }

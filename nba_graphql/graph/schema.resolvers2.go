@@ -58,24 +58,24 @@ package graph
 // 		return games, err
 // 	}
 // 	sort.SliceStable(games, func(i, j int) bool {
-// 		a, err := time.Parse("2006-01-02", games[i].Date)
+// 		a, err := time.Parse(util.DATE_FORMAT, games[i].Date)
 // 		if err != nil {
 // 			return false
 // 		}
-// 		b, err := time.Parse("2006-01-02", games[j].Date)
+// 		b, err := time.Parse(util.DATE_FORMAT, games[j].Date)
 // 		if err != nil {
 // 			return false
 // 		}
 // 		return a.After(b)
 // 	})
 // 	if input.StartDate != nil {
-// 		startDate, err := time.Parse("2006-01-02", *input.StartDate)
+// 		startDate, err := time.Parse(util.DATE_FORMAT, *input.StartDate)
 // 		if err != nil {
 // 			return nil, err
 // 		}
 // 		var gamesToKeep []*model.PlayerGame
 // 		for _, game := range games {
-// 			gameDate, err := time.Parse("2006-01-02", game.Date)
+// 			gameDate, err := time.Parse(util.DATE_FORMAT, game.Date)
 // 			if err != nil {
 // 				return nil, err
 // 			}
@@ -86,13 +86,13 @@ package graph
 // 		games = gamesToKeep
 // 	}
 // 	if input.EndDate != nil {
-// 		endDate, err := time.Parse("2006-01-02", *input.EndDate)
+// 		endDate, err := time.Parse(util.DATE_FORMAT, *input.EndDate)
 // 		if err != nil {
 // 			return nil, err
 // 		}
 // 		var gamesToKeep []*model.PlayerGame
 // 		for _, game := range games {
-// 			gameDate, err := time.Parse("2006-01-02", game.Date)
+// 			gameDate, err := time.Parse(util.DATE_FORMAT, game.Date)
 // 			if err != nil {
 // 				return nil, err
 // 			}
@@ -131,7 +131,7 @@ package graph
 // 	// }
 
 // 	if input.StartDate == nil && input.EndDate == nil {
-// 		// today := time.Now().Format("2006-01-02")
+// 		// today := time.Now().Format(util.DATE_FORMAT)
 // 		// input.StartDate = &today
 // 	}
 // 	input.PlayerName = &obj.Name
@@ -914,7 +914,7 @@ package graph
 // 	// }
 
 // 	if input.StartDate == nil && input.EndDate == nil {
-// 		today := time.Now().Format("2006-01-02")
+// 		today := time.Now().Format(util.DATE_FORMAT)
 // 		input.StartDate = &today
 // 	}
 

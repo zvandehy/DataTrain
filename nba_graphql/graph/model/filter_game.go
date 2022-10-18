@@ -83,13 +83,13 @@ func (gameFilter *GameFilter) MatchPlayerGame(g *PlayerGame) bool {
 			return false
 		}
 	}
-	date, err := time.Parse("2006-01-02", g.Date)
+	date, err := time.Parse(util.DATE_FORMAT, g.Date)
 	if err != nil {
 		logrus.Error("Error parsing game date: ", err)
 		return false
 	}
 	if gameFilter.StartDate != nil {
-		start, err := time.Parse("2006-01-02", *gameFilter.StartDate)
+		start, err := time.Parse(util.DATE_FORMAT, *gameFilter.StartDate)
 		if err != nil {
 			logrus.Error("Error parsing filter startDate: ", err)
 			return false
@@ -99,7 +99,7 @@ func (gameFilter *GameFilter) MatchPlayerGame(g *PlayerGame) bool {
 		}
 	}
 	if gameFilter.EndDate != nil {
-		end, err := time.Parse("2006-01-02", *gameFilter.EndDate)
+		end, err := time.Parse(util.DATE_FORMAT, *gameFilter.EndDate)
 		if err != nil {
 			logrus.Error("Error parsing filter endDate: ", err)
 			return false

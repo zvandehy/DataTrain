@@ -7,45 +7,29 @@ import (
 
 	"github.com/sirupsen/logrus"
 	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
+	"github.com/zvandehy/DataTrain/nba_graphql/util"
 )
 
-// Snapshots in time holding the similarity matrix for each date range.
+// PlayerSnapshots in time holding the similarity matrix for each date range.
 // The key is "<startDate>-<endDate>" and value is a similarity Matrix.
 // The value is a matrix that holds the average stats of players and comparisons between them.
-type Snapshots map[string]PlayerSimilarityMatrix
+type PlayerSnapshots map[string]PlayerSimilarityMatrix
 
-func NewSnapshots() *Snapshots {
-	s := make(Snapshots)
+func NewPlayerSnapshots() *PlayerSnapshots {
+	s := make(PlayerSnapshots)
 	return &s
 }
 
-// PlayerSimilarityMatrix holds the average stats of players and comparisons between them over a date range.
-// startDate and endDate require a format of "2006-01-02".
-// stats is a list of stats to compare players on.
-// players is a list of Player structs with basic player information and all of their games that will be deliminated by startDate and endDate.
-// func (s *Snapshots) AddSnapshots(startDate, endDate string, stats []string, players []*Player) {
-// 	// for each day in the range, parse the date string and create a snapshot
-// 	start, err := time.Parse("2006-01-02", startDate)
-// 	if err != nil {
-// 		logrus.Errorf("error parsing start date: %v", err)
-// 	}
-// 	end, err := time.Parse("2006-01-02", endDate)
-// 	if err != nil {
-// 		logrus.Errorf("error parsing end date: %v", err)
-// 	}
+func (s *PlayerSnapshots) Key(startDate, endDate string, playerPoolFilter PlayerFilter) string {
+	return fmt.Sprintf("%s-%s-%s", startDate, endDate, playerPoolFilter.Key())
+}
 
-// 	for start.Before(end) {
-// 		s.AddSnapshot(start, end, stats, players)
-// 		start = start.AddDate(0, 0, 1)
-// 	}
-// }
-
-func (s *Snapshots) AddSnapshot(startDate, endDate time.Time, playerFilter *PlayerFilter, players []*Player) {
+func (s *PlayerSnapshots) AddSnapshot(startDate, endDate time.Time, playerFilter *PlayerFilter, players []*Player) {
 	averages := []PlayerAverage{}
 	for _, player := range players {
 		var games []*PlayerGame
 		for _, game := range player.GamesCache {
-			date, err := time.Parse("2006-01-02", game.Date)
+			date, err := time.Parse(util.DATE_FORMAT, game.Date)
 			if err != nil {
 				logrus.Errorf("error parsing game date: %v", err)
 			}
@@ -57,11 +41,11 @@ func (s *Snapshots) AddSnapshot(startDate, endDate time.Time, playerFilter *Play
 			averages = append(averages, NewPlayerAverage(games, player))
 		}
 	}
-	(*s)[fmt.Sprintf("%s-%s-%s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02"), playerFilter.Key())] = *NewPlayerSimilarityMatrix(averages)
+	(*s)[fmt.Sprintf("%s-%s-%s", startDate.Format(util.DATE_FORMAT), endDate.Format(util.DATE_FORMAT), playerFilter.Key())] = *NewPlayerSimilarityMatrix(averages)
 }
 
-func (s *Snapshots) GetSimilarPlayers(playerID, limit int, startDate, endDate string, playerFilter *PlayerFilter, statsOfInterest []Stat) []Player {
-	key := fmt.Sprintf("%s-%s-%s", startDate, endDate, playerFilter.Key())
+func (s *PlayerSnapshots) GetSimilarPlayers(playerID, limit int, startDate, endDate string, playerFilter *PlayerFilter, statsOfInterest []Stat) []Player {
+	key := s.Key(startDate, endDate, *playerFilter)
 	if snapshot, ok := (*s)[key]; ok {
 		similarPlayers, err := snapshot.GetNearestPlayers(playerID, limit, statsOfInterest)
 		if err != nil {
@@ -142,7 +126,7 @@ func (m *PlayerSimilarityMatrix) AddNormalizedPlayers(players []PlayerAverage) {
 	for i, input := range statsOfInterest {
 		stat := NewStat(string(input))
 		if stat == "" {
-			logrus.Warning("Stat of interest not found: ", stat)
+			logrus.Warnf("Stat of interest not found: %v", stat)
 			continue
 		}
 		soi := NewStatOfInterest(stat)

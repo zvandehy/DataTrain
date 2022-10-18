@@ -44,7 +44,6 @@ func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
 		case PositionFG:
 			fallthrough
 		case PositionGF:
-			fmt.Println("F-G")
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"G-F", "F-G"}}}
 		case PositionCF:
 			fallthrough
@@ -297,7 +296,7 @@ func (f PlayerFilter) GetEarliestSeasonStartDate() (*time.Time, error) {
 			startDate = util.SEASON_START_2022_23
 		}
 	}
-	start, err := time.Parse("2006-01-02", startDate)
+	start, err := time.Parse(util.DATE_FORMAT, startDate)
 	if err != nil {
 		logrus.Errorf("Error parsing game date %v", startDate)
 		return nil, fmt.Errorf("error parsing game date %v", startDate)

@@ -152,7 +152,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 	startDate := &[]time.Time{util.SEASON_DATE(util.SEASON_START_2022_23)}[0]
 	for _, breakdown := range input.GameBreakdowns {
 		if breakdown.Filter != nil && breakdown.Filter.StartDate != nil {
-			start, err := time.Parse("2006-01-02", *breakdown.Filter.StartDate)
+			start, err := time.Parse(util.DATE_FORMAT, *breakdown.Filter.StartDate)
 			if err != nil {
 				logrus.Errorf("Error parsing start date %v", *breakdown.Filter.StartDate)
 				return nil, err
@@ -171,7 +171,6 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 		}
 	}
 	if input.SimilarPlayerInput != nil {
-		// TODO: Get earliest season for gamebreakdowns... separately? (currently crashes if no similar player input provided)
 		var err error
 		startDate, err = input.SimilarPlayerInput.PlayerPoolFilter.GetEarliestSeasonStartDate()
 		if err != nil {
@@ -179,11 +178,12 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 			return nil, err
 		}
 	}
-	startDateStr := startDate.Format("2006-01-02")
+	startDateStr := startDate.Format(util.DATE_FORMAT)
 
 	totalPrediction := model.AverageStats{}
 	gameBreakdownFragments := []*model.PredictionFragment{}
 	similarPlayerFragments := []*model.PredictionFragment{}
+	similarTeamFragments := []*model.PredictionFragment{}
 
 	// Player GameLog Breakdowns
 	// Base (Filter, Games, Avg) for all of this player's games from the start of the range to the game date
@@ -233,11 +233,12 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 		} else {
 			derived := pAvg.AverageStats()
 			frag := &model.PredictionFragment{
-				Name:      input.GameBreakdowns[i].Name,
-				Derived:   derived,
-				Base:      playerBase,
-				PctChange: playerBase.PercentChange(derived),
-				Weight:    input.GameBreakdowns[i].Weight,
+				Name:         input.GameBreakdowns[i].Name,
+				Derived:      derived,
+				DerivedGames: games,
+				Base:         playerBase,
+				PctChange:    playerBase.PercentChange(derived),
+				Weight:       input.GameBreakdowns[i].Weight,
 			}
 			for _, proposition := range propositions {
 				analysis := model.PropositionSummary{}
@@ -261,6 +262,100 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 				frag.Propositions = append(frag.Propositions, &prop)
 			}
 			gameBreakdownFragments = append(gameBreakdownFragments, frag)
+		}
+	}
+
+	countSimilarTeamsWithGames := 0
+	// Similar Team Breakdown
+	if input.SimilarTeamInput != nil {
+		// only get games before the current game (or the inputted end date if that is earlier)
+		if input.SimilarTeamInput.Period.EndDate == nil {
+			input.SimilarTeamInput.Period.EndDate = &obj.Date
+		} else {
+			end, err := time.Parse(util.DATE_FORMAT, *input.SimilarTeamInput.Period.EndDate)
+			if err != nil {
+				logrus.Errorf("Error parsing end date: %v", err)
+				input.SimilarTeamInput.Period.EndDate = &obj.Date
+			}
+			date, err := time.Parse(util.DATE_FORMAT, obj.Date)
+			if err != nil {
+				logrus.Errorf("Error parsing game date: %v", err)
+				return nil, err
+			}
+			if end.After(date) {
+				input.SimilarTeamInput.Period.EndDate = &obj.Date
+			}
+		}
+		similarTeams, err := r.Db.GetSimilarTeams(ctx, obj.OpponentID, input.SimilarTeamInput, obj.Date)
+		if err != nil {
+			logrus.Errorf("Error getting similar teams: %v", err)
+			return nil, err
+		}
+		for _, team := range similarTeams {
+			games := []*model.PlayerGame{}
+			for _, game := range obj.PlayerRef.GamesCache {
+				if input.SimilarTeamInput.Period.MatchGame(game) && game.OpponentID == team.TeamID {
+					games = append(games, game)
+				}
+			}
+			// Don't calculate averages if there are no games vs team
+			if len(games) > 0 {
+				countSimilarTeamsWithGames++
+				// player average for the games vs similar team
+				pAvg := model.NewPlayerAverage(games, obj.PlayerRef)
+				derived := pAvg.AverageStats()
+				frag := &model.PredictionFragment{
+					Name:         fmt.Sprintf("vs %v", team.Abbreviation),
+					Derived:      derived,
+					DerivedGames: games,
+					Base:         playerBase,
+					PctChange:    playerBase.PercentChange(derived),
+					Weight:       input.SimilarTeamInput.Weight,
+				}
+				for _, proposition := range propositions {
+					analysis := model.PropositionSummary{}
+					for _, game := range games {
+						propScore := game.Score(proposition.Type)
+						if propScore > proposition.Target {
+							analysis.NumOver++
+						}
+						if propScore < proposition.Target {
+							analysis.NumUnder++
+						}
+						if propScore == proposition.Target {
+							analysis.NumPush++
+						}
+					}
+					analysis.PctOver = float64(analysis.NumOver) / float64(len(games))
+					analysis.PctUnder = float64(analysis.NumUnder) / float64(len(games))
+					analysis.PctPush = float64(analysis.NumPush) / float64(len(games))
+					prop := *proposition
+					prop.Analysis = &analysis
+					frag.Propositions = append(frag.Propositions, &prop)
+				}
+				similarTeamFragments = append(similarTeamFragments, frag)
+			} else {
+				similarTeamFragments = append(similarTeamFragments, &model.PredictionFragment{
+					Name:         fmt.Sprintf("vs %v (None)", team.Abbreviation),
+					Derived:      &model.AverageStats{},
+					DerivedGames: []*model.PlayerGame{},
+					Base:         playerBase,
+					PctChange:    &model.AverageStats{},
+					Weight:       0,
+				})
+			}
+		}
+		// if there are no games vs similar teams, don't use the similar team input and distribute that weight across the other inputs
+		if countSimilarTeamsWithGames == 0 {
+			distributeExtraWeight += input.SimilarTeamInput.Weight
+		} else {
+			// distribute similar team weights evenly between all similar team breakdowns
+			similarTeamWeights := input.SimilarTeamInput.Weight / float64(countSimilarTeamsWithGames)
+			for i := range similarTeamFragments {
+				if similarTeamFragments[i].Weight > 0 {
+					similarTeamFragments[i].Weight = math.RoundFloat(similarTeamWeights, 2)
+				}
+			}
 		}
 	}
 
@@ -303,25 +398,24 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 				pAvg := model.NewPlayerAverage(matchupGames, &player)
 				derived := pAvg.AverageStats()
 				similarPlayerFragments = append(similarPlayerFragments, &model.PredictionFragment{
-					Name:      fmt.Sprintf("%v (%s) vs Opp", player.Name, player.Position),
-					Derived:   derived,
-					Base:      baseAvg,
-					PctChange: baseAvg.PercentChange(derived),
-					Weight:    input.SimilarPlayerInput.Weight,
+					Name:         fmt.Sprintf("%v (%s) vs Opp", player.Name, player.Position),
+					Derived:      derived,
+					DerivedGames: matchupGames,
+					Base:         baseAvg,
+					PctChange:    baseAvg.PercentChange(derived),
+					Weight:       input.SimilarPlayerInput.Weight,
 				})
 			} else {
 				similarPlayerFragments = append(similarPlayerFragments, &model.PredictionFragment{
-					Name:      fmt.Sprintf("%v (%s) vs Opp (None)", player.Name, player.Position),
-					Derived:   &model.AverageStats{},
-					Base:      baseAvg,
-					PctChange: &model.AverageStats{},
-					Weight:    0,
+					Name:         fmt.Sprintf("%v (%s) vs Opp (None)", player.Name, player.Position),
+					Derived:      &model.AverageStats{},
+					DerivedGames: matchupGames,
+					Base:         baseAvg,
+					PctChange:    &model.AverageStats{},
+					Weight:       0,
 				})
 			}
 		}
-	}
-
-	if input.SimilarPlayerInput != nil {
 		// if there are no similar players with games vs the opponent, don't use the similar player input and distribute that weight across the other inputs
 		if countSimilarPlayersWithGamesVsOpp == 0 {
 			distributeExtraWeight += input.SimilarPlayerInput.Weight
@@ -336,11 +430,28 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 		}
 	}
 
-	//distribute extra weight evenly among game breakdowns
-	// TODO: what about similar teams?
+	//distribute extra weight evenly among all valid breakdowns
 	if distributeExtraWeight > 0 {
+		distributeBetween := len(gameBreakdownFragments)
+		if countSimilarTeamsWithGames > 0 {
+			distributeBetween += countSimilarTeamsWithGames
+		}
+		if len(similarPlayerFragments) > 0 {
+			distributeBetween += countSimilarPlayersWithGamesVsOpp
+		}
+		extraWeight := math.RoundFloat(distributeExtraWeight/float64(distributeBetween), 2)
 		for i := range gameBreakdownFragments {
-			gameBreakdownFragments[i].Weight += math.RoundFloat(distributeExtraWeight/float64(len(gameBreakdownFragments)), 2)
+			gameBreakdownFragments[i].Weight += extraWeight
+		}
+		for i := range similarTeamFragments {
+			if similarTeamFragments[i].Weight > 0 {
+				similarTeamFragments[i].Weight += extraWeight
+			}
+		}
+		for i := range similarPlayerFragments {
+			if similarPlayerFragments[i].Weight > 0 {
+				similarPlayerFragments[i].Weight += extraWeight
+			}
 		}
 	}
 
@@ -372,11 +483,64 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 		totalPrediction.DoubleDouble += fragment.Derived.DoubleDouble * (fragment.Weight / 100.0)
 	}
 
+	for _, fragment := range similarTeamFragments {
+		totalPrediction.Assists += fragment.Derived.Assists * (fragment.Weight / 100.0)
+		totalPrediction.Blocks += fragment.Derived.Blocks * (fragment.Weight / 100.0)
+		totalPrediction.DefensiveRebounds += fragment.Derived.DefensiveRebounds * (fragment.Weight / 100.0)
+		totalPrediction.FieldGoalsAttempted += fragment.Derived.FieldGoalsAttempted * (fragment.Weight / 100.0)
+		totalPrediction.FieldGoalsMade += fragment.Derived.FieldGoalsMade * (fragment.Weight / 100.0)
+		totalPrediction.FreeThrowsAttempted += fragment.Derived.FreeThrowsAttempted * (fragment.Weight / 100.0)
+		totalPrediction.FreeThrowsMade += fragment.Derived.FreeThrowsMade * (fragment.Weight / 100.0)
+		totalPrediction.OffensiveRebounds += fragment.Derived.OffensiveRebounds * (fragment.Weight / 100.0)
+		totalPrediction.PersonalFouls += fragment.Derived.PersonalFouls * (fragment.Weight / 100.0)
+		totalPrediction.PersonalFoulsDrawn += fragment.Derived.PersonalFoulsDrawn * (fragment.Weight / 100.0)
+		totalPrediction.Points += fragment.Derived.Points * (fragment.Weight / 100.0)
+		totalPrediction.Rebounds += fragment.Derived.Rebounds * (fragment.Weight / 100.0)
+		totalPrediction.Steals += fragment.Derived.Steals * (fragment.Weight / 100.0)
+		totalPrediction.ThreePointersAttempted += fragment.Derived.ThreePointersAttempted * (fragment.Weight / 100.0)
+		totalPrediction.ThreePointersMade += fragment.Derived.ThreePointersMade * (fragment.Weight / 100.0)
+		totalPrediction.Turnovers += fragment.Derived.Turnovers * (fragment.Weight / 100.0)
+		totalPrediction.Minutes += fragment.Derived.Minutes * (fragment.Weight / 100.0)
+		totalPrediction.FantasyScore += fragment.Derived.FantasyScore * (fragment.Weight / 100.0)
+		totalPrediction.PointsAssists += fragment.Derived.PointsAssists * (fragment.Weight / 100.0)
+		totalPrediction.PointsRebounds += fragment.Derived.PointsRebounds * (fragment.Weight / 100.0)
+		totalPrediction.PointsReboundsAssists += fragment.Derived.PointsReboundsAssists * (fragment.Weight / 100.0)
+		totalPrediction.ReboundsAssists += fragment.Derived.ReboundsAssists * (fragment.Weight / 100.0)
+		totalPrediction.BlocksSteals += fragment.Derived.BlocksSteals * (fragment.Weight / 100.0)
+		totalPrediction.DoubleDouble += fragment.Derived.DoubleDouble * (fragment.Weight / 100.0)
+	}
+
 	if input.SimilarPlayerInput != nil {
 		wouldBeEstimate := &model.AverageStats{}
-		wouldBeWeightAdded := input.SimilarPlayerInput.Weight / float64(len(gameBreakdownFragments))
+		wouldBeWeightAdded := input.SimilarPlayerInput.Weight / float64(len(gameBreakdownFragments)+countSimilarTeamsWithGames)
 		//TODO: what about similar teams?
 		for _, fragment := range gameBreakdownFragments {
+			wouldBeEstimate.Assists += fragment.Base.Assists * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.Blocks += fragment.Base.Blocks * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.DefensiveRebounds += fragment.Base.DefensiveRebounds * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.FieldGoalsAttempted += fragment.Base.FieldGoalsAttempted * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.FieldGoalsMade += fragment.Base.FieldGoalsMade * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.FreeThrowsAttempted += fragment.Base.FreeThrowsAttempted * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.FreeThrowsMade += fragment.Base.FreeThrowsMade * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.OffensiveRebounds += fragment.Base.OffensiveRebounds * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.PersonalFouls += fragment.Base.PersonalFouls * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.PersonalFoulsDrawn += fragment.Base.PersonalFoulsDrawn * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.Points += fragment.Base.Points * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.Rebounds += fragment.Base.Rebounds * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.Steals += fragment.Base.Steals * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.ThreePointersAttempted += fragment.Base.ThreePointersAttempted * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.ThreePointersMade += fragment.Base.ThreePointersMade * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.Turnovers += fragment.Base.Turnovers * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.Minutes += fragment.Base.Minutes * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.FantasyScore += fragment.Base.FantasyScore * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.PointsAssists += fragment.Base.PointsAssists * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.PointsRebounds += fragment.Base.PointsRebounds * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.PointsReboundsAssists += fragment.Base.PointsReboundsAssists * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.ReboundsAssists += fragment.Base.ReboundsAssists * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.BlocksSteals += fragment.Base.BlocksSteals * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+			wouldBeEstimate.DoubleDouble += fragment.Base.DoubleDouble * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
+		}
+		for _, fragment := range similarTeamFragments {
 			wouldBeEstimate.Assists += fragment.Base.Assists * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
 			wouldBeEstimate.Blocks += fragment.Base.Blocks * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
 			wouldBeEstimate.DefensiveRebounds += fragment.Base.DefensiveRebounds * ((fragment.Weight + wouldBeWeightAdded) / 100.0)
@@ -457,6 +621,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 
 	fragments := []*model.PredictionFragment{}
 	fragments = append(fragments, gameBreakdownFragments...)
+	fragments = append(fragments, similarTeamFragments...)
 	fragments = append(fragments, similarPlayerFragments...)
 	breakdown := &model.PredictionBreakdown{
 		WeightedTotal: &totalPrediction,
@@ -470,7 +635,7 @@ func (r *propositionResolver) LastModified(ctx context.Context, obj *model.Propo
 	if obj.LastModified == nil {
 		return "", nil
 	}
-	return obj.LastModified.Format("2006-01-02"), nil
+	return obj.LastModified.Format(util.DATE_FORMAT), nil
 }
 
 // Player returns generated.PlayerResolver implementation.

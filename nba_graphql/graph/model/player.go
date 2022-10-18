@@ -326,7 +326,6 @@ func EuclideanDistance(diff PlayerDiff, statsOfInterest []Stat) float64 {
 		}
 	}
 	return math.Sqrt(sum)
-
 }
 
 func (p *PlayerAverage) Score(stat Stat) float64 {
@@ -383,9 +382,61 @@ func (p *PlayerAverage) Score(stat Stat) float64 {
 		return float64(p.Height)
 	case GamesPlayed:
 		return float64(p.GamesPlayed)
-	default:
-		logrus.Warnf("Unknown stat: '%s'", stat)
+	case DoubleDouble:
+		countDouble := 0
+		if p.Points >= 10 {
+			countDouble++
+		}
+		if p.Rebounds >= 10 {
+			countDouble++
+		}
+		if p.Assists >= 10 {
+			countDouble++
+		}
+		if p.Steals >= 10 {
+			countDouble++
+		}
+		if p.Blocks >= 10 {
+			countDouble++
+		}
+		if countDouble >= 2 {
+			return 1
+		}
 		return 0
+	default:
+		logrus.Warnf("Unknown player stat: '%s'", stat)
+		return 0
+	}
+}
+
+func PlayerAverageStats() []Stat {
+	return []Stat{
+		Assists,
+		Blocks,
+		DefensiveRebounds,
+		FieldGoalsAttempted,
+		FieldGoalsMade,
+		FreeThrowsAttempted,
+		FreeThrowsMade,
+		GamesPlayed,
+		Height,
+		Minutes,
+		OffensiveRebounds,
+		PersonalFoulsDrawn,
+		PersonalFouls,
+		Points,
+		Rebounds,
+		Steals,
+		ThreePointersAttempted,
+		ThreePointersMade,
+		Turnovers,
+		Weight,
+		FantasyScore,
+		PointsRebounds,
+		PointsAssists,
+		PointsReboundsAssists,
+		ReboundsAssists,
+		BlocksSteals,
 	}
 }
 
@@ -451,23 +502,4 @@ func (startValue *AverageStats) PercentChange(finalValue *AverageStats) *Average
 		PointsReboundsAssists:  similarity.RoundFloat(((finalValue.PointsReboundsAssists-startValue.PointsReboundsAssists)/startValue.PointsReboundsAssists)*100, 2),
 		DoubleDouble:           similarity.RoundFloat(((finalValue.DoubleDouble-startValue.DoubleDouble)/startValue.DoubleDouble)*100, 2),
 	}
-}
-
-type TeamAverage struct {
-	WinsAndLosses      []string `json:"wins_and_losses" bson:"wins_and_losses"`
-	GamesWon           float64  `json:"games_won" bson:"games_won"`
-	GamesLost          float64  `json:"games_lost" bson:"games_lost"`
-	Points             float64  `json:"points" bson:"points"`
-	OppPoints          float64  `json:"opponent_points" bson:"opponent_points"`
-	Assists            float64  `json:"assists" bson:"assists"`
-	OppAssists         float64  `json:"opponent_assists" bson:"opponent_assists"`
-	Rebounds           float64  `json:"rebounds" bson:"rebounds"`
-	OppRebounds        float64  `json:"opponent_rebounds" bson:"opponent_rebounds"`
-	Steals             float64  `json:"steals" bson:"steals"`
-	Blocks             float64  `json:"blocks" bson:"blocks"`
-	Turnovers          float64  `json:"turnovers" bson:"turnovers"`
-	ThreePointersMade  float64  `json:"three_pointers_made" bson:"three_pointers_made"`
-	PersonalFouls      float64  `json:"personal_fouls" bson:"personal_fouls"`
-	PersonalFoulsDrawn float64  `json:"personal_fouls_drawn" bson:"personal_fouls_drawn"`
-	Team               Team     `json:"team" bson:"team"`
 }
