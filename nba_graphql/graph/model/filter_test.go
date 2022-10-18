@@ -124,7 +124,7 @@ func TestPlayerFilter_FilterPlayerStats(t *testing.T) {
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
 			filter := PlayerFilter{StatFilters: &tt.statFilters}
-			got := filter.FilterPlayerStats(players)
+			got := filter.FilterPlayerStats(players, nil)
 			gotIDs := []int{}
 			for _, player := range got {
 				gotIDs = append(gotIDs, player.PlayerID)

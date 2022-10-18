@@ -32,6 +32,8 @@ type Player struct {
 	League     string        `json:"league" bson:"league"`
 }
 
+// TODO: The Stat / PlayerAverage / AverageStats archicecture definitely has some code smells.
+
 func NewPlayerAverage(games []*PlayerGame, player *Player) PlayerAverage {
 	average := PlayerAverage{}
 	average.GamesPlayed = float64(len(games))
@@ -61,6 +63,13 @@ func NewPlayerAverage(games []*PlayerGame, player *Player) PlayerAverage {
 		average.ThreePointersAttempted += float64(game.ThreePointersAttempted)
 		average.ThreePointersMade += float64(game.ThreePointersMade)
 		average.Turnovers += float64(game.Turnovers)
+		average.FantasyScore += float64(game.Score(FantasyScore))
+		average.PointsAssists += float64(game.Score(PointsAssists))
+		average.PointsRebounds += float64(game.Score(PointsRebounds))
+		average.PointsReboundsAssists += float64(game.Score(PointsReboundsAssists))
+		average.ReboundsAssists += float64(game.Score(ReboundsAssists))
+		average.BlocksSteals += float64(game.Score(BlocksSteals))
+		average.DoubleDouble += float64(game.Score(DoubleDouble))
 	}
 
 	average.Assists /= float64(len(games))
@@ -80,6 +89,13 @@ func NewPlayerAverage(games []*PlayerGame, player *Player) PlayerAverage {
 	average.ThreePointersAttempted /= float64(len(games))
 	average.ThreePointersMade /= float64(len(games))
 	average.Turnovers /= float64(len(games))
+	average.FantasyScore /= float64(len(games))
+	average.PointsAssists /= float64(len(games))
+	average.PointsRebounds /= float64(len(games))
+	average.PointsReboundsAssists /= float64(len(games))
+	average.ReboundsAssists /= float64(len(games))
+	average.BlocksSteals /= float64(len(games))
+	average.DoubleDouble /= float64(len(games))
 
 	return average
 }
@@ -122,6 +138,13 @@ type PlayerAverage struct {
 	ThreePointersMade      float64  `json:"three_pointers_made" bson:"three_pointers_made"`
 	Turnovers              float64  `json:"turnovers" bson:"turnovers"`
 	Weight                 float64  `json:"weight" bson:"weight"`
+	FantasyScore           float64  `json:"fantasy_score"`
+	PointsAssists          float64  `json:"points_assists"`
+	PointsRebounds         float64  `json:"points_rebounds"`
+	PointsReboundsAssists  float64  `json:"points_rebounds_assists"`
+	ReboundsAssists        float64  `json:"rebounds_assists"`
+	BlocksSteals           float64  `json:"blocks_steals"`
+	DoubleDouble           float64  `json:"double_double"`
 }
 
 func (p *PlayerAverage) Normalize(stats ...StatOfInterest) PlayerAverage {
@@ -168,6 +191,20 @@ func (p *PlayerAverage) Normalize(stats ...StatOfInterest) PlayerAverage {
 			normalized.Height = stat.ZScore(*p)
 		case Weight:
 			normalized.Weight = stat.ZScore(*p)
+		case FantasyScore:
+			normalized.FantasyScore = stat.ZScore(*p)
+		case PointsAssists:
+			normalized.PointsAssists = stat.ZScore(*p)
+		case PointsRebounds:
+			normalized.PointsRebounds = stat.ZScore(*p)
+		case PointsReboundsAssists:
+			normalized.PointsReboundsAssists = stat.ZScore(*p)
+		case ReboundsAssists:
+			normalized.ReboundsAssists = stat.ZScore(*p)
+		case BlocksSteals:
+			normalized.BlocksSteals = stat.ZScore(*p)
+		case DoubleDouble:
+			normalized.DoubleDouble = stat.ZScore(*p)
 		}
 	}
 	return normalized
@@ -209,6 +246,13 @@ func (p *PlayerAverage) Difference(fromPlayer PlayerAverage) PlayerDiff {
 		Weight:                 similarity.RoundFloat(fromPlayer.Weight-p.Weight, 2),
 		PersonalFoulsDrawn:     similarity.RoundFloat(fromPlayer.PersonalFoulsDrawn-p.PersonalFoulsDrawn, 2),
 		PersonalFouls:          similarity.RoundFloat(fromPlayer.PersonalFouls-p.PersonalFouls, 2),
+		FantasyScore:           similarity.RoundFloat(fromPlayer.FantasyScore-p.FantasyScore, 2),
+		PointsAssists:          similarity.RoundFloat(fromPlayer.PointsAssists-p.PointsAssists, 2),
+		PointsRebounds:         similarity.RoundFloat(fromPlayer.PointsRebounds-p.PointsRebounds, 2),
+		PointsReboundsAssists:  similarity.RoundFloat(fromPlayer.PointsReboundsAssists-p.PointsReboundsAssists, 2),
+		ReboundsAssists:        similarity.RoundFloat(fromPlayer.ReboundsAssists-p.ReboundsAssists, 2),
+		BlocksSteals:           similarity.RoundFloat(fromPlayer.BlocksSteals-p.BlocksSteals, 2),
+		DoubleDouble:           similarity.RoundFloat(fromPlayer.DoubleDouble-p.DoubleDouble, 2),
 		Player:                 p.Player}
 	return d
 }
@@ -263,6 +307,20 @@ func EuclideanDistance(diff PlayerDiff, statsOfInterest []Stat) float64 {
 			sum += math.Pow(diff.Turnovers, 2)
 		case Weight:
 			sum += math.Pow(diff.Weight, 2)
+		case FantasyScore:
+			sum += math.Pow(diff.FantasyScore, 2)
+		case PointsAssists:
+			sum += math.Pow(diff.PointsAssists, 2)
+		case PointsRebounds:
+			sum += math.Pow(diff.PointsRebounds, 2)
+		case PointsReboundsAssists:
+			sum += math.Pow(diff.PointsReboundsAssists, 2)
+		case ReboundsAssists:
+			sum += math.Pow(diff.ReboundsAssists, 2)
+		case BlocksSteals:
+			sum += math.Pow(diff.BlocksSteals, 2)
+		case DoubleDouble:
+			sum += math.Pow(diff.DoubleDouble, 2)
 		default:
 			sum += 0.0
 		}
@@ -353,6 +411,13 @@ func (p *PlayerAverage) AverageStats() *AverageStats {
 		Weight:                 similarity.RoundFloat(p.Weight, 2),
 		Height:                 similarity.RoundFloat(p.Height, 2),
 		GamesPlayed:            similarity.RoundFloat(p.GamesPlayed, 2),
+		FantasyScore:           similarity.RoundFloat(p.FantasyScore, 2),
+		PointsAssists:          similarity.RoundFloat(p.PointsAssists, 2),
+		PointsRebounds:         similarity.RoundFloat(p.PointsRebounds, 2),
+		PointsReboundsAssists:  similarity.RoundFloat(p.PointsReboundsAssists, 2),
+		ReboundsAssists:        similarity.RoundFloat(p.ReboundsAssists, 2),
+		BlocksSteals:           similarity.RoundFloat(p.BlocksSteals, 2),
+		DoubleDouble:           similarity.RoundFloat(p.DoubleDouble, 2),
 	}
 }
 
@@ -378,6 +443,13 @@ func (startValue *AverageStats) PercentChange(finalValue *AverageStats) *Average
 		Weight:                 similarity.RoundFloat(((finalValue.Weight-startValue.Weight)/startValue.Weight)*100, 2),
 		Height:                 similarity.RoundFloat(((finalValue.Height-startValue.Height)/startValue.Height)*100, 2),
 		GamesPlayed:            similarity.RoundFloat(((finalValue.GamesPlayed-startValue.GamesPlayed)/startValue.GamesPlayed)*100, 2),
+		FantasyScore:           similarity.RoundFloat(((finalValue.FantasyScore-startValue.FantasyScore)/startValue.FantasyScore)*100, 2),
+		PointsAssists:          similarity.RoundFloat(((finalValue.PointsAssists-startValue.PointsAssists)/startValue.PointsAssists)*100, 2),
+		BlocksSteals:           similarity.RoundFloat(((finalValue.BlocksSteals-startValue.BlocksSteals)/startValue.BlocksSteals)*100, 2),
+		PointsRebounds:         similarity.RoundFloat(((finalValue.PointsRebounds-startValue.PointsRebounds)/startValue.PointsRebounds)*100, 2),
+		ReboundsAssists:        similarity.RoundFloat(((finalValue.ReboundsAssists-startValue.ReboundsAssists)/startValue.ReboundsAssists)*100, 2),
+		PointsReboundsAssists:  similarity.RoundFloat(((finalValue.PointsReboundsAssists-startValue.PointsReboundsAssists)/startValue.PointsReboundsAssists)*100, 2),
+		DoubleDouble:           similarity.RoundFloat(((finalValue.DoubleDouble-startValue.DoubleDouble)/startValue.DoubleDouble)*100, 2),
 	}
 }
 

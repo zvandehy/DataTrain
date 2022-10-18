@@ -34,7 +34,7 @@ type PlayerGame {
   free_throws_percentage: Float!
   gameID: String!
   home_or_away: String!
-  win_or_loss: String!
+  outcome: Outcome!
   margin: Int!
   minutes: String!
   offensive_rebound_percentage: Float!
@@ -119,5 +119,12 @@ type AverageStats {
   three_pointers_made: Float!
   turnovers: Float!
   weight: Float!
+  fantasy_score: Float!
+  points_assists: Float!
+  points_rebounds: Float!
+  points_rebounds_assists: Float!
+  rebounds_assists: Float!
+  blocks_steals: Float!
+  double_double: Float!
   # Player                 Player   `json:"player" bson:"player"`
 }

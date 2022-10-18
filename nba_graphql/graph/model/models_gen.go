@@ -29,6 +29,13 @@ type AverageStats struct {
 	ThreePointersMade      float64 `json:"three_pointers_made"`
 	Turnovers              float64 `json:"turnovers"`
 	Weight                 float64 `json:"weight"`
+	FantasyScore           float64 `json:"fantasy_score"`
+	PointsAssists          float64 `json:"points_assists"`
+	PointsRebounds         float64 `json:"points_rebounds"`
+	PointsReboundsAssists  float64 `json:"points_rebounds_assists"`
+	ReboundsAssists        float64 `json:"rebounds_assists"`
+	BlocksSteals           float64 `json:"blocks_steals"`
+	DoubleDouble           float64 `json:"double_double"`
 }
 
 type GameBreakdownInput struct {
@@ -230,6 +237,49 @@ func (e *Operator) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Operator) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Outcome string
+
+const (
+	OutcomeWin     Outcome = "WIN"
+	OutcomeLoss    Outcome = "LOSS"
+	OutcomePending Outcome = "PENDING"
+)
+
+var AllOutcome = []Outcome{
+	OutcomeWin,
+	OutcomeLoss,
+	OutcomePending,
+}
+
+func (e Outcome) IsValid() bool {
+	switch e {
+	case OutcomeWin, OutcomeLoss, OutcomePending:
+		return true
+	}
+	return false
+}
+
+func (e Outcome) String() string {
+	return string(e)
+}
+
+func (e *Outcome) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Outcome(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Outcome", str)
+	}
+	return nil
+}
+
+func (e Outcome) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

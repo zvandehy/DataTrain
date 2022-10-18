@@ -6,6 +6,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/util"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type GameFilter struct {
@@ -23,6 +26,7 @@ type GameFilter struct {
 	HomeOrAwayMatch *bool           `json:"homeOrAwayMatch"`
 	StatFilters     *[]*StatFilter  `json:"statFilters"`
 	LastX           *int            `json:"lastX"`
+	Outcome         *Outcome        `json:"outcome"`
 }
 
 func (f GameFilter) String() string {
@@ -67,6 +71,18 @@ func (gameFilter *GameFilter) MatchPlayerGame(g *PlayerGame) bool {
 	if gameFilter.HomeOrAway != nil && !strings.EqualFold(string(*gameFilter.HomeOrAway), g.HomeOrAway) {
 		return false
 	}
+	if gameFilter.Outcome != nil {
+		outcome := strings.ToLower(g.Outcome)
+		if *gameFilter.Outcome == OutcomeWin && outcome[0] != 'w' {
+			return false
+		}
+		if *gameFilter.Outcome == OutcomeLoss && outcome[0] != 'l' {
+			return false
+		}
+		if *gameFilter.Outcome == OutcomePending && outcome[0] != 'p' {
+			return false
+		}
+	}
 	date, err := time.Parse("2006-01-02", g.Date)
 	if err != nil {
 		logrus.Error("Error parsing game date: ", err)
@@ -101,4 +117,91 @@ func (gameFilter *GameFilter) MatchPlayerGame(g *PlayerGame) bool {
 		}
 	}
 	return true
+}
+
+func (f *GameFilter) MongoPipeline(playerPipeline mongo.Pipeline) mongo.Pipeline {
+	pipeline := mongo.Pipeline{
+		//match games
+		bson.D{primitive.E{Key: "$match", Value: f.MongoFilter()}},
+		//find players for each matched game
+		// TODO: what if a player has multiple games that match the filter?
+		bson.D{primitive.E{Key: "$lookup", Value: bson.M{
+			"from":         "players",
+			"localField":   "playerID",
+			"foreignField": "playerID",
+			"as":           "player",
+		}}},
+		bson.D{primitive.E{Key: "$unwind", Value: "$player"}},
+		bson.D{primitive.E{Key: "$group", Value: bson.M{
+			"_id":              "$playerID",
+			"playerID":         bson.M{"$first": "$player.playerID"},
+			"name":             bson.M{"$first": "$player.name"},
+			"first_name":       bson.M{"$first": "$player.first_name"},
+			"last_name":        bson.M{"$first": "$player.last_name"},
+			"position":         bson.M{"$first": "$player.position"},
+			"seasons":          bson.M{"$first": "$player.seasons"},
+			"teamABR":          bson.M{"$first": "$player.teamABR"},
+			"height":           bson.M{"$first": "$player.height"},
+			"weight":           bson.M{"$first": "$player.weight"},
+			"lastModifiedDate": bson.M{"$first": "$player.lastModifiedDate"},
+			"league":           bson.M{"$first": "$player.league"},
+		}}},
+	}
+	pipeline = append(pipeline, playerPipeline...)
+	return pipeline
+}
+
+func (f *GameFilter) MongoFilter() bson.M {
+	matchGame := bson.M{}
+	if f.Seasons != nil && len(*f.Seasons) > 0 {
+		matchGame["season"] = bson.M{"$in": *f.Seasons}
+	}
+	if f.GameType != nil {
+		if *f.GameType == GameTypePlayoffs {
+			matchGame["playoffs"] = true
+		}
+		if *f.GameType == GameTypeRegularSeason {
+			matchGame["playoffs"] = false
+		}
+	}
+	if f.PlayerID != nil {
+		matchGame["playerID"] = *f.PlayerID
+	}
+	if f.GameID != nil {
+		matchGame["gameID"] = *f.GameID
+	}
+	if f.TeamID != nil {
+		matchGame["teamID"] = *f.TeamID
+	}
+	if f.OpponentID != nil {
+		matchGame["opponentID"] = *f.OpponentID
+	}
+	if f.HomeOrAway != nil {
+		matchGame["home_or_away"] = *f.HomeOrAway
+	}
+	if f.StartDate != nil && f.EndDate == nil {
+		matchGame["date"] = bson.M{"$gte": *f.StartDate}
+	}
+	if f.StartDate == nil && f.EndDate != nil {
+		matchGame["date"] = bson.M{"$lt": *f.EndDate}
+	}
+	if f.StartDate != nil && f.EndDate != nil {
+		if *f.StartDate == *f.EndDate {
+			matchGame["date"] = *f.StartDate
+		} else {
+			matchGame["date"] = bson.M{"$gte": *f.StartDate, "$lt": *f.EndDate}
+		}
+	}
+	if f.Outcome != nil {
+		if *f.Outcome == OutcomeWin {
+			matchGame["win_or_loss"] = bson.M{"$regex": "win", "$options": "i"}
+		}
+		if *f.Outcome == OutcomeLoss {
+			matchGame["win_or_loss"] = bson.M{"$regex": "loss", "$options": "i"}
+		}
+		if *f.Outcome == OutcomePending {
+			matchGame["win_or_loss"] = bson.M{"$regex": "pending", "$options": "i"}
+		}
+	}
+	return matchGame
 }

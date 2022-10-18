@@ -40,6 +40,7 @@ enum Stat {
   GamesPlayed
   Height
   Weight
+  DoubleDouble
 }
 
 input ProjectionFilter {
@@ -71,6 +72,7 @@ input PlayerFilter {
   endDate: String
   statFilters: [StatFilter!]
   withPropositions: ProjectionFilter
+  withGames: GameFilter
 }
 
 enum SeasonOption {
@@ -142,6 +144,13 @@ input GameFilter {
   homeOrAway: HomeOrAway
   homeOrAwayMatch: Boolean
   statFilters: [StatFilter!]
+  outcome: Outcome
+}
+
+enum Outcome {
+  WIN
+  LOSS
+  PENDING
 }
 
 enum GameType {

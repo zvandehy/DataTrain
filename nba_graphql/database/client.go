@@ -55,6 +55,7 @@ func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
 	nbaClient.Client = instance
 	nbaClient.Database = nbaClient.Client.Database(nbaClient.Name)
 	nbaClient.PlayerCache = make(map[string][]*model.Player)
+	logrus.Info("CACHEING PLAYERS")
 	// TODO: After automating game data collection, the cache should be updated
 	caches := [][]model.SeasonOption{
 		{model.SEASON_2020_21},
@@ -243,8 +244,13 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input *model.PlayerF
 	startTime := time.Now()
 	c.Queries++
 	players := []*model.Player{}
-	db := c.Collection("players")
+	dbName := "players"
 	pipeline := input.MongoPipeline()
+	if input.WithGames != nil {
+		dbName = "games"
+		pipeline = input.WithGames.MongoPipeline(pipeline)
+	}
+	db := c.Collection(dbName)
 	cur, err := db.Aggregate(ctx, pipeline)
 	if err != nil {
 		logrus.Errorf("Error getting players: %v", err)
@@ -258,9 +264,8 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input *model.PlayerF
 	}
 	// remove players that do not match all of input.StatFilters
 	if input.StatFilters != nil && len(*input.StatFilters) > 0 {
-		players = input.FilterPlayerStats(players)
+		players = input.FilterPlayerStats(players, nil)
 	}
-	fmt.Println(len(players))
 	// set each PlayerGame.PlayerRef to the player, so that predictions can be calculated using their gamelog history
 	for i := range players {
 		games := players[i].GamesCache
@@ -283,7 +288,7 @@ func (c *NBADatabaseClient) GetPlayers(ctx context.Context, input *model.PlayerF
 			players[i].GamesCache[j].PlayerRef = players[i]
 		}
 	}
-	logrus.Info(util.TimeLog(fmt.Sprintf("Query Players: %v", input), startTime))
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players: %v", len(players), input), startTime))
 	return players, nil
 
 }
@@ -298,7 +303,7 @@ func (c *NBADatabaseClient) GetSimilarPlayersFromMatrix(ctx context.Context, toP
 		logrus.Errorf("Error parsing game date %v", endDate)
 		return nil, fmt.Errorf("error parsing game date %v", endDate)
 	}
-	matrixID := fmt.Sprintf("%v-%v", start.Format("2006-01-02"), endDate)
+	matrixID := fmt.Sprintf("%v-%v-%s", start.Format("2006-01-02"), endDate, input.PlayerPoolFilter.Key())
 	if _, matrixOK := c.PlayerSimilarity[matrixID]; !matrixOK {
 		seasons := input.PlayerPoolFilter.Seasons
 		var players []*model.Player
@@ -310,14 +315,19 @@ func (c *NBADatabaseClient) GetSimilarPlayersFromMatrix(ctx context.Context, toP
 		} else {
 			players = p
 		}
-		players = input.PlayerPoolFilter.FilterPlayerStats(players)
-		statsOfInterest := []string{}
-		for _, stat := range input.StatsOfInterest {
-			statsOfInterest = append(statsOfInterest, string(stat))
+		var toPlayer *model.Player
+		for _, p := range players {
+			if p.PlayerID == toPlayerID {
+				toPlayer = p
+				break
+			}
 		}
-		c.PlayerSimilarity.AddSnapshot(*start, end, statsOfInterest, players)
+		fmt.Println(len(players))
+		players = input.PlayerPoolFilter.FilterPlayerStats(players, toPlayer)
+		fmt.Println(len(players))
+		c.PlayerSimilarity.AddSnapshot(*start, end, input.PlayerPoolFilter, players)
 	}
-	similarPlayers := c.PlayerSimilarity.GetSimilarPlayers(toPlayerID, *input.Limit, start.Format("2006-01-02"), endDate, input.StatsOfInterest)
+	similarPlayers := c.PlayerSimilarity.GetSimilarPlayers(toPlayerID, *input.Limit, start.Format("2006-01-02"), endDate, input.PlayerPoolFilter, input.StatsOfInterest)
 	return similarPlayers, nil
 }
 
@@ -593,6 +603,7 @@ func (c *NBADatabaseClient) GetTeamInjuries(ctx context.Context, teamIDs []int) 
 }
 
 func (c *NBADatabaseClient) GetPropositionsByGame(ctx context.Context, game *model.PlayerGame) ([]*model.Proposition, error) {
+	// TODO: use a dataloader for this
 	start := time.Now()
 	c.Queries++
 	if game.PlayerRef == nil || game.PlayerRef.Name == "" {
@@ -614,6 +625,6 @@ func (c *NBADatabaseClient) GetPropositionsByGame(ctx context.Context, game *mod
 		}
 		propositions = append(propositions, p.Props...)
 	}
-	logrus.Infof("Received %d propositions for {%s, %s} \tTook %v", len(propositions), game.PlayerRef.Name, game.Date, time.Since(start))
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) propositions for {%s, %s}", len(propositions), game.PlayerRef.Name, game.Date), start))
 	return propositions, nil
 }

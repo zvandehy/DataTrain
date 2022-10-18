@@ -10,8 +10,6 @@ import (
 
 type Stat string
 
-// type PropositionType Stat
-
 const (
 	Points                       Stat = "points"
 	Assists                      Stat = "assists"
@@ -48,11 +46,13 @@ const (
 	GamesPlayed                  Stat = "games_played"
 	Height                       Stat = "height"
 	Weight                       Stat = "weight"
+	DoubleDouble                 Stat = "double_double"
 )
 
 func NewStat(stat string) Stat {
 	lookup := strings.ReplaceAll(strings.ToLower(stat), " ", "_")
 	lookup = strings.ReplaceAll(lookup, "+", "_")
+	lookup = strings.ReplaceAll(lookup, "-", "_")
 	switch lookup {
 	case "points":
 		return Points
@@ -62,7 +62,7 @@ func NewStat(stat string) Stat {
 		return Rebounds
 	case "steals":
 		return Steals
-	// TODO: This might actually be blocks against
+	// TODO: This might actually be blocks against...
 	case "blocked_shots":
 		fallthrough
 	case "blocks":
@@ -72,6 +72,8 @@ func NewStat(stat string) Stat {
 	case "threepointersmade":
 		fallthrough
 	case "3-pt_made":
+		fallthrough
+	case "3_pt_made":
 		return ThreePointersMade
 	case "three_pointers_attempted":
 		fallthrough
@@ -189,6 +191,12 @@ func NewStat(stat string) Stat {
 		return Height
 	case "weight":
 		return Weight
+	case "double-double":
+		fallthrough
+	case "double_double":
+		fallthrough
+	case "doubledouble":
+		return DoubleDouble
 	default:
 		logrus.Errorf("Unknown stat: '%s'", stat)
 		return ""
@@ -218,137 +226,141 @@ func (s *Stat) UnmarshalGQL(v interface{}) error {
 func (s Stat) MarshalGQL(w io.Writer) {
 	switch s {
 	case "points":
-		io.WriteString(w, `"Points"`)
+		io.WriteString(w, `"points"`)
 	case "assists":
-		io.WriteString(w, `"Assists"`)
+		io.WriteString(w, `"assists"`)
 	case "rebounds":
-		io.WriteString(w, `"Rebounds"`)
+		io.WriteString(w, `"rebounds"`)
 	case "steals":
-		io.WriteString(w, `"Steals"`)
+		io.WriteString(w, `"steals"`)
 	case "blocks":
-		io.WriteString(w, `"Blocks"`)
+		io.WriteString(w, `"blocks"`)
 	case "three_pointers_made":
 		fallthrough
 	case "threepointersmade":
 		fallthrough
 	case "3-pt_made":
-		io.WriteString(w, `"ThreePointersMade"`)
+		io.WriteString(w, `"three_pointers_made"`)
 	case "three_pointers_attempted":
 		fallthrough
 	case "threepointersattempted":
-		io.WriteString(w, `"ThreePointersAttempted"`)
+		io.WriteString(w, `"three_pointers_attempted"`)
 	case "three_point_percentage":
 		fallthrough
 	case "threepointpercentage":
-		io.WriteString(w, `"ThreePointPercentage"`)
+		io.WriteString(w, `"three_point_percentage"`)
 	case "free_throws_made":
 		fallthrough
 	case "freethrowsmade":
-		io.WriteString(w, `"FreeThrowsMade"`)
+		io.WriteString(w, `"free_throws_made"`)
 	case "free_throws_attempted":
 		fallthrough
 	case "freethrowsattempted":
-		io.WriteString(w, `"FreeThrowsAttempted"`)
+		io.WriteString(w, `"free_throws_attempted"`)
 	case "free_throws_percentage":
 		fallthrough
 	case "freethrowspercentage":
-		io.WriteString(w, `"FreeThrowsPercentage"`)
+		io.WriteString(w, `"free_throws_percentage"`)
 	case "field_goals_made":
 		fallthrough
 	case "fieldgoalsmade":
-		io.WriteString(w, `"FieldGoalsMade"`)
+		io.WriteString(w, `"field_goals_made"`)
 	case "field_goals_attempted":
 		fallthrough
 	case "fieldgoalsattempted":
-		io.WriteString(w, `"FieldGoalsAttempted"`)
+		io.WriteString(w, `"field_goals_attempted"`)
 	case "field_goal_percentage":
 		fallthrough
 	case "fieldgoalpercentage":
-		io.WriteString(w, `"FieldGoalPercentage"`)
+		io.WriteString(w, `"field_goal_percentage"`)
 	case "effective_field_goal_percentage":
 		fallthrough
 	case "effectivefieldgoalpercentage":
-		io.WriteString(w, `"EffectiveFieldGoalPercentage"`)
+		io.WriteString(w, `"effective_field_goal_percentage"`)
 	case "true_shooting_percentage":
 		fallthrough
 	case "trueshootingpercentage":
-		io.WriteString(w, `"TrueShootingPercentage"`)
+		io.WriteString(w, `"true_shooting_percentage"`)
 	case "minutes":
-		io.WriteString(w, `"Minutes"`)
+		io.WriteString(w, `"minutes"`)
 	case "offensive_rebounds":
 		fallthrough
 	case "offensiverebounds":
-		io.WriteString(w, `"OffensiveRebounds"`)
+		io.WriteString(w, `"offensive_rebounds"`)
 	case "defensive_rebounds":
 		fallthrough
 	case "defensiverebounds":
-		io.WriteString(w, `"DefensiveRebounds"`)
+		io.WriteString(w, `"defensive_rebounds"`)
 	case "assist_percentage":
 		fallthrough
 	case "assistpercentage":
-		io.WriteString(w, `"AssistPercentage"`)
+		io.WriteString(w, `"assist_percentage"`)
 	case "offensive_rebound_percentage":
 		fallthrough
 	case "offensivereboundpercentage":
-		io.WriteString(w, `"OffensiveReboundPercentage"`)
+		io.WriteString(w, `"offensive_rebound_percentage"`)
 	case "defensive_rebound_percentage":
 		fallthrough
 	case "defensivereboundpercentage":
-		io.WriteString(w, `"DefensiveReboundPercentage"`)
+		io.WriteString(w, `"defensive_rebound_percentage"`)
 	case "usage":
-		io.WriteString(w, `"Usage"`)
+		io.WriteString(w, `"usage"`)
 	case "turnovers":
-		io.WriteString(w, `"Turnovers"`)
+		io.WriteString(w, `"turnovers"`)
 	case "games_played":
 		fallthrough
 	case "gamesplayed":
-		io.WriteString(w, `"GamesPlayed"`)
+		io.WriteString(w, `"games_played"`)
 	case "personal_fouls":
 		fallthrough
 	case "personalfouls":
-		io.WriteString(w, `"PersonalFouls"`)
+		io.WriteString(w, `"personal_fouls"`)
 	case "personal_fouls_drawn":
 		fallthrough
 	case "personalfoulsdrawn":
-		io.WriteString(w, `"PersonalFoulsDrawn"`)
+		io.WriteString(w, `"personal_fouls_drawn"`)
 	case "points_rebounds_assists":
 		fallthrough
 	case "pointsreboundsassists":
 		fallthrough
 	case "pts_rebs_asts":
-		io.WriteString(w, `"PointsReboundsAssists"`)
+		io.WriteString(w, `"points_rebounds_assists"`)
 	case "points_rebounds":
 		fallthrough
 	case "pointsrebounds":
 		fallthrough
 	case "pts_rebs":
-		io.WriteString(w, `"PointsRebounds"`)
+		io.WriteString(w, `"points_rebounds"`)
 	case "points_assists":
 		fallthrough
 	case "pointsassists":
 		fallthrough
 	case "pts_asts":
-		io.WriteString(w, `"PointsAssists"`)
+		io.WriteString(w, `"points_assists"`)
 	case "rebounds_assists":
 		fallthrough
 	case "reboundsassists":
 		fallthrough
 	case "rebs_asts":
-		io.WriteString(w, `"ReboundsAssists"`)
+		io.WriteString(w, `"rebounds_assists"`)
 	case "blocks_steals":
 		fallthrough
 	case "blockssteals":
 		fallthrough
 	case "blks_stls":
-		io.WriteString(w, `"BlocksSteals"`)
+		io.WriteString(w, `"blocks_steals"`)
 	case "fantasy_score":
 		fallthrough
 	case "fantasyscore":
-		io.WriteString(w, `"FantasyScore"`)
+		io.WriteString(w, `"fantasy_score"`)
 	case "height":
-		io.WriteString(w, `"Height"`)
+		io.WriteString(w, `"height"`)
 	case "weight":
-		io.WriteString(w, `"Weight"`)
+		io.WriteString(w, `"weight"`)
+	case "double_double":
+		fallthrough
+	case "doubledouble":
+		io.WriteString(w, `"double_double"`)
 	default:
 		logrus.Errorf("Stat.MarshalGQL: unknown Stat: '%s'", s)
 		io.WriteString(w, string(s))
@@ -377,6 +389,12 @@ func PlayerAverageStats() []Stat {
 		ThreePointersMade,
 		Turnovers,
 		Weight,
+		FantasyScore,
+		PointsRebounds,
+		PointsAssists,
+		PointsReboundsAssists,
+		ReboundsAssists,
+		BlocksSteals,
 	}
 }
 

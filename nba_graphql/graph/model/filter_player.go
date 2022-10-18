@@ -13,17 +13,20 @@ import (
 )
 
 type PlayerFilter struct {
-	Name             *string           `json:"name"`
-	PlayerID         *int              `json:"playerID"`
-	Seasons          *[]SeasonOption   `json:"seasons"`
-	PositionStrict   *Position         `json:"positionStrict"`
-	PositionLoose    *Position         `json:"positionLoose"`
-	TeamAbr          *string           `json:"teamABR"`
-	TeamID           *int              `json:"teamID"`
-	StartDate        *string           `json:"startDate"`
-	EndDate          *string           `json:"endDate"`
-	StatFilters      *[]*StatFilter    `json:"statFilters"`
-	WithPropositions *ProjectionFilter `json:"withPropositions"`
+	Name                *string           `json:"name"`
+	PlayerID            *int              `json:"playerID"`
+	Seasons             *[]SeasonOption   `json:"seasons"`
+	PositionStrict      *Position         `json:"positionStrict"`
+	PositionStrictMatch *bool             `json:"positionStrictMatch"`
+	PositionLoose       *Position         `json:"positionLoose"`
+	PositionLooseMatch  *bool             `json:"positionLooseMatch"`
+	TeamAbr             *string           `json:"teamABR"`
+	TeamID              *int              `json:"teamID"`
+	StartDate           *string           `json:"startDate"`
+	EndDate             *string           `json:"endDate"`
+	StatFilters         *[]*StatFilter    `json:"statFilters"`
+	WithPropositions    *ProjectionFilter `json:"withPropositions"`
+	WithGames           *GameFilter       `json:"withGames"`
 }
 
 func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
@@ -32,37 +35,38 @@ func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
 	positionFilter := bson.M{"position": bson.M{"$in": []string{"G", "F", "C", "G-F", "F-G", "F-C", "C-F"}}}
 	if input.PositionStrict != nil {
 		switch *input.PositionStrict {
-		case "G":
+		case PositionG:
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"G"}}}
-		case "F":
+		case PositionF:
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"F"}}}
-		case "C":
+		case PositionC:
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"C"}}}
-		case "F-G":
+		case PositionFG:
 			fallthrough
-		case "G-F":
+		case PositionGF:
+			fmt.Println("F-G")
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"G-F", "F-G"}}}
-		case "F-C":
+		case PositionCF:
 			fallthrough
-		case "C-F":
+		case PositionFC:
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"F-C", "C-F"}}}
 		}
 		orFilters = append(orFilters, positionFilter)
 	} else if input.PositionLoose != nil {
 		switch *input.PositionLoose {
-		case "G":
+		case PositionG:
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"G", "G-F", "F-G"}}}
-		case "F":
+		case PositionF:
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"F", "F-G", "F-C", "G-F", "C-F"}}}
-		case "C":
+		case PositionC:
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"C", "C-F", "F-C"}}}
-		case "F-G":
+		case PositionFG:
 			fallthrough
-		case "G-F":
+		case PositionGF:
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"G-F", "F-G", "G", "F"}}}
-		case "F-C":
+		case PositionCF:
 			fallthrough
-		case "C-F":
+		case PositionFC:
 			positionFilter = bson.M{"position": bson.M{"$in": []string{"F-C", "C-F", "F", "C"}}}
 		}
 		orFilters = append(orFilters, positionFilter)
@@ -128,12 +132,79 @@ func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
 	return pipeline
 }
 
-func (input PlayerFilter) FilterPlayerStats(players []*Player) []*Player {
+func (input PlayerFilter) FilterPlayerStats(players []*Player, toPlayer *Player) []*Player {
 	// TODO: Filter other PlayerFilter fields...
 	if input.StatFilters != nil && len(*input.StatFilters) > 0 {
 		filteredPlayers := []*Player{}
 		for _, player := range players {
 			matches := true
+			if toPlayer != nil {
+				if input.PositionStrictMatch != nil && *input.PositionStrictMatch {
+					switch toPlayer.Position {
+					case "G":
+						if player.Position != "G" {
+							matches = false
+							break
+						}
+					case "F":
+						if player.Position != "F" {
+							matches = false
+							break
+						}
+					case "C":
+						if player.Position != "C" {
+							matches = false
+							break
+						}
+					case "F-G":
+						fallthrough
+					case "G-F":
+						if player.Position != "F-G" && player.Position != "G-F" {
+							matches = false
+							break
+						}
+					case "F-C":
+						fallthrough
+					case "C-F":
+						if player.Position != "F-C" && player.Position != "C-F" {
+							matches = false
+							break
+						}
+					}
+				} else if input.PositionLooseMatch != nil && *input.PositionLooseMatch {
+					switch toPlayer.Position {
+					case "G":
+						if player.Position != "G" && player.Position != "F-G" && player.Position != "G-F" {
+							matches = false
+							break
+						}
+					case "F":
+						if player.Position != "F" && player.Position != "F-G" && player.Position != "F-C" && player.Position != "C-F" && player.Position != "G-F" {
+							matches = false
+							break
+						}
+					case "C":
+						if player.Position != "C" && player.Position != "F-C" && player.Position != "C-F" {
+							matches = false
+							break
+						}
+					case "F-G":
+						fallthrough
+					case "G-F":
+						if player.Position != "G" && player.Position != "F-G" && player.Position != "G-F" && player.Position != "F" {
+							matches = false
+							break
+						}
+					case "F-C":
+						fallthrough
+					case "C-F":
+						if player.Position != "C" && player.Position != "F-C" && player.Position != "C-F" && player.Position != "F" {
+							matches = false
+							break
+						}
+					}
+				}
+			}
 			for _, statFilter := range *input.StatFilters {
 				if !statFilter.MatchPlayer(player) {
 					matches = false

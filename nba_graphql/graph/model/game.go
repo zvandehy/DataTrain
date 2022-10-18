@@ -41,7 +41,7 @@ type PlayerGame struct {
 	Blocks                       int          `json:"blocks" bson:"blocks"`
 	Steals                       int          `json:"steals" bson:"steals"`
 	Usage                        float64      `json:"usage" bson:"usage"`
-	WinOrLoss                    string       `json:"win_or_loss" bson:"win_or_loss"`
+	Outcome                      string       `json:"win_or_loss" bson:"win_or_loss"`
 }
 
 func (g *PlayerGame) Score(stat Stat) float64 {
@@ -116,6 +116,27 @@ func (g *PlayerGame) Score(stat Stat) float64 {
 		return float64(g.Points) + float64(g.Rebounds)*1.2 + float64(g.Assists)*1.5 + float64(g.Steals)*3 + float64(g.Blocks)*3 - float64(g.Turnovers)
 	case GamesPlayed:
 		if g.Score(Minutes) > 0 {
+			return 1
+		}
+		return 0
+	case DoubleDouble:
+		countDouble := 0
+		if g.Points >= 10 {
+			countDouble++
+		}
+		if g.Rebounds >= 10 {
+			countDouble++
+		}
+		if g.Assists >= 10 {
+			countDouble++
+		}
+		if g.Steals >= 10 {
+			countDouble++
+		}
+		if g.Blocks >= 10 {
+			countDouble++
+		}
+		if countDouble >= 2 {
 			return 1
 		}
 		return 0

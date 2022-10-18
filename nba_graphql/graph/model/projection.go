@@ -196,7 +196,7 @@ func ParseUnderdogProjection(json UnderdogFantasy, sport string) ([]*Projection,
 	now := time.Now()
 	var projections []*Projection
 	for _, player := range json.Players {
-		if strings.ToLower(player.Sport) != strings.ToLower(sport) {
+		if strings.EqualFold(player.Sport, sport) {
 			continue
 		}
 		playername := fmt.Sprintf("%s %s", player.FirstName, player.LastName)
