@@ -17,7 +17,7 @@ import { DateRange } from "../../../shared/interfaces/dateRange.interface";
 import DayAccuracy from "./day-accuracy.component";
 import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
 import { Stat } from "../../../shared/interfaces/stat.interface";
-import DayAccuracyWrapper from "./day-accuracy-wrapper.component";
+// import DayAccuracyWrapper from "./day-accuracy-wrapper.component";
 
 interface CalendarSummaryProps {
   accuracy: Accuracy;
@@ -55,14 +55,15 @@ function GetAccuracyContentForDate(
       );
     }
     return (
-      <DayAccuracyWrapper
-        date={date}
-        customModel={customModel}
-        statType={statType}
-        lookup={lookup}
-        setAccuracy={setAccuracy}
-        hitCriteria={customModel.hitCriteria}
-      />
+      <></>
+      // <DayAccuracyWrapper
+      //   date={date}
+      //   customModel={customModel}
+      //   statType={statType}
+      //   lookup={lookup}
+      //   setAccuracy={setAccuracy}
+      //   hitCriteria={customModel.hitCriteria}
+      // />
     );
   }
   return <></>;

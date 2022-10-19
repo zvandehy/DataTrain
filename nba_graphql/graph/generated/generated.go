@@ -150,8 +150,9 @@ type ComplexityRoot struct {
 	}
 
 	PredictionBreakdown struct {
-		Fragments     func(childComplexity int) int
-		WeightedTotal func(childComplexity int) int
+		Fragments          func(childComplexity int) int
+		PredictionAccuracy func(childComplexity int) int
+		WeightedTotal      func(childComplexity int) int
 	}
 
 	PredictionFragment struct {
@@ -944,6 +945,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PredictionBreakdown.Fragments(childComplexity), true
+
+	case "PredictionBreakdown.predictionAccuracy":
+		if e.complexity.PredictionBreakdown.PredictionAccuracy == nil {
+			break
+		}
+
+		return e.complexity.PredictionBreakdown.PredictionAccuracy(childComplexity), true
 
 	case "PredictionBreakdown.weightedTotal":
 		if e.complexity.PredictionBreakdown.WeightedTotal == nil {
@@ -1809,6 +1817,7 @@ type PlayerGame {
 
 type PredictionBreakdown {
   weightedTotal: AverageStats!
+  predictionAccuracy: AverageStats!
   fragments: [PredictionFragment!]!
 }
 
@@ -1893,6 +1902,7 @@ input GameBreakdownInput {
 }
 
 input SimilarPlayerInput {
+  # TODO: Add a period
   limit: Int!
   statsOfInterest: [Stat!]
   playerPoolFilter: PlayerFilter
@@ -6504,6 +6514,8 @@ func (ec *executionContext) fieldContext_PlayerGame_prediction(ctx context.Conte
 			switch field.Name {
 			case "weightedTotal":
 				return ec.fieldContext_PredictionBreakdown_weightedTotal(ctx, field)
+			case "predictionAccuracy":
+				return ec.fieldContext_PredictionBreakdown_predictionAccuracy(ctx, field)
 			case "fragments":
 				return ec.fieldContext_PredictionBreakdown_fragments(ctx, field)
 			}
@@ -6720,6 +6732,106 @@ func (ec *executionContext) _PredictionBreakdown_weightedTotal(ctx context.Conte
 }
 
 func (ec *executionContext) fieldContext_PredictionBreakdown_weightedTotal(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PredictionBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "assists":
+				return ec.fieldContext_AverageStats_assists(ctx, field)
+			case "blocks":
+				return ec.fieldContext_AverageStats_blocks(ctx, field)
+			case "defensive_rebounds":
+				return ec.fieldContext_AverageStats_defensive_rebounds(ctx, field)
+			case "field_goals_attempted":
+				return ec.fieldContext_AverageStats_field_goals_attempted(ctx, field)
+			case "field_goals_made":
+				return ec.fieldContext_AverageStats_field_goals_made(ctx, field)
+			case "free_throws_attempted":
+				return ec.fieldContext_AverageStats_free_throws_attempted(ctx, field)
+			case "free_throws_made":
+				return ec.fieldContext_AverageStats_free_throws_made(ctx, field)
+			case "games_played":
+				return ec.fieldContext_AverageStats_games_played(ctx, field)
+			case "height":
+				return ec.fieldContext_AverageStats_height(ctx, field)
+			case "minutes":
+				return ec.fieldContext_AverageStats_minutes(ctx, field)
+			case "offensive_rebounds":
+				return ec.fieldContext_AverageStats_offensive_rebounds(ctx, field)
+			case "personal_fouls_drawn":
+				return ec.fieldContext_AverageStats_personal_fouls_drawn(ctx, field)
+			case "personal_fouls":
+				return ec.fieldContext_AverageStats_personal_fouls(ctx, field)
+			case "points":
+				return ec.fieldContext_AverageStats_points(ctx, field)
+			case "rebounds":
+				return ec.fieldContext_AverageStats_rebounds(ctx, field)
+			case "steals":
+				return ec.fieldContext_AverageStats_steals(ctx, field)
+			case "three_pointers_attempted":
+				return ec.fieldContext_AverageStats_three_pointers_attempted(ctx, field)
+			case "three_pointers_made":
+				return ec.fieldContext_AverageStats_three_pointers_made(ctx, field)
+			case "turnovers":
+				return ec.fieldContext_AverageStats_turnovers(ctx, field)
+			case "weight":
+				return ec.fieldContext_AverageStats_weight(ctx, field)
+			case "fantasy_score":
+				return ec.fieldContext_AverageStats_fantasy_score(ctx, field)
+			case "points_assists":
+				return ec.fieldContext_AverageStats_points_assists(ctx, field)
+			case "points_rebounds":
+				return ec.fieldContext_AverageStats_points_rebounds(ctx, field)
+			case "points_rebounds_assists":
+				return ec.fieldContext_AverageStats_points_rebounds_assists(ctx, field)
+			case "rebounds_assists":
+				return ec.fieldContext_AverageStats_rebounds_assists(ctx, field)
+			case "blocks_steals":
+				return ec.fieldContext_AverageStats_blocks_steals(ctx, field)
+			case "double_double":
+				return ec.fieldContext_AverageStats_double_double(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AverageStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PredictionBreakdown_predictionAccuracy(ctx context.Context, field graphql.CollectedField, obj *model.PredictionBreakdown) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PredictionBreakdown_predictionAccuracy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PredictionAccuracy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AverageStats)
+	fc.Result = res
+	return ec.marshalNAverageStats2ᚖgithubᚗcomᚋzvandehyᚋDataTrainᚋnba_graphqlᚋgraphᚋmodelᚐAverageStats(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PredictionBreakdown_predictionAccuracy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PredictionBreakdown",
 		Field:      field,
@@ -14286,6 +14398,13 @@ func (ec *executionContext) _PredictionBreakdown(ctx context.Context, sel ast.Se
 		case "weightedTotal":
 
 			out.Values[i] = ec._PredictionBreakdown_weightedTotal(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "predictionAccuracy":
+
+			out.Values[i] = ec._PredictionBreakdown_predictionAccuracy(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

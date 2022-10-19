@@ -8,10 +8,10 @@ import {
 } from "@mui/material";
 import { ColorCompare, ColorPct } from "../../shared/functions/color.fn";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
+import { Proposition } from "../../shared/interfaces/graphql/game.interface";
 import {
   PredictionFragment,
   Projection,
-  Proposition,
 } from "../../shared/interfaces/graphql/projection.interface";
 import { ScoreType } from "../../shared/interfaces/score-type.enum";
 import { Stat, Minutes } from "../../shared/interfaces/stat.interface";

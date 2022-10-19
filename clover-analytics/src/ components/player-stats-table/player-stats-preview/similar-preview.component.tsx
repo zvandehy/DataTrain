@@ -1,23 +1,16 @@
-import { KeyboardArrowUp, KeyboardArrowDown } from "@material-ui/icons";
 import {
-  Collapse,
-  IconButton,
   Paper,
   Table,
   TableBody,
   TableContainer,
   TableHead,
 } from "@mui/material";
-import { useState } from "react";
 import { ColorCompare, ColorPct } from "../../../shared/functions/color.fn";
 import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
-import {
-  Projection,
-  Proposition,
-} from "../../../shared/interfaces/graphql/projection.interface";
-import { ScoreType } from "../../../shared/interfaces/score-type.enum";
+import { Proposition } from "../../../shared/interfaces/graphql/game.interface";
+import { Projection } from "../../../shared/interfaces/graphql/projection.interface";
 import { SimilarCalculation } from "../../../shared/interfaces/similarCalculation.interface";
-import { Minutes, Stat } from "../../../shared/interfaces/stat.interface";
+import { Minutes } from "../../../shared/interfaces/stat.interface";
 import { StyledTableCell } from "../../styled-table/styled-table-cell.component";
 import { StyledTableRow } from "../../styled-table/styled-table-row.component";
 import "./similar-preview.component.css";

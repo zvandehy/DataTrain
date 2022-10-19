@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+	"regexp"
 	"strconv"
 )
 
@@ -146,6 +148,11 @@ func (g *PlayerGame) Score(stat Stat) float64 {
 }
 
 func ConvertMinutesToFloat(minutes string) (float64, error) {
+	//test regex for "00:00"
+	re := regexp.MustCompile(`^([0-9]{2}):([0-9]{2})$`)
+	if !re.MatchString(minutes) {
+		return 0, fmt.Errorf("invalid minutes format: %s", minutes)
+	}
 	//convert "mm:ss" to minutes
 	min, err := strconv.ParseFloat(minutes[:len(minutes)-3], 64)
 	if err != nil {

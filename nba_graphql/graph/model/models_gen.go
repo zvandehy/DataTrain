@@ -52,8 +52,9 @@ type ModelInput struct {
 }
 
 type PredictionBreakdown struct {
-	WeightedTotal *AverageStats         `json:"weightedTotal"`
-	Fragments     []*PredictionFragment `json:"fragments"`
+	WeightedTotal      *AverageStats         `json:"weightedTotal"`
+	PredictionAccuracy *AverageStats         `json:"predictionAccuracy"`
+	Fragments          []*PredictionFragment `json:"fragments"`
 }
 
 type PredictionFragment struct {

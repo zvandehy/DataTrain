@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
-	"github.com/zvandehy/DataTrain/nba_graphql/math"
+	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
 	"github.com/zvandehy/DataTrain/nba_graphql/util"
 )
 
@@ -197,6 +198,20 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 			playerBaseGames = append(playerBaseGames, game)
 		}
 	}
+	// sort playerBaseGames by game.date
+	sort.Slice(playerBaseGames, func(i, j int) bool {
+		a, err := time.Parse(util.DATE_FORMAT, playerBaseGames[i].Date)
+		if err != nil {
+			logrus.Errorf("Error parsing date %v", playerBaseGames[i].Date)
+			return false
+		}
+		b, err := time.Parse(util.DATE_FORMAT, playerBaseGames[j].Date)
+		if err != nil {
+			logrus.Errorf("Error parsing date %v", playerBaseGames[j].Date)
+			return false
+		}
+		return a.Before(b)
+	})
 	playerBase := &model.AverageStats{}
 	if len(playerBaseGames) > 0 {
 		b := model.NewPlayerAverage(playerBaseGames, obj.PlayerRef)
@@ -206,7 +221,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 	distributeExtraWeight := 0.0
 	for i := range input.GameBreakdowns {
 		games := []*model.PlayerGame{}
-		for _, game := range obj.PlayerRef.GamesCache {
+		for _, game := range playerBaseGames {
 			// only get games before the current game
 			input.GameBreakdowns[i].Filter.EndDate = &obj.Date
 			// if opponentMatch is true, only get games previously matched up against opponent
@@ -353,7 +368,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 			similarTeamWeights := input.SimilarTeamInput.Weight / float64(countSimilarTeamsWithGames)
 			for i := range similarTeamFragments {
 				if similarTeamFragments[i].Weight > 0 {
-					similarTeamFragments[i].Weight = math.RoundFloat(similarTeamWeights, 2)
+					similarTeamFragments[i].Weight = similarity.RoundFloat(similarTeamWeights, 2)
 				}
 			}
 		}
@@ -424,7 +439,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 			similarPlayerWeights := input.SimilarPlayerInput.Weight / float64(countSimilarPlayersWithGamesVsOpp)
 			for i := range similarPlayerFragments {
 				if similarPlayerFragments[i].Weight > 0 {
-					similarPlayerFragments[i].Weight = math.RoundFloat(similarPlayerWeights, 2)
+					similarPlayerFragments[i].Weight = similarity.RoundFloat(similarPlayerWeights, 2)
 				}
 			}
 		}
@@ -439,7 +454,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 		if len(similarPlayerFragments) > 0 {
 			distributeBetween += countSimilarPlayersWithGamesVsOpp
 		}
-		extraWeight := math.RoundFloat(distributeExtraWeight/float64(distributeBetween), 2)
+		extraWeight := similarity.RoundFloat(distributeExtraWeight/float64(distributeBetween), 2)
 		for i := range gameBreakdownFragments {
 			gameBreakdownFragments[i].Weight += extraWeight
 		}
@@ -594,38 +609,67 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 			totalPrediction.DoubleDouble += (wouldBeEstimate.DoubleDouble + ((fragment.PctChange.DoubleDouble / 100) * wouldBeEstimate.DoubleDouble)) * (fragment.Weight / 100.0)
 		}
 	}
-	totalPrediction.Assists = math.RoundFloat(totalPrediction.Assists, 2)
-	totalPrediction.Blocks = math.RoundFloat(totalPrediction.Blocks, 2)
-	totalPrediction.DefensiveRebounds = math.RoundFloat(totalPrediction.DefensiveRebounds, 2)
-	totalPrediction.FieldGoalsAttempted = math.RoundFloat(totalPrediction.FieldGoalsAttempted, 2)
-	totalPrediction.FieldGoalsMade = math.RoundFloat(totalPrediction.FieldGoalsMade, 2)
-	totalPrediction.FreeThrowsAttempted = math.RoundFloat(totalPrediction.FreeThrowsAttempted, 2)
-	totalPrediction.FreeThrowsMade = math.RoundFloat(totalPrediction.FreeThrowsMade, 2)
-	totalPrediction.OffensiveRebounds = math.RoundFloat(totalPrediction.OffensiveRebounds, 2)
-	totalPrediction.PersonalFouls = math.RoundFloat(totalPrediction.PersonalFouls, 2)
-	totalPrediction.PersonalFoulsDrawn = math.RoundFloat(totalPrediction.PersonalFoulsDrawn, 2)
-	totalPrediction.Points = math.RoundFloat(totalPrediction.Points, 2)
-	totalPrediction.Rebounds = math.RoundFloat(totalPrediction.Rebounds, 2)
-	totalPrediction.Steals = math.RoundFloat(totalPrediction.Steals, 2)
-	totalPrediction.ThreePointersAttempted = math.RoundFloat(totalPrediction.ThreePointersAttempted, 2)
-	totalPrediction.ThreePointersMade = math.RoundFloat(totalPrediction.ThreePointersMade, 2)
-	totalPrediction.Turnovers = math.RoundFloat(totalPrediction.Turnovers, 2)
-	totalPrediction.Minutes = math.RoundFloat(totalPrediction.Minutes, 2)
-	totalPrediction.FantasyScore = math.RoundFloat(totalPrediction.FantasyScore, 2)
-	totalPrediction.PointsAssists = math.RoundFloat(totalPrediction.PointsAssists, 2)
-	totalPrediction.PointsRebounds = math.RoundFloat(totalPrediction.PointsRebounds, 2)
-	totalPrediction.PointsReboundsAssists = math.RoundFloat(totalPrediction.PointsReboundsAssists, 2)
-	totalPrediction.ReboundsAssists = math.RoundFloat(totalPrediction.ReboundsAssists, 2)
-	totalPrediction.BlocksSteals = math.RoundFloat(totalPrediction.BlocksSteals, 2)
-	totalPrediction.DoubleDouble = math.RoundFloat(totalPrediction.DoubleDouble, 2)
+	totalPrediction.Assists = similarity.RoundFloat(totalPrediction.Assists, 2)
+	totalPrediction.Blocks = similarity.RoundFloat(totalPrediction.Blocks, 2)
+	totalPrediction.DefensiveRebounds = similarity.RoundFloat(totalPrediction.DefensiveRebounds, 2)
+	totalPrediction.FieldGoalsAttempted = similarity.RoundFloat(totalPrediction.FieldGoalsAttempted, 2)
+	totalPrediction.FieldGoalsMade = similarity.RoundFloat(totalPrediction.FieldGoalsMade, 2)
+	totalPrediction.FreeThrowsAttempted = similarity.RoundFloat(totalPrediction.FreeThrowsAttempted, 2)
+	totalPrediction.FreeThrowsMade = similarity.RoundFloat(totalPrediction.FreeThrowsMade, 2)
+	totalPrediction.OffensiveRebounds = similarity.RoundFloat(totalPrediction.OffensiveRebounds, 2)
+	totalPrediction.PersonalFouls = similarity.RoundFloat(totalPrediction.PersonalFouls, 2)
+	totalPrediction.PersonalFoulsDrawn = similarity.RoundFloat(totalPrediction.PersonalFoulsDrawn, 2)
+	totalPrediction.Points = similarity.RoundFloat(totalPrediction.Points, 2)
+	totalPrediction.Rebounds = similarity.RoundFloat(totalPrediction.Rebounds, 2)
+	totalPrediction.Steals = similarity.RoundFloat(totalPrediction.Steals, 2)
+	totalPrediction.ThreePointersAttempted = similarity.RoundFloat(totalPrediction.ThreePointersAttempted, 2)
+	totalPrediction.ThreePointersMade = similarity.RoundFloat(totalPrediction.ThreePointersMade, 2)
+	totalPrediction.Turnovers = similarity.RoundFloat(totalPrediction.Turnovers, 2)
+	totalPrediction.Minutes = similarity.RoundFloat(totalPrediction.Minutes, 2)
+	totalPrediction.FantasyScore = similarity.RoundFloat(totalPrediction.FantasyScore, 2)
+	totalPrediction.PointsAssists = similarity.RoundFloat(totalPrediction.PointsAssists, 2)
+	totalPrediction.PointsRebounds = similarity.RoundFloat(totalPrediction.PointsRebounds, 2)
+	totalPrediction.PointsReboundsAssists = similarity.RoundFloat(totalPrediction.PointsReboundsAssists, 2)
+	totalPrediction.ReboundsAssists = similarity.RoundFloat(totalPrediction.ReboundsAssists, 2)
+	totalPrediction.BlocksSteals = similarity.RoundFloat(totalPrediction.BlocksSteals, 2)
+	totalPrediction.DoubleDouble = similarity.RoundFloat(totalPrediction.DoubleDouble, 2)
+
+	predictionAccuracy := &model.AverageStats{}
+	if obj.Outcome != "" && strings.ToLower(obj.Outcome)[0] != 'p' {
+		predictionAccuracy.Assists = similarity.RoundFloat(totalPrediction.Assists-float64(obj.Assists), 2)
+		predictionAccuracy.Blocks = similarity.RoundFloat(totalPrediction.Blocks-float64(obj.Blocks), 2)
+		predictionAccuracy.DefensiveRebounds = similarity.RoundFloat(totalPrediction.DefensiveRebounds-float64(obj.DefensiveRebounds), 2)
+		predictionAccuracy.FieldGoalsAttempted = similarity.RoundFloat(totalPrediction.FieldGoalsAttempted-float64(obj.FieldGoalsAttempted), 2)
+		predictionAccuracy.FieldGoalsMade = similarity.RoundFloat(totalPrediction.FieldGoalsMade-float64(obj.FieldGoalsMade), 2)
+		predictionAccuracy.FreeThrowsAttempted = similarity.RoundFloat(totalPrediction.FreeThrowsAttempted-float64(obj.FreeThrowsAttempted), 2)
+		predictionAccuracy.FreeThrowsMade = similarity.RoundFloat(totalPrediction.FreeThrowsMade-float64(obj.FreeThrowsMade), 2)
+		predictionAccuracy.OffensiveRebounds = similarity.RoundFloat(totalPrediction.OffensiveRebounds-float64(obj.OffensiveRebounds), 2)
+		predictionAccuracy.PersonalFouls = similarity.RoundFloat(totalPrediction.PersonalFouls-float64(obj.PersonalFouls), 2)
+		predictionAccuracy.PersonalFoulsDrawn = similarity.RoundFloat(totalPrediction.PersonalFoulsDrawn-float64(obj.PersonalFoulsDrawn), 2)
+		predictionAccuracy.Points = similarity.RoundFloat(totalPrediction.Points-float64(obj.Points), 2)
+		predictionAccuracy.Rebounds = similarity.RoundFloat(totalPrediction.Rebounds-float64(obj.Rebounds), 2)
+		predictionAccuracy.Steals = similarity.RoundFloat(totalPrediction.Steals-float64(obj.Steals), 2)
+		predictionAccuracy.ThreePointersAttempted = similarity.RoundFloat(totalPrediction.ThreePointersAttempted-float64(obj.ThreePointersAttempted), 2)
+		predictionAccuracy.ThreePointersMade = similarity.RoundFloat(totalPrediction.ThreePointersMade-float64(obj.ThreePointersMade), 2)
+		predictionAccuracy.Turnovers = similarity.RoundFloat(totalPrediction.Turnovers-float64(obj.Turnovers), 2)
+		predictionAccuracy.Minutes = similarity.RoundFloat(totalPrediction.Minutes-obj.Score(model.Minutes), 2)
+		predictionAccuracy.FantasyScore = similarity.RoundFloat(totalPrediction.FantasyScore-obj.Score(model.FantasyScore), 2)
+		predictionAccuracy.PointsAssists = similarity.RoundFloat(totalPrediction.PointsAssists-obj.Score(model.PointsAssists), 2)
+		predictionAccuracy.PointsRebounds = similarity.RoundFloat(totalPrediction.PointsRebounds-obj.Score(model.PointsRebounds), 2)
+		predictionAccuracy.PointsReboundsAssists = similarity.RoundFloat(totalPrediction.PointsReboundsAssists-obj.Score(model.PointsReboundsAssists), 2)
+		predictionAccuracy.ReboundsAssists = similarity.RoundFloat(totalPrediction.ReboundsAssists-obj.Score(model.ReboundsAssists), 2)
+		predictionAccuracy.BlocksSteals = similarity.RoundFloat(totalPrediction.BlocksSteals-obj.Score(model.BlocksSteals), 2)
+		predictionAccuracy.DoubleDouble = similarity.RoundFloat(totalPrediction.DoubleDouble-obj.Score(model.DoubleDouble), 2)
+	}
 
 	fragments := []*model.PredictionFragment{}
 	fragments = append(fragments, gameBreakdownFragments...)
 	fragments = append(fragments, similarTeamFragments...)
 	fragments = append(fragments, similarPlayerFragments...)
 	breakdown := &model.PredictionBreakdown{
-		WeightedTotal: &totalPrediction,
-		Fragments:     fragments,
+		WeightedTotal:      &totalPrediction,
+		PredictionAccuracy: predictionAccuracy,
+		Fragments:          fragments,
 	}
 	return breakdown, nil
 }

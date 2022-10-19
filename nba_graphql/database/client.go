@@ -309,7 +309,11 @@ func (c *NBADatabaseClient) GetSimilarPlayersFromMatrix(ctx context.Context, toP
 	if _, matrixOK := c.PlayerSimilarity[matrixID]; !matrixOK {
 		seasons := input.PlayerPoolFilter.Seasons
 		var players []*model.Player
-		if p, cacheOK := c.PlayerCache[fmt.Sprintf("%v", *seasons)]; !cacheOK {
+		sortedSeasons := *seasons
+		sort.Slice(sortedSeasons, func(i, j int) bool {
+			return sortedSeasons[i] < sortedSeasons[j]
+		})
+		if p, cacheOK := c.PlayerCache[fmt.Sprintf("%v", sortedSeasons)]; !cacheOK {
 			players, err = c.GetPlayers(ctx, input.PlayerPoolFilter)
 			if err != nil {
 				return nil, fmt.Errorf("error getting players: %v", err)
@@ -332,6 +336,7 @@ func (c *NBADatabaseClient) GetSimilarPlayersFromMatrix(ctx context.Context, toP
 }
 
 func (c *NBADatabaseClient) GetTeams(ctx context.Context, inputs *[]*model.TeamFilter) ([]*model.Team, error) {
+	// TODO: Use dataloader
 	startTime := time.Now()
 	c.Queries++
 	teams := []*model.Team{}

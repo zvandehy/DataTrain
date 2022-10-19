@@ -1,13 +1,7 @@
-import {
-  GameFilter,
-  StatFilter,
-} from "../interfaces/graphql/filters.interface";
-import { Game } from "../interfaces/graphql/game.interface";
+import { GameFilter } from "../interfaces/graphql/filters.interface";
+import { Game, Proposition } from "../interfaces/graphql/game.interface";
 import { CompareDates } from "./dates.fn";
-import {
-  Projection,
-  Proposition,
-} from "../interfaces/graphql/projection.interface";
+import { Projection } from "../interfaces/graphql/projection.interface";
 import {
   ListFilterOptions,
   ListSortOptions,
@@ -21,12 +15,12 @@ export function FilterGames(games: Game[], gameFilter: GameFilter): Game[] {
     .filter((game) => {
       //match the game if the season is the same
       let seasonMatch = true;
-      if (gameFilter.season) {
-        seasonMatch = gameFilter.season === game.season;
-        if (!seasonMatch) {
-          return false;
-        }
-      }
+      // if (gameFilter.season) {
+      //   seasonMatch = gameFilter.season === game.season;
+      //   if (!seasonMatch) {
+      //     return false;
+      //   }
+      // }
       //match the game if the date is after the start date filter
       let gameIsAfterStartDate = true;
       if (gameFilter.startDate) {
@@ -50,15 +44,15 @@ export function FilterGames(games: Game[], gameFilter: GameFilter): Game[] {
 
       //use statFilters
       let matchesStatFilter = true;
-      if (gameFilter.statFilters && gameFilter.statFilters.length > 0) {
-        gameFilter.statFilters.forEach((statFilter) => {
-          if (!StatFilterMatch(game, statFilter)) {
-            filteredCount++;
-            matchesStatFilter = false;
-            return false;
-          }
-        });
-      }
+      // if (gameFilter.statFilters && gameFilter.statFilters.length > 0) {
+      //   gameFilter.statFilters.forEach((statFilter) => {
+      //     if (!StatFilterMatch(game, statFilter)) {
+      //       filteredCount++;
+      //       matchesStatFilter = false;
+      //       return false;
+      //     }
+      //   });
+      // }
       return (
         seasonMatch &&
         gameIsAfterStartDate &&
@@ -161,13 +155,13 @@ export function SortProjections(
   });
 }
 
-export function StatFilterMatch(game: Game, filter: StatFilter): boolean {
-  const score = filter.stat.score(game);
-  if (filter.min !== undefined && score < filter.min) {
-    return false;
-  }
-  if (filter.max !== undefined && score > filter.max) {
-    return false;
-  }
-  return true;
-}
+// export function StatFilterMatch(game: Game, filter: StatFilter): boolean {
+//   const score = filter.stat.score(game);
+//   if (filter.min !== undefined && score < filter.min) {
+//     return false;
+//   }
+//   if (filter.max !== undefined && score > filter.max) {
+//     return false;
+//   }
+//   return true;
+// }

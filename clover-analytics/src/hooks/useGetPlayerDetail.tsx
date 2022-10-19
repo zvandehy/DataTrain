@@ -237,7 +237,7 @@ export const useGetPlayerDetails = ({
     //TODO: refactor query to use predictionFilter
     variables: {
       playerID: playerID,
-      season: predictionFilter.season,
+      // season: predictionFilter.season,
       date: predictionFilter.endDate,
     },
   });

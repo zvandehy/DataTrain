@@ -1,6 +1,4 @@
-import { split } from "@apollo/client";
-import { Game } from "./graphql/game.interface";
-import { Proposition } from "./graphql/projection.interface";
+import { Game, Proposition } from "./graphql/game.interface";
 import { TeamGame } from "./graphql/teamgame.interface";
 import { ScoreType } from "./score-type.enum";
 

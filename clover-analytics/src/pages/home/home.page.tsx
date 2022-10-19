@@ -16,44 +16,47 @@ import { Button, TextField } from "@mui/material";
 import { INITIAL_CUSTOM_MODEL_STATE } from "../../ components/custom-model-dialog/custom-model-dialog.reducer";
 import moment from "moment";
 import CustomModelDialog from "../../ components/custom-model-dialog/custom-model-dialog.component";
-import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
+import {
+  CustomCalculation,
+  ModelInput,
+} from "../../shared/interfaces/custom-prediction.interface";
 import { Projection } from "../../shared/interfaces/graphql/projection.interface";
+import { DEFAULT_MODEL } from "../../shared/constants";
 
 const Home: React.FC = () => {
-  const [date, setDate] = useState(
+  const [date, setDate] = useState<Date>(
     localStorage.getObject("date") ?? new Date()
   );
-  const [season, setSeason] = useState("2022-23");
-  const [sportsbook, setSportsbook] = useState("");
+  // const [sportsbook, setSportsbook] = useState("");
   const [openCustomModel, setOpenCustomModel] = useState(false);
   const [customPredictionModel, setCustomPredictionModel] =
-    useState<CustomCalculation>(
-      localStorage.getObject("customModel") ?? INITIAL_CUSTOM_MODEL_STATE
+    useState<ModelInput>(
+      localStorage.getObject("customModel") ?? DEFAULT_MODEL
     );
 
-  let projectionFilter: ProjectionFilter = {
-    startDate: moment(date).format("YYYY-MM-DD"),
-    endDate: moment(date).format("YYYY-MM-DD"),
-  };
-  if (sportsbook) {
-    projectionFilter.sportsbook = sportsbook;
-  }
-  const gameFilter: GameFilter = {
-    endDate: moment(date).format("YYYY-MM-DD"),
-    // statFilters: [{ stat: Minutes, min: 10 }],
-  };
-  const predictionFilter: GameFilter = {
-    season: season,
-    endDate: moment(date).format("YYYY-MM-DD"),
-  };
+  // let projectionFilter: ProjectionFilter = {
+  //   startDate: moment(date).format("YYYY-MM-DD"),
+  //   endDate: moment(date).add(1, 'days').format("YYYY-MM-DD"),
+  // };
+  // if (sportsbook) {
+  //   projectionFilter.sportsbook = sportsbook;
+  // }
+  // const gameFilter: GameFilter = {
+  //   endDate: moment(date).format("YYYY-MM-DD"),
+  //   // statFilters: [{ stat: Minutes, min: 10 }],
+  // };
+  // const predictionFilter: GameFilter = {
+  //   season: season,
+  //   endDate: moment(date).format("YYYY-MM-DD"),
+  // };
   //SEASONS
-  const seasons: Option<string>[] = [
-    { label: "2022-23 (Current)", id: "2022-23" },
-    { label: "2021-22", id: "2021-22" },
-  ];
-  const onSeasonChange = (value: string) => {
-    setSeason(value);
-  };
+  // const seasons: Option<string>[] = [
+  //   { label: "2022-23 (Current)", id: "2022-23" },
+  //   { label: "2021-22", id: "2021-22" },
+  // ];
+  // const onSeasonChange = (value: string) => {
+  //   setSeason(value);
+  // };
   const onDateChange = (newValue: Date | null) => {
     const newDate: Date = newValue || new Date();
     setDate(newDate);
@@ -63,23 +66,22 @@ const Home: React.FC = () => {
     setOpenCustomModel(false);
   };
 
-  const save = (value: CustomCalculation) => {
+  const save = (value: ModelInput) => {
     localStorage.setObject("customModel", value);
     setCustomPredictionModel(value);
   };
 
   const { loading, error, data } = useGetProjections({
-    projectionFilter,
-    gameFilter,
-    predictionFilter,
+    startDate: moment(date).format("YYYY-MM-DD"),
+    endDate: moment(date).add(1, "days").format("YYYY-MM-DD"),
     customModel: customPredictionModel,
   });
 
   if (loading) {
-    return <>{loading}</>;
+    return <div>"Loading..."</div>;
   }
   if (error) {
-    return <>{error}</>;
+    return <div>{JSON.stringify(error)}</div>;
   }
 
   return (
@@ -100,7 +102,7 @@ const Home: React.FC = () => {
           setCustomModel={save}
         />
 
-        <AutocompleteFilter
+        {/* <AutocompleteFilter
           options={[
             { label: "PrizePicks", id: "PrizePicks" },
             { label: "Underdog", id: "UnderdogFantasy" },
@@ -112,7 +114,7 @@ const Home: React.FC = () => {
           options={seasons}
           onChange={onSeasonChange}
           label="Season"
-        />
+        /> */}
         <LocalizationProvider dateAdapter={AdapterMoment}>
           <DesktopDatePicker
             label="Date"
@@ -134,9 +136,10 @@ const Home: React.FC = () => {
         </LocalizationProvider>
       </div>
       <PlayerCardList
-        projections={data}
-        customModel={customPredictionModel}
-        gameFilter={gameFilter}
+        players={data}
+        // projections={data}
+        // customModel={customPredictionModel}
+        // gameFilter={gameFilter}
       />
     </div>
   );

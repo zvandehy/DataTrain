@@ -97,6 +97,9 @@ input StatFilter {
 input Period {
   startDate: String
   endDate: String
+  # TODO: support match season
+  matchSeason: Boolean
+  matchPreviousSeason: Boolean
   seasons: [SeasonOption!]
   limit: Int
 }
@@ -140,6 +143,9 @@ input GameFilter {
   playerID: Int
   gameID: String
   # TODO: Replace seasons, dates, and gameType with Period
+  # TODO: Implement Season/PreviousSeason Match, but could also just implement it in Period and add a period here
+  seasonMatch: Boolean
+  previousSeasonMatch: Boolean
   seasons: [SeasonOption!]
   startDate: String
   endDate: String

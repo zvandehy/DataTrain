@@ -1,7 +1,7 @@
 import moment from "moment";
 import React from "react";
 import { BETTING_CATEGORIES } from "../../../../shared/constants";
-import { Proposition } from "../../../../shared/interfaces/graphql/projection.interface";
+import { Proposition } from "../../../../shared/interfaces/graphql/game.interface";
 import { Stat } from "../../../../shared/interfaces/stat.interface";
 import { PredictionIconSmall } from "../../../prediction/prediction-icon.component";
 import "./stat-select-buttons.component.css";

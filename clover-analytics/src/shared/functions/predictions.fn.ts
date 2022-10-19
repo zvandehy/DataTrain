@@ -5,12 +5,11 @@ import {
   Factor,
 } from "../interfaces/custom-prediction.interface";
 import { GameFilter } from "../interfaces/graphql/filters.interface";
-import { Game } from "../interfaces/graphql/game.interface";
+import { Game, Proposition } from "../interfaces/graphql/game.interface";
 import {
   Prediction,
   PredictionFragment,
   Projection,
-  Proposition,
 } from "../interfaces/graphql/projection.interface";
 import { ScoreType } from "../interfaces/score-type.enum";
 import { SimilarCalculation } from "../interfaces/similarCalculation.interface";

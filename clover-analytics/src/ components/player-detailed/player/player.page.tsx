@@ -8,10 +8,7 @@ import {
 import { GetImpliedTarget } from "../../../shared/functions/target.fn";
 import { GameFilter } from "../../../shared/interfaces/graphql/filters.interface";
 import { Player } from "../../../shared/interfaces/graphql/player.interface";
-import {
-  Projection,
-  Proposition,
-} from "../../../shared/interfaces/graphql/projection.interface";
+import { Projection } from "../../../shared/interfaces/graphql/projection.interface";
 import { Stat } from "../../../shared/interfaces/stat.interface";
 import "./player.page.css";
 import AutocompleteFilter from "../../autocomplete-filter/autocomplete-filter.component";
@@ -21,6 +18,7 @@ import Prediction from "../../prediction/prediction.component";
 import PlayerStatsChart from "../player-stats-chart/player-stats-chart.component";
 import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
 import PlayerStatsTable from "../../player-stats-table/player-stats-table.component";
+import { Proposition } from "../../../shared/interfaces/graphql/game.interface";
 
 function getProposition(
   projection: Projection | undefined,

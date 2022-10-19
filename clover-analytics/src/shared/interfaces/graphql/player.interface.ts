@@ -9,6 +9,7 @@ export interface Player {
   seasons: string[];
   position: string;
   currentTeam: Team;
+  team: Team;
   games: Game[];
   injuries: Injury[];
   projections: Projection[];

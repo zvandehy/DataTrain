@@ -69,6 +69,7 @@ type PlayerGame {
 
 type PredictionBreakdown {
   weightedTotal: AverageStats!
+  predictionAccuracy: AverageStats!
   fragments: [PredictionFragment!]!
 }
 

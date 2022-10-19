@@ -1,10 +1,6 @@
 import moment from "moment";
-import { Game } from "./graphql/game.interface";
-import {
-  Prediction,
-  Projection,
-  Proposition,
-} from "./graphql/projection.interface";
+import { Game, Proposition } from "./graphql/game.interface";
+import { Projection } from "./graphql/projection.interface";
 import { Stat } from "./stat.interface";
 
 export enum HitCriteriaType {

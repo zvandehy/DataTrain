@@ -7,15 +7,13 @@ import {
 } from "@mui/material";
 import React from "react";
 import { ColorCompare, ColorPct } from "../../../shared/functions/color.fn";
-import {
-  Projection,
-  Proposition,
-} from "../../../shared/interfaces/graphql/projection.interface";
+import { Projection } from "../../../shared/interfaces/graphql/projection.interface";
 import { StyledTableCell } from "../../styled-table/styled-table-cell.component";
 import { StyledTableRow } from "../../styled-table/styled-table-row.component";
 import SimilarPreview from "./similar-preview.component";
 import "./player-stats-preview.component.css";
 import { CustomCalculation } from "../../../shared/interfaces/custom-prediction.interface";
+import { Proposition } from "../../../shared/interfaces/graphql/game.interface";
 
 interface PlayerStatsPreviewProps {
   selectedProp: Proposition;
