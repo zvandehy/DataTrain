@@ -1,9 +1,12 @@
-# DataTrain
-NBA player props analyzer
-Current implementations are more of a prototype
+# CLOVER ANALYTICS
+NBA Player Sportsbook Analyzer
+
+This tool aims to allow anyone to review available Player Props on DFS sites, create their own prediction models, and analyze the performance of these models. Sportsbooks have all of the edge: they have dedicated line makers, computing power, favorable betting lines, knowledge of the amount of money being placed on each bet, and they only show customers a limited set of relevant data to their player props. This tool attempts tp take some of that edge back by creating an easy way for users to get all of the data that they want about a player and their past performances. Users can create custom prediction models by simply selecting what data they believe is relevant to a prediction, and weights associated with the importannce of that data. The tool uses this custom model to automatically collect, analyze, and calculate a prediction. Then the user can review the prediction and how that model performs compared to actual results and sportsbook lines.
 
 # React
 Front End of Web App
+
+http://www.clover-analytics.com
 
 Requires React and local libraries
 - ```cd react/nba-analyzer```
@@ -13,7 +16,9 @@ Requires React and local libraries
 - ```npm start```
 
 # NBA_GraphQL
-Golang implementation of a GraphQL backend to aggregate data from DB or other API sources
+Golang implementation of a GraphQL backend to aggregate data from DB or other API sources.
+
+https://clover-backend.fly.dev/nba
 
 Requires golang to be installed
 - ```cd nba_graphql```
