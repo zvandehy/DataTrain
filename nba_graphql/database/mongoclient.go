@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,6 +29,7 @@ type NBADatabaseClient struct {
 	PlayerSimilarity model.PlayerSnapshots
 	TeamSimilarity   model.TeamSnapshots
 	PlayerCache      map[string][]*model.Player
+	TeamCache        map[string][]*model.Team
 }
 
 func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
@@ -56,6 +58,7 @@ func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
 	nbaClient.Client = instance
 	nbaClient.Database = nbaClient.Client.Database(nbaClient.Name)
 	nbaClient.PlayerCache = make(map[string][]*model.Player)
+	nbaClient.TeamCache = make(map[string][]*model.Team)
 	logrus.Info("CACHEING PLAYERS")
 	// TODO: After automating game data collection, the cache should be updated
 	caches := [][]model.SeasonOption{
@@ -347,7 +350,13 @@ func (c *NBADatabaseClient) GetTeams(ctx context.Context, inputs *[]*model.TeamF
 			orFilter = append(orFilter, input.MongoFilter())
 		}
 		matchFilter["$or"] = orFilter
+	} else {
+		if teams, ok := c.TeamCache["default"]; ok {
+			logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Teams: %v", len(teams), inputs), startTime))
+			return teams, nil
+		}
 	}
+
 	pipeline := mongo.Pipeline{
 		bson.D{primitive.E{Key: "$match", Value: matchFilter}},
 		bson.D{primitive.E{Key: "$lookup", Value: bson.M{
@@ -368,6 +377,10 @@ func (c *NBADatabaseClient) GetTeams(ctx context.Context, inputs *[]*model.TeamF
 	if err != nil {
 		logrus.Errorf("Error getting teams: %v", err)
 		return nil, fmt.Errorf("error unmarshalling teams: %v", err)
+	}
+	if inputs == nil {
+		logrus.Info("Cacheing Teams Default")
+		c.TeamCache["default"] = teams
 	}
 	// // set each TeamGame.TeamRef to the player, so that predictions can be calculated using their gamelog history
 	// for i := range players {
@@ -432,9 +445,16 @@ func (c *NBADatabaseClient) GetSimilarTeams(ctx context.Context, toTeamID int, i
 	if _, matrixOK := c.TeamSimilarity[matrixID]; !matrixOK {
 		// teams, err := c.GetTeams(ctx, &input.TeamPoolFilter)
 		// TODO: use the teamPoolfilter
-		teams, err = c.GetTeams(ctx, nil)
-		if err != nil {
-			return nil, fmt.Errorf("error getting teams: %v", err)
+		var ok bool = false
+		if teams, ok = c.TeamCache["default"]; !ok {
+			teams, err = c.GetTeams(ctx, nil)
+			if err != nil {
+				if strings.Contains(err.Error(), "ctx") {
+					logrus.Errorf("Error getting teams: %v", err)
+					return nil, fmt.Errorf("error querying teams: %v | %v", err, ctx)
+				}
+				return nil, fmt.Errorf("error getting teams: %v", err)
+			}
 		}
 		c.TeamSimilarity.AddSnapshot(start, end, teams)
 	}

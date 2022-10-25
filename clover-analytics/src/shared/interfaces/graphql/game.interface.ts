@@ -102,13 +102,20 @@ export interface BreakdownFragment {
 export interface PropositionA {
   target: number;
   type: string;
-  statType: Stat;
+  statType?: Stat;
   sportsbook: string;
   lastModified: Date;
   analysis?: PropSummary;
   actual: number;
+  actualPerMin: number;
   estimation: number;
-  predictionDiff: number; // Difference between prediction and target
+  estimationPerMin: number;
+  predictionTargetDiff: number; // Difference between prediction and target
+  predictionTargetDiffPCT: number; // % Difference between prediction and target
+  actualDiff: number;
+  actualDiffPCT: number;
+  actualDiffPerMin: number;
+  actualDiffPerMinPCT: number;
   // TODO: add a significance field
   prediction: string; // OVER or UNDER
   predictionHit: string; // HIT or MISS or PUSH

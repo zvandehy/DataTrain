@@ -144,6 +144,7 @@ func (r *playerGameResolver) FantasyScore(ctx context.Context, obj *model.Player
 
 // Prediction is the resolver for the prediction field.
 func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGame, input model.ModelInput) (*model.PredictionBreakdown, error) {
+	// TODO: ADD DATALOADER
 	propositions, err := r.Db.GetPropositionsByGame(ctx, obj)
 	if err != nil {
 		logrus.Errorf("Error loading propositions for game %v", obj)
@@ -679,7 +680,7 @@ func (r *propositionResolver) LastModified(ctx context.Context, obj *model.Propo
 	if obj.LastModified == nil {
 		return "", nil
 	}
-	return obj.LastModified.Format(util.DATE_FORMAT), nil
+	return obj.LastModified.Format(time.RFC3339), nil
 }
 
 // Player returns generated.PlayerResolver implementation.

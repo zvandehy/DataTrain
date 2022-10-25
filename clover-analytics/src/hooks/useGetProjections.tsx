@@ -1,6 +1,11 @@
 import { ApolloError, gql, useQuery } from "@apollo/client";
+import moment from "moment";
 import { ModelInput } from "../shared/interfaces/custom-prediction.interface";
-import { AverageStats } from "../shared/interfaces/graphql/game.interface";
+import {
+  AverageStats,
+  Game,
+  PropositionA,
+} from "../shared/interfaces/graphql/game.interface";
 import { Player } from "../shared/interfaces/graphql/player.interface";
 
 export const GET_UPCOMING_PROJECTIONS = gql`
@@ -198,7 +203,8 @@ export const useGetProjections = ({
       console.log(player.name);
       if (player.games.length > 0) {
         const newPlayer = player;
-        newPlayer.games = newPlayer.games.map((game) => {
+        let newGames: Game[] = [];
+        newPlayer.games.forEach((game) => {
           const newGame = game;
           if (game.prediction.fragments.length > 0) {
             newGame.prediction.propositions =
@@ -209,23 +215,55 @@ export const useGetProjections = ({
                   newGame.prediction.weightedTotal[
                     prop.type as keyof AverageStats
                   ];
-                newProp.predictionDiff = +(
+                newProp.estimationPerMin = +(
+                  newProp.estimation / newGame.prediction.weightedTotal.minutes
+                ).toFixed(2);
+                newProp.predictionTargetDiff = +(
                   prop.estimation - prop.target
                 ).toFixed(2);
-                newProp.prediction = prop.predictionDiff > 0 ? "OVER" : "UNDER";
-                newProp.actual = newGame[
-                  prop.type as keyof AverageStats
-                ] as number;
+                newProp.predictionTargetDiffPCT = +(
+                  (prop.predictionTargetDiff / prop.target) *
+                  100
+                ).toFixed();
+                newProp.prediction =
+                  prop.predictionTargetDiff > 0 ? "OVER" : "UNDER";
+                newProp.actual = +(
+                  newGame[prop.type as keyof AverageStats] as number
+                ).toFixed();
+                newProp.actualPerMin = +(
+                  newProp.actual / newGame.prediction.weightedTotal.minutes
+                ).toFixed(2);
                 newProp.predictionHit =
-                  prop.actual === prop.target
+                  newGame.outcome.toUpperCase() === "PENDING"
+                    ? "PENDING"
+                    : prop.actual === prop.target
                     ? "PUSH"
-                    : prop.predictionDiff > 0 && prop.actual > prop.target
+                    : prop.predictionTargetDiff > 0 && prop.actual > prop.target
                     ? "HIT"
-                    : prop.predictionDiff < 0 && prop.actual < prop.target
+                    : prop.predictionTargetDiff < 0 && prop.actual < prop.target
                     ? "HIT"
                     : "MISS";
+                newProp.actualDiff = +(prop.actual - prop.target).toFixed(2);
+                newProp.actualDiffPCT = +(
+                  (prop.actualDiff / prop.target) *
+                  100
+                ).toFixed();
+                newProp.actualDiffPerMin = +(
+                  newProp.actualPerMin - newProp.estimationPerMin
+                ).toFixed(2);
+                newProp.actualDiffPerMinPCT = +(
+                  (prop.actualDiffPerMin / prop.estimationPerMin) *
+                  100
+                ).toFixed();
                 return newProp;
               });
+            newGame.prediction.propositions =
+              newGame.prediction.propositions.sort((a, b) =>
+                Math.abs(a.predictionTargetDiffPCT) >
+                Math.abs(b.predictionTargetDiffPCT)
+                  ? -1
+                  : 1
+              );
           }
           //       const propositions = game.prediction.fragments[0].propositions;
           //       for (let i = 0; i < propositions.length; i++) {
@@ -233,10 +271,30 @@ export const useGetProjections = ({
 
           //         newGame.prediction.propositions.push(prop);
           //       }
-          return newGame;
+
+          // game date is before today and they played (not pending) or game is today or later
+          if (
+            (moment(game.date).isBefore(startDate, "day") &&
+              game.outcome.toUpperCase() !== "PENDING") ||
+            moment(game.date).isSameOrAfter(startDate, "day")
+          ) {
+            newGames.push(newGame);
+          } else {
+            console.log(
+              game.date,
+              game.outcome,
+              moment(game.date).isBefore(),
+              moment(game.date).isSameOrAfter(),
+              game.outcome.toUpperCase() !== "PENDING"
+            );
+          }
         });
-        players.push(newPlayer);
+        newPlayer.games = newGames;
+        if (newPlayer.games.length > 0) {
+          players.push(newPlayer);
+        }
       }
+      players = players.sort((a, b) => GetMaxPctDiff(b) - GetMaxPctDiff(a));
     });
     return {
       loading: false,
@@ -246,3 +304,15 @@ export const useGetProjections = ({
   }
   return { loading, error, data: [] };
 };
+
+function GetMaxPctDiff(player: Player) {
+  let maxPctDiff = 0;
+  player.games.forEach((game) => {
+    game.prediction.propositions.forEach((prop) => {
+      if (Math.abs(prop.predictionTargetDiffPCT) > Math.abs(maxPctDiff)) {
+        maxPctDiff = Math.abs(prop.predictionTargetDiffPCT);
+      }
+    });
+  });
+  return maxPctDiff;
+}

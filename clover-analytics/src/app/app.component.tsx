@@ -1,61 +1,74 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ApolloProvider } from "@apollo/client";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
-import Home from "../../pages/home/home.page";
-import PlayerPage from "../../pages/player/player-wrapper.page";
-import "../../shared/styles";
+import Dashboard from "../pages/dashboard/dashboard.page";
+import Home from "../pages/home/home.page";
+import PlayerPage from "../pages/player/player-wrapper.page";
+import apolloClient from "../shared/apollo-client";
+import "../shared/styles";
+import { COLORS } from "../shared/styles/constants";
 import "./app.component.css";
-import "../../shared/fonts/Oswald-Regular.ttf";
-import apolloClient from "../../shared/apollo-client";
+declare module "@mui/material/styles" {
+  interface Palette {
+    negative: Palette["primary"];
+    positive: Palette["primary"];
+    push: Palette["primary"];
+  }
 
-const theme = createTheme({
+  // allow configuration using `createTheme`
+  interface PaletteOptions {
+    negative?: PaletteOptions["primary"];
+    positive?: PaletteOptions["primary"];
+    push?: PaletteOptions["primary"];
+  }
+}
+
+// Update the Button's color prop options
+declare module "@mui/material/Button" {
+  interface ButtonPropsColorOverrides {
+    positive: true;
+    negative: true;
+    push: true;
+  }
+}
+
+declare module "@mui/material/Typography" {
+  interface ButtonPropsColorOverrides {
+    positive: true;
+    negative: true;
+    push: true;
+  }
+}
+
+export const theme = createTheme({
   palette: {
+    mode: "dark",
     primary: {
-      main: "#395c6b",
+      main: COLORS.PRIMARY,
     },
     secondary: {
-      main: "#f59a4b",
+      main: COLORS.SECONDARY,
     },
-    text: {
-      primary: "#f8ffff",
+    background: {
+      default: "#212121",
+      paper: "#424242",
     },
-    info: {
-      main: "#f8ffff",
+    warning: {
+      main: "#fdd835",
     },
-  },
-  components: {
-    MuiSelect: {
-      defaultProps: {
-        variant: "standard",
-        style: {
-          // fontSize: "inherit",
-          color: "inherit",
-        },
-      },
-      styleOverrides: {
-        icon: {
-          fill: "#f59a4b",
-          fontSize: "1.75rem",
-        },
-      },
+    positive: {
+      main: COLORS.HIGHER,
+      contrastText: "#000",
     },
-    MuiAutocomplete: {
-      defaultProps: {
-        // variant: "",
-
-        style: {
-          // fontSize: "inherit",
-          color: "white",
-        },
-      },
-      styleOverrides: {
-        // icon: {
-        //   fill: "#f59a4b",
-        //   fontSize: "1.75rem",
-        // },
-      },
+    negative: {
+      main: COLORS.LOWER,
+      contrastText: "#FFF",
+    },
+    push: {
+      main: COLORS.PUSH,
+      contrastText: "#000",
     },
   },
 });
@@ -78,6 +91,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/wnba" element={<Home />} />
             <Route path="/nba" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             {/* <Route
           exact
           path="/"

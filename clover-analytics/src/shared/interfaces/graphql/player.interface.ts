@@ -6,6 +6,7 @@ import { Team } from "./team.interface";
 export interface Player {
   name: string;
   playerID: number;
+  image: string;
   seasons: string[];
   position: string;
   currentTeam: Team;

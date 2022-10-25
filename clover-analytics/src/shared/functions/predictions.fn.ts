@@ -13,7 +13,7 @@ import {
 } from "../interfaces/graphql/projection.interface";
 import { ScoreType } from "../interfaces/score-type.enum";
 import { SimilarCalculation } from "../interfaces/similarCalculation.interface";
-import { ConvertMinutes, GetStat } from "../interfaces/stat.interface";
+import { ConvertMinutesToNumber, GetStat } from "../interfaces/stat.interface";
 import { FilterGames } from "./filters.fn";
 import { AdjustConfidence, CalculateSimilarity } from "./similarity.fn";
 
@@ -408,7 +408,7 @@ export function CalculateFragment(
     avgPerMin: stat.averagePer(nGames, ScoreType.PerMin),
     minutes: +(
       nGames
-        .map((game) => ConvertMinutes(game.minutes))
+        .map((game) => ConvertMinutesToNumber(game.minutes))
         .reduce((a, b) => a + b, 0) / nGames.length
     ).toFixed(2),
     median: stat.median(nGames),

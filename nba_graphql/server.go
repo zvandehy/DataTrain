@@ -37,9 +37,9 @@ func main() {
 		Debug:            true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Access-Control-Allow-Origin"},
-		AllowOriginFunc: func(origin string) bool {
-			return true
-		}, //overrides allowed origins
+		// AllowOriginFunc: func(origin string) bool {
+		// 	return true
+		// }, //overrides allowed origins
 	}).Handler)
 	nbaClient, err := database.ConnectDB(context.Background(), "nba")
 	if err != nil {

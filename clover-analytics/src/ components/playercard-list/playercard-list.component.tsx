@@ -200,8 +200,8 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
                         <TableCell>{prop.target}</TableCell>
                         <TableCell>{prop.estimation}</TableCell>
                         <TableCell>
-                          {(prop.predictionDiff > 0 ? "+" : "") +
-                            prop.predictionDiff}
+                          {(prop.predictionTargetDiff > 0 ? "+" : "") +
+                            prop.predictionTargetDiff}
                         </TableCell>
                         <TableCell>{prop.prediction}</TableCell>
                         <TableCell>
@@ -215,7 +215,7 @@ const PlayerCardList: React.FC<PlayerCardListProps> = ({
                             : (prop.actual - prop.target).toFixed(2)}
                         </TableCell>
                         <TableCell>
-                          {pending ? "PENDING" : prop.predictionDiff}
+                          {pending ? "PENDING" : prop.predictionTargetDiff}
                         </TableCell>
                         <TableCell>
                           {pending ? "PENDING" : prop.predictionHit}
