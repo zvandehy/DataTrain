@@ -2,13 +2,11 @@ import { ApolloProvider } from "@apollo/client";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import DashboardPage from "../../pages/dashboard/dashboard.page";
+import apolloClient from "../../shared/apollo-client";
+import { COLORS } from "../../shared/styles/constants";
 
-import Dashboard from "../pages/dashboard/dashboard.page";
-import Home from "../pages/home/home.page";
-import PlayerPage from "../pages/player/player-wrapper.page";
-import apolloClient from "../shared/apollo-client";
 import "../shared/styles";
-import { COLORS } from "../shared/styles/constants";
 import "./app.component.css";
 declare module "@mui/material/styles" {
   interface Palette {
@@ -86,12 +84,12 @@ const App: React.FC = () => {
       <ApolloProvider client={apolloClient}>
         <Router>
           <Routes>
-            <Route path="/nba/players/:id" element={<PlayerPage />}></Route>
+            {/* <Route path="/nba/players/:id" element={<PlayerPage />}></Route>
             <Route path="/wnba/players/:id" element={<PlayerPage />}></Route>
             <Route path="/" element={<Home />} />
             <Route path="/wnba" element={<Home />} />
-            <Route path="/nba" element={<Home />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/nba" element={<Home />} /> */}
+            <Route path="/dashboard" element={<DashboardPage />} />
             {/* <Route
           exact
           path="/"

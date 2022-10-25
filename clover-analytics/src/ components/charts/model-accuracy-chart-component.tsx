@@ -160,7 +160,32 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
       <Box id="chart" minHeight={"400px"} p={2}>
         <Bar
           datasetIdKey="id"
-          options={options}
+          // options={options}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            // stacked: true,
+            plugins: {
+              title: {
+                display: true,
+                text: `Model Accuracy between ${startDate} and ${endDate}`,
+                color: "#FFF",
+              },
+              subtitle: {
+                display: true,
+                text: `Total Accuracy: ${totalAccuracy.toFixed(
+                  2
+                )}% (${totalHits} hits, ${totalMisses} misses)`,
+                color: "#FFF",
+              },
+              tooltip: {
+                enabled: true,
+                mode: "index",
+                caretPadding: 10,
+              },
+            },
+          }}
           data={{
             labels: days,
             datasets: [

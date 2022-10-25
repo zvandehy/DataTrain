@@ -1,27 +1,14 @@
 import React, { useState } from "react";
-import PlayerCardList from "../../ components/playercard-list/playercard-list.component";
 import "./home.page.css";
 
-import {
-  GameFilter,
-  ProjectionFilter,
-} from "../../shared/interfaces/graphql/filters.interface";
-import { Option } from "../../shared/interfaces/option.interface";
-import AutocompleteFilter from "../../components/autocomplete-filter/autocomplete-filter.component";
-import { useGetProjections } from "../../hooks/useGetProjections";
+import { Button, TextField } from "@mui/material";
+import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import { Button, TextField } from "@mui/material";
-import { INITIAL_CUSTOM_MODEL_STATE } from "../../components/custom-model-dialog/custom-model-dialog.reducer";
 import moment from "moment";
-import CustomModelDialog from "../../ components/custom-model-dialog/custom-model-dialog.component";
-import {
-  CustomCalculation,
-  ModelInput,
-} from "../../shared/interfaces/custom-prediction.interface";
-import { Projection } from "../../shared/interfaces/graphql/projection.interface";
+import { useGetProjections } from "../../hooks/useGetProjections";
 import { DEFAULT_MODEL } from "../../shared/constants";
+import { ModelInput } from "../../shared/interfaces/custom-prediction.interface";
 
 const Home: React.FC = () => {
   const [date, setDate] = useState<Date>(
@@ -96,11 +83,11 @@ const Home: React.FC = () => {
         >
           Custom Model
         </Button>
-        <CustomModelDialog
+        {/* <CustomModelDialog
           open={openCustomModel}
           closeDialog={close}
           setCustomModel={save}
-        />
+        /> */}
 
         {/* <AutocompleteFilter
           options={[
@@ -135,12 +122,12 @@ const Home: React.FC = () => {
           />
         </LocalizationProvider>
       </div>
-      <PlayerCardList
+      {/* <PlayerCardList
         players={data}
         // projections={data}
         // customModel={customPredictionModel}
         // gameFilter={gameFilter}
-      />
+      /> */}
     </div>
   );
 };
