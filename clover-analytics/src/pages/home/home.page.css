@@ -2,6 +2,7 @@
   display: grid;
   grid-template-areas:
     "query-filters list-filters"
+    "accuracy accuracy"
     "summary summary"
     "dist dist"
     "max-dist max-dist"

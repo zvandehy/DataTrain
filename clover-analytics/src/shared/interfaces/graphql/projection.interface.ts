@@ -1,7 +1,5 @@
-import { ScoreType } from "../score-type.enum";
 import { SimilarCalculation } from "../similarCalculation.interface";
-import { Stat } from "../stat.interface";
-import { Game } from "./game.interface";
+import { Game, Proposition } from "./game.interface";
 import { Player } from "./player.interface";
 import { Team } from "./team.interface";
 
@@ -12,16 +10,6 @@ export interface Projection {
   result: Game;
   startTime: string;
   date: string;
-}
-
-export interface Proposition {
-  target: number;
-  type: string;
-  statType: Stat;
-  sportsbook: string;
-  predictions: Prediction[];
-  customPrediction: Prediction;
-  lastModified: Date;
 }
 
 export interface Prediction {

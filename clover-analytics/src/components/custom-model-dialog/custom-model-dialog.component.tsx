@@ -12,9 +12,11 @@ import {
   Box,
 } from "@mui/material";
 import { useReducer } from "react";
+import { DEFAULT_MODEL } from "../../shared/constants";
 import {
   CustomCalculation,
   Factor,
+  ModelInput,
 } from "../../shared/interfaces/custom-prediction.interface";
 import "./custom-model-dialog.component.css";
 import {
@@ -26,7 +28,7 @@ import {
 interface CustomModelDialogProps {
   open: boolean;
   closeDialog: () => void;
-  setCustomModel: (customModel: CustomCalculation) => void;
+  setCustomModel: (customModel: ModelInput) => void;
 }
 
 const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
@@ -34,12 +36,14 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
   closeDialog,
   setCustomModel,
 }: CustomModelDialogProps) => {
-  const [customModelForm, dispatch] = useReducer(
-    customModelReducer,
-    localStorage.getObject("customModel") ?? INITIAL_CUSTOM_MODEL_STATE
-  );
+  // const [customModelForm, dispatch] = useReducer(
+  //   customModelReducer,
+  //   localStorage.getObject("customModel") ?? DEFAULT_MODEL
+  // );
+  let customModelForm = DEFAULT_MODEL;
   const dispatchLog = (action: any) => {
-    dispatch(action);
+    // dispatch(action);
+    console.log(action);
   };
   const handleClose = (event: any, reason: string) => {
     if (reason === "backdropClick") {
@@ -87,7 +91,7 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
       <Typography color="black" textAlign={"left"}>
         Include Push?
       </Typography>
-      <ToggleButtonGroup
+      {/* <ToggleButtonGroup
         color="primary"
         value={customModelForm.includePush.toString()}
         exclusive
@@ -100,7 +104,7 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
       >
         <ToggleButton value="true">Yes</ToggleButton>
         <ToggleButton value="false">No</ToggleButton>
-      </ToggleButtonGroup>
+      </ToggleButtonGroup> */}
       {/* <Typography color="black" textAlign="left">
         Include Games on Different Teams?
       </Typography>
@@ -121,7 +125,7 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
       <Typography color="black" textAlign="left">
         Last X Games Breakdown
       </Typography>
-      <Box>
+      {/* <Box>
         {customModelForm.recency?.length ? (
           customModelForm.recency.map((fragment: Factor, index: number) => {
             return (
@@ -168,11 +172,11 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
         ) : (
           <></>
         )}
-      </Box>
+      </Box> */}
       <Typography color="black" textAlign="left">
         Players with Similar Statistics vs. Opponent
       </Typography>
-      <TextField
+      {/* <TextField
         id="similar-players-weight-input"
         label="Similar Players Weight"
         type="number"
@@ -187,11 +191,11 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
           "& .MuiInputBase-input": { color: "black" },
         }}
         variant={"filled"}
-      />
+      /> */}
       <Typography color="black" textAlign="left">
         Player vs. Teams Similar to the Opponent
       </Typography>
-      <TextField
+      {/* <TextField
         id="similar-teams-weight-input"
         label="Similar Teams Weight"
         type="number"
@@ -206,11 +210,11 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
           "& .MuiInputBase-input": { color: "black" },
         }}
         variant={"filled"}
-      />
+      /> */}
       <Typography color="black" textAlign="left">
         Previous Head to Head Matchups
       </Typography>
-      <TextField
+      {/* <TextField
         id="versus-opponent-weight-input"
         label="Versus Opponent Weight"
         type="number"
@@ -225,12 +229,12 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
           "& .MuiInputBase-input": { color: "black" },
         }}
         variant={"filled"}
-      />
-      <DialogContentText>
+      /> */}
+      {/* <DialogContentText>
         Total Weight (must equal 100%):{" "}
         {customModelTotalWeight(customModelForm)}
-      </DialogContentText>
-      <DialogActions>
+      </DialogContentText> */}
+      {/* <DialogActions>
         {customModelTotalWeight(customModelForm) !== 100 ? (
           <Button variant={"contained"} disabled>
             Save
@@ -243,7 +247,7 @@ const CustomModelDialog: React.FC<CustomModelDialogProps> = ({
         <Button variant={"outlined"} onClick={cancel}>
           Cancel
         </Button>
-      </DialogActions>
+      </DialogActions> */}
     </Dialog>
   );
 };

@@ -1,7 +1,7 @@
 import { Collapse, Table, TableBody, TableHead } from "@mui/material";
 import { ColorCompare } from "../../shared/functions/color.fn";
 import { Game } from "../../shared/interfaces/graphql/game.interface";
-import { Proposition } from "../../shared/interfaces/graphql/projection.interface";
+import { Proposition } from "../../shared/interfaces/graphql/game.interface";
 import { ScoreType } from "../../shared/interfaces/score-type.enum";
 import { Stat, Minutes } from "../../shared/interfaces/stat.interface";
 import { StyledTableCell } from "../styled-table/styled-table-cell.component";

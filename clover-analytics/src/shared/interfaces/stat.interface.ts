@@ -1,6 +1,4 @@
-import { split } from "@apollo/client";
-import { Game } from "./graphql/game.interface";
-import { Proposition } from "./graphql/projection.interface";
+import { Game, Proposition } from "./graphql/game.interface";
 import { TeamGame } from "./graphql/teamgame.interface";
 import { ScoreType } from "./score-type.enum";
 
@@ -79,18 +77,108 @@ function defaultScorePer(
     return scoreFn(game);
   }
   if (scoreType === ScoreType.PerMin) {
-    return +(scoreFn(game) / ConvertMinutes(game.minutes)).toFixed(2);
+    return +(scoreFn(game) / ConvertMinutesToNumber(game.minutes)).toFixed(2);
   }
   if (scoreType === ScoreType.Per36Min) {
-    return +(scoreFn(game) / (ConvertMinutes(game.minutes) / 36)).toFixed(2);
+    return +(
+      scoreFn(game) /
+      (ConvertMinutesToNumber(game.minutes) / 36)
+    ).toFixed(2);
   }
   return 0;
 }
 
-export function ConvertMinutes(minutes: string): number {
+export function ConvertMinutesToNumber(minutes: string): number {
   const splitMinutes = minutes.split(":");
   const seconds = +splitMinutes[0] * 60 + +splitMinutes[1];
   return +(seconds / 60).toFixed(2);
+}
+
+export function ConvertMinutes(minutes: number): string {
+  const minutesInt = Math.floor(minutes);
+  const seconds = Math.floor((minutes - minutesInt) * 60);
+  return `${minutesInt}:${seconds < 10 ? "0" + seconds : seconds}`;
+}
+
+export function GetStatAbbreviation(stat: string): string {
+  switch (stat) {
+    case "points":
+      return "PTS";
+    case "assists":
+      return "AST";
+    case "rebounds":
+      return "REB";
+    case "steals":
+      return "STL";
+    case "blocks":
+      return "BLK";
+    case "blocks_steals":
+      return "BLK+STL";
+    case "turnovers":
+      return "TOV";
+    case "points_rebounds":
+      return "PTS+REB";
+    case "points_assists":
+      return "PTS+AST";
+    case "points_rebounds_assists":
+      return "PTS+REB+AST";
+    case "rebounds_assists":
+      return "REB+AST";
+    case "fantasy_score":
+      return "FANTASY";
+    case "field_goals_made":
+      return "FGM";
+    case "field_goals_attempted":
+      return "FGA";
+    case "three_pointers_made":
+      return "3PM";
+    case "three_pointers_attempted":
+      return "3PA";
+    case "free_throws_made":
+      return "FTM";
+    case "free_throws_attempted":
+      return "FTA";
+    case "field_goal_percentage":
+      return "FG%";
+    case "three_point_percentage":
+      return "3P%";
+    case "free_throw_percentage":
+      return "FT%";
+    case "effective_field_goal_percentage":
+      return "eFG%";
+    case "true_shooting_percentage":
+      return "TS%";
+    case "offensive_rebounds":
+      return "OREB";
+    case "defensive_rebounds":
+      return "DREB";
+    case "offensive_rating":
+      return "ORtg";
+    case "defensive_rating":
+      return "DRtg";
+    case "net_rating":
+      return "NRtg";
+    case "assists_percentage":
+      return "AST%";
+    case "assists_to_turnovers_ratio":
+      return "AST/TOV";
+    case "steals_percentage":
+      return "STL%";
+    case "blocks_percentage":
+      return "BLK%";
+    case "turnovers_percentage":
+      return "TOV%";
+    case "usage_percentage":
+      return "USG%";
+    case "offensive_win_shares":
+      return "OWS";
+    case "defensive_win_shares":
+      return "DWS";
+    case "win_shares":
+      return "WS";
+    default:
+      return stat;
+  }
 }
 
 function defaultAverage(
@@ -179,7 +267,7 @@ export const Minutes: Stat = new Stat(
     abbreviation: "MIN",
     label: "minutes",
   },
-  { score: (game: Game) => ConvertMinutes(game.minutes) }
+  { score: (game: Game) => ConvertMinutesToNumber(game.minutes) }
 );
 export const Rebounds: Stat = new Stat({
   display: "Rebounds",
@@ -362,7 +450,9 @@ export const LookupStats: Record<string, Stat> = {
   blks_stls: BlocksSteals,
   "Pts+Rebs+Asts": PointsReboundsAssists,
   "Pts+Rebs": PointsRebounds,
+  pts_rebs: PointsRebounds,
   "Pts+Asts": PointsAssists,
+  pts_asts: PointsAssists,
   "Rebs+Asts": ReboundsAssists,
   rebs_asts: ReboundsAssists,
   "Fantasy Score": Fantasy,

@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import moment from "moment";
 import { FilterGames } from "../shared/functions/filters.fn";
-import { CalculatePredictions } from "../shared/functions/predictions.fn";
 import { CustomCalculation } from "../shared/interfaces/custom-prediction.interface";
 import { GameFilter } from "../shared/interfaces/graphql/filters.interface";
 import { Player } from "../shared/interfaces/graphql/player.interface";
@@ -238,7 +237,7 @@ export const useGetPlayerDetails = ({
     //TODO: refactor query to use predictionFilter
     variables: {
       playerID: playerID,
-      season: predictionFilter.season,
+      // season: predictionFilter.season,
       date: predictionFilter.endDate,
     },
   });
@@ -274,7 +273,6 @@ export const useGetPlayerDetails = ({
         return newProjection;
       }
     );
-    // projections = CalculatePredictions(projections, gameFilter, customModel);
     const player: Player = {
       ...data.player,
       projections: projections,

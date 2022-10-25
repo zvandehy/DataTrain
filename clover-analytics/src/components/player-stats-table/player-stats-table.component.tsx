@@ -6,10 +6,7 @@ import {
   TableHead,
 } from "@mui/material";
 import React, { useState } from "react";
-import {
-  Projection,
-  Proposition,
-} from "../../shared/interfaces/graphql/projection.interface";
+import { Projection } from "../../shared/interfaces/graphql/projection.interface";
 import { StyledTableCell } from "../styled-table/styled-table-cell.component";
 import { StyledTableRow } from "../styled-table/styled-table-row.component";
 import "./player-stats-table.component.css";
@@ -19,6 +16,7 @@ import SimilarTable from "./similar-table.component";
 import ExpandSimilarPlayers from "./expand-similar-player-table";
 import ExpandTeamTable from "./expand-team-table";
 import ExpandFragmentTable from "./expand-fragment-table";
+import { Proposition } from "../../shared/interfaces/graphql/game.interface";
 
 interface PlayerStatsTableProps {
   selectedProp: Proposition;

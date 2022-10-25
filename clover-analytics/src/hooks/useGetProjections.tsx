@@ -1,445 +1,318 @@
-import { ApolloQueryResult, gql, useQuery } from "@apollo/client";
-import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
+import { ApolloError, gql, useQuery } from "@apollo/client";
 import moment from "moment";
-import React from "react";
-import { CalculatePredictions } from "../shared/functions/predictions.fn";
-import { CustomCalculation } from "../shared/interfaces/custom-prediction.interface";
+import { ModelInput } from "../shared/interfaces/custom-prediction.interface";
 import {
-  GameFilter,
-  ProjectionFilter,
-} from "../shared/interfaces/graphql/filters.interface";
-import { Projection } from "../shared/interfaces/graphql/projection.interface";
+  AverageStats,
+  Game,
+  PropositionA,
+} from "../shared/interfaces/graphql/game.interface";
+import { Player } from "../shared/interfaces/graphql/player.interface";
 
-export const GET_PROJECTIONS = gql`
-  query GetProjections(
-    $playerFilter: ProjectionFilter!
-    $gameFilter: GameFilter!
+export const GET_UPCOMING_PROJECTIONS = gql`
+  query GetUpcomingProjections(
+    $startDate: String!
+    $endDate: String!
+    $customModel: ModelInput!
   ) {
-    projections(input: $playerFilter) {
-      player {
-        name
-        position
-        playerID
-        currentTeam {
-          abbreviation
-          teamID
-          name
-        }
-        games(input: $gameFilter) {
-          season
-          date
-          gameID
-          playoffs
-          opponent {
-            name
-            teamID
-            abbreviation
-          }
-          points
-          assists
-          rebounds
-          defensive_rebounds
-          offensive_rebounds
-          three_pointers_attempted
-          three_pointers_made
-          free_throws_attempted
-          free_throws_made
-          minutes
-          blocks
-          turnovers
-          steals
+    players(
+      input: {
+        withGames: { startDate: $startDate, endDate: $endDate }
+        withPropositions: {
+          period: { startDate: $startDate, endDate: $endDate }
         }
       }
-      opponent {
+    ) {
+      playerID
+      name
+      image
+      position
+      team {
         abbreviation
-        teamID
-        name
       }
-      propositions {
-        target
-        type
-        sportsbook
-        lastModified
-      }
-      startTime
-      result {
+      games(input: { startDate: $startDate, endDate: $endDate }) {
+        date
+        outcome
+        opponent {
+          abbreviation
+        }
         points
-        assists
         rebounds
-        defensive_rebounds
-        offensive_rebounds
-        three_pointers_attempted
-        three_pointers_made
-        free_throws_attempted
-        free_throws_made
-        minutes
+        assists
+        steals
         blocks
         turnovers
-        steals
-      }
-    }
-  }
-`;
-
-export const GET_PROJECTIONS_AND_SIMILAR_PLAYERS = gql`
-  query GetProjections(
-    $playerFilter: ProjectionFilter!
-    $gameFilter: GameFilter!
-  ) {
-    projections(input: $playerFilter) {
-      player {
-        name
-        position
-        playerID
-        currentTeam {
-          abbreviation
-          teamID
-          name
-        }
-        games(input: $gameFilter) {
-          season
-          date
-          gameID
-          playoffs
-          opponent {
-            name
-            teamID
-            abbreviation
-          }
-          points
-          assists
-          rebounds
-          defensive_rebounds
-          offensive_rebounds
-          three_pointers_attempted
-          three_pointers_made
-          free_throws_attempted
-          free_throws_made
-          minutes
-          blocks
-          turnovers
-          steals
-        }
-        similarPlayers(input: $gameFilter) {
-          name
-          currentTeam {
-            name
-            abbreviation
-          }
-          position
-          playerID
-          games(input: $gameFilter) {
-            season
-            date
-            gameID
-            playoffs
-            opponent {
-              name
-              teamID
-              abbreviation
-            }
+        minutes
+        fantasy_score
+        points_rebounds_assists
+        points_rebounds
+        points_assists
+        rebounds_assists
+        blocks_steals
+        free_throws_percentage
+        free_throws_made
+        field_goal_percentage
+        field_goals_made
+        three_point_percentage
+        three_pointers_made
+        three_pointers_attempted
+        field_goals_attempted
+        free_throws_attempted
+        home_or_away
+        prediction(input: $customModel) {
+          weightedTotal {
             points
-            assists
             rebounds
-            defensive_rebounds
-            offensive_rebounds
-            three_pointers_attempted
+            assists
+            points_rebounds
+            points_assists
+            rebounds_assists
+            points_rebounds_assists
+            blocks
+            steals
+            blocks_steals
+            turnovers
+            fantasy_score
             three_pointers_made
-            free_throws_attempted
             free_throws_made
             minutes
-            blocks
-            turnovers
-            steals
           }
-        }
-      }
-      opponent {
-        abbreviation
-        teamID
-        name
-      }
-      propositions {
-        target
-        type
-        sportsbook
-      }
-      startTime
-      result {
-        points
-        assists
-        rebounds
-        defensive_rebounds
-        offensive_rebounds
-        three_pointers_attempted
-        three_pointers_made
-        free_throws_attempted
-        free_throws_made
-        minutes
-        blocks
-        turnovers
-        steals
-      }
-    }
-  }
-`;
-
-export const GET_PROJECTIONS_AND_SIMILAR_TEAMS = gql`
-  query GetProjections(
-    $playerFilter: ProjectionFilter!
-    $gameFilter: GameFilter!
-  ) {
-    projections(input: $playerFilter) {
-      player {
-        name
-        position
-        playerID
-        currentTeam {
-          abbreviation
-          teamID
-          name
-        }
-        games(input: $gameFilter) {
-          season
-          date
-          gameID
-          playoffs
-          opponent {
-            name
-            teamID
-            abbreviation
-          }
-          points
-          assists
-          rebounds
-          defensive_rebounds
-          offensive_rebounds
-          three_pointers_attempted
-          three_pointers_made
-          free_throws_attempted
-          free_throws_made
-          minutes
-          blocks
-          turnovers
-          steals
-        }
-      }
-      opponent {
-        abbreviation
-        teamID
-        name
-        similarTeams(input: $gameFilter) {
-          name
-          abbreviation
-          teamID
-        }
-      }
-      propositions {
-        target
-        type
-        sportsbook
-      }
-      startTime
-      result {
-        points
-        assists
-        rebounds
-        defensive_rebounds
-        offensive_rebounds
-        three_pointers_attempted
-        three_pointers_made
-        free_throws_attempted
-        free_throws_made
-        minutes
-        blocks
-        turnovers
-        steals
-      }
-    }
-  }
-`;
-
-export const GET_PROJECTIONS_AND_SIMILAR_PLAYERS_AND_TEAMS = gql`
-  query GetProjections(
-    $playerFilter: ProjectionFilter!
-    $gameFilter: GameFilter!
-  ) {
-    projections(input: $playerFilter) {
-      player {
-        name
-        position
-        playerID
-        currentTeam {
-          abbreviation
-          teamID
-          name
-        }
-        games(input: $gameFilter) {
-          season
-          date
-          gameID
-          playoffs
-          opponent {
-            name
-            teamID
-            abbreviation
-          }
-          points
-          assists
-          rebounds
-          defensive_rebounds
-          offensive_rebounds
-          three_pointers_attempted
-          three_pointers_made
-          free_throws_attempted
-          free_throws_made
-          minutes
-          blocks
-          turnovers
-          steals
-        }
-        similarPlayers(input: $gameFilter) {
-          name
-          currentTeam {
-            name
-            abbreviation
-          }
-          position
-          playerID
-          games(input: $gameFilter) {
-            season
-            date
-            gameID
-            playoffs
-            opponent {
-              name
-              teamID
-              abbreviation
-            }
+          predictionAccuracy {
             points
-            assists
             rebounds
-            defensive_rebounds
-            offensive_rebounds
-            three_pointers_attempted
+            assists
+            points_rebounds
+            points_assists
+            rebounds_assists
+            points_rebounds_assists
+            blocks
+            steals
+            blocks_steals
+            turnovers
+            fantasy_score
             three_pointers_made
-            free_throws_attempted
             free_throws_made
             minutes
-            blocks
-            turnovers
-            steals
+          }
+          fragments {
+            name
+            weight
+            propositions {
+              target
+              type
+              sportsbook
+              lastModified
+              analysis {
+                numOver
+                numUnder
+                numPush
+                pctOver
+                pctUnder
+                pctPush
+              }
+            }
+            derived {
+              points
+              rebounds
+              assists
+              points_rebounds
+              points_assists
+              rebounds_assists
+              points_rebounds_assists
+              blocks
+              steals
+              blocks_steals
+              turnovers
+              fantasy_score
+              three_pointers_made
+              free_throws_made
+              minutes
+              games_played
+            }
+            base {
+              points
+              rebounds
+              assists
+              points_rebounds
+              points_assists
+              rebounds_assists
+              points_rebounds_assists
+              blocks
+              steals
+              blocks_steals
+              turnovers
+              fantasy_score
+              three_pointers_made
+              free_throws_made
+              minutes
+            }
+            pctChange {
+              points
+              rebounds
+              assists
+              points_rebounds
+              points_assists
+              rebounds_assists
+              points_rebounds_assists
+              blocks
+              steals
+              blocks_steals
+              turnovers
+              fantasy_score
+              three_pointers_made
+              free_throws_made
+              minutes
+            }
+            # derived games?
           }
         }
-      }
-      opponent {
-        abbreviation
-        teamID
-        name
-        similarTeams(input: $gameFilter) {
-          name
-          abbreviation
-          teamID
-        }
-      }
-      propositions {
-        target
-        type
-        sportsbook
-        lastModified
-      }
-      startTime
-      result {
-        points
-        assists
-        rebounds
-        defensive_rebounds
-        offensive_rebounds
-        three_pointers_attempted
-        three_pointers_made
-        free_throws_attempted
-        free_throws_made
-        minutes
-        blocks
-        turnovers
-        steals
       }
     }
   }
 `;
-
 export interface QueryResult {
-  loading?: any;
-  error?: any;
+  loading?: boolean;
+  error?: ApolloError;
   data?: any;
 }
 
 export interface ProjectionQueryResult extends QueryResult {
-  data: Projection[];
+  data: Player[];
 }
 
 export const useGetProjections = ({
-  projectionFilter,
-  gameFilter,
-  predictionFilter,
+  startDate,
+  endDate,
   customModel,
 }: {
-  projectionFilter: ProjectionFilter;
-  gameFilter: GameFilter;
-  predictionFilter: GameFilter;
-  customModel: CustomCalculation;
+  startDate: string;
+  endDate: string;
+  customModel: ModelInput;
 }): ProjectionQueryResult => {
-  let QUERY =
-    customModel.similarPlayers &&
-    customModel.similarPlayers.weight > 0 &&
-    customModel.similarTeams &&
-    customModel.similarTeams.weight > 0
-      ? GET_PROJECTIONS_AND_SIMILAR_PLAYERS_AND_TEAMS
-      : customModel.similarPlayers && customModel.similarPlayers.weight > 0
-      ? GET_PROJECTIONS_AND_SIMILAR_PLAYERS
-      : customModel.similarTeams && customModel.similarTeams.weight > 0
-      ? GET_PROJECTIONS_AND_SIMILAR_TEAMS
-      : GET_PROJECTIONS;
-  // QUERY = GET_PROJECTIONS;
-  const { loading, error, data } = useQuery(QUERY, {
-    variables: { playerFilter: projectionFilter, gameFilter: predictionFilter },
+  const { loading, error, data } = useQuery(GET_UPCOMING_PROJECTIONS, {
+    variables: { startDate, endDate, customModel },
   });
-  let loadingComponent;
   if (loading) {
-    loadingComponent = (
-      <Box className={"loading-results"}>
-        <h1>Loading </h1>
-        <CircularProgress />
-      </Box>
-    );
+    return { loading, error, data: [] };
   }
-  let errorComponent;
   if (error) {
-    errorComponent = <Box>{JSON.stringify(error) + error.message}</Box>;
+    return { loading, error, data: [] };
   }
-  if (data && data?.projections) {
-    let projections = data?.projections.map((projection: Projection) => {
-      let player = { ...projection.player };
-      let games = player.games.map((game) => {
-        return { ...game };
-      });
-      games.sort((a, b) => {
-        return moment(a.date).diff(b.date);
-      });
-      player.games = games;
-      return { ...projection, player: player };
-    });
+  if (data && data?.players) {
+    let players: Player[] = [];
+    data.players.forEach((player: Player) => {
+      console.log(player.name);
+      if (player.games.length > 0) {
+        const newPlayer = player;
+        let newGames: Game[] = [];
+        newPlayer.games.forEach((game) => {
+          const newGame = game;
+          if (game.prediction.fragments.length > 0) {
+            newGame.prediction.propositions =
+              game.prediction.fragments[0].propositions.map((prop) => {
+                const newProp = prop;
+                newProp.analysis = undefined;
+                newProp.estimation =
+                  newGame.prediction.weightedTotal[
+                    prop.type as keyof AverageStats
+                  ];
+                newProp.estimationPerMin = +(
+                  newProp.estimation / newGame.prediction.weightedTotal.minutes
+                ).toFixed(2);
+                newProp.predictionTargetDiff = +(
+                  prop.estimation - prop.target
+                ).toFixed(2);
+                newProp.predictionTargetDiffPCT = +(
+                  (prop.predictionTargetDiff / prop.target) *
+                  100
+                ).toFixed();
+                newProp.prediction =
+                  prop.predictionTargetDiff > 0 ? "OVER" : "UNDER";
+                newProp.actual = +(
+                  newGame[prop.type as keyof AverageStats] as number
+                ).toFixed();
+                newProp.actualPerMin = +(
+                  newProp.actual / newGame.prediction.weightedTotal.minutes
+                ).toFixed(2);
+                newProp.predictionHit =
+                  newGame.outcome.toUpperCase() === "PENDING"
+                    ? "PENDING"
+                    : prop.actual === prop.target
+                    ? "PUSH"
+                    : prop.predictionTargetDiff > 0 && prop.actual > prop.target
+                    ? "HIT"
+                    : prop.predictionTargetDiff < 0 && prop.actual < prop.target
+                    ? "HIT"
+                    : "MISS";
+                newProp.actualDiff = +(prop.actual - prop.target).toFixed(2);
+                newProp.actualDiffPCT = +(
+                  (prop.actualDiff / prop.target) *
+                  100
+                ).toFixed();
+                newProp.actualDiffPerMin = +(
+                  newProp.actualPerMin - newProp.estimationPerMin
+                ).toFixed(2);
+                newProp.actualDiffPerMinPCT = +(
+                  (prop.actualDiffPerMin / prop.estimationPerMin) *
+                  100
+                ).toFixed();
+                return newProp;
+              });
+            newGame.prediction.propositions =
+              newGame.prediction.propositions.sort((a, b) =>
+                Math.abs(a.predictionTargetDiffPCT) >
+                Math.abs(b.predictionTargetDiffPCT)
+                  ? -1
+                  : 1
+              );
+          }
+          //       const propositions = game.prediction.fragments[0].propositions;
+          //       for (let i = 0; i < propositions.length; i++) {
+          //         const prop = newGame.prediction.propositions[i];
 
+          //         newGame.prediction.propositions.push(prop);
+          //       }
+
+          // game date is before today and they played (not pending) or game is today or later
+          if (
+            (moment(game.date).isBefore(startDate, "day") &&
+              game.outcome.toUpperCase() !== "PENDING") ||
+            moment(game.date).isSameOrAfter(startDate, "day")
+          ) {
+            newGames.push(newGame);
+          } else {
+            console.log(
+              game.date,
+              game.outcome,
+              moment(game.date).isBefore(),
+              moment(game.date).isSameOrAfter(),
+              game.outcome.toUpperCase() !== "PENDING"
+            );
+          }
+        });
+        newPlayer.games = newGames;
+        if (newPlayer.games.length > 0) {
+          players.push(newPlayer);
+        }
+      }
+      players = players.sort((a, b) => GetMaxPctDiff(b) - GetMaxPctDiff(a));
+    });
     return {
-      loading: loadingComponent,
-      error: errorComponent,
-      data: projections,
+      loading: false,
+      error: undefined,
+      data: players,
     };
   }
-  return {
-    loading: loadingComponent,
-    error: errorComponent,
-    data: [],
-  };
+  return { loading, error, data: [] };
 };
+
+function GetMaxPctDiff(player: Player) {
+  let maxPctDiff = 0;
+  player.games.forEach((game) => {
+    game.prediction.propositions.forEach((prop) => {
+      if (Math.abs(prop.predictionTargetDiffPCT) > Math.abs(maxPctDiff)) {
+        maxPctDiff = Math.abs(prop.predictionTargetDiffPCT);
+      }
+    });
+  });
+  return maxPctDiff;
+}

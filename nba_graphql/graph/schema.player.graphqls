@@ -1,0 +1,132 @@
+# TODO: Add average(input: filter{period, mode, limit/filter?})
+type Player {
+  #firstName lastName
+  name: String!
+  #playerID of NBA stats
+  playerID: Int!
+  seasons: [String!]!
+  #G, F, or C
+  position: String!
+  team: Team!
+  games(input: GameFilter!): [PlayerGame!]!
+  # average(input: GameFilter!): AverageStats!
+  # injuries: [Injury!]
+  projections(input: ProjectionFilter!): [Projection!]!
+  height: String!
+  weight: Int!
+  image: String!
+  league: String!
+  # similarPlayers(input: GameFilter!): [Player!]!
+}
+
+type PlayerGame {
+  assist_percentage: Float!
+  assists: Int!
+  date: String!
+  defensive_rebound_percentage: Float!
+  defensive_rebounds: Int!
+  effective_field_goal_percentage: Float!
+  field_goal_percentage: Float!
+  field_goals_attempted: Int!
+  field_goals_made: Int!
+  free_throws_attempted: Int!
+  free_throws_made: Int!
+  free_throws_percentage: Float!
+  gameID: String!
+  home_or_away: String!
+  outcome: Outcome!
+  margin: Int!
+  minutes: String!
+  offensive_rebound_percentage: Float!
+  offensive_rebounds: Int!
+  opponent: Team!
+  opponentStats: TeamGame!
+  team: Team!
+  teamStats: TeamGame!
+  personal_fouls_drawn: Int!
+  personal_fouls: Int!
+  points: Int!
+  player: Player!
+  playoffs: Boolean!
+  season: SeasonOption!
+  three_point_percentage: Float!
+  three_pointers_attempted: Int!
+  three_pointers_made: Int!
+  rebounds: Int!
+  true_shooting_percentage: Float!
+  turnovers: Int!
+  usage: Float!
+  blocks: Int!
+  steals: Int!
+  points_rebounds: Int!
+  points_assists: Int!
+  points_rebounds_assists: Int!
+  rebounds_assists: Int!
+  blocks_steals: Int!
+  fantasy_score: Float!
+  prediction(input: ModelInput!): PredictionBreakdown!
+}
+
+type PredictionBreakdown {
+  weightedTotal: AverageStats!
+  predictionAccuracy: AverageStats!
+  fragments: [PredictionFragment!]!
+}
+
+type PredictionFragment {
+  name: String!
+  derived: AverageStats!
+  derivedGames: [PlayerGame!]!
+  base: AverageStats!
+  pctChange: AverageStats!
+  weight: Float!
+  propositions(input: PropositionFilter): [Proposition!]!
+}
+
+type Proposition {
+  target: Float!
+  type: Stat!
+  sportsbook: SportsbookOption!
+  analysis: PropositionSummary
+  lastModified: String!
+}
+
+type PropositionSummary {
+  numOver: Int!
+  numUnder: Int!
+  numPush: Int!
+  pctOver: Float!
+  pctUnder: Float!
+  pctPush: Float!
+}
+
+type AverageStats {
+  assists: Float!
+  blocks: Float!
+  defensive_rebounds: Float!
+  field_goals_attempted: Float!
+  field_goals_made: Float!
+  free_throws_attempted: Float!
+  free_throws_made: Float!
+  games_played: Float!
+  height: Float!
+  minutes: Float!
+  offensive_rebounds: Float!
+  personal_fouls_drawn: Float!
+  personal_fouls: Float!
+  points: Float!
+  rebounds: Float!
+  steals: Float!
+  three_pointers_attempted: Float!
+  three_pointers_made: Float!
+  turnovers: Float!
+  weight: Float!
+  fantasy_score: Float!
+  points_assists: Float!
+  points_rebounds: Float!
+  points_rebounds_assists: Float!
+  rebounds_assists: Float!
+  blocks_steals: Float!
+  double_double: Float!
+  # Player                 Player   `json:"player" bson:"player"`
+}

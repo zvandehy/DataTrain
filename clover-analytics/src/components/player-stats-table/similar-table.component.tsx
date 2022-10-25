@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { ColorCompare, ColorPct } from "../../shared/functions/color.fn";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
-import { Proposition } from "../../shared/interfaces/graphql/projection.interface";
+import { Proposition } from "../../shared/interfaces/graphql/game.interface";
 import { SimilarCalculation } from "../../shared/interfaces/similarCalculation.interface";
 import { Minutes, Stat } from "../../shared/interfaces/stat.interface";
 import { StyledTableCell } from "../styled-table/styled-table-cell.component";

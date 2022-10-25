@@ -5,23 +5,15 @@ import {
   Factor,
 } from "../interfaces/custom-prediction.interface";
 import { GameFilter } from "../interfaces/graphql/filters.interface";
-import { Game } from "../interfaces/graphql/game.interface";
+import { Game, Proposition } from "../interfaces/graphql/game.interface";
 import {
   Prediction,
   PredictionFragment,
   Projection,
-  Proposition,
 } from "../interfaces/graphql/projection.interface";
-import { ListFilterOptions } from "../interfaces/listFilter.interface";
 import { ScoreType } from "../interfaces/score-type.enum";
 import { SimilarCalculation } from "../interfaces/similarCalculation.interface";
-import {
-  ConvertMinutes,
-  GetStat,
-  Minutes,
-  Points,
-  ReboundsAssists,
-} from "../interfaces/stat.interface";
+import { ConvertMinutesToNumber, GetStat } from "../interfaces/stat.interface";
 import { FilterGames } from "./filters.fn";
 import { AdjustConfidence, CalculateSimilarity } from "./similarity.fn";
 
@@ -42,6 +34,9 @@ export function CalculatePredictions(
       };
     }
     let c = CalculatePrediction(updatedProjection, gameFilter, customModel);
+    c.propositions = c.propositions.sort(
+      (prop) => prop.customPrediction.confidence
+    );
     return c;
   });
 }
@@ -114,13 +109,13 @@ export function UpdatePropositionWithPrediction(
     );
 
     if (
+      // TODO: This is skipping count of 0 (all games)
       projection.player.games.slice(item.count! * -1).length < item.count! ||
       filteredGames.length === item.count
     ) {
       skipped_weight_sum += item.weight;
       return;
     }
-
     let fragment = CalculateFragment(nGames, proposition, item);
     prediction.recencyFragments.push(fragment);
   });
@@ -405,6 +400,7 @@ export function CalculateFragment(
     else if (score < proposition.target) numUnder++;
     else numPush++;
   });
+
   let fragment: PredictionFragment = {
     games: nGames,
     weight: item.weight,
@@ -412,7 +408,7 @@ export function CalculateFragment(
     avgPerMin: stat.averagePer(nGames, ScoreType.PerMin),
     minutes: +(
       nGames
-        .map((game) => ConvertMinutes(game.minutes))
+        .map((game) => ConvertMinutesToNumber(game.minutes))
         .reduce((a, b) => a + b, 0) / nGames.length
     ).toFixed(2),
     median: stat.median(nGames),

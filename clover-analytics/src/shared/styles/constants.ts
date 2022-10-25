@@ -1,0 +1,11 @@
+export const COLORS = {
+  HIGHER: "#00BFA5",
+  HIGHER_DARK: "#009688",
+  LOWER: "#FF5252",
+  LOWER_DARK: "#D50000",
+  PUSH: "#2196F3",
+  PUSH_DARK: "#1976D2",
+  PRIMARY: "#8e24aa",
+  SECONDARY: "#5181a2",
+  AVATAR: "#f5f5f5",
+};

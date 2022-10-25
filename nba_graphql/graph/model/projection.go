@@ -8,28 +8,51 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Projection struct {
-	PlayerName   string         `json:"playername" bson:"playername"`
-	OpponentAbr  string         `json:"opponent" bson:"opponent"`
-	Propositions []*Proposition `json:"propositions" bson:"propositions"`
-	StartTime    string         `json:"startTime" bson:"startTime"`
-	Date         string         `json:"date" bson:"date"`
+	PlayerName  string         `json:"playername" bson:"playername"`
+	OpponentAbr string         `json:"opponent" bson:"opponent"` //TODO: Refactor to OpponentAbr
+	Props       []*Proposition `json:"propositions" bson:"propositions"`
+	StartTime   string         `json:"startTime" bson:"startTime"`
+	Date        string         `json:"date" bson:"date"`
+
+	Player   Player `json:"playerCache" bson:"playerCache"`
+	Opponent Team   `json:"opponentTeam" bson:"opponentTeam"`
 }
 
-type Proposition struct {
-	Sportsbook   string        `json:"sportsbook" bson:"sportsbook"`
-	Target       float64       `json:"target" bson:"target"`
-	Type         string        `json:"type" bson:"type"`
-	LastModified *time.Time    `json:"lastModified" bson:"lastModified"`
-	Predictions  []*Prediction `json:"predictions" bson:"predictions"`
+func (p *Projection) Match(projectionFilter ProjectionFilter) bool {
+	if !projectionFilter.Period.MatchProjection(p) {
+		return false
+	}
+	// if projectionFilter.PropositionFilter != nil {
+	// 	for _, prop := range p.Props {
+	// 		if prop.Match(projectionFilter.PropositionFilter) {
+	// 			return true
+	// 		}
+	// 	}
+	// 	return false
+	// }
+	return true
+}
+
+func (p *Projection) UnmarshalBSON(data []byte) error {
+	type Alias Projection
+	bson.Unmarshal(data, (*Alias)(p))
+	for i, prop := range p.Props {
+		prop.ProjectionRef = p
+		p.Props[i] = prop
+	}
+	// p.PlayerMatrix = v.PlayerMatrix
+	return nil
 }
 
 type Prediction struct {
 	Model               string  `json:"model" bson:"model"`
-	OverUnderPrediction string  `json:"overUnderPrediction" bson:"overUnderPrediction"`
-	TotalPrediction     float64 `json:"totalPrediction" bson:"totalPrediction"`
+	OverUnderPrediction Output  `json:"overUnderPrediction" bson:"overUnderPrediction"`
+	Confidence          float64 `json:"confidence" bson:"confidence"`
+	Estimation          float64 `json:"estimation" bson:"estimation"`
 }
 type PrizePicks struct {
 	Data     []PrizePicksData     `json:"data" bson:"data"`
@@ -87,13 +110,13 @@ type PrizePicksIncluded struct {
 //ParsePrizePick creates a Projection and adds it to the projections slice or adds a Target to an existing projection
 func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projections []*Projection) ([]*Projection, error) {
 	var playerName string
-	var statType string
+	var statType Stat
 	for _, p := range included {
 		if p.ID == prop.Relationships.Player.Data.ID {
 			playerName = p.Attributes.Name
 		}
 		if p.ID == prop.Relationships.StatType.Data.ID {
-			statType = p.Attributes.Name
+			statType = NewStat(p.Attributes.Name)
 		}
 		if statType != "" && playerName != "" {
 			break
@@ -121,13 +144,13 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 				logrus.Warn("skipping promo prizepick")
 				continue
 			}
-			projections[i].Propositions = append(projections[i].Propositions, &Proposition{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now})
+			projections[i].Props = append(projections[i].Props, &Proposition{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now})
 			return projections, nil
 		}
 	}
 
 	// otherwise, create a new player projection with this proposition (prop type) in it
-	projections = append(projections, &Projection{PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Date: date, StartTime: prop.Attributes.Start_time, Propositions: []*Proposition{{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now}}})
+	projections = append(projections, &Projection{PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Date: date, StartTime: prop.Attributes.Start_time, Props: []*Proposition{{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now}}})
 	return projections, nil
 }
 
@@ -173,7 +196,7 @@ func ParseUnderdogProjection(json UnderdogFantasy, sport string) ([]*Projection,
 	now := time.Now()
 	var projections []*Projection
 	for _, player := range json.Players {
-		if strings.ToLower(player.Sport) != strings.ToLower(sport) {
+		if strings.EqualFold(player.Sport, sport) {
 			continue
 		}
 		playername := fmt.Sprintf("%s %s", player.FirstName, player.LastName)
@@ -208,27 +231,23 @@ func ParseUnderdogProjection(json UnderdogFantasy, sport string) ([]*Projection,
 				if !ok {
 					category = overUnder.OverUnder.Appearance.Category
 				}
+				stat := NewStat(category)
 				proposition := Proposition{
 					Sportsbook:   "UnderdogFantasy",
 					LastModified: &now,
 					Target:       target,
-					Type:         category,
+					Type:         stat,
 				}
 				propositions = append(propositions, &proposition)
 			}
 
 		}
-		logrus.Warnf("%s %s %s %s %v", playername, opponent, date, startTime, len(propositions))
-		for _, proposition := range propositions {
-			logrus.Warnf("%v", proposition)
-		}
-		logrus.Warn()
 		projections = append(projections, &Projection{
-			PlayerName:   playername,
-			OpponentAbr:  opponent,
-			StartTime:    start,
-			Date:         date,
-			Propositions: propositions,
+			PlayerName:  playername,
+			OpponentAbr: opponent,
+			StartTime:   start,
+			Date:        date,
+			Props:       propositions,
 		})
 	}
 	return projections, nil
@@ -264,7 +283,7 @@ func getAppearanceIDForPlayer(playerID string, appearances []UnderdogAppearance)
 			return appearance.AppearanceID, nil
 		}
 	}
-	return "", fmt.Errorf("Couldn't find appearance for playerID: %s", playerID)
+	return "", fmt.Errorf("Couldn't find appearance for playerID: '%s'", playerID)
 }
 
 func getOpponent(underdogGames []UnderdogGame, teamID string) (string, *UnderdogGame, error) {
@@ -276,17 +295,17 @@ func getOpponent(underdogGames []UnderdogGame, teamID string) (string, *Underdog
 			return strings.SplitN(game.Title, " @ ", 2)[0], &game, nil
 		}
 	}
-	return "", nil, fmt.Errorf("Couldn't find opponent for team %s", teamID)
+	return "", nil, fmt.Errorf("Couldn't find opponent for team: '%s'", teamID)
 }
 
 func GetBestProjection(projections []*Projection) *Projection {
 	maxTargets := 0
 	var bestProjections []*Projection
 	for _, projection := range projections {
-		if len(projection.Propositions) > maxTargets {
-			maxTargets = len(projection.Propositions)
+		if len(projection.Props) > maxTargets {
+			maxTargets = len(projection.Props)
 			bestProjections = []*Projection{projection}
-		} else if len(projection.Propositions) == maxTargets {
+		} else if len(projection.Props) == maxTargets {
 			bestProjections = append(bestProjections, projection)
 		}
 	}

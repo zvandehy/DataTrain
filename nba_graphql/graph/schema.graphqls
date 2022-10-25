@@ -1,194 +1,133 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-type Player {
-  #firstName lastName
-  name: String!
-  #playerID of NBA stats
-  playerID: Int!
-  seasons: [String!]!
-  #G, F, or C
-  position: String!
-  # TODO: change 'currentTeam' to 'team'
-  currentTeam: Team!
-  games(input: GameFilter!): [PlayerGame!]!
-  injuries: [Injury!]
-  projections(input: ProjectionFilter!): [Projection!]!
-  height: String!
-  weight: Int!
-  similarPlayers(input: GameFilter!): [Player!]!
-}
-
-type Team {
-  name: String!
-  teamID: Int!
-  abbreviation: String!
-  location: String!
-  numWins: Int! #TODO
-  numLoss: Int! #TODO
-  games(input: GameFilter!): [TeamGame!]!
-  players: [Player!]!
-  injuries: [Injury!]
-  similarTeams(input: GameFilter!): [Team!]!
-}
-
-type TeamGame {
-  date: String!
-  margin: Int!
-  points: Int!
-  assists: Int!
-  rebounds: Int!
-  offensive_rebounds: Int!
-  defensive_rebounds: Int!
-  turnovers: Int!
-  steals: Int!
-  blocks: Int!
-  three_pointers_attempted: Int!
-  three_pointers_made: Int!
-  defensive_rating: Float!
-  defensive_rebound_percentage: Float!
-  field_goal_percentage: Float!
-  field_goals_attempted: Int!
-  gameID: String!
-  home_or_away: String!
-  field_goals_made: Int!
-  free_throws_attempted: Int!
-  free_throws_made: Int!
-  free_throws_percentage: Float!
-  offensive_rebound_percentage: Float!
-  opponent: Team!
-  opponent_assists: Int!
-  opponent_effective_field_goal_percentage: Float!
-  opponent_field_goals_attempted: Int!
-  opponent_free_throws_attempted: Int!
-  opponent_points: Int!
-  opponent_rebounds: Int!
-  opponent_three_pointers_attempted: Int!
-  opponent_three_pointers_made: Int!
-  plus_minus_per_hundred: Float!
-  possessions: Int!
-  playoffs: Boolean!
-  personal_fouls: Int!
-  personal_fouls_drawn: Int!
-  season: String!
-  win_or_loss: String!
-  playersInGame: PlayersInGame!
-}
-
-type PlayerGame {
-  assist_percentage: Float!
-  assists: Int!
-  date: String!
-  defensive_rebound_percentage: Float!
-  defensive_rebounds: Int!
-  effective_field_goal_percentage: Float!
-  field_goal_percentage: Float!
-  field_goals_attempted: Int!
-  field_goals_made: Int!
-  free_throws_attempted: Int!
-  free_throws_made: Int!
-  free_throws_percentage: Float!
-  gameID: String!
-  home_or_away: String!
-  win_or_loss: String!
-  margin: Int!
-  minutes: String!
-  offensive_rebound_percentage: Float!
-  offensive_rebounds: Int!
-  opponent: Team!
-  opponentStats: TeamGame!
-  team: Team!
-  teamStats: TeamGame!
-  personal_fouls_drawn: Int!
-  personal_fouls: Int!
-  points: Int!
-  player: Player!
-  playoffs: Boolean!
-  season: String!
-  three_point_percentage: Float!
-  three_pointers_attempted: Int!
-  three_pointers_made: Int!
-  rebounds: Int!
-  true_shooting_percentage: Float!
-  turnovers: Int!
-  usage: Float!
-  blocks: Int!
-  steals: Int!
-  playersInGame: PlayersInGame!
-  projections: [Projection]!
-}
-
-type Projection {
-  player: Player!
-  opponent: Team!
-  propositions: [Proposition]!
-  result: PlayerGame
-  startTime: String!
-  date: String!
-}
-
-type Proposition {
-  target: Float!
-  type: String!
-  sportsbook: String!
-  predictions: [Prediction!]!
-  lastModified: String!
-}
-
-type Prediction {
-  model: String!
-  overUnderPrediction: String!
-  totalPrediction: Float
-}
-
-# add injuries to games
-type Injury {
-  startDate: String!
-  returnDate: String!
-  status: String!
-  player: Player!
-}
-
-type Target {
-  target: Float!
-  type: String!
-}
-
-type PlayersInGame {
-  team: [Player!]!
-  opponent: [Player!]!
-}
-
 type Query {
-  players: [Player!]!
-  filterPlayers(input: PlayerFilter!): [Player!]!
-  player(input: PlayerFilter!): Player!
-  teams: [Team!]!
-  filterTeams(input: TeamFilter!): [Team!]!
-  team(input: TeamFilter!): Team!
-  teamGames(input: GameFilter!): [TeamGame!]!
-  playerGames(input: GameFilter!): [PlayerGame!]!
-  projections(input: ProjectionFilter!): [Projection!]!
+  players(input: PlayerFilter): [Player!]!
+  teams(input: TeamFilter!): [Team!]!
+  # projections(input: ProjectionFilter!): [Projection!]!
+}
+
+enum Stat {
+  Points
+  Assists
+  Rebounds
+  Steals
+  Blocks
+  ThreePointersMade
+  ThreePointersAttempted
+  ThreePointPercentage
+  FreeThrowsMade
+  FreeThrowsAttempted
+  FreeThrowsPercentage
+  FieldGoalsMade
+  FieldGoalsAttempted
+  FieldGoalPercentage
+  EffectiveFieldGoalPercentage
+  TrueShootingPercentage
+  Minutes
+  OffensiveRebounds
+  DefensiveRebounds
+  AssistPercentage
+  OffensiveReboundPercentage
+  DefensiveReboundPercentage
+  Usage
+  Turnovers
+  PersonalFouls
+  PersonalFoulsDrawn
+  PointsReboundsAssists
+  PointsRebounds
+  PointsAssists
+  ReboundsAssists
+  BlocksSteals
+  FantasyScore
+  GamesPlayed
+  Height
+  Weight
+  DoubleDouble
+  GamesWon
+  GamesLost
+  OppPoints
+  OppAssists
+  OppRebounds
 }
 
 input ProjectionFilter {
-  sportsbook: String
-  playerName: String
-  playerID: Int
-  startDate: String
-  endDate: String
-  teamID: Int
-  opponentID: Int
+  period: Period!
+  propositionFilter: PropositionFilter
+}
+
+input PropositionFilter {
+  sportsbook: SportsbookOption
+  propositionType: Stat # TODO: Limit to only stats that make sense
+}
+
+enum SportsbookOption {
+  PrizePicks
+  UnderdogFantasy
 }
 
 input PlayerFilter {
   name: String
   playerID: Int
-  season: String
-  position: String
+  seasons: [SeasonOption!]
+  positionStrict: Position
+  positionStrictMatch: Boolean
+  positionLoose: Position
+  positionLooseMatch: Boolean
   teamABR: String
   teamID: Int
+  startDate: String
+  endDate: String
+  statFilters: [StatFilter!]
+  withPropositions: ProjectionFilter
+  withGames: GameFilter
+}
+
+enum SeasonOption {
+  SEASON_2022_23
+  SEASON_2021_22
+  SEASON_2020_21
+}
+
+input StatFilter {
+  period: Period
+  stat: Stat!
+  mode: StatMode!
+  operator: Operator!
+  value: Float!
+}
+
+input Period {
+  startDate: String
+  endDate: String
+  # TODO: support match season
+  matchSeason: Boolean
+  matchPreviousSeason: Boolean
+  seasons: [SeasonOption!]
+  limit: Int
+}
+
+enum StatMode {
+  PER_GAME
+  PER_36
+  PER_MINUTE
+  TOTAL
+}
+
+enum Operator {
+  GT
+  GTE
+  LT
+  LTE
+  EQ
+  NEQ
+}
+
+enum Position {
+  G
+  F
+  C
+  G_F
+  F_G
+  F_C
+  C_F
 }
 
 input TeamFilter {
@@ -197,12 +136,40 @@ input TeamFilter {
   abbreviation: String
 }
 
-# TODO: Add a date filter
 input GameFilter {
   teamID: Int
+  opponentID: Int
+  opponentMatch: Boolean
   playerID: Int
   gameID: String
-  season: String
+  # TODO: Replace seasons, dates, and gameType with Period
+  # TODO: Implement Season/PreviousSeason Match, but could also just implement it in Period and add a period here
+  seasonMatch: Boolean
+  previousSeasonMatch: Boolean
+  seasons: [SeasonOption!]
   startDate: String
   endDate: String
+  lastX: Int
+  gameType: GameType
+  gameTypeMatch: Boolean
+  homeOrAway: HomeOrAway
+  homeOrAwayMatch: Boolean
+  statFilters: [StatFilter!]
+  outcome: Outcome
+}
+
+enum Outcome {
+  WIN
+  LOSS
+  PENDING
+}
+
+enum GameType {
+  REGULAR_SEASON
+  PLAYOFFS
+}
+
+enum HomeOrAway {
+  HOME
+  AWAY
 }

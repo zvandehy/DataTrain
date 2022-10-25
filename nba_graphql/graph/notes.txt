@@ -1,0 +1,264 @@
+
+
+query(filterPlayers, model) {
+    //filterProjections - within dateRange, etc.
+    //filterPlayers - players from specific teams, positions, or that match stat limits (also do this client-side)
+    //customModel - 
+
+    Projections(filterProjections: {}, filterPlayers: {}, model:{}) {
+        player {}
+        opponent {}
+        propositions {
+            sportsbook
+            target
+            statType
+            prediction(model) {
+                confidence
+                overUnder
+                estimation
+                // games { ... }
+                average { ... }
+                averagePerMin { ... }
+                pctOver
+                pctOverOrPush
+                ...
+                pctDiff
+                pctDiffPerMin
+            }
+        }
+    }
+
+}
+
+
+getProjection() {
+    //get projection (and propositions) from DB
+    //marshal data into Projection and Projection.Proposition structs
+    // get player's min/max games immediately. filter games more (locally) when calculating prediction fragments
+    // for each Proposition
+    //    Proposition.Prediction = calculatePrediction(MODEL, Proposition)
+}
+
+//need access to...
+- projection opponent
+- projection home/away
+- projection player
+- projection season // Could be determined given defined date range
+- getPlayerGames() // --> filter Player.Games from given *PLAYER*
+
+// the similar player/team models will be consistent for each proposition that exists on the same projection date
+// so, we don't want to get the player averages & similarity scores each time we make a calculation
+// ... especially because a single player will have many propositions for a single projection.
+// Instead, we should build some sort of a similarity matrix given the projection date and similarity model.
+// each date of interest requires it's own player & team matrix.
+// But, if we assume that the GameFilter & startDate criteria do not change, then we can build a matrix where each cell
+// is filled with data structures that represent the normalized difference for all possible StatAverages between two players.
+
+//Projection.SimilarPlayerMatrix / Projection.SimilarTeamMatrix  (similarityModel, Projection.StartTime) =
+// \ | A | B | C |
+// A | + | x | y |
+// B | x | + | z |
+// C | y | z | + |
+
+// \ |  A  |  B  | C |
+// A |  +  |  -  | - |
+// B | BxA |  +  | - |
+// C | CxA | CxB | + |
+
+
+// matrix[A][C] = y, where y is a StatAverage object but each stat is actually the difference between A's average and C's average
+// e.g. y = { Points: -1, Assists: 3, Rebound: 8} would mean that A averages 1 less point, 3 more assists, and 8 more rebounds than C.
+// these objects could be used to calculate a similarity score that can change depending on the user's input (stats of interest):
+// e.g. similarity(matrix[A][C], similarityModel) = a
+// similarity() would implement a distance metric that is dynamic based on the "stats of interest" and where the returned number is smaller for more similar objects.
+// a value of 0 would mean the two items have identical averages for the "stats of interest"
+
+// the teams/players most similar to A would be calculated with (or minimum): sort(matrix[A], (a,b) => similarity(a,similarityModel) - similarity(b,similarityModel) )[0:n]
+
+// TLDR: 
+// 1. query the average stats of all players and save the *normalized differences* in a matrix
+// 1a. there will be a similarity matrix for each day that a game is played in the season
+// 1b. the average will be all games for a player from a given start date (for now, just first day of season but potentially add user-input?), until the given projection date
+// 1c. limiting the number of players (e.g. players who have had a projection) will speed up the queries and calculating the matrix
+// 1d. can keep a simple map cache of `map["${startDate}-${endDate}]matrix` objects
+// 2. when searching for a similar team/player on a given date, lookup the matrix by the given projection date
+// 3. using this matrix, get the row of similarity objects for how this player compares to every other player
+// 3a. calculate the similarity score for each, using the user-defined "stats of interest" model
+// 4. return the n (limit) players with the smallest distances
+
+// TODO: How would this be ( / is this) possible with another clustering/similarity implementation, like k-means?
+
+- getSimilarPlayers(PLAYER, similarPlayerModel, endDate) // --> 
+- getSimilarTeams(OPPONENT, similarOpponentModel, endDate) // --> 
+
+calculatePrediction(customModel, proposition) {
+    // last N Games fragments, 
+    for _, item := range customModel.PlayerGames {
+        fragment := model.PredictionFragment{}
+        fragment.weight = item.weight/100
+        filter := item.filter // item.Filter is a GameFilter
+        filter.endDate = *PROJECTION_START_DATE*
+        if filter.matchOpponent == true { item.Filter.opponent: *PROJECTION_OPPONENT_ID* }
+        if filter.matchHomeAway == true { item.Filter.home_or_away: *PROJECTION_HOME_OR_AWAY* }
+        fragment.games = getPlayerGames(*PLAYER*, filter)
+        // set the average, countOver, countUnder, countPush, and over/under/diff percentages on the fragment (mutate the object)
+        calculateFragment(&fragment, proposition.stat, proposition.target) //TODO: refactor to fragment.Calculate(stat, target), or constructor
+    }
+
+    // similar team fragments
+    similarTeams := getSimilarTeams(*PROJECTION_OPPONENT_ID*, customModel.similarOpponent) // get teams similar to *OPPONENT* from projection
+    simTeamFragments := make(model.PredictionFragment{}, len(similarTeams))
+    for i := range simTeamFragments {
+        simTeam := similarTeams[i]
+        simTeamFragment[i].opponent = simTeam
+        // weight for this fragment the assigned similarity weight distributed evenly between all similar teams
+        simTeamFragment[i].weight = customModel.similarTeam.weight / len(similarPlayers) / 100
+        simTeamFragment[i].games = getPlayerGames(*PLAYER*, {season: *PROJECTION_CURRENT_SEASON*, endDate: *PROJECTION_GAME_START_TIME*, opponent: simTeam.teamID})
+        simTeamFragment[i].average = new StatAverage(fragment.Games) // StatAverage object holds averages from pre-filtered games
+        // TODO: averagePerMinute
+        calculateFragment(&simTeamFragment[i], proposition.stat, proposition.target)
+    }
+
+    // similar player fragments
+    similarPlayers := getSimilarPlayers(*PLAYER*, customModel.similarPlayer, *PROJECTION_GAME_START_TIME*) //get players similar to *PLAYER* from projection
+    simPlayerFragments := make(model.PredictionFragment{}, len(similarPlayers))
+    for i := range simPlayerFragments {
+        simPlayer := similarPlayers[i]
+        simPlayerFragments[i].player = simPlayer
+        // weight for this fragment the assigned similarity weight distributed evenly between all similar players
+        simPlayerFragments[i].weight = customModel.similarPlayer.weight / len(similarPlayers) / 100
+        simPlayerFragments[i].games = getPlayerGames(simPlayer, {season: *PROJECTION_CURRENT_SEASON*, endDate: *PROJECTION_GAME_START_TIME*})
+        simPlayerFragments[i].average = new StatAverage(fragment.Games) // StatAverage object holds averages from pre-filtered games
+        // TODO: averagePerMinute
+        calculateFragment(&simPlayerFragments[i], proposition.stat, simPlayerFragments[i].average.get(proposition.stat))
+    }
+
+    //TODO: adjust weights if any of the fragments have no applicable games
+
+    // calculate over/under, estimate, and confidence
+    overConfidence := 0.0
+    underConfidence := 0.0
+    estimation := 0.0
+    redistributedEstimate := 0.0
+    // TODO: get nonSimilarPlayerFragments
+    for _, fragment := range nonSimilarPlayerFragments {
+        estimation += fragment.average.get(proposition.stat)*fragment.weight
+        overConfidence += fragment.OverConfidence(model)
+        underConfidence += fragment.UnderConfidence(model)
+        weight = fragment.weight + (customModel.similarPlayer.weight/len(similarPlayerFragments))
+        redistributedEstimate += fragment.average.get(proposition.stat)*weight
+    }
+
+    //estimation from similar players' games (if X player scores less against the OPP, then estimation should be adjusted based on the significance of that difference): 
+    for _, spFragmnet := similarPlayerFragments {
+        //9 += 15+(66%*15)*10%
+        estimation += (redistributedEstimate+(spFragment.pctDiff*redistributedEstimate))*spFragment.weight
+        overConfidence += spFragment.OverConfidence(model)
+        underConfidence += spFragment.UnderConfidence(model)
+    }    
+}
+
+func (*f PredictionFragment) OverConfidence(model CustomModel) {
+    if(model.includePush) {
+        return (fragment.pctOver+fragment.pctPush)*fragment.weight
+    } 
+    returnfragment.pctOver*fragment.weight
+}
+
+func (*f PredictionFragment) UnderConfidence(model CustomModel) {
+    if(model.includePush) {
+        return (fragment.pctUnder+fragment.pctPush)*fragment.weight
+    } 
+    returnfragment.pctUnder*fragment.weight
+}
+
+
+10 * 20%
+20 * 20%
+15 * 20%
+estimation so far: 10*.2+20*.2+15*.2 = 2+4+3 = 9...
+(if only used these at 33.3% each, would be: (10*33.3%=3.33)+(20*33.3%=6.66)+(15*33.4%=5.01)=9.99+5.01=15)
+
+OTHER PLAYERS: 40%
+runningEstimate = 9
+redistributedEstimate (estimate if weight assigned to similarPlayers was evenly redistributed) = 15
+4 PLAYERS, 10% EACH
+(1) 15 --> 25 = +10 = (+10/15) +66% => 66% * 15 = 10 => estimate += 10+15 * 10%
+(2) 10 --> 15 = +05 =          +50% => 50% * 15 = 7.5 => estimate += 7.5+15 * 10%
+(3) 15 --> 12 = -03 =          -20% => -20% * 15 = -3 => estimate += -3+15 *10%
+(4) 16 --> 15 = -01 =          -06% => -.0625*15 = -0.9375 => estimate += -.9375+15 *10%
+similarPlayersPctDiffTotal = +47%
+similarPlayerEstimate = redistributedEstimate + redistributedEstimate * similarPlayersPctDiffTotal = 15+15*.47 = 22.05
+22.05*40% = 8.82
+
+estimate += 8.82 = 17.82
+
+
+calculateFragment(*fragment, stat, target) {
+    if(fragment.games != nil && len(fragment.games) > 0) {
+        countOver := 0
+        countUnder := 0
+        countPush := 0
+        for _, game := fragment.games {
+            if(game.Score(stat) > target) countOver++
+            ...
+            //count everything
+        }
+        //calculate over/under percentages
+        //mutate fragment object
+    }
+}
+
+
+Model {
+    // FILTER_X/Y/Z could be any variation of gamefilters (last X,Y,Z, playoffs, home/away, etc.)
+    gameBreakdowns([{FILTER_X, WEIGHT_X}, {FILTER_Y, WEIGHT_Y}])
+    similarPlayer(
+        limit: X,
+        statsOfInterest: [String], //TODO: limit input based on possible comparable similar player stats
+        perMinute: Boolean,
+        weight: Int,
+        //TODO: possibly limit pool of possible players given a PlayerFilter (e.g. players that average at least 10 points per game)
+    )
+    similarTeam(
+        limit: X,
+        statsOfInterest: [String], //TODO: limit input based on possible comparable similar team stats
+        weight: Int,
+        //TODO: perMinute
+    )
+}
+
+
+gameBreakdowns(
+    [
+        filter: GameFilter,
+        weight: Int
+    ]
+)
+
+GameFilter {
+    lastXGames: Int
+    gameType: Playoffs/RegularSeason/Other
+    seasons: [String]
+    statFilters: [StatFilter]
+    matchOpponent: Boolean
+    matchHomeAway: Boolean
+}
+
+PlayerFilter {
+
+}
+
+StatFilter {
+    stat: String!
+    min: Float
+    max: Float
+    lookup: String
+}
+
+
+
+
+Querying by position:
+    PositionStrict(X) => get players whose position is exactly X
+    PositionLoose(X) => players that are exactly X, or X-Y

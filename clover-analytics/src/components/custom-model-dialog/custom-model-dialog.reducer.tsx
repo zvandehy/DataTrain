@@ -1,17 +1,23 @@
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
-export const INITIAL_CUSTOM_MODEL_STATE = {
+import { HitCriteriaType } from "../../shared/interfaces/accuracy.interface";
+export const INITIAL_CUSTOM_MODEL_STATE: CustomCalculation = {
   includePush: true,
   includeOnDifferentTeam: true,
+  hitCriteria: {
+    confidenceThreshold: 60,
+    stepSize: 10,
+    hitType: HitCriteriaType.ALL_PROPS,
+  },
   recency: [
     { count: 0, weight: 20 },
-    { count: 20, weight: 10 },
+    { count: 30, weight: 10 },
     { count: 10, weight: 10 },
-    { count: 5, weight: 12 },
+    { count: 5, weight: 0 },
   ],
-  similarPlayers: { count: 10, weight: 12 },
-  similarTeams: { count: 3, weight: 15 },
-  opponentWeight: 21,
-  // homeAwayWeight:0.1,
+  similarPlayers: { count: 10, weight: 20 },
+  similarTeams: { count: 3, weight: 20 },
+  opponentWeight: 20,
+  // homeAwayWeight:0,
 };
 
 export enum CustomModelActionType {
@@ -32,24 +38,6 @@ export interface CustomModelAction {
   type: CustomModelActionType;
   payload: any;
 }
-
-// export interface CustomCalculation {
-//     includePush: boolean;
-//     includeOnDifferentTeam: boolean;
-//     recency?: Factor[];
-//     recencyPct?: Factor[];
-//     similarPlayers?: Factor;
-//     similarTeams?: Factor;
-//     homeAwayWeight?: number;
-//     opponentWeight?: number;
-//     playoffs?: Factor;
-//   }
-
-//   export interface Factor {
-//     weight: number;
-//     count?: number;
-//     seasons?: string[];
-//   }
 
 export const customModelReducer = (
   state: CustomCalculation,

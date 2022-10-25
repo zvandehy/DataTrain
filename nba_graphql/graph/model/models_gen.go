@@ -2,41 +2,467 @@
 
 package model
 
-type GameFilter struct {
-	TeamID    *int    `json:"teamID"`
-	PlayerID  *int    `json:"playerID"`
-	GameID    *string `json:"gameID"`
-	Season    *string `json:"season"`
-	StartDate *string `json:"startDate"`
-	EndDate   *string `json:"endDate"`
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type AverageStats struct {
+	Assists                float64 `json:"assists"`
+	Blocks                 float64 `json:"blocks"`
+	DefensiveRebounds      float64 `json:"defensive_rebounds"`
+	FieldGoalsAttempted    float64 `json:"field_goals_attempted"`
+	FieldGoalsMade         float64 `json:"field_goals_made"`
+	FreeThrowsAttempted    float64 `json:"free_throws_attempted"`
+	FreeThrowsMade         float64 `json:"free_throws_made"`
+	GamesPlayed            float64 `json:"games_played"`
+	Height                 float64 `json:"height"`
+	Minutes                float64 `json:"minutes"`
+	OffensiveRebounds      float64 `json:"offensive_rebounds"`
+	PersonalFoulsDrawn     float64 `json:"personal_fouls_drawn"`
+	PersonalFouls          float64 `json:"personal_fouls"`
+	Points                 float64 `json:"points"`
+	Rebounds               float64 `json:"rebounds"`
+	Steals                 float64 `json:"steals"`
+	ThreePointersAttempted float64 `json:"three_pointers_attempted"`
+	ThreePointersMade      float64 `json:"three_pointers_made"`
+	Turnovers              float64 `json:"turnovers"`
+	Weight                 float64 `json:"weight"`
+	FantasyScore           float64 `json:"fantasy_score"`
+	PointsAssists          float64 `json:"points_assists"`
+	PointsRebounds         float64 `json:"points_rebounds"`
+	PointsReboundsAssists  float64 `json:"points_rebounds_assists"`
+	ReboundsAssists        float64 `json:"rebounds_assists"`
+	BlocksSteals           float64 `json:"blocks_steals"`
+	DoubleDouble           float64 `json:"double_double"`
 }
 
-type PlayerFilter struct {
-	Name     *string `json:"name"`
-	PlayerID *int    `json:"playerID"`
-	Season   *string `json:"season"`
-	Position *string `json:"position"`
-	TeamAbr  *string `json:"teamABR"`
-	TeamID   *int    `json:"teamID"`
+type GameBreakdownInput struct {
+	Name   string      `json:"name"`
+	Filter *GameFilter `json:"filter"`
+	Weight float64     `json:"weight"`
+}
+
+type ModelInput struct {
+	Model              *string               `json:"model"`
+	GameBreakdowns     []*GameBreakdownInput `json:"gameBreakdowns"`
+	SimilarPlayerInput *SimilarPlayerInput   `json:"similarPlayerInput"`
+	SimilarTeamInput   *SimilarTeamInput     `json:"similarTeamInput"`
+}
+
+type PredictionBreakdown struct {
+	WeightedTotal      *AverageStats         `json:"weightedTotal"`
+	PredictionAccuracy *AverageStats         `json:"predictionAccuracy"`
+	Fragments          []*PredictionFragment `json:"fragments"`
+}
+
+type PredictionFragment struct {
+	Name         string         `json:"name"`
+	Derived      *AverageStats  `json:"derived"`
+	DerivedGames []*PlayerGame  `json:"derivedGames"`
+	Base         *AverageStats  `json:"base"`
+	PctChange    *AverageStats  `json:"pctChange"`
+	Weight       float64        `json:"weight"`
+	Propositions []*Proposition `json:"propositions"`
 }
 
 type ProjectionFilter struct {
-	Sportsbook *string `json:"sportsbook"`
-	PlayerName *string `json:"playerName"`
-	PlayerID   *int    `json:"playerID"`
-	StartDate  *string `json:"startDate"`
-	EndDate    *string `json:"endDate"`
-	TeamID     *int    `json:"teamID"`
-	OpponentID *int    `json:"opponentID"`
+	Period            *Period            `json:"period"`
+	PropositionFilter *PropositionFilter `json:"propositionFilter"`
 }
 
-type Target struct {
-	Target float64 `json:"target"`
-	Type   string  `json:"type"`
+type PropositionFilter struct {
+	Sportsbook      *SportsbookOption `json:"sportsbook"`
+	PropositionType *Stat             `json:"propositionType"`
+}
+
+type PropositionSummary struct {
+	NumOver  int     `json:"numOver"`
+	NumUnder int     `json:"numUnder"`
+	NumPush  int     `json:"numPush"`
+	PctOver  float64 `json:"pctOver"`
+	PctUnder float64 `json:"pctUnder"`
+	PctPush  float64 `json:"pctPush"`
+}
+
+type SimilarPlayerInput struct {
+	Limit            int           `json:"limit"`
+	StatsOfInterest  []Stat        `json:"statsOfInterest"`
+	PlayerPoolFilter *PlayerFilter `json:"playerPoolFilter"`
+	Weight           float64       `json:"weight"`
+}
+
+type SimilarTeamInput struct {
+	Limit           int           `json:"limit"`
+	StatsOfInterest []Stat        `json:"statsOfInterest"`
+	TeamPoolFilter  []*TeamFilter `json:"teamPoolFilter"`
+	Period          *Period       `json:"period"`
+	Weight          float64       `json:"weight"`
+}
+
+type StatFilter struct {
+	Period   *Period  `json:"period"`
+	Stat     Stat     `json:"stat"`
+	Mode     StatMode `json:"mode"`
+	Operator Operator `json:"operator"`
+	Value    float64  `json:"value"`
 }
 
 type TeamFilter struct {
 	Name         *string `json:"name"`
 	TeamID       *int    `json:"teamID"`
 	Abbreviation *string `json:"abbreviation"`
+}
+
+type GameType string
+
+const (
+	GameTypeRegularSeason GameType = "REGULAR_SEASON"
+	GameTypePlayoffs      GameType = "PLAYOFFS"
+)
+
+var AllGameType = []GameType{
+	GameTypeRegularSeason,
+	GameTypePlayoffs,
+}
+
+func (e GameType) IsValid() bool {
+	switch e {
+	case GameTypeRegularSeason, GameTypePlayoffs:
+		return true
+	}
+	return false
+}
+
+func (e GameType) String() string {
+	return string(e)
+}
+
+func (e *GameType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GameType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GameType", str)
+	}
+	return nil
+}
+
+func (e GameType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type HomeOrAway string
+
+const (
+	HomeOrAwayHome HomeOrAway = "HOME"
+	HomeOrAwayAway HomeOrAway = "AWAY"
+)
+
+var AllHomeOrAway = []HomeOrAway{
+	HomeOrAwayHome,
+	HomeOrAwayAway,
+}
+
+func (e HomeOrAway) IsValid() bool {
+	switch e {
+	case HomeOrAwayHome, HomeOrAwayAway:
+		return true
+	}
+	return false
+}
+
+func (e HomeOrAway) String() string {
+	return string(e)
+}
+
+func (e *HomeOrAway) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = HomeOrAway(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid HomeOrAway", str)
+	}
+	return nil
+}
+
+func (e HomeOrAway) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Operator string
+
+const (
+	OperatorGt  Operator = "GT"
+	OperatorGte Operator = "GTE"
+	OperatorLt  Operator = "LT"
+	OperatorLte Operator = "LTE"
+	OperatorEq  Operator = "EQ"
+	OperatorNeq Operator = "NEQ"
+)
+
+var AllOperator = []Operator{
+	OperatorGt,
+	OperatorGte,
+	OperatorLt,
+	OperatorLte,
+	OperatorEq,
+	OperatorNeq,
+}
+
+func (e Operator) IsValid() bool {
+	switch e {
+	case OperatorGt, OperatorGte, OperatorLt, OperatorLte, OperatorEq, OperatorNeq:
+		return true
+	}
+	return false
+}
+
+func (e Operator) String() string {
+	return string(e)
+}
+
+func (e *Operator) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Operator(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Operator", str)
+	}
+	return nil
+}
+
+func (e Operator) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Outcome string
+
+const (
+	OutcomeWin     Outcome = "WIN"
+	OutcomeLoss    Outcome = "LOSS"
+	OutcomePending Outcome = "PENDING"
+)
+
+var AllOutcome = []Outcome{
+	OutcomeWin,
+	OutcomeLoss,
+	OutcomePending,
+}
+
+func (e Outcome) IsValid() bool {
+	switch e {
+	case OutcomeWin, OutcomeLoss, OutcomePending:
+		return true
+	}
+	return false
+}
+
+func (e Outcome) String() string {
+	return string(e)
+}
+
+func (e *Outcome) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Outcome(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Outcome", str)
+	}
+	return nil
+}
+
+func (e Outcome) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Output string
+
+const (
+	OutputOver  Output = "OVER"
+	OutputUnder Output = "UNDER"
+)
+
+var AllOutput = []Output{
+	OutputOver,
+	OutputUnder,
+}
+
+func (e Output) IsValid() bool {
+	switch e {
+	case OutputOver, OutputUnder:
+		return true
+	}
+	return false
+}
+
+func (e Output) String() string {
+	return string(e)
+}
+
+func (e *Output) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Output(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Output", str)
+	}
+	return nil
+}
+
+func (e Output) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Position string
+
+const (
+	PositionG  Position = "G"
+	PositionF  Position = "F"
+	PositionC  Position = "C"
+	PositionGF Position = "G_F"
+	PositionFG Position = "F_G"
+	PositionFC Position = "F_C"
+	PositionCF Position = "C_F"
+)
+
+var AllPosition = []Position{
+	PositionG,
+	PositionF,
+	PositionC,
+	PositionGF,
+	PositionFG,
+	PositionFC,
+	PositionCF,
+}
+
+func (e Position) IsValid() bool {
+	switch e {
+	case PositionG, PositionF, PositionC, PositionGF, PositionFG, PositionFC, PositionCF:
+		return true
+	}
+	return false
+}
+
+func (e Position) String() string {
+	return string(e)
+}
+
+func (e *Position) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Position(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Position", str)
+	}
+	return nil
+}
+
+func (e Position) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type SportsbookOption string
+
+const (
+	SportsbookOptionPrizePicks      SportsbookOption = "PrizePicks"
+	SportsbookOptionUnderdogFantasy SportsbookOption = "UnderdogFantasy"
+)
+
+var AllSportsbookOption = []SportsbookOption{
+	SportsbookOptionPrizePicks,
+	SportsbookOptionUnderdogFantasy,
+}
+
+func (e SportsbookOption) IsValid() bool {
+	switch e {
+	case SportsbookOptionPrizePicks, SportsbookOptionUnderdogFantasy:
+		return true
+	}
+	return false
+}
+
+func (e SportsbookOption) String() string {
+	return string(e)
+}
+
+func (e *SportsbookOption) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SportsbookOption(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SportsbookOption", str)
+	}
+	return nil
+}
+
+func (e SportsbookOption) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type StatMode string
+
+const (
+	StatModePerGame   StatMode = "PER_GAME"
+	StatModePer36     StatMode = "PER_36"
+	StatModePerMinute StatMode = "PER_MINUTE"
+	StatModeTotal     StatMode = "TOTAL"
+)
+
+var AllStatMode = []StatMode{
+	StatModePerGame,
+	StatModePer36,
+	StatModePerMinute,
+	StatModeTotal,
+}
+
+func (e StatMode) IsValid() bool {
+	switch e {
+	case StatModePerGame, StatModePer36, StatModePerMinute, StatModeTotal:
+		return true
+	}
+	return false
+}
+
+func (e StatMode) String() string {
+	return string(e)
+}
+
+func (e *StatMode) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = StatMode(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid StatMode", str)
+	}
+	return nil
+}
+
+func (e StatMode) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

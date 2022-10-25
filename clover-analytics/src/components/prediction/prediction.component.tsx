@@ -2,10 +2,8 @@ import { InputLabel, ListSubheader, MenuItem, Select } from "@mui/material";
 import moment from "moment";
 import React from "react";
 import { PropositionResult } from "../../shared/functions/predictions.fn";
-import {
-  Projection,
-  Proposition,
-} from "../../shared/interfaces/graphql/projection.interface";
+import { Proposition } from "../../shared/interfaces/graphql/game.interface";
+import { Projection } from "../../shared/interfaces/graphql/projection.interface";
 import { Stat } from "../../shared/interfaces/stat.interface";
 import PredictionIcon from "./prediction-icon.component";
 import "./prediction.component.css";
