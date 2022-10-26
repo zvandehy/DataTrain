@@ -77,6 +77,7 @@ func ConnectDB(ctx context.Context, db string) (*NBADatabaseClient, error) {
 		nbaClient.PlayerCache[fmt.Sprintf("%v", cache)] = players
 		logrus.Info("Cached players for: ", cache)
 	}
+	// nbaClient.PlayerCache[fmt.Sprintf("%v",[][]model.SeasonOption{{model.SEASON_2020_21,model.SEASON_2021_22}})]
 	nbaClient.PlayerSimilarity = *model.NewPlayerSnapshots()
 	nbaClient.TeamSimilarity = *model.NewTeamSnapshots()
 	logrus.Infof("Connected to DB: '%v/%v'", config.DBSource, nbaClient.Name)

@@ -94,6 +94,11 @@ func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
 
 	var filter bson.M
 	if len(andFilters) > 0 {
+		if len(andFilters) == 1 {
+			if _, ok := andFilters[0].(bson.M)["seasons"]; ok {
+				andFilters = append(andFilters, bson.M{"exclude": false})
+			}
+		}
 		filter = bson.M{
 			"$and": andFilters,
 		}
@@ -128,6 +133,7 @@ func (input *PlayerFilter) MongoPipeline() mongo.Pipeline {
 		pipeline = append(pipeline, bson.D{primitive.E{Key: "$lookup", Value: lookupProjections}})
 		pipeline = append(pipeline, bson.D{primitive.E{Key: "$match", Value: projectionFilter}})
 	}
+	logrus.Warn(pipeline)
 	return pipeline
 }
 
