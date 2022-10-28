@@ -7,5 +7,10 @@ import "github.com/zvandehy/DataTrain/nba_graphql/database"
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	Db *database.NBADatabaseClient
+	database.BasketballRepository
+}
+
+// NewResolver returns a new instance of the resolver.
+func NewResolver(db database.BasketballRepository) *Resolver {
+	return &Resolver{BasketballRepository: db}
 }

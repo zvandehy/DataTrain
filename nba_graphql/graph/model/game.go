@@ -18,9 +18,9 @@ type PlayerGame struct {
 	FieldGoalsMade               int          `json:"field_goals_made" bson:"field_goals_made"`
 	FreeThrowsAttempted          int          `json:"free_throws_attempted" bson:"free_throws_attempted"`
 	FreeThrowsMade               int          `json:"free_throws_made" bson:"free_throws_made"`
-	FreeThrowsPercentage         float64      `json:"free_throws_percentage" bson:"free_throws_percentage"`
+	FreeThrowsPercentage         float64      `json:"free_throws_percentage" bson:"free_throws_percentage"` //change to freeThrowPercentage
 	GameID                       string       `json:"gameID" bson:"gameID"`
-	HomeOrAway                   string       `json:"home_or_away" bson:"home_or_away"`
+	HomeOrAway                   string       `json:"home_or_away" bson:"home_or_away"` //add "HOME" or "AWAY" constraint
 	Margin                       int          `json:"margin" bson:"margin"`
 	Minutes                      string       `json:"minutes" bson:"minutes"`
 	OffensiveReboundPercentage   float64      `json:"offensive_rebound_percentage" bson:"offensive_rebound_percentage"`

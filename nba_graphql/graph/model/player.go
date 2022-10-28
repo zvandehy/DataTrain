@@ -17,6 +17,8 @@ var PlayerNames map[string]string = map[string]string{
 	"Olivia Nelson-Odada": "Olivia Nelson-Ododa",
 }
 
+// TODO: Change first_name and last_name to firstName and lastName
+
 type Player struct {
 	FirstName   string   `json:"first_name" bson:"first_name"`
 	LastName    string   `json:"last_name" bson:"last_name"`
@@ -329,7 +331,11 @@ func EuclideanDistance(diff PlayerDiff, statsOfInterest []Stat) float64 {
 }
 
 func (p *PlayerAverage) Score(stat Stat) float64 {
-	switch NewStat(string(stat)) {
+	s, err := NewStat(string(stat))
+	if err != nil {
+		return 0.0
+	}
+	switch s {
 	case Points:
 		return float64(p.Points)
 	case Assists:

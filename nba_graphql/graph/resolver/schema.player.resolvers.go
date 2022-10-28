@@ -145,7 +145,7 @@ func (r *playerGameResolver) FantasyScore(ctx context.Context, obj *model.Player
 // Prediction is the resolver for the prediction field.
 func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGame, input model.ModelInput) (*model.PredictionBreakdown, error) {
 	// TODO: ADD DATALOADER
-	propositions, err := r.Db.GetPropositionsByGame(ctx, obj)
+	propositions, err := r.GetPropositionsByPlayerGame(ctx, *obj)
 	if err != nil {
 		logrus.Errorf("Error loading propositions for game %v", obj)
 		return nil, err
@@ -302,7 +302,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 				input.SimilarTeamInput.Period.EndDate = &obj.Date
 			}
 		}
-		similarTeams, err := r.Db.GetSimilarTeams(ctx, obj.OpponentID, input.SimilarTeamInput, obj.Date)
+		similarTeams, err := r.GetSimilarTeams(ctx, obj.OpponentID, input.SimilarTeamInput, obj.Date)
 		if err != nil {
 			logrus.Errorf("Error getting similar teams: %v", err)
 			return nil, err
@@ -378,7 +378,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 	countSimilarPlayersWithGamesVsOpp := 0
 	if input.SimilarPlayerInput != nil {
 		// gets X similar players to the current player, where X is defined by the input limit
-		similarPlayers, err := r.Db.GetSimilarPlayersFromMatrix(ctx, obj.PlayerID, input.SimilarPlayerInput, obj.Date)
+		similarPlayers, err := r.GetSimilarPlayers(ctx, obj.PlayerID, input.SimilarPlayerInput, obj.Date)
 		if err != nil {
 			logrus.Errorf("Error getting similar players: %v", err)
 			return nil, err
@@ -391,7 +391,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 					baseGames = append(baseGames, game)
 				}
 			}
-			b := model.NewPlayerAverage(baseGames, &player)
+			b := model.NewPlayerAverage(baseGames, player)
 			baseAvg := b.AverageStats()
 
 			// get the similar player's games vs the matchup opponent
@@ -411,7 +411,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 			// Don't calculate averages if there are no games vs opponent
 			if len(matchupGames) > 0 {
 				countSimilarPlayersWithGamesVsOpp++
-				pAvg := model.NewPlayerAverage(matchupGames, &player)
+				pAvg := model.NewPlayerAverage(matchupGames, player)
 				derived := pAvg.AverageStats()
 				similarPlayerFragments = append(similarPlayerFragments, &model.PredictionFragment{
 					Name:         fmt.Sprintf("%v (%s) vs Opp", player.Name, player.Position),

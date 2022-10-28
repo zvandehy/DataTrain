@@ -20,7 +20,10 @@ type Proposition struct {
 func (p *Proposition) UnmarshalBSON(data []byte) error {
 	type Alias Proposition
 	bson.Unmarshal(data, (*Alias)(p))
-	t := NewStat(p.TypeRaw)
+	t, err := NewStat(p.TypeRaw)
+	if err != nil {
+		return err
+	}
 	p.Type = t
 	return nil
 }
@@ -28,7 +31,10 @@ func (p *Proposition) UnmarshalBSON(data []byte) error {
 func (p *Proposition) UnmarshalJSON(data []byte) error {
 	type Alias Proposition
 	json.Unmarshal(data, (*Alias)(p))
-	t := NewStat(p.TypeRaw)
+	t, err := NewStat(p.TypeRaw)
+	if err != nil {
+		return err
+	}
 	p.Type = t
 	return nil
 }

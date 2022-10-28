@@ -111,22 +111,35 @@ type PrizePicksIncluded struct {
 func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projections []*Projection) ([]*Projection, error) {
 	var playerName string
 	var statType Stat
-	for _, p := range included {
-		if p.ID == prop.Relationships.Player.Data.ID {
-			playerName = p.Attributes.Name
+
+	// TODO: refactor to use map in parent
+	var idToName map[string]string = make(map[string]string)
+	for _, inc := range included {
+		idToName[inc.ID] = inc.Attributes.Name
+	}
+	if val, ok := idToName[prop.Relationships.Player.Data.ID]; ok {
+		playerName = strings.TrimSpace(val)
+	} else {
+		return nil, errors.New("could not find player name")
+	}
+	if val, ok := idToName[prop.Relationships.StatType.Data.ID]; ok {
+		var err error
+		statType, err = NewStat(val)
+		if err != nil {
+			return nil, err
 		}
-		if p.ID == prop.Relationships.StatType.Data.ID {
-			statType = NewStat(p.Attributes.Name)
-		}
-		if statType != "" && playerName != "" {
-			break
-		}
+	} else {
+		return nil, errors.New("could not find stat type")
 	}
 	if playerName == "" {
-		return nil, fmt.Errorf("error retrieving prizepick player name")
+		err := fmt.Errorf("error retrieving prizepick player name")
+		logrus.Error(err)
+		return nil, err
 	}
 	if statType == "" {
-		return nil, fmt.Errorf("error retrieving prizepick stat type")
+		err := fmt.Errorf("error retrieving prizepick stat type for player %s | %+v", playerName, prop)
+		logrus.Error(err)
+		return nil, err
 	}
 
 	target, err := strconv.ParseFloat(prop.Attributes.Line_score, 64)
@@ -231,7 +244,10 @@ func ParseUnderdogProjection(json UnderdogFantasy, sport string) ([]*Projection,
 				if !ok {
 					category = overUnder.OverUnder.Appearance.Category
 				}
-				stat := NewStat(category)
+				stat, err := NewStat(category)
+				if err != nil {
+					return nil, err
+				}
 				proposition := Proposition{
 					Sportsbook:   "UnderdogFantasy",
 					LastModified: &now,

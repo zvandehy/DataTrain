@@ -56,24 +56,48 @@ const (
 	OppRebounds Stat = "opponent_rebounds"
 )
 
-func NewStat(stat string) Stat {
-	lookup := strings.ReplaceAll(strings.ToLower(stat), " ", "_")
-	lookup = strings.ReplaceAll(lookup, "+", "_")
-	lookup = strings.ReplaceAll(lookup, "-", "_")
+func strip(s string) string {
+	var result strings.Builder
+	for i := 0; i < len(s); i++ {
+		b := s[i]
+		if ('a' <= b && b <= 'z') ||
+			('A' <= b && b <= 'Z') ||
+			('0' <= b && b <= '9') ||
+			b == ' ' {
+			result.WriteByte(b)
+		}
+	}
+	return result.String()
+}
+
+func NewStat(stat string) (Stat, error) {
+	if stat == "" {
+		return "", fmt.Errorf("empty stat")
+	}
+	// lookup := strings.ReplaceAll(strings.ToLower(stat), " ", "_")
+	// lookup = strings.ReplaceAll(lookup, "+", "_")
+	// lookup = strings.ReplaceAll(lookup, "-", "_")
+	// lookup = strings.ReplaceAll(lookup, "_", "")
+	// lookup = strings.ReplaceAll(lookup, "-", "")
+	// lookup = strings.TrimSpace(lookup)
+	lookup := strip(strings.ToLower(stat))
+	lookup = strings.ReplaceAll(lookup, " ", "")
 	switch lookup {
 	case "points":
-		return Points
+		return Points, nil
 	case "assists":
-		return Assists
+		return Assists, nil
 	case "rebounds":
-		return Rebounds
+		return Rebounds, nil
 	case "steals":
-		return Steals
+		return Steals, nil
 	// TODO: This might actually be blocks against...
 	case "blocked_shots":
 		fallthrough
+	case "blockedshots":
+		fallthrough
 	case "blocks":
-		return Blocks
+		return Blocks, nil
 	case "three_pointers_made":
 		fallthrough
 	case "threepointersmade":
@@ -81,138 +105,150 @@ func NewStat(stat string) Stat {
 	case "3-pt_made":
 		fallthrough
 	case "3_pt_made":
-		return ThreePointersMade
+		fallthrough
+	case "3ptmade":
+		return ThreePointersMade, nil
 	case "three_pointers_attempted":
 		fallthrough
 	case "threepointersattempted":
-		return ThreePointersAttempted
+		return ThreePointersAttempted, nil
 	case "three_point_percentage":
 		fallthrough
 	case "threepointpercentage":
-		return ThreePointPercentage
+		return ThreePointPercentage, nil
 	case "free_throws_made":
 		fallthrough
 	case "freethrowsmade":
-		return FreeThrowsMade
+		return FreeThrowsMade, nil
 	case "free_throws_attempted":
 		fallthrough
 	case "freethrowsattempted":
-		return FreeThrowsAttempted
+		return FreeThrowsAttempted, nil
 	case "free_throws_percentage":
 		fallthrough
 	case "freethrowspercentage":
-		return FreeThrowsPercentage
+		return FreeThrowsPercentage, nil
 	case "field_goals_made":
 		fallthrough
 	case "fieldgoalsmade":
-		return FieldGoalsMade
+		return FieldGoalsMade, nil
 	case "field_goals_attempted":
 		fallthrough
 	case "fieldgoalsattempted":
-		return FieldGoalsAttempted
+		return FieldGoalsAttempted, nil
 	case "field_goal_percentage":
 		fallthrough
 	case "fieldgoalpercentage":
-		return FieldGoalPercentage
+		return FieldGoalPercentage, nil
 	case "effective_field_goal_percentage":
 		fallthrough
 	case "effectivefieldgoalpercentage":
-		return EffectiveFieldGoalPercentage
+		return EffectiveFieldGoalPercentage, nil
 	case "true_shooting_percentage":
 		fallthrough
 	case "trueshootingpercentage":
-		return TrueShootingPercentage
+		return TrueShootingPercentage, nil
 	case "minutes":
-		return Minutes
+		return Minutes, nil
 	case "offensive_rebounds":
 		fallthrough
 	case "offensiverebounds":
-		return OffensiveRebounds
+		return OffensiveRebounds, nil
 	case "defensive_rebounds":
 		fallthrough
 	case "defensiverebounds":
-		return DefensiveRebounds
+		return DefensiveRebounds, nil
 	case "assist_percentage":
 		fallthrough
 	case "assistpercentage":
-		return AssistPercentage
+		return AssistPercentage, nil
 	case "offensive_rebound_percentage":
 		fallthrough
 	case "offensivereboundpercentage":
-		return OffensiveReboundPercentage
+		return OffensiveReboundPercentage, nil
 	case "defensive_rebound_percentage":
 		fallthrough
 	case "defensivereboundpercentage":
-		return DefensiveReboundPercentage
+		return DefensiveReboundPercentage, nil
 	case "usage":
-		return Usage
+		return Usage, nil
 	case "turnovers":
-		return Turnovers
+		return Turnovers, nil
 	case "gamesplayed":
 		fallthrough
 	case "games_played":
-		return GamesPlayed
+		return GamesPlayed, nil
 	case "personal_fouls":
 		fallthrough
 	case "personalfouls":
-		return PersonalFouls
+		return PersonalFouls, nil
 	case "personal_fouls_drawn":
 		fallthrough
 	case "personalfoulsdrawn":
-		return PersonalFoulsDrawn
+		return PersonalFoulsDrawn, nil
 	case "points_rebounds_assists":
 		fallthrough
 	case "pointsreboundsassists":
 		fallthrough
 	case "pts_rebs_asts":
-		return PointsReboundsAssists
+		fallthrough
+	case "ptsrebsasts":
+		return PointsReboundsAssists, nil
 	case "pointsrebounds":
 		fallthrough
 	case "points_rebounds":
 		fallthrough
 	case "pts_rebs":
-		return PointsRebounds
+		fallthrough
+	case "ptsrebs":
+		return PointsRebounds, nil
 	case "points_assists":
 		fallthrough
 	case "pointsassists":
 		fallthrough
 	case "pts_asts":
-		return PointsAssists
+		fallthrough
+	case "ptsasts":
+		return PointsAssists, nil
 	case "rebounds_assists":
 		fallthrough
 	case "reboundsassists":
 		fallthrough
 	case "rebs_asts":
-		return ReboundsAssists
+		fallthrough
+	case "rebsasts":
+		return ReboundsAssists, nil
 	case "blocks_steals":
 		fallthrough
 	case "blks_stls":
 		fallthrough
+	case "blksstls":
+		fallthrough
 	case "blockssteals":
-		return BlocksSteals
+		return BlocksSteals, nil
 	case "fantasy_score":
 		fallthrough
 	case "fantasyscore":
-		return FantasyScore
+		return FantasyScore, nil
 	case "height":
-		return Height
+		return Height, nil
 	case "weight":
-		return Weight
+		return Weight, nil
 	case "double-double":
 		fallthrough
 	case "double_double":
 		fallthrough
 	case "doubledouble":
-		return DoubleDouble
+		return DoubleDouble, nil
 	// Team Stats
 	case "games_won":
 		fallthrough
 	case "gameswon":
-		return GamesWon
+		return GamesWon, nil
 	case "games_lost":
 		fallthrough
 	case "gameslost":
-		return GamesLost
+		return GamesLost, nil
 	case "opponent_points":
 		fallthrough
 	case "opponentpoints":
@@ -220,7 +256,7 @@ func NewStat(stat string) Stat {
 	case "opppoints":
 		fallthrough
 	case "opp_points":
-		return OppPoints
+		return OppPoints, nil
 	case "opponent_assists":
 		fallthrough
 	case "opponentassists":
@@ -228,7 +264,7 @@ func NewStat(stat string) Stat {
 	case "oppassists":
 		fallthrough
 	case "opp_assists":
-		return OppAssists
+		return OppAssists, nil
 	case "opponent_rebounds":
 		fallthrough
 	case "opponentrebounds":
@@ -236,20 +272,28 @@ func NewStat(stat string) Stat {
 	case "opprebounds":
 		fallthrough
 	case "opp_rebounds":
-		return OppRebounds
+		return OppRebounds, nil
 	default:
 		logrus.Errorf("Unknown new stat: '%s'", stat)
-		return ""
+		return "", fmt.Errorf("Unknown new stat: '%s'", stat)
 	}
 }
 
 func (s *Stat) UnmarshalJSON(data []byte) error {
-	*s = NewStat(string(data[:]))
+	v, err := NewStat(string(data[:]))
+	if err != nil {
+		return err
+	}
+	*s = v
 	return nil
 }
 
 func (s *Stat) UnmarshalBSON(data []byte) error {
-	*s = NewStat(string(data[:]))
+	v, err := NewStat(string(data[:]))
+	if err != nil {
+		return err
+	}
+	*s = v
 	return nil
 }
 
@@ -259,7 +303,11 @@ func (s *Stat) UnmarshalGQL(v interface{}) error {
 		return fmt.Errorf("Stat must be a string")
 	}
 
-	*s = NewStat(stat)
+	x, err := NewStat(stat)
+	if err != nil {
+		return err
+	}
+	*s = x
 	return nil
 }
 

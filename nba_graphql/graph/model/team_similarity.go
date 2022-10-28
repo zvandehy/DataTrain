@@ -44,19 +44,19 @@ func (s *TeamSnapshots) AddSnapshot(startDate, endDate time.Time, teams []*Team)
 	(*s)[key] = *NewTeamSimilarityMatrix(averages)
 }
 
-func (s *TeamSnapshots) GetSimilarTeams(teamID, limit int, startDate, endDate string, statsOfInterest []Stat) []Team {
+func (s *TeamSnapshots) GetSimilarTeams(teamID, limit int, startDate, endDate string, statsOfInterest []Stat) []*Team {
 	key := s.Key(startDate, endDate)
 	if snapshot, ok := (*s)[key]; ok {
 		similarTeams, err := snapshot.GetNearestTeams(teamID, limit, statsOfInterest)
 		if err != nil {
 			logrus.Errorf("error getting similar teams from matrix '%v': %v", key, err)
 			logrus.Errorf("%+v", *s)
-			return []Team{}
+			return []*Team{}
 		}
 		return similarTeams
 	}
 	logrus.Errorf("snapshot '%v' not found in:\n\t%+v", key, *s)
-	return []Team{}
+	return []*Team{}
 }
 
 type TeamSimilarityMatrix struct {
@@ -112,8 +112,8 @@ func (m *TeamSimilarityMatrix) AddNormalizedTeams(teams []TeamAverage) {
 	statsOfInterest := TeamAverageStats()
 	stats := make([]StatOfInterest, len(statsOfInterest))
 	for i, input := range statsOfInterest {
-		stat := NewStat(string(input))
-		if stat == "" {
+		stat, err := NewStat(string(input))
+		if err != nil {
 			logrus.Warning("Stat of interest not found: ", stat)
 			continue
 		}
@@ -166,10 +166,10 @@ func (m *TeamSimilarityMatrix) CompareAverages(in int, averageIn TeamAverage) ma
 	return comparisons
 }
 
-func (m *TeamSimilarityMatrix) GetNearestTeams(toTeam int, limit int, statsOfInterest []Stat) (similarTeams []Team, err error) {
+func (m *TeamSimilarityMatrix) GetNearestTeams(toTeam int, limit int, statsOfInterest []Stat) (similarTeams []*Team, err error) {
 	if vector, ok := m.Matrix[toTeam]; ok {
 		for _, team := range vector.GetNearest(limit, statsOfInterest) {
-			similarTeams = append(similarTeams, team.Team)
+			similarTeams = append(similarTeams, &team.Team)
 		}
 		return similarTeams, nil
 	}

@@ -16,7 +16,7 @@ func (r *queryResolver) Players(ctx context.Context, input *model.PlayerFilter) 
 	if input == nil {
 		input = &model.PlayerFilter{}
 	}
-	players, err := r.Db.GetPlayers(ctx, input)
+	players, err := r.GetPlayers(ctx, true, input)
 	if err != nil {
 		return []*model.Player{}, err
 	}

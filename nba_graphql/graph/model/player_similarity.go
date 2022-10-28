@@ -44,17 +44,17 @@ func (s *PlayerSnapshots) AddSnapshot(startDate, endDate time.Time, playerFilter
 	(*s)[fmt.Sprintf("%s-%s-%s", startDate.Format(util.DATE_FORMAT), endDate.Format(util.DATE_FORMAT), playerFilter.Key())] = *NewPlayerSimilarityMatrix(averages)
 }
 
-func (s *PlayerSnapshots) GetSimilarPlayers(playerID, limit int, startDate, endDate string, playerFilter *PlayerFilter, statsOfInterest []Stat) []Player {
+func (s *PlayerSnapshots) GetSimilarPlayers(playerID, limit int, startDate, endDate string, playerFilter *PlayerFilter, statsOfInterest []Stat) []*Player {
 	key := s.Key(startDate, endDate, *playerFilter)
 	if snapshot, ok := (*s)[key]; ok {
 		similarPlayers, err := snapshot.GetNearestPlayers(playerID, limit, statsOfInterest)
 		if err != nil {
 			logrus.Errorf("error getting similar players from matrix '%v': %v", key, err)
-			return []Player{}
+			return []*Player{}
 		}
 		return similarPlayers
 	}
-	return []Player{}
+	return []*Player{}
 }
 
 type PlayerSimilarityMatrix struct {
@@ -124,8 +124,9 @@ func (m *PlayerSimilarityMatrix) AddNormalizedPlayers(players []PlayerAverage) {
 	statsOfInterest := PlayerAverageStats()
 	stats := make([]StatOfInterest, len(statsOfInterest))
 	for i, input := range statsOfInterest {
-		stat := NewStat(string(input))
-		if stat == "" {
+		stat, err := NewStat(string(input))
+
+		if err != nil {
 			logrus.Warnf("Stat of interest not found: %v", stat)
 			continue
 		}
@@ -177,10 +178,10 @@ func (m *PlayerSimilarityMatrix) CompareAverages(in int, averageIn PlayerAverage
 	return comparisons
 }
 
-func (m *PlayerSimilarityMatrix) GetNearestPlayers(toPlayer int, limit int, statsOfInterest []Stat) (similarPlayers []Player, err error) {
+func (m *PlayerSimilarityMatrix) GetNearestPlayers(toPlayer int, limit int, statsOfInterest []Stat) (similarPlayers []*Player, err error) {
 	if vector, ok := m.Matrix[toPlayer]; ok {
 		for _, player := range vector.GetNearest(limit, statsOfInterest) {
-			similarPlayers = append(similarPlayers, player.Player)
+			similarPlayers = append(similarPlayers, &player.Player)
 		}
 		return similarPlayers, nil
 	}
