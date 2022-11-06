@@ -29,11 +29,11 @@ func (s *PlayerSnapshots) AddSnapshot(startDate, endDate time.Time, playerFilter
 	for _, player := range players {
 		var games []*PlayerGame
 		for _, game := range player.GamesCache {
-			date, err := time.Parse(util.DATE_FORMAT, game.Date)
-			if err != nil {
-				logrus.Errorf("error parsing game date: %v", err)
-			}
-			if date.After(startDate) && date.Before(endDate) {
+			// date, err := time.Parse(util.DATE_FORMAT, game.Date)
+			// if err != nil {
+			// 	logrus.Errorf("error parsing game date: %v", err)
+			// }
+			if game.Date.After(startDate) && game.Date.Before(endDate) {
 				games = append(games, game)
 			}
 		}
@@ -77,10 +77,7 @@ func (v *SimilarityVector) GetNearest(limit int, statsOfInterest []Stat) []Playe
 	sort.Slice(nearest, func(i, j int) bool {
 		return EuclideanDistance(nearest[i], statsOfInterest) < EuclideanDistance(nearest[j], statsOfInterest)
 	})
-	// fmt.Println("Distance to: ", v.Average.Player.Name)
-	// for _, diff := range nearest {
-	// 	fmt.Printf("%20.20s: (%v)\t[Pts:%v\tRebs: %v\tAsts: %v\t3PM: %v\tFGA: %v\tMIN: %v\tHeight: %v]\n", diff.Player.Name, EuclideanDistance(diff, statsOfInterest), diff.Points, diff.Rebounds, diff.Assists, diff.ThreePointersMade, diff.FieldGoalsAttempted, diff.Minutes, diff.Height)
-	// }
+
 	if len(v.Comparisons) <= limit {
 		return nearest
 	}

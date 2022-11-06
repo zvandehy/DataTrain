@@ -1,49 +1,57 @@
 package model
 
 import (
+	"database/sql"
 	"fmt"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type PlayerGame struct {
-	AssistPercentage             float64      `json:"assist_percentage" bson:"assist_percentage"`
-	Assists                      int          `json:"assists" bson:"assists"`
-	Date                         string       `json:"date" bson:"date"`
-	DefensiveReboundPercentage   float64      `json:"defensive_rebound_percentage" bson:"defensive_rebound_percentage"`
-	DefensiveRebounds            int          `json:"defensive_rebounds" bson:"defensive_rebounds"`
-	EffectiveFieldGoalPercentage float64      `json:"effective_field_goal_percentage" bson:"effective_field_goal_percentage"`
-	FieldGoalPercentage          float64      `json:"field_goal_percentage" bson:"field_goal_percentage"`
-	FieldGoalsAttempted          int          `json:"field_goals_attempted" bson:"field_goals_attempted"`
-	FieldGoalsMade               int          `json:"field_goals_made" bson:"field_goals_made"`
-	FreeThrowsAttempted          int          `json:"free_throws_attempted" bson:"free_throws_attempted"`
-	FreeThrowsMade               int          `json:"free_throws_made" bson:"free_throws_made"`
-	FreeThrowsPercentage         float64      `json:"free_throws_percentage" bson:"free_throws_percentage"` //change to freeThrowPercentage
-	GameID                       string       `json:"gameID" bson:"gameID"`
-	HomeOrAway                   string       `json:"home_or_away" bson:"home_or_away"` //add "HOME" or "AWAY" constraint
-	Margin                       int          `json:"margin" bson:"margin"`
-	Minutes                      string       `json:"minutes" bson:"minutes"`
-	OffensiveReboundPercentage   float64      `json:"offensive_rebound_percentage" bson:"offensive_rebound_percentage"`
-	OffensiveRebounds            int          `json:"offensive_rebounds" bson:"offensive_rebounds"`
-	TeamID                       int          `json:"team" bson:"team"`
-	OpponentID                   int          `json:"opponent" bson:"opponent"`
-	PersonalFoulsDrawn           int          `json:"personal_fouls_drawn" bson:"personal_fouls_drawn"`
-	PersonalFouls                int          `json:"personal_fouls" bson:"personal_fouls"`
-	Points                       int          `json:"points" bson:"points"`
-	PlayerID                     int          `json:"playerID" bson:"playerID"`
-	PlayerRef                    *Player      `json:"playerRef" bson:"playerRef"`
-	Playoffs                     bool         `json:"playoffs" bson:"playoffs"`
-	Season                       SeasonOption `json:"season" bson:"season"`
-	ThreePointPercentage         float64      `json:"three_point_percentage" bson:"three_point_percentage"`
-	ThreePointersAttempted       int          `json:"three_pointers_attempted" bson:"three_pointers_attempted"`
-	ThreePointersMade            int          `json:"three_pointers_made" bson:"three_pointers_made"`
-	Rebounds                     int          `json:"total_rebounds" bson:"total_rebounds"`
-	TrueShootingPercentage       float64      `json:"true_shooting_percentage" bson:"true_shooting_percentage"`
-	Turnovers                    int          `json:"turnovers" bson:"turnovers"`
-	Blocks                       int          `json:"blocks" bson:"blocks"`
-	Steals                       int          `json:"steals" bson:"steals"`
-	Usage                        float64      `json:"usage" bson:"usage"`
-	Outcome                      string       `json:"win_or_loss" bson:"win_or_loss"`
+	AssistPercentage             sql.NullFloat64 `db:"assistPct" json:"assist_percentage" bson:"assist_percentage"`
+	Assists                      int             `db:"assists" json:"assists" bson:"assists"`
+	PotentialAssists             int             `db:"potentialAssists" json:"potential_assists" bson:"potential_assists"`
+	AssistConversionRate         sql.NullFloat64 `db:"assistConversionRate" json:"assist_conversion_rate" bson:"assist_conversion_rate"`
+	Passes                       int             `db:"passes" json:"passes" bson:"passes"`
+	Date                         *time.Time      `db:"date" json:"date" bson:"date"`
+	DefensiveReboundPercentage   sql.NullFloat64 `db:"defensiveReboundPct" json:"defensive_rebound_percentage" bson:"defensive_rebound_percentage"`
+	DefensiveRebounds            int             `db:"defensiveRebounds" json:"defensive_rebounds" bson:"defensive_rebounds"`
+	EffectiveFieldGoalPercentage sql.NullFloat64 `db:"effectiveFieldGoalPct" json:"effective_field_goal_percentage" bson:"effective_field_goal_percentage"`
+	FieldGoalPercentage          sql.NullFloat64 `db:"fieldGoalPct" json:"field_goal_percentage" bson:"field_goal_percentage"`
+	FieldGoalsAttempted          int             `db:"fieldGoalsAttempted" json:"field_goals_attempted" bson:"field_goals_attempted"`
+	FieldGoalsMade               int             `db:"fieldGoalsMade" json:"field_goals_made" bson:"field_goals_made"`
+	FreeThrowsAttempted          int             `db:"freeThrowsAttempted" json:"free_throws_attempted" bson:"free_throws_attempted"`
+	FreeThrowsMade               int             `db:"freeThrowsMade" json:"free_throws_made" bson:"free_throws_made"`
+	FreeThrowsPercentage         sql.NullFloat64 `db:"freeThrowPct" json:"free_throws_percentage" bson:"free_throws_percentage"` //change to freeThrowPercentage
+	GameID                       string          `db:"gameID" json:"gameID" bson:"gameID"`
+	HomeOrAway                   string          `db:"homeAway" json:"home_or_away" bson:"home_or_away"` //add "HOME" or "AWAY" constraint
+	Margin                       int             `db:"margin" json:"margin" bson:"margin"`
+	Minutes                      float64         `db:"minutes" json:"minutes" bson:"minutes"`
+	OffensiveReboundPercentage   sql.NullFloat64 `db:"offensiveReboundPct" json:"offensive_rebound_percentage" bson:"offensive_rebound_percentage"`
+	OffensiveRebounds            int             `db:"offensiveRebounds" json:"offensive_rebounds" bson:"offensive_rebounds"`
+	TeamID                       int             `db:"teamID" json:"team" bson:"team"`
+	OpponentID                   int             `db:"opponentID" json:"opponent" bson:"opponent"`
+	PersonalFoulsDrawn           int             `db:"personalFoulsDrawn" json:"personal_fouls_drawn" bson:"personal_fouls_drawn"`
+	PersonalFouls                int             `db:"personalFouls" json:"personal_fouls" bson:"personal_fouls"`
+	Points                       int             `db:"points" json:"points" bson:"points"`
+	PlayerID                     int             `db:"playerID" json:"playerID" bson:"playerID"`
+	PlayerRef                    *Player         `json:"playerRef" bson:"playerRef"`
+	Playoffs                     bool            `db:"playoffs" json:"playoffs" bson:"playoffs"`
+	Season                       SeasonOption    `db:"season" json:"season" bson:"season"`
+	ThreePointPercentage         sql.NullFloat64 `db:"threePointPct" json:"three_point_percentage" bson:"three_point_percentage"`
+	ThreePointersAttempted       int             `db:"threePointersAttempted" json:"three_pointers_attempted" bson:"three_pointers_attempted"`
+	ThreePointersMade            int             `db:"threePointersMade" json:"three_pointers_made" bson:"three_pointers_made"`
+	Rebounds                     int             `db:"rebounds" json:"total_rebounds" bson:"total_rebounds"`
+	TrueShootingPercentage       sql.NullFloat64 `db:"trueShootingPct" json:"true_shooting_percentage" bson:"true_shooting_percentage"`
+	Turnovers                    int             `db:"turnovers" json:"turnovers" bson:"turnovers"`
+	Blocks                       int             `db:"blocks" json:"blocks" bson:"blocks"`
+	Steals                       int             `db:"steals" json:"steals" bson:"steals"`
+	Usage                        sql.NullFloat64 `db:"usage" json:"usage" bson:"usage"`
+	Outcome                      string          `db:"outcome" json:"win_or_loss" bson:"win_or_loss"`
+
+	CreatedAt *time.Time `db:"CreatedAt" json:"CreatedAt" bson:"CreatedAt"`
+	UpdatedAt *time.Time `db:"UpdatedAt" json:"UpdatedAt" bson:"UpdatedAt"`
 }
 
 func (g *PlayerGame) Score(stat Stat) float64 {
@@ -63,41 +71,37 @@ func (g *PlayerGame) Score(stat Stat) float64 {
 	case ThreePointersAttempted:
 		return float64(g.ThreePointersAttempted)
 	case ThreePointPercentage:
-		return g.ThreePointPercentage
+		return g.ThreePointPercentage.Float64
 	case FreeThrowsMade:
 		return float64(g.FreeThrowsMade)
 	case FreeThrowsAttempted:
 		return float64(g.FreeThrowsAttempted)
 	case FreeThrowsPercentage:
-		return g.FreeThrowsPercentage
+		return g.FreeThrowsPercentage.Float64
 	case FieldGoalsMade:
 		return float64(g.FieldGoalsMade)
 	case FieldGoalsAttempted:
 		return float64(g.FieldGoalsAttempted)
 	case FieldGoalPercentage:
-		return g.FieldGoalPercentage
+		return g.FieldGoalPercentage.Float64
 	case EffectiveFieldGoalPercentage:
-		return g.EffectiveFieldGoalPercentage
+		return g.EffectiveFieldGoalPercentage.Float64
 	case TrueShootingPercentage:
-		return g.TrueShootingPercentage
+		return g.TrueShootingPercentage.Float64
 	case Minutes:
-		min, err := ConvertMinutesToFloat(g.Minutes)
-		if err != nil {
-			return 0
-		}
-		return float64(min)
+		return g.Minutes
 	case OffensiveRebounds:
 		return float64(g.OffensiveRebounds)
 	case DefensiveRebounds:
 		return float64(g.DefensiveRebounds)
 	case AssistPercentage:
-		return g.AssistPercentage
+		return g.AssistPercentage.Float64
 	case OffensiveReboundPercentage:
-		return g.OffensiveReboundPercentage
+		return g.OffensiveReboundPercentage.Float64
 	case DefensiveReboundPercentage:
-		return g.DefensiveReboundPercentage
+		return g.DefensiveReboundPercentage.Float64
 	case Usage:
-		return g.Usage
+		return g.Usage.Float64
 	case Turnovers:
 		return float64(g.Turnovers)
 	case PersonalFouls:

@@ -108,21 +108,17 @@ type PrizePicksIncluded struct {
 }
 
 //ParsePrizePick creates a Projection and adds it to the projections slice or adds a Target to an existing projection
-func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projections []*Projection) ([]*Projection, error) {
+func ParsePrizePick(prop PrizePicksData, itemIDToNameMap map[string]string, projections []*Projection) ([]*Projection, error) {
 	var playerName string
 	var statType Stat
 
-	// TODO: refactor to use map in parent
-	var idToName map[string]string = make(map[string]string)
-	for _, inc := range included {
-		idToName[inc.ID] = inc.Attributes.Name
-	}
-	if val, ok := idToName[prop.Relationships.Player.Data.ID]; ok {
+	// get playername and statType from id to name mapping
+	if val, ok := itemIDToNameMap[prop.Relationships.Player.Data.ID]; ok {
 		playerName = strings.TrimSpace(val)
 	} else {
 		return nil, errors.New("could not find player name")
 	}
-	if val, ok := idToName[prop.Relationships.StatType.Data.ID]; ok {
+	if val, ok := itemIDToNameMap[prop.Relationships.StatType.Data.ID]; ok {
 		var err error
 		statType, err = NewStat(val)
 		if err != nil {
@@ -131,6 +127,7 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 	} else {
 		return nil, errors.New("could not find stat type")
 	}
+
 	if playerName == "" {
 		err := fmt.Errorf("error retrieving prizepick player name")
 		logrus.Error(err)
@@ -150,6 +147,7 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 	dateSlice := strings.SplitN(prop.Attributes.Start_time, "T", 2)
 	date := dateSlice[0]
 	now := time.Now()
+
 	// if player is already in list of projections, just add a proposition (for this prop type) to their projection
 	for i, projection := range projections {
 		if projection.PlayerName == playerName {

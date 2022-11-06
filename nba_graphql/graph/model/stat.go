@@ -10,6 +10,10 @@ import (
 
 type Stat string
 
+func (s Stat) String() string {
+	return string(s)
+}
+
 const (
 	Points                       Stat = "points"
 	Assists                      Stat = "assists"

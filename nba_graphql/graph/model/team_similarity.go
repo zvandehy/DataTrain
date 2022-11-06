@@ -79,10 +79,6 @@ func (v *TeamSimilarityVector) GetNearest(limit int, statsOfInterest []Stat) []T
 	sort.Slice(nearest, func(i, j int) bool {
 		return TeamEuclideanDistance(nearest[i], statsOfInterest) < TeamEuclideanDistance(nearest[j], statsOfInterest)
 	})
-	// fmt.Println("Distance to: ", v.Average.Team.Name)
-	// for _, diff := range nearest {
-	// 	fmt.Printf("%20.20s: (%v)\t[OppPts:%v\tOppRebs: %v\tOppAsts: %v\t]\n", diff.Team.Name, TeamEuclideanDistance(diff, statsOfInterest), diff.OppPoints, diff.OppRebounds, diff.OppAssists)
-	// }
 	if len(v.Comparisons) <= limit {
 		return nearest
 	}

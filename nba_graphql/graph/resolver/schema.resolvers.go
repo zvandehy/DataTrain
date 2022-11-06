@@ -6,20 +6,25 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 )
 
 // Players is the resolver for the players field.
 func (r *queryResolver) Players(ctx context.Context, input *model.PlayerFilter) ([]*model.Player, error) {
+	startTime := time.Now()
 	if input == nil {
 		input = &model.PlayerFilter{}
 	}
 	players, err := r.GetPlayers(ctx, true, input)
 	if err != nil {
+		logrus.Error(err)
 		return []*model.Player{}, err
 	}
+	logrus.Info("Players query took ", time.Since(startTime))
 	return players, nil
 }
 

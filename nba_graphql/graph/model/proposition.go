@@ -7,6 +7,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+type DBProposition struct {
+	PlayerID     int        `db:"playerID"`
+	GameID       string     `db:"gameID"`
+	OpponentID   int        `db:"opponentID"`
+	PlayerName   string     `db:"playerName"`
+	Date         *time.Time `db:"date"`
+	StatType     string     `db:"statType"`
+	Target       float64    `db:"target"`
+	Sportsbook   string     `db:"sportsbook"`
+	LastModified *time.Time `db:"lastModified"`
+	CreatedAt    *time.Time `db:"CreatedAt"`
+	UpdatedAt    *time.Time `db:"UpdatedAt"`
+}
+
 type Proposition struct {
 	Sportsbook    SportsbookOption    `json:"sportsbook" bson:"sportsbook"`
 	Target        float64             `json:"target" bson:"target"`

@@ -228,9 +228,14 @@ func (c *MongoClient) GetLeague() string {
 // 	// return filter
 // }
 
-func (c *MongoClient) GetPlayers(ctx context.Context, withGames bool, input *model.PlayerFilter) ([]*model.Player, error) {
+func (c *MongoClient) GetPlayers(ctx context.Context, withGames bool, inputs ...*model.PlayerFilter) ([]*model.Player, error) {
 	if !withGames {
 		panic("get players without games not implemented")
+	}
+	// TODO: refactor to use list of inputs
+	var input *model.PlayerFilter
+	if len(inputs) > 0 {
+		input = (inputs)[0]
 	}
 	startTime := time.Now()
 	c.Queries++
@@ -262,17 +267,17 @@ func (c *MongoClient) GetPlayers(ctx context.Context, withGames bool, input *mod
 		games := players[i].GamesCache
 		// sort games from most recent to least recent
 		sort.Slice(games, func(i, j int) bool {
-			a, err := time.Parse(util.DATE_FORMAT, games[i].Date)
-			if err != nil {
-				logrus.Errorf("Error parsing game date %v", games[i].Date)
-				return false
-			}
-			b, err := time.Parse(util.DATE_FORMAT, games[j].Date)
-			if err != nil {
-				logrus.Errorf("Error parsing game date %v", games[j].Date)
-				return false
-			}
-			return a.After(b)
+			// a, err := time.Parse(util.DATE_FORMAT, games[i].Date)
+			// if err != nil {
+			// 	logrus.Errorf("Error parsing game date %v", games[i].Date)
+			// 	return false
+			// }
+			// b, err := time.Parse(util.DATE_FORMAT, games[j].Date)
+			// if err != nil {
+			// 	logrus.Errorf("Error parsing game date %v", games[j].Date)
+			// 	return false
+			// }
+			return games[i].Date.After(*games[j].Date)
 		})
 		players[i].GamesCache = games
 		for j := range players[i].GamesCache {
@@ -302,6 +307,18 @@ func (c *MongoClient) GetPropositions(ctx context.Context, input *model.Proposit
 	// }
 	// logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Propositions: %v", len(propositions), input), startTime))
 	// return propositions, nil
+}
+
+func (c *MongoClient) SavePropositions(ctx context.Context, propositions []*model.DBProposition) (int, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (c *MongoClient) SaveUpcomingGames(ctx context.Context, games []*model.PlayerGame) (int, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (c *MongoClient) GetPlayerGames(ctx context.Context, input *model.GameFilter) ([]*model.PlayerGame, error) {
+	panic("not implemented") // TODO: Implement
 }
 
 func (c *MongoClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int, input *model.SimilarPlayerInput, endDate string) ([]*model.Player, error) {

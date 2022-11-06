@@ -3,6 +3,7 @@ package model
 import (
 	"math"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
@@ -10,19 +11,22 @@ import (
 )
 
 type Team struct {
-	Name         string      `json:"name" bson:"name"`
-	TeamID       int         `json:"teamID" bson:"teamID"`
-	Abbreviation string      `json:"abbreviation" bson:"abbreviation"`
-	Location     string      `json:"location" bson:"city"`
-	NumWins      int         `json:"numWins" bson:"numWins"`
-	NumLoss      int         `json:"numLoss" bson:"numLoss"`
-	League       string      `json:"league" bson:"league"`
-	GamesCache   []*TeamGame `json:"gamesCache" bson:"gamesCache"`
+	Name         string `db:"name" json:"name" bson:"name"`
+	TeamID       int    `db:"teamID" json:"teamID" bson:"teamID"`
+	Abbreviation string `db:"abbreviation" json:"abbreviation" bson:"abbreviation"`
+	Location     string `db:"city" json:"location" bson:"city"`
+	// todo: remove this
+	NumWins    int         `json:"numWins" bson:"numWins"`
+	NumLoss    int         `json:"numLoss" bson:"numLoss"`
+	League     string      `db:"league" json:"league" bson:"league"`
+	GamesCache []*TeamGame `json:"gamesCache" bson:"gamesCache"`
+	CreatedAt  *time.Time  `db:"CreatedAt" json:"CreatedAt" bson:"CreatedAt"`
+	UpdatedAt  *time.Time  `db:"UpdatedAt" json:"UpdatedAt" bson:"UpdatedAt"`
 }
 
-func (t Team) String() string {
-	return util.Print(t)
-}
+// func (t Team) String() string {
+// 	return util.Print(t)
+// }
 
 type TeamGame struct {
 	Assists                              int     `json:"assists" bson:"assists"`

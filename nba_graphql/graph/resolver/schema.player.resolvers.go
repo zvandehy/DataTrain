@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
@@ -24,15 +23,17 @@ func (r *playerResolver) Team(ctx context.Context, obj *model.Player) (*model.Te
 		logrus.Errorf("CurrentTeam is empty for player %v", obj)
 		return &model.Team{}, fmt.Errorf("CurrentTeam is empty for player %v", obj)
 	}
-	t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
-	if err != nil {
+	teams, err := r.GetTeams(ctx, false, &model.TeamFilter{Abbreviation: &obj.CurrentTeam})
+	// t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
+	if err != nil || len(teams) == 0 {
 		logrus.Errorf("Error loading team '%v' from: %v", obj.CurrentTeam, obj)
 		return nil, err
 	}
-	if t == nil {
-		return &model.Team{}, nil
+	if len(teams) > 1 {
+		logrus.Errorf("Found multiple teams for '%v' from: %v", obj.CurrentTeam, obj)
+		return nil, fmt.Errorf("found multiple teams for '%v' from: %v", obj.CurrentTeam, obj)
 	}
-	return t, err
+	return teams[0], err
 }
 
 // Games is the resolver for the games field.
@@ -73,15 +74,22 @@ func (r *playerGameResolver) Outcome(ctx context.Context, obj *model.PlayerGame)
 
 // Opponent is the resolver for the opponent field.
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
-	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	// team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
+	teams, err := r.GetTeams(ctx, false, &model.TeamFilter{TeamID: &obj.OpponentID})
+	// t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
+	if err != nil || len(teams) == 0 {
+		logrus.Errorf("Error loading team '%v' from: %v", obj.OpponentID, obj)
+		return nil, err
+	}
+	if len(teams) > 1 {
+		logrus.Errorf("Found multiple opponents for '%v' from: %v", obj.OpponentID, obj)
+		return nil, fmt.Errorf("found multiple opponents for '%v' from: %v", obj.OpponentID, obj)
+	}
 	if err != nil {
 		logrus.Errorf("Error loading opponent '%v' from: %v", obj.OpponentID, obj)
 		return nil, err
 	}
-	if team == nil {
-		return &model.Team{}, nil
-	}
-	return team, err
+	return teams[0], err
 }
 
 // OpponentStats is the resolver for the opponentStats field.
@@ -91,15 +99,22 @@ func (r *playerGameResolver) OpponentStats(ctx context.Context, obj *model.Playe
 
 // Team is the resolver for the team field.
 func (r *playerGameResolver) Team(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
-	team, err := dataloader.For(ctx).TeamByID.Load(obj.TeamID)
+	// team, err := dataloader.For(ctx).TeamByID.Load(obj.TeamID)
+	teams, err := r.GetTeams(ctx, false, &model.TeamFilter{TeamID: &obj.TeamID})
+	// t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
+	if err != nil || len(teams) == 0 {
+		logrus.Errorf("Error loading team '%v' from: %v", obj.TeamID, obj)
+		return nil, err
+	}
+	if len(teams) > 1 {
+		logrus.Errorf("Found multiple teams for '%v' from: %v", obj.TeamID, obj)
+		return nil, fmt.Errorf("Found multiple teams for '%v' from: %v", obj.TeamID, obj)
+	}
 	if err != nil {
 		logrus.Errorf("Error loading team '%v' from: %v", obj.TeamID, obj)
 		return nil, err
 	}
-	if team == nil {
-		return &model.Team{}, nil
-	}
-	return team, err
+	return teams[0], err
 }
 
 // TeamStats is the resolver for the teamStats field.
@@ -189,9 +204,10 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 
 	// Player GameLog Breakdowns
 	// Base (Filter, Games, Avg) for all of this player's games from the start of the range to the game date
+	date := obj.Date.Format(util.DATE_FORMAT)
 	baseFilter := model.GameFilter{
 		StartDate: &startDateStr,
-		EndDate:   &obj.Date,
+		EndDate:   &date,
 	}
 	playerBaseGames := []*model.PlayerGame{}
 	for _, game := range obj.PlayerRef.GamesCache {
@@ -201,17 +217,17 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 	}
 	// sort playerBaseGames by game.date
 	sort.Slice(playerBaseGames, func(i, j int) bool {
-		a, err := time.Parse(util.DATE_FORMAT, playerBaseGames[i].Date)
-		if err != nil {
-			logrus.Errorf("Error parsing date %v", playerBaseGames[i].Date)
-			return false
-		}
-		b, err := time.Parse(util.DATE_FORMAT, playerBaseGames[j].Date)
-		if err != nil {
-			logrus.Errorf("Error parsing date %v", playerBaseGames[j].Date)
-			return false
-		}
-		return a.Before(b)
+		// a, err := time.Parse(util.DATE_FORMAT, playerBaseGames[i].Date)
+		// if err != nil {
+		// 	logrus.Errorf("Error parsing date %v", playerBaseGames[i].Date)
+		// 	return false
+		// }
+		// b, err := time.Parse(util.DATE_FORMAT, playerBaseGames[j].Date)
+		// if err != nil {
+		// 	logrus.Errorf("Error parsing date %v", playerBaseGames[j].Date)
+		// 	return false
+		// }
+		return playerBaseGames[i].Date.Before(*playerBaseGames[j].Date)
 	})
 	playerBase := &model.AverageStats{}
 	if len(playerBaseGames) > 0 {
@@ -224,7 +240,8 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 		games := []*model.PlayerGame{}
 		for _, game := range playerBaseGames {
 			// only get games before the current game
-			input.GameBreakdowns[i].Filter.EndDate = &obj.Date
+			d := game.Date.Format(util.DATE_FORMAT)
+			input.GameBreakdowns[i].Filter.EndDate = &d
 			// if opponentMatch is true, only get games previously matched up against opponent
 			if input.GameBreakdowns[i].Filter.OpponentMatch != nil && *input.GameBreakdowns[i].Filter.OpponentMatch {
 				input.GameBreakdowns[i].Filter.OpponentID = &obj.OpponentID
@@ -285,24 +302,25 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 	// Similar Team Breakdown
 	if input.SimilarTeamInput != nil {
 		// only get games before the current game (or the inputted end date if that is earlier)
+		d := obj.Date.Format(util.DATE_FORMAT)
 		if input.SimilarTeamInput.Period.EndDate == nil {
-			input.SimilarTeamInput.Period.EndDate = &obj.Date
+			input.SimilarTeamInput.Period.EndDate = &d
 		} else {
 			end, err := time.Parse(util.DATE_FORMAT, *input.SimilarTeamInput.Period.EndDate)
 			if err != nil {
 				logrus.Errorf("Error parsing end date: %v", err)
-				input.SimilarTeamInput.Period.EndDate = &obj.Date
+				input.SimilarTeamInput.Period.EndDate = &d
 			}
-			date, err := time.Parse(util.DATE_FORMAT, obj.Date)
-			if err != nil {
-				logrus.Errorf("Error parsing game date: %v", err)
-				return nil, err
-			}
-			if end.After(date) {
-				input.SimilarTeamInput.Period.EndDate = &obj.Date
+			// date, err := time.Parse(util.DATE_FORMAT, d)
+			// if err != nil {
+			// 	logrus.Errorf("Error parsing game date: %v", err)
+			// 	return nil, err
+			// }
+			if end.After(*obj.Date) {
+				input.SimilarTeamInput.Period.EndDate = &d
 			}
 		}
-		similarTeams, err := r.GetSimilarTeams(ctx, obj.OpponentID, input.SimilarTeamInput, obj.Date)
+		similarTeams, err := r.GetSimilarTeams(ctx, obj.OpponentID, input.SimilarTeamInput, d)
 		if err != nil {
 			logrus.Errorf("Error getting similar teams: %v", err)
 			return nil, err
@@ -377,8 +395,10 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 
 	countSimilarPlayersWithGamesVsOpp := 0
 	if input.SimilarPlayerInput != nil {
+		d := obj.Date.Format(util.DATE_FORMAT)
 		// gets X similar players to the current player, where X is defined by the input limit
-		similarPlayers, err := r.GetSimilarPlayers(ctx, obj.PlayerID, input.SimilarPlayerInput, obj.Date)
+		// TODO: Refactor function to use time.Time instead of string
+		similarPlayers, err := r.GetSimilarPlayers(ctx, obj.PlayerID, input.SimilarPlayerInput, d)
 		if err != nil {
 			logrus.Errorf("Error getting similar players: %v", err)
 			return nil, err
@@ -396,7 +416,7 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 
 			// get the similar player's games vs the matchup opponent
 			opponentFilter := model.GameFilter{
-				EndDate:    &obj.Date,
+				EndDate:    &d,
 				OpponentID: &obj.OpponentID,
 			}
 			if len(*input.SimilarPlayerInput.PlayerPoolFilter.Seasons) > 0 {

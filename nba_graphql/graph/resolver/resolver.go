@@ -1,6 +1,8 @@
 package resolver
 
-import "github.com/zvandehy/DataTrain/nba_graphql/database"
+import (
+	"github.com/zvandehy/DataTrain/nba_graphql/database"
+)
 
 // This file will not be regenerated automatically.
 //

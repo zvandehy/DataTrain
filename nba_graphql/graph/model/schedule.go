@@ -6,10 +6,10 @@ type Schedule struct {
 			Games []struct {
 				GameDateEst string `json:"gameDateEst"`
 				AwayTeam    struct {
-					TeamTriCode string `json:"triCode"`
+					TeamTriCode string `json:"teamTriCode"`
 				} `json:"awayTeam"`
 				HomeTeam struct {
-					TeamTriCode string `json:"triCode"`
+					TeamTriCode string `json:"teamTriCode"`
 				} `json:"homeTeam"`
 				GameID string `json:"gameId"`
 			} `json:"games"`

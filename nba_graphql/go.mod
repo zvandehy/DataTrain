@@ -13,6 +13,8 @@ require (
 	go.mongodb.org/mongo-driver v1.10.2
 )
 
+require github.com/jmoiron/sqlx v1.3.5 // indirect
+
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
