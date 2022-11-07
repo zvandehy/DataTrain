@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"time"
 )
 
 type AverageStats struct {
@@ -76,12 +75,12 @@ type ProjectionFilter struct {
 type PropositionFilter struct {
 	Sportsbook      *SportsbookOption `json:"sportsbook"`
 	PropositionType *Stat             `json:"propositionType"`
-	StartDate *time.Time `json:"startDate"`
-	EndDate *time.Time `json:"endDate"`
-	PlayerID *string `json:"playerID"`
-	PlayerName *string `json:"playerName"`
-	TeamID *string `json:"teamID"`
-	TeamName *string `json:"teamName"`
+	StartDate       *string           `json:"startDate"`
+	EndDate         *string           `json:"endDate"`
+	PlayerID        *int              `json:"PlayerID"`
+	PlayerName      *string           `json:"PlayerName"`
+	TeamID          *int              `json:"TeamID"`
+	TeamName        *string           `json:"TeamName"`
 }
 
 type PropositionSummary struct {

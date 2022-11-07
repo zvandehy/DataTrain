@@ -33,7 +33,45 @@ func (r *queryResolver) Teams(ctx context.Context, input model.TeamFilter) ([]*m
 	panic(fmt.Errorf("(r *queryResolver) Teams not implemented"))
 }
 
+// Games is the resolver for the games field.
+func (r *queryResolver) Games(ctx context.Context, input model.GameFilter) ([]*model.PlayerGame, error) {
+	games, err := r.GetPlayerGames(ctx, &input)
+	if err != nil || len(games) == 0 {
+		logrus.Error(err)
+		return []*model.PlayerGame{}, err
+	}
+	return games, nil
+}
+
+// SeasonMatch is the resolver for the seasonMatch field.
+func (r *gameFilterResolver) SeasonMatch(ctx context.Context, obj *model.GameFilter, data *bool) error {
+	panic(fmt.Errorf("not implemented"))
+}
+
+// PreviousSeasonMatch is the resolver for the previousSeasonMatch field.
+func (r *gameFilterResolver) PreviousSeasonMatch(ctx context.Context, obj *model.GameFilter, data *bool) error {
+	panic(fmt.Errorf("not implemented"))
+}
+
+// MatchSeason is the resolver for the matchSeason field.
+func (r *periodResolver) MatchSeason(ctx context.Context, obj *model.Period, data *bool) error {
+	panic(fmt.Errorf("not implemented"))
+}
+
+// MatchPreviousSeason is the resolver for the matchPreviousSeason field.
+func (r *periodResolver) MatchPreviousSeason(ctx context.Context, obj *model.Period, data *bool) error {
+	panic(fmt.Errorf("not implemented"))
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// GameFilter returns generated.GameFilterResolver implementation.
+func (r *Resolver) GameFilter() generated.GameFilterResolver { return &gameFilterResolver{r} }
+
+// Period returns generated.PeriodResolver implementation.
+func (r *Resolver) Period() generated.PeriodResolver { return &periodResolver{r} }
+
 type queryResolver struct{ *Resolver }
+type gameFilterResolver struct{ *Resolver }
+type periodResolver struct{ *Resolver }

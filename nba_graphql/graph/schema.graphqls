@@ -1,6 +1,7 @@
 type Query {
   players(input: PlayerFilter): [Player!]!
   teams(input: TeamFilter!): [Team!]!
+  games(input: GameFilter!): [PlayerGame!]!
   # projections(input: ProjectionFilter!): [Projection!]!
 }
 
@@ -56,6 +57,12 @@ input ProjectionFilter {
 input PropositionFilter {
   sportsbook: SportsbookOption
   propositionType: Stat # TODO: Limit to only stats that make sense
+  startDate: String
+  endDate: String
+  PlayerID: Int
+  PlayerName: String
+  TeamID: Int
+  TeamName: String
 }
 
 enum SportsbookOption {

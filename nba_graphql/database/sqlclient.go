@@ -6,11 +6,13 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
+	"github.com/zvandehy/DataTrain/nba_graphql/util"
 )
 
 type SQLClient struct {
@@ -76,6 +78,8 @@ func (c *SQLClient) SavePropositions(ctx context.Context, propositions []*model.
 }
 
 func (c *SQLClient) GetPlayers(ctx context.Context, withGames bool, playerFilters ...*model.PlayerFilter) ([]*model.Player, error) {
+	c.AddQuery()
+	start := time.Now()
 	or := []string{}
 	args := []interface{}{}
 	for _, playerFilter := range playerFilters {
@@ -183,8 +187,8 @@ func (c *SQLClient) GetPlayers(ctx context.Context, withGames bool, playerFilter
 				}
 			}
 		}
-		fmt.Println(len(games))
 	}
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players: %v", len(players), playerFilters), start))
 	return players, nil
 }
 
@@ -226,6 +230,8 @@ func (c *SQLClient) SaveUpcomingGames(ctx context.Context, games []*model.Player
 }
 
 func (c *SQLClient) GetPlayerGames(ctx context.Context, input *model.GameFilter) (games []*model.PlayerGame, err error) {
+	c.AddQuery()
+	start := time.Now()
 	where := []string{}
 	args := []interface{}{}
 	if input.PlayerID != nil {
@@ -294,14 +300,17 @@ func (c *SQLClient) GetPlayerGames(ctx context.Context, input *model.GameFilter)
 
 	query := fmt.Sprintf("SELECT * FROM playergames WHERE %s", strings.Join(where, " AND "))
 	err = c.SelectContext(ctx, &games, query, args...)
-	if err != nil {
+	if err != nil || len(games) == 0 {
 		logrus.Warnf("failed to get playergames using query: %v | %+v", query, args)
 		return nil, fmt.Errorf("failed to get player games: %w", err)
 	}
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Player Games: %v", len(games), input), start))
 	return games, nil
 }
 
 func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *model.PropositionFilter) ([]*model.Proposition, error) {
+	c.AddQuery()
+	start := time.Now()
 	where := []string{}
 	args := []interface{}{}
 	if propositionFilter.PlayerID != nil {
@@ -345,28 +354,32 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 		logrus.Warnf("failed to get propositions using query: %v | %+v", query, args)
 		return nil, fmt.Errorf("failed to get propositions: %w", err)
 	}
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Propositions: %v", len(propositions), propositionFilter), start))
 	return propositions, nil
 }
 
 func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ...*model.TeamFilter) ([]*model.Team, error) {
-	if len(teamFilters) > 1 {
-		panic("multiple team filter not implemented") // TODO: Implement
-	}
-	teams := []model.Team{}
-	where := []string{}
+	c.AddQuery()
+	start := time.Now()
+	teams := []*model.Team{}
+	or := []string{}
 	args := []interface{}{}
-	if len(teamFilters) > 0 {
-		if (teamFilters)[0].TeamID != nil {
+	for _, teamFilter := range teamFilters {
+		where := []string{}
+		if teamFilter.TeamID != nil {
 			where = append(where, "teamID = ?")
-			args = append(args, *(teamFilters)[0].TeamID)
+			args = append(args, *teamFilter.TeamID)
 		}
-		if (teamFilters)[0].Name != nil {
+		if teamFilter.Name != nil {
 			where = append(where, "name = ?")
-			args = append(args, *(teamFilters)[0].Name)
+			args = append(args, *teamFilter.Name)
 		}
-		if (teamFilters)[0].Abbreviation != nil {
+		if teamFilter.Abbreviation != nil {
 			where = append(where, "abbreviation = ?")
-			args = append(args, *(teamFilters)[0].Abbreviation)
+			args = append(args, *teamFilter.Abbreviation)
+		}
+		if len(where) > 0 {
+			or = append(or, fmt.Sprintf("(%s)", strings.Join(where, " AND ")))
 		}
 	}
 	if withGames {
@@ -374,26 +387,23 @@ func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ..
 		// err := c.Select(&teamwithgames, query, args...)
 		panic("get teams with games not implemented") // TODO: Implement
 	}
-	query := fmt.Sprintf("SELECT * FROM teams WHERE %s", strings.Join(where, " AND "))
-	if len(where) == 0 {
+	query := fmt.Sprintf("SELECT * FROM teams WHERE %s", strings.Join(or, " OR "))
+	if len(or) == 0 {
 		query = "SELECT * FROM teams"
 	}
-	logrus.Debug(query, args)
+	logrus.Warn(query, args)
 	err := c.Select(&teams, query, args...)
 	if err != nil {
 		logrus.Warnf("failed to get teams using query: %v | %+v", query, args)
 		return nil, fmt.Errorf("failed to get teams: %w", err)
 	}
-	ret := []*model.Team{}
-	for _, team := range teams {
-		ret = append(ret, &team)
-	}
-	return ret, nil
-	// return , nil
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Teams: %v", len(teams), teamFilters), start))
+	return teams, nil
 }
 
 func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int, input *model.SimilarPlayerInput, endDate string) ([]*model.Player, error) {
-	logrus.Info("start getting similar players")
+	c.AddQuery()
+	start := time.Now()
 	// stats := []string{"height", "points", "assists", "rebounds", "offensiveRebounds", "defensiveRebounds", "threePointersMade", "threePointersAttempted"}
 	stats := []string{"points", "assists", "weight", "heightInches", "rebounds", "fieldGoalsAttempted", "threePointersMade", "threePointersAttempted", "offensiveRebounds", "defensiveRebounds"}
 	summation := make([]string, len(stats))
@@ -408,7 +418,7 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 	}
 	limit := 6
 	if (*input).Limit != 0 {
-		limit = input.Limit
+		limit = input.Limit + 1
 	}
 	query := fmt.Sprintf(`
 	SELECT p.name, playerID, count(*) AS games, %[6]s,
@@ -422,7 +432,7 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 			%[4]s 
 		FROM playergames JOIN players USING (playerID)
 		WHERE (playoffs=False OR playoffs=TRUE) ) AS from_league
-	JOIN players p USING (playerID) WHERE (playoffs=False OR playoffs=TRUE) AND playerID <> %[1]d
+	JOIN players p USING (playerID) WHERE (playoffs=False OR playoffs=TRUE)
 	GROUP BY playerID, AVG_%[5]s, STD_%[5]s
 	HAVING avg(points)>0 AND games>10
 	ORDER BY DISTANCE ASC
@@ -476,7 +486,8 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		}
 		return iDistance < jDistance
 	})
-	return players, nil
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Similar Players: %s | %v", len(players), players[0].Name, input), start))
+	return players[1:], nil
 }
 
 func (c *SQLClient) GetSimilarTeams(ctx context.Context, similarToTeamID int, input *model.SimilarTeamInput, endDate string) ([]*model.Team, error) {
@@ -484,6 +495,8 @@ func (c *SQLClient) GetSimilarTeams(ctx context.Context, similarToTeamID int, in
 }
 
 func (c *SQLClient) GetPropositionsByPlayerGame(ctx context.Context, game model.PlayerGame) ([]*model.Proposition, error) {
+	c.AddQuery()
+	start := time.Now()
 	where := []string{}
 	args := []interface{}{}
 	if game.PlayerID != 0 {
@@ -503,5 +516,6 @@ func (c *SQLClient) GetPropositionsByPlayerGame(ctx context.Context, game model.
 	if err != nil {
 		return nil, fmt.Errorf("failed to get propositions: %w", err)
 	}
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Propositions from game: %v", len(propositions), game), start))
 	return propositions, nil
 }

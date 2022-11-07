@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
@@ -19,21 +20,16 @@ import (
 
 // Team is the resolver for the team field.
 func (r *playerResolver) Team(ctx context.Context, obj *model.Player) (*model.Team, error) {
-	if obj.CurrentTeam == "" {
-		logrus.Errorf("CurrentTeam is empty for player %v", obj)
-		return &model.Team{}, fmt.Errorf("CurrentTeam is empty for player %v", obj)
+	if obj.CurrentTeam == "" && obj.TeamID == 0 {
+		logrus.Errorf("Player is missing current team: %v", obj)
+		return &model.Team{}, fmt.Errorf("Player is missing current team: %v", obj)
 	}
-	teams, err := r.GetTeams(ctx, false, &model.TeamFilter{Abbreviation: &obj.CurrentTeam})
-	// t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
-	if err != nil || len(teams) == 0 {
+	team, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
+	if err != nil {
 		logrus.Errorf("Error loading team '%v' from: %v", obj.CurrentTeam, obj)
 		return nil, err
 	}
-	if len(teams) > 1 {
-		logrus.Errorf("Found multiple teams for '%v' from: %v", obj.CurrentTeam, obj)
-		return nil, fmt.Errorf("found multiple teams for '%v' from: %v", obj.CurrentTeam, obj)
-	}
-	return teams[0], err
+	return team, err
 }
 
 // Games is the resolver for the games field.
@@ -57,6 +53,36 @@ func (r *playerResolver) Image(ctx context.Context, obj *model.Player) (string, 
 	return fmt.Sprintf("https://ak-static.cms.nba.com/wp-content/uploads/headshots/%s/latest/260x190/%d.png", strings.ToLower(obj.League), obj.PlayerID), nil
 }
 
+// AssistPercentage is the resolver for the assist_percentage field.
+func (r *playerGameResolver) AssistPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return obj.AssistPercentage.Float64, nil
+}
+
+// Date is the resolver for the date field.
+func (r *playerGameResolver) Date(ctx context.Context, obj *model.PlayerGame) (string, error) {
+	return obj.Date.Format(util.DATE_FORMAT), nil
+}
+
+// DefensiveReboundPercentage is the resolver for the defensive_rebound_percentage field.
+func (r *playerGameResolver) DefensiveReboundPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return obj.DefensiveReboundPercentage.Float64, nil
+}
+
+// EffectiveFieldGoalPercentage is the resolver for the effective_field_goal_percentage field.
+func (r *playerGameResolver) EffectiveFieldGoalPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return obj.EffectiveFieldGoalPercentage.Float64, nil
+}
+
+// FieldGoalPercentage is the resolver for the field_goal_percentage field.
+func (r *playerGameResolver) FieldGoalPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return obj.FieldGoalPercentage.Float64, nil
+}
+
+// FreeThrowsPercentage is the resolver for the free_throws_percentage field.
+func (r *playerGameResolver) FreeThrowsPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return obj.FreeThrowsPercentage.Float64, nil
+}
+
 // Outcome is the resolver for the outcome field.
 func (r *playerGameResolver) Outcome(ctx context.Context, obj *model.PlayerGame) (model.Outcome, error) {
 	outcome := strings.ToLower(obj.Outcome)
@@ -72,24 +98,27 @@ func (r *playerGameResolver) Outcome(ctx context.Context, obj *model.PlayerGame)
 	}
 }
 
+// Minutes is the resolver for the minutes field.
+func (r *playerGameResolver) Minutes(ctx context.Context, obj *model.PlayerGame) (string, error) {
+	// convert minutes decimal to string
+	minutes := int(obj.Minutes)
+	seconds := int((obj.Minutes - float64(minutes)) * 60)
+	return fmt.Sprintf("%d:%02d", minutes, seconds), nil
+}
+
+// OffensiveReboundPercentage is the resolver for the offensive_rebound_percentage field.
+func (r *playerGameResolver) OffensiveReboundPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return obj.OffensiveReboundPercentage.Float64, nil
+}
+
 // Opponent is the resolver for the opponent field.
 func (r *playerGameResolver) Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
-	// team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
-	teams, err := r.GetTeams(ctx, false, &model.TeamFilter{TeamID: &obj.OpponentID})
-	// t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
-	if err != nil || len(teams) == 0 {
-		logrus.Errorf("Error loading team '%v' from: %v", obj.OpponentID, obj)
-		return nil, err
-	}
-	if len(teams) > 1 {
-		logrus.Errorf("Found multiple opponents for '%v' from: %v", obj.OpponentID, obj)
-		return nil, fmt.Errorf("found multiple opponents for '%v' from: %v", obj.OpponentID, obj)
-	}
+	team, err := dataloader.For(ctx).TeamByID.Load(obj.OpponentID)
 	if err != nil {
 		logrus.Errorf("Error loading opponent '%v' from: %v", obj.OpponentID, obj)
 		return nil, err
 	}
-	return teams[0], err
+	return team, err
 }
 
 // OpponentStats is the resolver for the opponentStats field.
@@ -99,22 +128,12 @@ func (r *playerGameResolver) OpponentStats(ctx context.Context, obj *model.Playe
 
 // Team is the resolver for the team field.
 func (r *playerGameResolver) Team(ctx context.Context, obj *model.PlayerGame) (*model.Team, error) {
-	// team, err := dataloader.For(ctx).TeamByID.Load(obj.TeamID)
-	teams, err := r.GetTeams(ctx, false, &model.TeamFilter{TeamID: &obj.TeamID})
-	// t, err := dataloader.For(ctx).TeamByAbr.Load(obj.CurrentTeam)
-	if err != nil || len(teams) == 0 {
-		logrus.Errorf("Error loading team '%v' from: %v", obj.TeamID, obj)
-		return nil, err
-	}
-	if len(teams) > 1 {
-		logrus.Errorf("Found multiple teams for '%v' from: %v", obj.TeamID, obj)
-		return nil, fmt.Errorf("Found multiple teams for '%v' from: %v", obj.TeamID, obj)
-	}
+	team, err := dataloader.For(ctx).TeamByID.Load(obj.TeamID)
 	if err != nil {
 		logrus.Errorf("Error loading team '%v' from: %v", obj.TeamID, obj)
 		return nil, err
 	}
-	return teams[0], err
+	return team, err
 }
 
 // TeamStats is the resolver for the teamStats field.
@@ -124,7 +143,31 @@ func (r *playerGameResolver) TeamStats(ctx context.Context, obj *model.PlayerGam
 
 // Player is the resolver for the player field.
 func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error) {
-	return obj.PlayerRef, nil
+	player, err := dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
+	if err != nil {
+		logrus.Errorf("Error loading player '%v' from: %v | %w", obj.PlayerID, obj, err)
+		return nil, err
+	}
+	if player == nil {
+		logrus.Errorf("Unable to find player '%v' from: %v", obj.PlayerID, obj)
+		return nil, fmt.Errorf("unable to find player '%v' from game: %v %v", obj.PlayerID, obj.GameID, obj.Date)
+	}
+	return player, err
+}
+
+// ThreePointPercentage is the resolver for the three_point_percentage field.
+func (r *playerGameResolver) ThreePointPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return obj.ThreePointPercentage.Float64, nil
+}
+
+// TrueShootingPercentage is the resolver for the true_shooting_percentage field.
+func (r *playerGameResolver) TrueShootingPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return obj.TrueShootingPercentage.Float64, nil
+}
+
+// Usage is the resolver for the usage field.
+func (r *playerGameResolver) Usage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return obj.Usage.Float64, nil
 }
 
 // PointsRebounds is the resolver for the points_rebounds field.

@@ -2,9 +2,11 @@ package dataloader
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 )
@@ -17,7 +19,9 @@ const waitTime = 150 * time.Millisecond
 const maxBatch = 50
 
 type Loaders struct {
-	// PlayerByID               PlayerLoaderID
+	PlayerByID PlayerLoaderID
+	TeamByID   TeamLoaderID
+	TeamByAbr  TeamLoaderABR
 	// PlayerByFilter           PlayerLoader
 	// PlayerGameByFilter       PlayerGameLoader
 	// TeamGameByPlayerGame     TeamGameLoader
@@ -27,13 +31,27 @@ type Loaders struct {
 func Middleware(conn database.BasketballRepository, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), loadersKey, &Loaders{
-			// PlayerByFilter: *NewPlayerLoader(
-			// 	PlayerLoaderConfig{
-			// 		MaxBatch: maxBatch,
-			// 		Wait:     waitTime,
-			// 		Fetch:    fetchPlayer,
-			// 	},
-			// ),
+			PlayerByID: *NewPlayerLoaderID(
+				PlayerLoaderIDConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch:    fetchPlayerByID(conn, r.Context()),
+				},
+			),
+			TeamByID: *NewTeamLoaderID(
+				TeamLoaderIDConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch:    fetchTeamByID(conn, r.Context()),
+				},
+			),
+			TeamByAbr: *NewTeamLoaderABR(
+				TeamLoaderABRConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch:    fetchTeamByAbbreviation(conn, r.Context()),
+				},
+			),
 			// TeamGameByPlayerGame: *NewTeamGameLoader(
 			// 	TeamGameLoaderConfig{
 			// 		MaxBatch: maxBatch,
@@ -65,32 +83,120 @@ func For(ctx context.Context) *Loaders {
 	return ctx.Value(loadersKey).(*Loaders)
 }
 
-func fetchPlayer(keys []model.PlayerFilter) ([]*model.Player, []error) {
-	panic("fetch player not implemented")
-	// players := make([]*model.Player, len(keys))
-	// playersByName := make(map[string]*model.Player, len(keys))
-	// errs := make([]error, len(keys))
-	// cur, err := conn.GetPlayersCursor(r.Context(), keys)
-	// if err != nil {
-	// 	return nil, []error{err}
-	// }
-	// defer cur.Close(r.Context())
+func wrapPlayerNames(names []string) []*model.PlayerFilter {
+	wrapped := make([]*model.PlayerFilter, len(names))
+	for i := range names {
+		wrapped[i] = &model.PlayerFilter{Name: &(names[i])}
+	}
+	return wrapped
+}
 
-	// for cur.Next(r.Context()) {
-	// 	player := &model.Player{}
-	// 	err := cur.Decode(&player)
-	// 	if err != nil {
-	// 		return nil, []error{err}
-	// 	}
-	// 	playersByName[player.Name] = player
-	// }
-	// if err := cur.Err(); err != nil {
-	// 	return nil, []error{err}
-	// }
-	// for i, player := range keys {
-	// 	players[i] = playersByName[*player.Name]
-	// }
-	// return players, errs
+func fetchPlayerByName(db database.BasketballRepository, ctx context.Context) func(playerNames []string) ([]*model.Player, []error) {
+	return func(playerNames []string) ([]*model.Player, []error) {
+		nameToPlayerMap := make(map[string]*model.Player, len(playerNames))
+		players, err := db.GetPlayers(ctx, false, wrapPlayerNames(playerNames)...)
+		if err != nil {
+			return nil, []error{err}
+		}
+		for _, player := range players {
+			nameToPlayerMap[player.Name] = player
+		}
+		players = make([]*model.Player, len(playerNames))
+		for i, name := range playerNames {
+			players[i] = nameToPlayerMap[name]
+		}
+		return players, nil
+	}
+}
+
+func wrapPlayerIDs(ids []int) []*model.PlayerFilter {
+	wrapped := make([]*model.PlayerFilter, len(ids))
+	for i := range ids {
+		wrapped[i] = &model.PlayerFilter{PlayerID: &(ids[i])}
+	}
+	return wrapped
+}
+
+func fetchPlayerByID(db database.BasketballRepository, ctx context.Context) func(playerIDs []int) ([]*model.Player, []error) {
+	return func(playerIDs []int) ([]*model.Player, []error) {
+		idToPlayerMap := make(map[int]*model.Player, len(playerIDs))
+		players, err := db.GetPlayers(ctx, false, wrapPlayerIDs(playerIDs)...)
+		if err != nil {
+			logrus.Errorf("error fetching players by id: %v", err)
+			return nil, []error{err}
+		}
+		if len(players) == 0 {
+			return nil, []error{fmt.Errorf("no players found")}
+		}
+		for _, player := range players {
+			idToPlayerMap[player.PlayerID] = player
+		}
+		players = make([]*model.Player, len(playerIDs))
+		for i, id := range playerIDs {
+			players[i] = idToPlayerMap[id]
+		}
+		return players, nil
+	}
+}
+
+func wrapTeamIDs(ids []int) []*model.TeamFilter {
+	wrapped := make([]*model.TeamFilter, len(ids))
+	for i := range ids {
+		wrapped[i] = &model.TeamFilter{TeamID: &(ids[i])}
+	}
+	return wrapped
+}
+
+func fetchTeamByID(db database.BasketballRepository, ctx context.Context) func(teamIDs []int) ([]*model.Team, []error) {
+	return func(teamIDs []int) ([]*model.Team, []error) {
+		idToTeamMap := make(map[int]*model.Team, len(teamIDs))
+		teams, err := db.GetTeams(ctx, false, wrapTeamIDs(teamIDs)...)
+		if err != nil {
+			logrus.Errorf("error fetching teams by id: %v", err)
+			return nil, []error{err}
+		}
+		if len(teams) == 0 {
+			return nil, []error{fmt.Errorf("no teams found")}
+		}
+		for _, team := range teams {
+			idToTeamMap[team.TeamID] = team
+		}
+		teams = make([]*model.Team, len(teamIDs))
+		for i, id := range teamIDs {
+			teams[i] = idToTeamMap[id]
+		}
+		return teams, nil
+	}
+}
+
+func wrapTeamAbbreviations(abbreviations []string) []*model.TeamFilter {
+	wrapped := make([]*model.TeamFilter, len(abbreviations))
+	for i := range abbreviations {
+		wrapped[i] = &model.TeamFilter{Abbreviation: &(abbreviations[i])}
+	}
+	return wrapped
+}
+
+func fetchTeamByAbbreviation(db database.BasketballRepository, ctx context.Context) func(teamAbbreviations []string) ([]*model.Team, []error) {
+	return func(teamAbbreviations []string) ([]*model.Team, []error) {
+		abrToTeamMap := make(map[string]*model.Team, len(teamAbbreviations))
+		teams, err := db.GetTeams(ctx, false, wrapTeamAbbreviations(teamAbbreviations)...)
+		if err != nil {
+			logrus.Errorf("error fetching teams by id: %v", err)
+			return nil, []error{err}
+		}
+		if len(teams) == 0 {
+			return nil, []error{fmt.Errorf("no teams found")}
+		}
+		for _, team := range teams {
+			abrToTeamMap[team.Abbreviation] = team
+		}
+		teams = make([]*model.Team, len(teamAbbreviations))
+		for i, id := range teamAbbreviations {
+			teams[i] = abrToTeamMap[id]
+		}
+		return teams, nil
+	}
 }
 
 func fetchTeamGameByPlayerGame(conn database.BasketballRepository, ctx context.Context) func(keys []model.PlayerGame) ([]*model.TeamGame, []error) {

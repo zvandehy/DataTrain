@@ -7,7 +7,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
-	"github.com/zvandehy/DataTrain/nba_graphql/util"
 )
 
 // If key is found, use the value.
@@ -114,9 +113,9 @@ func (p *Player) HeightInInches() int {
 // 	return util.Print(p)
 // }
 
-func (p PlayerGame) String() string {
-	return util.Print(p)
-}
+// func (p PlayerGame) String() string {
+// 	return util.Print(p)
+// }
 
 // TODO: To add a new stat to player similarity, add it to all of: ... // TODO: look into this, see if there is a more maintainable way to do this
 type PlayerAverage struct {
