@@ -11,7 +11,6 @@ type Player {
   games(input: GameFilter!): [PlayerGame!]!
   # average(input: GameFilter!): AverageStats!
   # injuries: [Injury!]
-  projections(input: ProjectionFilter!): [Projection!]!
   height: String!
   weight: Int!
   image: String!
@@ -22,6 +21,9 @@ type Player {
 type PlayerGame {
   assist_percentage: Float!
   assists: Int!
+  passes: Int!
+  potential_assists: Int!
+  assist_conversion_rate: Float!
   date: String!
   defensive_rebound_percentage: Float!
   defensive_rebounds: Int!
@@ -65,6 +67,7 @@ type PlayerGame {
   blocks_steals: Int!
   fantasy_score: Float!
   prediction(input: ModelInput!): PredictionBreakdown!
+  propositions(input: PropositionFilter): [Proposition!]!
 }
 
 type PredictionBreakdown {
@@ -128,5 +131,6 @@ type AverageStats {
   rebounds_assists: Float!
   blocks_steals: Float!
   double_double: Float!
-  # Player                 Player   `json:"player" bson:"player"`
+  passes: Float!
+  potential_assists: Float!
 }

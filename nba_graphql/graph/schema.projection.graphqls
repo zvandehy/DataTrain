@@ -1,12 +1,3 @@
-type Projection {
-  player: Player!
-  opponent: Team!
-  propositions(input: PropositionFilter): [Proposition]!
-  result: PlayerGame
-  startTime: String!
-  date: String!
-}
-
 input ModelInput {
   model: String
   gameBreakdowns: [GameBreakdownInput!]

@@ -43,11 +43,6 @@ func (r *playerResolver) Games(ctx context.Context, obj *model.Player, input mod
 	return games, nil
 }
 
-// Projections is the resolver for the projections field.
-func (r *playerResolver) Projections(ctx context.Context, obj *model.Player, input model.ProjectionFilter) ([]*model.Projection, error) {
-	panic(fmt.Errorf("(r *playerResolver) Projections not implemented"))
-}
-
 // Image is the resolver for the image field.
 func (r *playerResolver) Image(ctx context.Context, obj *model.Player) (string, error) {
 	return fmt.Sprintf("https://ak-static.cms.nba.com/wp-content/uploads/headshots/%s/latest/260x190/%d.png", strings.ToLower(obj.League), obj.PlayerID), nil
@@ -56,6 +51,11 @@ func (r *playerResolver) Image(ctx context.Context, obj *model.Player) (string, 
 // AssistPercentage is the resolver for the assist_percentage field.
 func (r *playerGameResolver) AssistPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
 	return obj.AssistPercentage.Float64, nil
+}
+
+// AssistConversionRate is the resolver for the assist_conversion_rate field.
+func (r *playerGameResolver) AssistConversionRate(ctx context.Context, obj *model.PlayerGame) (float64, error) {
+	return float64(int(obj.AssistConversionRate.Float64)) / 100, nil
 }
 
 // Date is the resolver for the date field.
@@ -736,6 +736,11 @@ func (r *playerGameResolver) Prediction(ctx context.Context, obj *model.PlayerGa
 		Fragments:          fragments,
 	}
 	return breakdown, nil
+}
+
+// Propositions is the resolver for the propositions field.
+func (r *playerGameResolver) Propositions(ctx context.Context, obj *model.PlayerGame, input *model.PropositionFilter) ([]*model.Proposition, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 // LastModified is the resolver for the lastModified field.

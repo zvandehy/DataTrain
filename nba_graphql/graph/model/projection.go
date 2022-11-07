@@ -22,21 +22,6 @@ type Projection struct {
 	Opponent Team   `json:"opponentTeam" bson:"opponentTeam"`
 }
 
-func (p *Projection) Match(projectionFilter ProjectionFilter) bool {
-	if !projectionFilter.Period.MatchProjection(p) {
-		return false
-	}
-	// if projectionFilter.PropositionFilter != nil {
-	// 	for _, prop := range p.Props {
-	// 		if prop.Match(projectionFilter.PropositionFilter) {
-	// 			return true
-	// 		}
-	// 	}
-	// 	return false
-	// }
-	return true
-}
-
 func (p *Projection) UnmarshalBSON(data []byte) error {
 	type Alias Projection
 	bson.Unmarshal(data, (*Alias)(p))

@@ -36,6 +36,8 @@ type AverageStats struct {
 	ReboundsAssists        float64 `json:"rebounds_assists"`
 	BlocksSteals           float64 `json:"blocks_steals"`
 	DoubleDouble           float64 `json:"double_double"`
+	Passes                 float64 `json:"passes"`
+	PotentialAssists       float64 `json:"potential_assists"`
 }
 
 type GameBreakdownInput struct {
@@ -65,11 +67,6 @@ type PredictionFragment struct {
 	PctChange    *AverageStats  `json:"pctChange"`
 	Weight       float64        `json:"weight"`
 	Propositions []*Proposition `json:"propositions"`
-}
-
-type ProjectionFilter struct {
-	Period            *Period            `json:"period"`
-	PropositionFilter *PropositionFilter `json:"propositionFilter"`
 }
 
 type PropositionFilter struct {

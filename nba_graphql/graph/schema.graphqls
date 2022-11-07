@@ -49,11 +49,6 @@ enum Stat {
   OppRebounds
 }
 
-input ProjectionFilter {
-  period: Period!
-  propositionFilter: PropositionFilter
-}
-
 input PropositionFilter {
   sportsbook: SportsbookOption
   propositionType: Stat # TODO: Limit to only stats that make sense
@@ -83,7 +78,7 @@ input PlayerFilter {
   startDate: String
   endDate: String
   statFilters: [StatFilter!]
-  withPropositions: ProjectionFilter
+  withPropositions: PropositionFilter
   withGames: GameFilter
 }
 

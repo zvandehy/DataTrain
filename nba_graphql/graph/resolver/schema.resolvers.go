@@ -63,6 +63,11 @@ func (r *periodResolver) MatchPreviousSeason(ctx context.Context, obj *model.Per
 	panic(fmt.Errorf("not implemented"))
 }
 
+// WithPropositions is the resolver for the withPropositions field.
+func (r *playerFilterResolver) WithPropositions(ctx context.Context, obj *model.PlayerFilter, data *model.PropositionFilter) error {
+	panic(fmt.Errorf("not implemented"))
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -72,6 +77,10 @@ func (r *Resolver) GameFilter() generated.GameFilterResolver { return &gameFilte
 // Period returns generated.PeriodResolver implementation.
 func (r *Resolver) Period() generated.PeriodResolver { return &periodResolver{r} }
 
+// PlayerFilter returns generated.PlayerFilterResolver implementation.
+func (r *Resolver) PlayerFilter() generated.PlayerFilterResolver { return &playerFilterResolver{r} }
+
 type queryResolver struct{ *Resolver }
 type gameFilterResolver struct{ *Resolver }
 type periodResolver struct{ *Resolver }
+type playerFilterResolver struct{ *Resolver }
