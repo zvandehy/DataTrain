@@ -25,7 +25,7 @@ type PlayerGame struct {
 	FreeThrowsMade               int             `db:"freeThrowsMade" json:"free_throws_made" bson:"free_throws_made"`
 	FreeThrowsPercentage         sql.NullFloat64 `db:"freeThrowPct" json:"free_throws_percentage" bson:"free_throws_percentage"` //change to freeThrowPercentage
 	GameID                       string          `db:"gameID" json:"gameID" bson:"gameID"`
-	HomeOrAway                   string          `db:"homeAway" json:"home_or_away" bson:"home_or_away"` //add "HOME" or "AWAY" constraint
+	HomeOrAway                   HomeOrAway      `db:"homeAway" json:"home_or_away" bson:"home_or_away"` //add "HOME" or "AWAY" constraint
 	Margin                       int             `db:"margin" json:"margin" bson:"margin"`
 	Minutes                      float64         `db:"minutes" json:"minutes" bson:"minutes"`
 	OffensiveReboundPercentage   sql.NullFloat64 `db:"offensiveReboundPct" json:"offensive_rebound_percentage" bson:"offensive_rebound_percentage"`

@@ -2,7 +2,7 @@ type Query {
   players(input: PlayerFilter): [Player!]!
   teams(input: TeamFilter!): [Team!]!
   games(input: GameFilter!): [PlayerGame!]!
-  # projections(input: ProjectionFilter!): [Projection!]!
+  propositions(input: PropositionFilter!): [Proposition!]!
 }
 
 enum Stat {
@@ -47,6 +47,9 @@ enum Stat {
   OppPoints
   OppAssists
   OppRebounds
+  Passes
+  PotentialAssists
+  AssistConversionRate
 }
 
 input PropositionFilter {
@@ -157,10 +160,10 @@ input GameFilter {
   homeOrAway: HomeOrAway
   homeOrAwayMatch: Boolean
   statFilters: [StatFilter!]
-  outcome: Outcome
+  outcome: GameOutcome
 }
 
-enum Outcome {
+enum GameOutcome {
   WIN
   LOSS
   PENDING

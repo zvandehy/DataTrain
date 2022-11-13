@@ -68,7 +68,7 @@ func (c *SQLClient) AddQuery() {
 func (c *SQLClient) SavePropositions(ctx context.Context, propositions []*model.DBProposition) (int, error) {
 	tx := c.MustBegin()
 	for _, proposition := range propositions {
-		tx.MustExec("REPLACE INTO propositions (playerID, gameID, playername, date, opponentID, lastModified, sportsbook, statType, target) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", proposition.PlayerID, proposition.GameID, proposition.PlayerName, proposition.Date, proposition.OpponentID, proposition.LastModified, proposition.Sportsbook, proposition.StatType, proposition.Target)
+		tx.MustExec("REPLACE INTO propositions (playerID, gameID, playername, startTime, opponentID, lastModified, sportsbook, statType, target) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", proposition.PlayerID, proposition.GameID, proposition.PlayerName, proposition.StartTime, proposition.OpponentID, proposition.LastModified, proposition.Sportsbook, proposition.StatType, proposition.Target)
 	}
 	err := tx.Commit()
 	if err != nil {
@@ -252,13 +252,11 @@ func (c *SQLClient) GetPlayerGames(ctx context.Context, input *model.GameFilter)
 	}
 	// Seasons         *[]SeasonOption `json:"seasons"` /TODO: VERIFY THAT THIS WORKS
 	if input.Seasons != nil {
-		seasons := []string{}
+		qs := strings.Repeat("?,", len(*input.Seasons))
+		where = append(where, fmt.Sprintf("season IN (%s)", qs[:len(qs)-1]))
 		for _, season := range *input.Seasons {
-			seasons = append(seasons, string(season))
+			args = append(args, season)
 		}
-		s := fmt.Sprintf("season IN (%s)", strings.Join(seasons, ","))
-		where = append(where, s)
-		args = append(args, seasons)
 	}
 	if input.StartDate != nil && input.EndDate != nil {
 		if *input.StartDate == *input.EndDate {
@@ -287,18 +285,11 @@ func (c *SQLClient) GetPlayerGames(ctx context.Context, input *model.GameFilter)
 		args = append(args, *input.Outcome)
 	}
 
-	// OpponentMatch   *bool           `json:"opponentMatch"`
-	// GameType        *GameType       `json:"gameType"`
-	// GameTypeMatch   *bool           `json:"gameTypeMatch"`
-	// HomeOrAwayMatch *bool           `json:"homeOrAwayMatch"`
-	// StatFilters     *[]*StatFilter  `json:"statFilters"`
-	// LastX           *int            `json:"lastX"`
-
-	if input.LastX != nil || input.StatFilters != nil || input.HomeOrAwayMatch != nil || input.GameTypeMatch != nil || input.OpponentMatch != nil || input.GameType != nil {
-		panic("game filter not implemented") // TODO: IMPLEMENT
+	limit := ""
+	if input.LastX != nil && *input.LastX > 0 {
+		limit = fmt.Sprintf(" LIMIT %d", input.LastX)
 	}
-
-	query := fmt.Sprintf("SELECT * FROM playergames WHERE %s", strings.Join(where, " AND "))
+	query := fmt.Sprintf("SELECT * FROM playergames WHERE %s ORDER BY date%s", strings.Join(where, " AND "), limit)
 	err = c.SelectContext(ctx, &games, query, args...)
 	if err != nil || len(games) == 0 {
 		logrus.Warnf("failed to get playergames using query: %v | %+v", query, args)
@@ -347,12 +338,107 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 		where = append(where, "type = ?")
 		args = append(args, *propositionFilter.PropositionType)
 	}
-	query := fmt.Sprintf("SELECT * FROM propositions WHERE %s", strings.Join(where, " AND "))
-	var propositions []*model.Proposition
-	err := c.SelectContext(ctx, &propositions, query, args...)
+	query := "SELECT statType, target, sportsbook, lastModified, pg.* FROM propositions pr JOIN playergames pg USING (playerID, gameID)"
+	if len(where) > 0 {
+		query = fmt.Sprintf("%s WHERE %s", query, strings.Join(where, " AND "))
+	}
+	// query += " LIMIT 10"
+
+	var rawResults []*struct {
+		Type         string                 `db:"statType"`
+		Target       float64                `db:"target"`
+		Sportsbook   model.SportsbookOption `db:"sportsbook"`
+		LastModified *time.Time             `db:"lastModified"`
+		// PropDate     *time.Time             `db:"propdate"`
+		// playerName   string                 `db:"playerName"`
+		*model.PlayerGame
+	}
+	// 	playerID
+	// 	gameID
+	// 	opponentID
+	// 	playerName
+	// 	date
+	// 	target
+	// 	sportsbook
+	// 	lastModified
+	// 	CreatedAt
+	// 	UpdatedAt
+	// 	gameID	varchar(255)	NO	PRI
+	// playerID	int	NO	PRI
+	// opponentID	int	NO	MUL
+	// teamID	int	NO	MUL
+	// outcome	enum('WIN','LOSS','PENDING')	YES
+	// homeAway	enum('HOME','AWAY')	YES
+	// date	datetime	NO	MUL
+	// season	varchar(255)	YES
+	// assists	int	YES
+	// defensiveReboundPct	float	YES
+	// defensiveRebounds	int	YES
+	// offensiveReboundPct	float	YES
+	// offensiveRebounds	int	YES
+	// effectiveFieldGoalPct	float	YES
+	// fieldGoalPct	float	YES
+	// fieldGoalsAttempted	int	YES
+	// fieldGoalsMade	int	YES
+	// freeThrowsAttempted	int	YES
+	// freeThrowsMade	int	YES
+	// freeThrowPct	float	YES
+	// margin	int	YES
+	// personalFoulsDrawn	int	YES
+	// personalFouls	int	YES
+	// points	int	YES		0
+	// playoffs	tinyint(1)	YES
+	// threePointPct	float	YES
+	// threePointersAttempted	int	YES
+	// threePointersMade	int	YES
+	// rebounds	int	YES
+	// trueShootingPct	float	YES
+	// turnovers	int	YES
+	// blocks	int	YES
+	// steals	int	YES
+	// usage	float	YES
+	// potentialAssists	int	YES
+	// assistConversionRate	float	YES
+	// assistPct	float	YES
+	// minutes	float	YES		0
+	// passes	int	YES		0
+	// UpdatedAt	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+	// CreatedAt	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+
+	err := c.SelectContext(ctx, &rawResults, query, args...)
 	if err != nil {
 		logrus.Warnf("failed to get propositions using query: %v | %+v", query, args)
 		return nil, fmt.Errorf("failed to get propositions: %w", err)
+	}
+	var propositions []*model.Proposition
+	for _, rawResult := range rawResults {
+		stat, err := model.NewStat(rawResult.Type)
+		if err != nil {
+			logrus.Warnf("failed to get stat type: %v", rawResult.Type)
+			continue
+		}
+		proposition := &model.Proposition{
+			Game:         rawResult.PlayerGame,
+			TypeRaw:      rawResult.Type,
+			Target:       rawResult.Target,
+			Sportsbook:   rawResult.Sportsbook,
+			LastModified: rawResult.LastModified,
+			Type:         stat,
+			Outcome:      model.PropOutcomePending,
+		}
+		if proposition.Game != nil && proposition.Game.Outcome != model.GameOutcomePending.String() {
+			score := proposition.Game.Score(stat)
+			proposition.ActualResult = &score
+			if score > proposition.Target {
+				proposition.Outcome = model.PropOutcomeOver
+			} else if score < proposition.Target {
+				proposition.Outcome = model.PropOutcomeUnder
+			} else {
+				proposition.Outcome = model.PropOutcomePush
+			}
+			proposition.Accuracy = (score - proposition.Target) / proposition.Target
+		}
+		propositions = append(propositions, proposition)
 	}
 	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Propositions: %v", len(propositions), propositionFilter), start))
 	return propositions, nil
@@ -391,7 +477,7 @@ func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ..
 	if len(or) == 0 {
 		query = "SELECT * FROM teams"
 	}
-	logrus.Warn(query, args)
+	// logrus.Warn(query, args)
 	err := c.Select(&teams, query, args...)
 	if err != nil {
 		logrus.Warnf("failed to get teams using query: %v | %+v", query, args)
@@ -401,9 +487,10 @@ func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ..
 	return teams, nil
 }
 
-func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int, input *model.SimilarPlayerInput, endDate string) ([]*model.Player, error) {
+func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int, input *model.SimilarPlayerInput, endDate *time.Time) ([]*model.Player, error) {
 	c.AddQuery()
 	start := time.Now()
+	end := endDate.Format(util.DATE_FORMAT)
 	// stats := []string{"height", "points", "assists", "rebounds", "offensiveRebounds", "defensiveRebounds", "threePointersMade", "threePointersAttempted"}
 	stats := []string{"points", "assists", "weight", "heightInches", "rebounds", "fieldGoalsAttempted", "threePointersMade", "threePointersAttempted", "offensiveRebounds", "defensiveRebounds"}
 	summation := make([]string, len(stats))
@@ -420,6 +507,8 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 	if (*input).Limit != 0 {
 		limit = input.Limit + 1
 	}
+	// TODO: Allow similarity to be based off of this seasons, this and last season, or all time
+	gameFilter := fmt.Sprintf("date < %s AND season = %s", end, "2022-23")
 	query := fmt.Sprintf(`
 	SELECT p.name, playerID, count(*) AS games, %[6]s,
 		SQRT(%[2]s) AS DISTANCE
@@ -427,17 +516,17 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		JOIN (SELECT 
 			%[3]s 
 		FROM playergames JOIN players USING (playerID) WHERE playerID=%[1]d
-		AND (playoffs=False OR playoffs=TRUE) ) AS from_player
+		AND (%[8]s) ) AS from_player
 		JOIN (SELECT 
 			%[4]s 
 		FROM playergames JOIN players USING (playerID)
-		WHERE (playoffs=False OR playoffs=TRUE) ) AS from_league
-	JOIN players p USING (playerID) WHERE (playoffs=False OR playoffs=TRUE)
+		WHERE (%[8]s) ) AS from_league
+	JOIN players p USING (playerID) WHERE (%[8]s)
 	GROUP BY playerID, AVG_%[5]s, STD_%[5]s
 	HAVING avg(points)>0 AND games>10
 	ORDER BY DISTANCE ASC
-	LIMIT %[7]d;`, similarToPlayerID, strings.Join(summation, "+"), strings.Join(avg, ","), strings.Join(std, ","), strings.ToUpper(stats[0]), strings.Join(selector, ","), limit)
-
+	LIMIT %[7]d;`, similarToPlayerID, strings.Join(summation, "+"), strings.Join(avg, ","), strings.Join(std, ","), strings.ToUpper(stats[0]), strings.Join(selector, ","), limit, gameFilter)
+	// logrus.Warn(query)
 	playerDistances := []struct {
 		Id                     int     `db:"playerID"`
 		Name                   string  `db:"name"`
@@ -465,10 +554,15 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		logrus.Infof("(%2.2d) %15.15s (%2.2d): %8.3f %6.2f %6.0f %6.0f %7.1f %8.1f %5.1f %6.2f\n", i, pDistance.Name, pDistance.NGames, pDistance.Distance, pDistance.Points, pDistance.Weight, pDistance.Height, pDistance.Assists, pDistance.Rebounds, pDistance.FieldGoalsAttempted, pDistance.ThreePointersMade)
 	}
 	playerFilters := make([]*model.PlayerFilter, len(playerDistances))
+	// TODO: Allow similarity to be based off of this seasons, this and last season, or all time
+	seasons := []model.SeasonOption{}
+	seasons = append(seasons, model.SEASON_2022_23)
 	for i := range playerDistances {
-		playerFilters[i] = &model.PlayerFilter{
-			PlayerID: &playerDistances[i].Id,
-		}
+		pFilter := *input.PlayerPoolFilter
+		pFilter.PlayerID = &playerDistances[i].Id
+		pFilter.EndDate = &end
+		pFilter.Seasons = &seasons
+		playerFilters[i] = &pFilter
 	}
 	players, err := c.GetPlayers(ctx, true, playerFilters...)
 	if err != nil {

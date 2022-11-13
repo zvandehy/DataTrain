@@ -66,33 +66,33 @@ func main() {
 	time.Sleep(time.Second * 5)
 
 	// call this function every Tick
-	// go func() {
-	// 	getprizepicks(nbaClient)
-	// 	tick := time.Tick(10 * time.Minute)
-	// 	for range tick {
-	// 		getprizepicks(nbaClient)
-	// 		// cachePlayers(nbaClient)
-	// 		// resp, err := http.Get("https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json")
-	// 		// if err != nil {
-	// 		// 	logrus.Error("Error getting schedule: ", err)
-	// 		// }
-	// 		// defer resp.Body.Close()
-	// 		// body, err := io.ReadAll(resp.Body)
-	// 		// if err != nil {
-	// 		// 	logrus.Error("Error reading schedule: ", err)
-	// 		// }
-	// 		// var schedule model.Schedule
-	// 		// err = json.Unmarshal(body, &schedule)
-	// 		// if err != nil {
-	// 		// 	logrus.Error("Error unmarshalling schedule: ", err)
-	// 		// }
-	// 		// for _, gameDate := range schedule.LeagueSchedule.GameDates {
-	// 		// 	for _, game :=  range gameDate.Games {
+	go func() {
+		database.Getprizepicks(nbaClient)
+		tick := time.Tick(10 * time.Minute)
+		for range tick {
+			database.Getprizepicks(nbaClient)
+			// 		// cachePlayers(nbaClient)
+			// 		// resp, err := http.Get("https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json")
+			// 		// if err != nil {
+			// 		// 	logrus.Error("Error getting schedule: ", err)
+			// 		// }
+			// 		// defer resp.Body.Close()
+			// 		// body, err := io.ReadAll(resp.Body)
+			// 		// if err != nil {
+			// 		// 	logrus.Error("Error reading schedule: ", err)
+			// 		// }
+			// 		// var schedule model.Schedule
+			// 		// err = json.Unmarshal(body, &schedule)
+			// 		// if err != nil {
+			// 		// 	logrus.Error("Error unmarshalling schedule: ", err)
+			// 		// }
+			// 		// for _, gameDate := range schedule.LeagueSchedule.GameDates {
+			// 		// 	for _, game :=  range gameDate.Games {
 
-	// 		// 	}
-	// 		// }
-	// 	}
-	// }()
+			// 		// 	}
+			// 		// }
+		}
+	}()
 
 	nbaServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver.NewResolver(nbaClient)}))
 	// wnbaServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver.NewResolver(wnbaClient)}))

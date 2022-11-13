@@ -51,6 +51,9 @@ const (
 	Height                       Stat = "height"
 	Weight                       Stat = "weight"
 	DoubleDouble                 Stat = "double_double"
+	Passes                       Stat = "passes"
+	PotentialAssists             Stat = "potential_assists"
+	AssistConversionRate         Stat = "assist_conversion_rate"
 
 	//TeamStats
 	GamesWon    Stat = "games_won"

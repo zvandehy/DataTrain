@@ -43,14 +43,9 @@ func (r *queryResolver) Games(ctx context.Context, input model.GameFilter) ([]*m
 	return games, nil
 }
 
-// SeasonMatch is the resolver for the seasonMatch field.
-func (r *gameFilterResolver) SeasonMatch(ctx context.Context, obj *model.GameFilter, data *bool) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PreviousSeasonMatch is the resolver for the previousSeasonMatch field.
-func (r *gameFilterResolver) PreviousSeasonMatch(ctx context.Context, obj *model.GameFilter, data *bool) error {
-	panic(fmt.Errorf("not implemented"))
+// Propositions is the resolver for the propositions field.
+func (r *queryResolver) Propositions(ctx context.Context, input model.PropositionFilter) ([]*model.Proposition, error) {
+	return r.GetPropositions(ctx, &input)
 }
 
 // MatchSeason is the resolver for the matchSeason field.
@@ -71,9 +66,6 @@ func (r *playerFilterResolver) WithPropositions(ctx context.Context, obj *model.
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-// GameFilter returns generated.GameFilterResolver implementation.
-func (r *Resolver) GameFilter() generated.GameFilterResolver { return &gameFilterResolver{r} }
-
 // Period returns generated.PeriodResolver implementation.
 func (r *Resolver) Period() generated.PeriodResolver { return &periodResolver{r} }
 
@@ -81,6 +73,5 @@ func (r *Resolver) Period() generated.PeriodResolver { return &periodResolver{r}
 func (r *Resolver) PlayerFilter() generated.PlayerFilterResolver { return &playerFilterResolver{r} }
 
 type queryResolver struct{ *Resolver }
-type gameFilterResolver struct{ *Resolver }
 type periodResolver struct{ *Resolver }
 type playerFilterResolver struct{ *Resolver }

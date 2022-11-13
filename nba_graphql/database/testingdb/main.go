@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -178,7 +177,7 @@ func ParsePrizePickProposition(db database.BasketballRepository, schedule model.
 		StatType:     statType,
 		LastModified: &now,
 		PlayerName:   playerName,
-		Date:         &date,
+		StartTime:    &date,
 	}
 
 	homeAway, err := getHomeTeam(schedule, prop.Attributes.Start_time, prop.Attributes.Description)
@@ -211,7 +210,7 @@ func ParsePrizePickProposition(db database.BasketballRepository, schedule model.
 	if err != nil {
 		logrus.Errorf("failed to save upcoming game %v", game)
 	}
-	logrus.Infof("saved upcoming game %v %v", game.GameID, game.PlayerID)
+	// logrus.Infof("saved upcoming game %v %v", game.GameID, game.PlayerID)
 	return proposition, nil
 }
 
@@ -302,7 +301,7 @@ func getTeamABRFromSchedule(schedule model.Schedule, startTime string, opponentA
 	return "", fmt.Errorf("could not find game vs %s on %v", opponentAbr, startTime)
 }
 
-func getHomeTeam(schedule model.Schedule, startTime string, opponentAbr string) (string, error) {
+func getHomeTeam(schedule model.Schedule, startTime string, opponentAbr string) (model.HomeOrAway, error) {
 	dateSlice := strings.SplitN(startTime, "T", 2)
 	startdate := dateSlice[0]
 	for _, gamedate := range schedule.LeagueSchedule.GameDates {
@@ -313,10 +312,10 @@ func getHomeTeam(schedule model.Schedule, startTime string, opponentAbr string) 
 					continue
 				}
 				if game.HomeTeam.TeamTriCode == opponentAbr {
-					return "AWAY", nil
+					return model.HomeOrAwayAway, nil
 				}
 				if game.AwayTeam.TeamTriCode == opponentAbr {
-					return "HOME", nil
+					return model.HomeOrAwayHome, nil
 				}
 			}
 		}
@@ -341,22 +340,22 @@ func main() {
 	// get random player from players
 
 	// get random int between 0 and len(players)
-	rand.Seed(time.Now().UnixNano())
-	randPlayer := players[rand.Intn(len(players))]
-	// player := players[24]
-	fmt.Println(randPlayer.Name)
-	sim, err := db.GetSimilarPlayers(
-		context.Background(),
-		randPlayer.PlayerID,
-		&model.SimilarPlayerInput{Limit: 100},
-		"",
-	)
-	if err != nil {
-		panic(err)
-	}
-	for _, simPlayer := range sim {
-		fmt.Println(simPlayer.Name, simPlayer.CurrentTeam, len(simPlayer.GamesCache))
-	}
+	// rand.Seed(time.Now().UnixNano())
+	// randPlayer := players[rand.Intn(len(players))]
+	// // player := players[24]
+	// fmt.Println(randPlayer.Name)
+	// sim, err := db.GetSimilarPlayers(
+	// 	context.Background(),
+	// 	randPlayer.PlayerID,
+	// 	&model.SimilarPlayerInput{Limit: 100},
+	// 	"",
+	// )
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// for _, simPlayer := range sim {
+	// 	fmt.Println(simPlayer.Name, simPlayer.CurrentTeam, len(simPlayer.GamesCache))
+	// }
 
 	// getprizepicks(db)
 
@@ -566,7 +565,7 @@ func getSchedule() *model.Schedule {
 	return &schedule
 }
 
-func getprizepicks(nbaClient database.BasketballRepository) {
+func Getprizepicks(nbaClient database.BasketballRepository) {
 	// TODO: THIS IS SLOWWWW
 	leagueID := 7
 	if strings.ToLower(nbaClient.GetLeague()) == "wnba" {

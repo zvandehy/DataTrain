@@ -26,19 +26,13 @@ func (p *Projection) UnmarshalBSON(data []byte) error {
 	type Alias Projection
 	bson.Unmarshal(data, (*Alias)(p))
 	for i, prop := range p.Props {
-		prop.ProjectionRef = p
+		// prop.ProjectionRef = p
 		p.Props[i] = prop
 	}
 	// p.PlayerMatrix = v.PlayerMatrix
 	return nil
 }
 
-type Prediction struct {
-	Model               string  `json:"model" bson:"model"`
-	OverUnderPrediction Output  `json:"overUnderPrediction" bson:"overUnderPrediction"`
-	Confidence          float64 `json:"confidence" bson:"confidence"`
-	Estimation          float64 `json:"estimation" bson:"estimation"`
-}
 type PrizePicks struct {
 	Data     []PrizePicksData     `json:"data" bson:"data"`
 	Included []PrizePicksIncluded `json:"included" bson:"included"`

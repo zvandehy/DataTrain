@@ -36,7 +36,7 @@ type PlayerGame {
   free_throws_percentage: Float!
   gameID: String!
   home_or_away: String!
-  outcome: Outcome!
+  outcome: GameOutcome!
   margin: Int!
   minutes: String!
   offensive_rebound_percentage: Float!
@@ -66,41 +66,9 @@ type PlayerGame {
   rebounds_assists: Int!
   blocks_steals: Int!
   fantasy_score: Float!
-  prediction(input: ModelInput!): PredictionBreakdown!
+
+  prediction(input: ModelInput!): GamePrediction!
   propositions(input: PropositionFilter): [Proposition!]!
-}
-
-type PredictionBreakdown {
-  weightedTotal: AverageStats!
-  predictionAccuracy: AverageStats!
-  fragments: [PredictionFragment!]!
-}
-
-type PredictionFragment {
-  name: String!
-  derived: AverageStats!
-  derivedGames: [PlayerGame!]!
-  base: AverageStats!
-  pctChange: AverageStats!
-  weight: Float!
-  propositions(input: PropositionFilter): [Proposition!]!
-}
-
-type Proposition {
-  target: Float!
-  type: Stat!
-  sportsbook: SportsbookOption!
-  analysis: PropositionSummary
-  lastModified: String!
-}
-
-type PropositionSummary {
-  numOver: Int!
-  numUnder: Int!
-  numPush: Int!
-  pctOver: Float!
-  pctUnder: Float!
-  pctPush: Float!
 }
 
 type AverageStats {

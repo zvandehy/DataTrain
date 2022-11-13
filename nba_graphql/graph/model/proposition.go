@@ -12,7 +12,7 @@ type DBProposition struct {
 	GameID       string     `db:"gameID"`
 	OpponentID   int        `db:"opponentID"`
 	PlayerName   string     `db:"playerName"`
-	Date         *time.Time `db:"date"`
+	StartTime    *time.Time `db:"startTime"`
 	StatType     string     `db:"statType"`
 	Target       float64    `db:"target"`
 	Sportsbook   string     `db:"sportsbook"`
@@ -22,13 +22,15 @@ type DBProposition struct {
 }
 
 type Proposition struct {
-	Sportsbook    SportsbookOption    `json:"sportsbook" bson:"sportsbook"`
-	Target        float64             `json:"target" bson:"target"`
-	TypeRaw       string              `json:"type" bson:"type"`
-	Type          Stat                `json:"propType" bson:"propType"`
-	LastModified  *time.Time          `json:"lastModified" bson:"lastModified"`
-	ProjectionRef *Projection         `json:"projectionRef" bson:"projectionRef"`
-	Analysis      *PropositionSummary `json:"analysis" bson:"analysis"`
+	Sportsbook   SportsbookOption `db:"sportsbook" json:"sportsbook" bson:"sportsbook"`
+	Target       float64          `db:"target" json:"target" bson:"target"`
+	TypeRaw      string           `db:"statType" json:"type" bson:"type"`
+	Type         Stat             `json:"propType" bson:"propType"`
+	LastModified *time.Time       `json:"lastModified" bson:"lastModified"`
+	Outcome      PropOutcome      `json:"outcome" bson:"outcome"`
+	ActualResult *float64         `json:"actualResult" bson:"actualResult"`
+	Accuracy     float64          `json:"accuracy" bson:"accuracy"`
+	Game         *PlayerGame      `json:"game" bson:"game"`
 }
 
 func (p *Proposition) UnmarshalBSON(data []byte) error {
