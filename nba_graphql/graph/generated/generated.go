@@ -280,35 +280,45 @@ type PlayerResolver interface {
 }
 type PlayerGameResolver interface {
 	AssistPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error)
-
+	Assists(ctx context.Context, obj *model.PlayerGame) (int, error)
+	Passes(ctx context.Context, obj *model.PlayerGame) (int, error)
+	PotentialAssists(ctx context.Context, obj *model.PlayerGame) (int, error)
 	AssistConversionRate(ctx context.Context, obj *model.PlayerGame) (float64, error)
 	Date(ctx context.Context, obj *model.PlayerGame) (string, error)
 	DefensiveReboundPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error)
-
+	DefensiveRebounds(ctx context.Context, obj *model.PlayerGame) (int, error)
 	EffectiveFieldGoalPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error)
 	FieldGoalPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error)
-
+	FieldGoalsAttempted(ctx context.Context, obj *model.PlayerGame) (int, error)
+	FieldGoalsMade(ctx context.Context, obj *model.PlayerGame) (int, error)
+	FreeThrowsAttempted(ctx context.Context, obj *model.PlayerGame) (int, error)
+	FreeThrowsMade(ctx context.Context, obj *model.PlayerGame) (int, error)
 	FreeThrowsPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error)
 
 	HomeOrAway(ctx context.Context, obj *model.PlayerGame) (string, error)
 	Outcome(ctx context.Context, obj *model.PlayerGame) (model.GameOutcome, error)
-
+	Margin(ctx context.Context, obj *model.PlayerGame) (int, error)
 	Minutes(ctx context.Context, obj *model.PlayerGame) (string, error)
 	OffensiveReboundPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error)
-
+	OffensiveRebounds(ctx context.Context, obj *model.PlayerGame) (int, error)
 	Opponent(ctx context.Context, obj *model.PlayerGame) (*model.Team, error)
 	OpponentStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error)
 	Team(ctx context.Context, obj *model.PlayerGame) (*model.Team, error)
 	TeamStats(ctx context.Context, obj *model.PlayerGame) (*model.TeamGame, error)
-
+	PersonalFoulsDrawn(ctx context.Context, obj *model.PlayerGame) (int, error)
+	PersonalFouls(ctx context.Context, obj *model.PlayerGame) (int, error)
+	Points(ctx context.Context, obj *model.PlayerGame) (int, error)
 	Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error)
 
 	ThreePointPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error)
-
+	ThreePointersAttempted(ctx context.Context, obj *model.PlayerGame) (int, error)
+	ThreePointersMade(ctx context.Context, obj *model.PlayerGame) (int, error)
+	Rebounds(ctx context.Context, obj *model.PlayerGame) (int, error)
 	TrueShootingPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error)
-
+	Turnovers(ctx context.Context, obj *model.PlayerGame) (int, error)
 	Usage(ctx context.Context, obj *model.PlayerGame) (float64, error)
-
+	Blocks(ctx context.Context, obj *model.PlayerGame) (int, error)
+	Steals(ctx context.Context, obj *model.PlayerGame) (int, error)
 	PointsRebounds(ctx context.Context, obj *model.PlayerGame) (int, error)
 	PointsAssists(ctx context.Context, obj *model.PlayerGame) (int, error)
 	PointsReboundsAssists(ctx context.Context, obj *model.PlayerGame) (int, error)
@@ -5535,7 +5545,7 @@ func (ec *executionContext) _PlayerGame_assists(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Assists, nil
+		return ec.resolvers.PlayerGame().Assists(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5556,8 +5566,8 @@ func (ec *executionContext) fieldContext_PlayerGame_assists(ctx context.Context,
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -5579,7 +5589,7 @@ func (ec *executionContext) _PlayerGame_passes(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Passes, nil
+		return ec.resolvers.PlayerGame().Passes(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5600,8 +5610,8 @@ func (ec *executionContext) fieldContext_PlayerGame_passes(ctx context.Context, 
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -5623,7 +5633,7 @@ func (ec *executionContext) _PlayerGame_potential_assists(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PotentialAssists, nil
+		return ec.resolvers.PlayerGame().PotentialAssists(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5644,8 +5654,8 @@ func (ec *executionContext) fieldContext_PlayerGame_potential_assists(ctx contex
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -5799,7 +5809,7 @@ func (ec *executionContext) _PlayerGame_defensive_rebounds(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DefensiveRebounds, nil
+		return ec.resolvers.PlayerGame().DefensiveRebounds(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5820,8 +5830,8 @@ func (ec *executionContext) fieldContext_PlayerGame_defensive_rebounds(ctx conte
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -5931,7 +5941,7 @@ func (ec *executionContext) _PlayerGame_field_goals_attempted(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FieldGoalsAttempted, nil
+		return ec.resolvers.PlayerGame().FieldGoalsAttempted(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5952,8 +5962,8 @@ func (ec *executionContext) fieldContext_PlayerGame_field_goals_attempted(ctx co
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -5975,7 +5985,7 @@ func (ec *executionContext) _PlayerGame_field_goals_made(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FieldGoalsMade, nil
+		return ec.resolvers.PlayerGame().FieldGoalsMade(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5996,8 +6006,8 @@ func (ec *executionContext) fieldContext_PlayerGame_field_goals_made(ctx context
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -6019,7 +6029,7 @@ func (ec *executionContext) _PlayerGame_free_throws_attempted(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FreeThrowsAttempted, nil
+		return ec.resolvers.PlayerGame().FreeThrowsAttempted(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6040,8 +6050,8 @@ func (ec *executionContext) fieldContext_PlayerGame_free_throws_attempted(ctx co
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -6063,7 +6073,7 @@ func (ec *executionContext) _PlayerGame_free_throws_made(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FreeThrowsMade, nil
+		return ec.resolvers.PlayerGame().FreeThrowsMade(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6084,8 +6094,8 @@ func (ec *executionContext) fieldContext_PlayerGame_free_throws_made(ctx context
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -6283,7 +6293,7 @@ func (ec *executionContext) _PlayerGame_margin(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Margin, nil
+		return ec.resolvers.PlayerGame().Margin(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6304,8 +6314,8 @@ func (ec *executionContext) fieldContext_PlayerGame_margin(ctx context.Context, 
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -6415,7 +6425,7 @@ func (ec *executionContext) _PlayerGame_offensive_rebounds(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.OffensiveRebounds, nil
+		return ec.resolvers.PlayerGame().OffensiveRebounds(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6436,8 +6446,8 @@ func (ec *executionContext) fieldContext_PlayerGame_offensive_rebounds(ctx conte
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -6835,7 +6845,7 @@ func (ec *executionContext) _PlayerGame_personal_fouls_drawn(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PersonalFoulsDrawn, nil
+		return ec.resolvers.PlayerGame().PersonalFoulsDrawn(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6856,8 +6866,8 @@ func (ec *executionContext) fieldContext_PlayerGame_personal_fouls_drawn(ctx con
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -6879,7 +6889,7 @@ func (ec *executionContext) _PlayerGame_personal_fouls(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PersonalFouls, nil
+		return ec.resolvers.PlayerGame().PersonalFouls(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6900,8 +6910,8 @@ func (ec *executionContext) fieldContext_PlayerGame_personal_fouls(ctx context.C
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -6923,7 +6933,7 @@ func (ec *executionContext) _PlayerGame_points(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Points, nil
+		return ec.resolvers.PlayerGame().Points(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6944,8 +6954,8 @@ func (ec *executionContext) fieldContext_PlayerGame_points(ctx context.Context, 
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -7165,7 +7175,7 @@ func (ec *executionContext) _PlayerGame_three_pointers_attempted(ctx context.Con
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ThreePointersAttempted, nil
+		return ec.resolvers.PlayerGame().ThreePointersAttempted(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7186,8 +7196,8 @@ func (ec *executionContext) fieldContext_PlayerGame_three_pointers_attempted(ctx
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -7209,7 +7219,7 @@ func (ec *executionContext) _PlayerGame_three_pointers_made(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ThreePointersMade, nil
+		return ec.resolvers.PlayerGame().ThreePointersMade(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7230,8 +7240,8 @@ func (ec *executionContext) fieldContext_PlayerGame_three_pointers_made(ctx cont
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -7253,7 +7263,7 @@ func (ec *executionContext) _PlayerGame_rebounds(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Rebounds, nil
+		return ec.resolvers.PlayerGame().Rebounds(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7274,8 +7284,8 @@ func (ec *executionContext) fieldContext_PlayerGame_rebounds(ctx context.Context
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -7341,7 +7351,7 @@ func (ec *executionContext) _PlayerGame_turnovers(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Turnovers, nil
+		return ec.resolvers.PlayerGame().Turnovers(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7362,8 +7372,8 @@ func (ec *executionContext) fieldContext_PlayerGame_turnovers(ctx context.Contex
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -7429,7 +7439,7 @@ func (ec *executionContext) _PlayerGame_blocks(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Blocks, nil
+		return ec.resolvers.PlayerGame().Blocks(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7450,8 +7460,8 @@ func (ec *executionContext) fieldContext_PlayerGame_blocks(ctx context.Context, 
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -7473,7 +7483,7 @@ func (ec *executionContext) _PlayerGame_steals(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Steals, nil
+		return ec.resolvers.PlayerGame().Steals(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7494,8 +7504,8 @@ func (ec *executionContext) fieldContext_PlayerGame_steals(ctx context.Context, 
 	fc = &graphql.FieldContext{
 		Object:     "PlayerGame",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -15358,26 +15368,65 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 
 			})
 		case "assists":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_assists(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_assists(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "passes":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_passes(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_passes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "potential_assists":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_potential_assists(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_potential_assists(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "assist_conversion_rate":
 			field := field
 
@@ -15439,12 +15488,25 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 
 			})
 		case "defensive_rebounds":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_defensive_rebounds(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_defensive_rebounds(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "effective_field_goal_percentage":
 			field := field
 
@@ -15486,33 +15548,85 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 
 			})
 		case "field_goals_attempted":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_field_goals_attempted(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_field_goals_attempted(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "field_goals_made":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_field_goals_made(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_field_goals_made(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "free_throws_attempted":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_free_throws_attempted(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_free_throws_attempted(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "free_throws_made":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_free_throws_made(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_free_throws_made(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "free_throws_percentage":
 			field := field
 
@@ -15581,12 +15695,25 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 
 			})
 		case "margin":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_margin(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_margin(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "minutes":
 			field := field
 
@@ -15628,12 +15755,25 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 
 			})
 		case "offensive_rebounds":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_offensive_rebounds(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_offensive_rebounds(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "opponent":
 			field := field
 
@@ -15715,26 +15855,65 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 
 			})
 		case "personal_fouls_drawn":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_personal_fouls_drawn(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_personal_fouls_drawn(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "personal_fouls":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_personal_fouls(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_personal_fouls(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "points":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_points(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_points(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "player":
 			field := field
 
@@ -15790,26 +15969,65 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 
 			})
 		case "three_pointers_attempted":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_three_pointers_attempted(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_three_pointers_attempted(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "three_pointers_made":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_three_pointers_made(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_three_pointers_made(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "rebounds":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_rebounds(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_rebounds(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "true_shooting_percentage":
 			field := field
 
@@ -15831,12 +16049,25 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 
 			})
 		case "turnovers":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_turnovers(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_turnovers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "usage":
 			field := field
 
@@ -15858,19 +16089,45 @@ func (ec *executionContext) _PlayerGame(ctx context.Context, sel ast.SelectionSe
 
 			})
 		case "blocks":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_blocks(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_blocks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "steals":
+			field := field
 
-			out.Values[i] = ec._PlayerGame_steals(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlayerGame_steals(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "points_rebounds":
 			field := field
 

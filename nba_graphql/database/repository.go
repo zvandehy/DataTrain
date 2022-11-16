@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -74,6 +75,7 @@ func Getprizepicks(nbaClient BasketballRepository) {
 	}
 	start := time.Now()
 	var propositions []*model.DBProposition
+	var games []*model.PlayerGame
 	url := fmt.Sprintf("https://partner-api.prizepicks.com/projections?single_stat=True&per_page=1000&league_id=%d", leagueID)
 	res, err := http.Get(url)
 	if err != nil {
@@ -96,19 +98,33 @@ func Getprizepicks(nbaClient BasketballRepository) {
 		idToName[inc.ID] = inc.Attributes.Name
 	}
 	schedule := getSchedule()
+	countgames := 0
+	countprops := 0
 	for _, prop := range prizepicks.Data {
 		if prop.Attributes.Is_promo {
 			logrus.Warn("skipping promo")
 			continue
 		}
-		p, err := ParsePrizePickProposition(nbaClient, *schedule, prop, idToName)
+		p, game, err := ParsePrizePickProposition(nbaClient, *schedule, prop, idToName)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{"error": err, "prop": prop}).Warn("couldn't parse prizepicks proposition")
 			continue
 		}
 		propositions = append(propositions, p)
+		countprops++
+		contains := false
+		for _, g := range games {
+			if g.PlayerID == game.PlayerID && g.GameID == game.GameID {
+				contains = true
+				break
+			}
+		}
+		if !contains {
+			games = append(games, game)
+			countgames++
+		}
 		fmt.Println(len(propositions), p.PlayerName, p.Target, p.StatType)
-		if len(propositions) >= 20 {
+		if len(propositions) >= 50 {
 			//upsert
 			x, err := nbaClient.SavePropositions(context.Background(), propositions)
 			if err != nil {
@@ -123,56 +139,73 @@ func Getprizepicks(nbaClient BasketballRepository) {
 
 	fmt.Println("REMAINING TO IMPORT: ", len(propositions))
 	//upsert
-	countprops, err := nbaClient.SavePropositions(context.Background(), propositions)
+	_, err = nbaClient.SavePropositions(context.Background(), propositions)
 	if err != nil {
 		if err != nil {
 			logrus.Warn(err)
+		}
+	}
+	fmt.Printf("Saving %d upcoming games\n", len(games))
+	date := games[0].Date.Format(util.DATE_FORMAT)
+	foundGames, err := nbaClient.GetPlayerGames(context.Background(), &model.GameFilter{StartDate: &date, EndDate: &date})
+	if err != nil {
+		logrus.Warn(err)
+	}
+	fmt.Println("Found player games: ", len(foundGames), " Player Prop games: ", len(games))
+	//remove foundGames from games
+	for _, foundGame := range foundGames {
+		for i, game := range games {
+			if foundGame.PlayerID == game.PlayerID && foundGame.GameID == game.GameID {
+				games = append(games[:i], games[i+1:]...)
+				break
+			}
+		}
+	}
+	sort.Slice(games, func(i, j int) bool {
+		return games[i].GameID < games[j].GameID
+	})
+	for _, game := range games {
+		fmt.Println(game.PlayerID, game.GameID, game.Date, game.OpponentID)
+	}
+
+	if len(games) > 0 {
+		_, err = nbaClient.SaveUpcomingGames(context.Background(), games)
+		if err != nil {
+			logrus.Errorf("failed to save upcoming games %+v", games)
 		}
 	}
 	fmt.Println("Imported ", countprops, " propositions")
-	games := []*model.PlayerGame{} //TODO: get games
-	countgames, err := nbaClient.SaveUpcomingGames(context.Background(), games)
-	if err != nil {
-		if err != nil {
-			logrus.Warn(err)
-		}
-	}
-	logrus.Printf(util.TimeLog(fmt.Sprintf("Retrieved %s propositions from PrizePicks and inserted %d games", nbaClient.GetLeague(), countgames), start))
+	logrus.Printf(util.TimeLog(fmt.Sprintf("Retrieved %s propositions from PrizePicks and inserted %d games", nbaClient.GetLeague(), len(games)), start))
 }
 
-func ParsePrizePickProposition(db BasketballRepository, schedule model.Schedule, prop model.PrizePicksData, itemIDToNameMap map[string]string) (proposition *model.DBProposition, err error) {
+func ParsePrizePickProposition(db BasketballRepository, schedule model.Schedule, prop model.PrizePicksData, itemIDToNameMap map[string]string) (proposition *model.DBProposition, game *model.PlayerGame, err error) {
 	if prop.Attributes.Is_promo {
 		logrus.Warn("skipping promo prizepick %+v", prop)
-		return nil, fmt.Errorf("skipping promo prizepick")
+		return nil, nil, fmt.Errorf("skipping promo prizepick")
 	}
 	playerName, err := getPlayerName(prop, itemIDToNameMap)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	statType, err := getStatType(prop, itemIDToNameMap)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	target, err := getTarget(prop)
 	if err != nil {
-		return nil, err
-	}
-	date, err := time.Parse(time.RFC3339, prop.Attributes.Start_time)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to retrieve prizepicks date")
+		return nil, nil, err
 	}
 	playerID, err := getPlayerID(db, playerName)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	opponentID, err := getTeamID(db, prop.Attributes.Description)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
 	gameID, err := getGameIDFromSchedule(schedule, prop.Attributes.Start_time, prop.Attributes.Description)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	now := time.Now()
 
@@ -185,23 +218,27 @@ func ParsePrizePickProposition(db BasketballRepository, schedule model.Schedule,
 		StatType:     statType,
 		LastModified: &now,
 		PlayerName:   playerName,
-		StartTime:    &date,
 	}
 
 	homeAway, err := getHomeTeam(schedule, prop.Attributes.Start_time, prop.Attributes.Description)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	teamABR, err := getTeamABRFromSchedule(schedule, prop.Attributes.Start_time, prop.Attributes.Description)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	teamID, err := getTeamID(db, teamABR)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+	dateSplit := strings.Split(prop.Attributes.Start_time, "T")
+	date, err := time.Parse(util.DATE_FORMAT, dateSplit[0])
+	if err != nil {
+		return nil, nil, err
 	}
 	// save upcoming game in db
-	game := &model.PlayerGame{
+	game = &model.PlayerGame{
 		PlayerID:   playerID,
 		GameID:     gameID,
 		OpponentID: opponentID,
@@ -214,12 +251,8 @@ func ParsePrizePickProposition(db BasketballRepository, schedule model.Schedule,
 		Playoffs: false,
 		Outcome:  "PENDING",
 	}
-	_, err = db.SaveUpcomingGames(context.Background(), []*model.PlayerGame{game})
-	if err != nil {
-		logrus.Errorf("failed to save upcoming game %v", game)
-	}
 	// logrus.Infof("saved upcoming game %v %v", game.GameID, game.PlayerID)
-	return proposition, nil
+	return proposition, game, nil
 }
 
 func getPlayerName(prop model.PrizePicksData, itemIDToNameMap map[string]string) (string, error) {

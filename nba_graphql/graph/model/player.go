@@ -49,23 +49,23 @@ func NewPlayerAverage(games []*PlayerGame, player *Player) PlayerAverage {
 	average.Weight = float64(player.Weight)
 
 	for _, game := range games {
-		average.Assists += float64(game.Assists)
-		average.Blocks += float64(game.Blocks)
-		average.DefensiveRebounds += float64(game.DefensiveRebounds)
-		average.FieldGoalsAttempted += float64(game.FieldGoalsAttempted)
-		average.FieldGoalsMade += float64(game.FieldGoalsMade)
-		average.FreeThrowsAttempted += float64(game.FreeThrowsAttempted)
-		average.FreeThrowsMade += float64(game.FreeThrowsMade)
+		average.Assists += float64(game.Assists.Int16)
+		average.Blocks += float64(game.Blocks.Int16)
+		average.DefensiveRebounds += float64(game.DefensiveRebounds.Int16)
+		average.FieldGoalsAttempted += float64(game.FieldGoalsAttempted.Int16)
+		average.FieldGoalsMade += float64(game.FieldGoalsMade.Int16)
+		average.FreeThrowsAttempted += float64(game.FreeThrowsAttempted.Int16)
+		average.FreeThrowsMade += float64(game.FreeThrowsMade.Int16)
 		average.Minutes += float64(game.Minutes)
-		average.OffensiveRebounds += float64(game.OffensiveRebounds)
-		average.PersonalFoulsDrawn += float64(game.PersonalFoulsDrawn)
-		average.PersonalFouls += float64(game.PersonalFouls)
-		average.Points += float64(game.Points)
-		average.Rebounds += float64(game.Rebounds)
-		average.Steals += float64(game.Steals)
-		average.ThreePointersAttempted += float64(game.ThreePointersAttempted)
-		average.ThreePointersMade += float64(game.ThreePointersMade)
-		average.Turnovers += float64(game.Turnovers)
+		average.OffensiveRebounds += float64(game.OffensiveRebounds.Int16)
+		average.PersonalFoulsDrawn += float64(game.PersonalFoulsDrawn.Int16)
+		average.PersonalFouls += float64(game.PersonalFouls.Int16)
+		average.Points += float64(game.Points.Int16)
+		average.Rebounds += float64(game.Rebounds.Int16)
+		average.Steals += float64(game.Steals.Int16)
+		average.ThreePointersAttempted += float64(game.ThreePointersAttempted.Int16)
+		average.ThreePointersMade += float64(game.ThreePointersMade.Int16)
+		average.Turnovers += float64(game.Turnovers.Int16)
 		average.FantasyScore += float64(game.Score(FantasyScore))
 		average.PointsAssists += float64(game.Score(PointsAssists))
 		average.PointsRebounds += float64(game.Score(PointsRebounds))
@@ -113,9 +113,7 @@ func (p *Player) HeightInInches() int {
 // 	return util.Print(p)
 // }
 
-// func (p PlayerGame) String() string {
-// 	return util.Print(p)
-// }
+// func (p PlayerGame) String() st.Int16
 
 // TODO: To add a new stat to player similarity, add it to all of: ... // TODO: look into this, see if there is a more maintainable way to do this
 type PlayerAverage struct {

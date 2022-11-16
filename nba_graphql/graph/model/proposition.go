@@ -12,7 +12,6 @@ type DBProposition struct {
 	GameID       string     `db:"gameID"`
 	OpponentID   int        `db:"opponentID"`
 	PlayerName   string     `db:"playerName"`
-	StartTime    *time.Time `db:"startTime"`
 	StatType     string     `db:"statType"`
 	Target       float64    `db:"target"`
 	Sportsbook   string     `db:"sportsbook"`

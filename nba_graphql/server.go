@@ -71,26 +71,6 @@ func main() {
 		tick := time.Tick(10 * time.Minute)
 		for range tick {
 			database.Getprizepicks(nbaClient)
-			// 		// cachePlayers(nbaClient)
-			// 		// resp, err := http.Get("https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json")
-			// 		// if err != nil {
-			// 		// 	logrus.Error("Error getting schedule: ", err)
-			// 		// }
-			// 		// defer resp.Body.Close()
-			// 		// body, err := io.ReadAll(resp.Body)
-			// 		// if err != nil {
-			// 		// 	logrus.Error("Error reading schedule: ", err)
-			// 		// }
-			// 		// var schedule model.Schedule
-			// 		// err = json.Unmarshal(body, &schedule)
-			// 		// if err != nil {
-			// 		// 	logrus.Error("Error unmarshalling schedule: ", err)
-			// 		// }
-			// 		// for _, gameDate := range schedule.LeagueSchedule.GameDates {
-			// 		// 	for _, game :=  range gameDate.Games {
-
-			// 		// 	}
-			// 		// }
 		}
 	}()
 

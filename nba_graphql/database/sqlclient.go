@@ -68,7 +68,7 @@ func (c *SQLClient) AddQuery() {
 func (c *SQLClient) SavePropositions(ctx context.Context, propositions []*model.DBProposition) (int, error) {
 	tx := c.MustBegin()
 	for _, proposition := range propositions {
-		tx.MustExec("REPLACE INTO propositions (playerID, gameID, playername, startTime, opponentID, lastModified, sportsbook, statType, target) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", proposition.PlayerID, proposition.GameID, proposition.PlayerName, proposition.StartTime, proposition.OpponentID, proposition.LastModified, proposition.Sportsbook, proposition.StatType, proposition.Target)
+		tx.MustExec("REPLACE INTO propositions (playerID, gameID, playername, opponentID, lastModified, sportsbook, statType, target) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", proposition.PlayerID, proposition.GameID, proposition.PlayerName, proposition.OpponentID, proposition.LastModified, proposition.Sportsbook, proposition.StatType, proposition.Target)
 	}
 	err := tx.Commit()
 	if err != nil {
@@ -76,6 +76,9 @@ func (c *SQLClient) SavePropositions(ctx context.Context, propositions []*model.
 	}
 	return len(propositions), nil
 }
+
+var playerIDs = map[int]model.Player{}
+var playerNames = map[string]model.Player{}
 
 func (c *SQLClient) GetPlayers(ctx context.Context, withGames bool, playerFilters ...*model.PlayerFilter) ([]*model.Player, error) {
 	c.AddQuery()
@@ -156,27 +159,49 @@ func (c *SQLClient) GetPlayers(ctx context.Context, withGames bool, playerFilter
 			}
 		}
 	}
-	query := "SELECT * FROM players"
-	if len(or) > 0 {
-		query = fmt.Sprintf("%s WHERE %s", query, strings.Join(or, " OR "))
-	}
 	players := []*model.Player{}
-	err := c.SelectContext(ctx, &players, query, args...)
-	if err != nil {
-		logrus.Warnf("query: %s", query)
-		logrus.Warnf("args: %v", args)
-		return nil, fmt.Errorf("failed to get players: %w", err)
+	for _, filter := range playerFilters {
+		if filter.PositionLoose != nil || filter.PositionStrict != nil {
+			players = []*model.Player{}
+			break
+		}
+		if filter.PlayerID != nil {
+			if player, ok := playerIDs[*filter.PlayerID]; ok {
+				players = append(players, &player)
+			}
+		} else if filter.Name != nil {
+			if player, ok := playerNames[*filter.Name]; ok {
+				players = append(players, &player)
+			}
+		}
 	}
-
+	cachedPlayers := len(players) == len(playerFilters) && len(players) > 0
+	if !cachedPlayers {
+		query := "SELECT * FROM players"
+		if len(or) > 0 {
+			query = fmt.Sprintf("%s WHERE %s", query, strings.Join(or, " OR "))
+		}
+		players = []*model.Player{}
+		err := c.SelectContext(ctx, &players, query, args...)
+		if err != nil {
+			logrus.Warnf("query: %s", query)
+			logrus.Warnf("args: %v", args)
+			return nil, fmt.Errorf("failed to get players: %w", err)
+		}
+		for _, player := range players {
+			playerIDs[player.PlayerID] = *player
+			playerNames[player.Name] = *player
+		}
+	}
 	games := []*model.PlayerGame{}
-	ids := []interface{}{}
-	idqs := []string{}
-	for _, player := range players {
-		ids = append(ids, player.PlayerID)
-		idqs = append(idqs, "?")
-	}
 	if withGames {
-		err = c.SelectContext(ctx, &games, fmt.Sprintf("SELECT * FROM playergames WHERE playerID IN (%s)", strings.Join(idqs, ", ")), ids...)
+		ids := []interface{}{}
+		idqs := []string{}
+		for _, player := range players {
+			ids = append(ids, player.PlayerID)
+			idqs = append(idqs, "?")
+		}
+		err := c.SelectContext(ctx, &games, fmt.Sprintf("SELECT * FROM playergames WHERE playerID IN (%s)", strings.Join(idqs, ", ")), ids...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get player games: %w", err)
 		}
@@ -187,6 +212,10 @@ func (c *SQLClient) GetPlayers(ctx context.Context, withGames bool, playerFilter
 				}
 			}
 		}
+		logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players with games: %v", len(players), playerFilters), start))
+		return players, nil
+	} else if cachedPlayers {
+		return players, nil
 	}
 	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players: %v", len(players), playerFilters), start))
 	return players, nil
@@ -218,7 +247,7 @@ func (c *SQLClient) SaveUpcomingGames(ctx context.Context, games []*model.Player
 		// 	Outcome:    "PENDING",
 		// }
 		// oppg := &model.TeamGame{}
-		tx.MustExec("INSERT IGNORE INTO playergames (date, gameID, homeAway, opponentID, teamID, playerID, season, playoffs, outcome) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", g.Date, g.GameID, g.HomeOrAway, g.OpponentID, g.TeamID, g.PlayerID, g.Season, g.Playoffs, g.Outcome)
+		tx.MustExec("INSERT INTO playergames (date, gameID, homeAway, opponentID, teamID, playerID, season, playoffs, outcome) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", g.Date, g.GameID, g.HomeOrAway, g.OpponentID, g.TeamID, g.PlayerID, g.Season, g.Playoffs, g.Outcome)
 		//tx.MustExce("REPLACE INTO teamgames") // team
 		//tx.MustExce("REPLACE INTO teamgames") // opponent
 	}
@@ -260,8 +289,14 @@ func (c *SQLClient) GetPlayerGames(ctx context.Context, input *model.GameFilter)
 	}
 	if input.StartDate != nil && input.EndDate != nil {
 		if *input.StartDate == *input.EndDate {
-			where = append(where, "date = ?")
-			args = append(args, *input.StartDate)
+			where = append(where, "date >= ? AND date < ?")
+			// start of day
+			date, err := time.Parse(util.DATE_FORMAT, *input.StartDate)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse date: %w", err)
+			}
+			end := date.Add(24 * time.Hour)
+			args = append(args, date, end)
 		} else {
 			where = append(where, "date BETWEEN ? AND ?")
 			args = append(args, *input.StartDate, *input.EndDate)
@@ -291,9 +326,12 @@ func (c *SQLClient) GetPlayerGames(ctx context.Context, input *model.GameFilter)
 	}
 	query := fmt.Sprintf("SELECT * FROM playergames WHERE %s ORDER BY date%s", strings.Join(where, " AND "), limit)
 	err = c.SelectContext(ctx, &games, query, args...)
-	if err != nil || len(games) == 0 {
+	if err != nil {
 		logrus.Warnf("failed to get playergames using query: %v | %+v", query, args)
 		return nil, fmt.Errorf("failed to get player games: %w", err)
+	}
+	if len(games) == 0 {
+		logrus.Warnf("received 0 playergames using query: %v | %+v", query, args)
 	}
 	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Player Games: %v", len(games), input), start))
 	return games, nil
@@ -444,6 +482,9 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 	return propositions, nil
 }
 
+var teamIDs = map[int]model.Team{}
+var teamABRs = map[string]model.Team{}
+
 func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ...*model.TeamFilter) ([]*model.Team, error) {
 	c.AddQuery()
 	start := time.Now()
@@ -473,6 +514,21 @@ func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ..
 		// err := c.Select(&teamwithgames, query, args...)
 		panic("get teams with games not implemented") // TODO: Implement
 	}
+	for _, team := range teamFilters {
+		if team.TeamID != nil {
+			if t, ok := teamIDs[*team.TeamID]; ok {
+				teams = append(teams, &t)
+			}
+		} else if team.Abbreviation != nil {
+			if t, ok := teamABRs[*team.Abbreviation]; ok {
+				teams = append(teams, &t)
+			}
+		}
+	}
+	if len(teams) == len(teamFilters) {
+		return teams, nil
+	}
+	teams = []*model.Team{}
 	query := fmt.Sprintf("SELECT * FROM teams WHERE %s", strings.Join(or, " OR "))
 	if len(or) == 0 {
 		query = "SELECT * FROM teams"
@@ -482,6 +538,10 @@ func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ..
 	if err != nil {
 		logrus.Warnf("failed to get teams using query: %v | %+v", query, args)
 		return nil, fmt.Errorf("failed to get teams: %w", err)
+	}
+	for _, team := range teams {
+		teamIDs[team.TeamID] = *team
+		teamABRs[team.Abbreviation] = *team
 	}
 	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Teams: %v", len(teams), teamFilters), start))
 	return teams, nil

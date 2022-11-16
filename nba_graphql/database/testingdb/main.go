@@ -177,7 +177,6 @@ func ParsePrizePickProposition(db database.BasketballRepository, schedule model.
 		StatType:     statType,
 		LastModified: &now,
 		PlayerName:   playerName,
-		StartTime:    &date,
 	}
 
 	homeAway, err := getHomeTeam(schedule, prop.Attributes.Start_time, prop.Attributes.Description)

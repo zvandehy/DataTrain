@@ -56,9 +56,9 @@ func (r *Resolver) GetGamelogBreakdowns(ctx context.Context, inputs []*model.Gam
 		return []*model.PropBreakdown{}
 	}
 
-	baseTotal := 0
+	baseTotal := 0.0
 	for _, game := range base {
-		baseTotal += game.Points
+		baseTotal += game.Score(stat)
 	}
 	baseAvg := float64(baseTotal) / float64(len(base))
 	if target == nil {

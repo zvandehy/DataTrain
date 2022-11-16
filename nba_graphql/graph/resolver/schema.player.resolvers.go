@@ -50,6 +50,30 @@ func (r *playerGameResolver) AssistPercentage(ctx context.Context, obj *model.Pl
 	return obj.AssistPercentage.Float64, nil
 }
 
+// Assists is the resolver for the assists field.
+func (r *playerGameResolver) Assists(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.Assists.Valid {
+		return int(obj.Assists.Int16), nil
+	}
+	return 0, nil
+}
+
+// Passes is the resolver for the passes field.
+func (r *playerGameResolver) Passes(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.Passes.Valid {
+		return int(obj.Passes.Int16), nil
+	}
+	return 0, nil
+}
+
+// PotentialAssists is the resolver for the potential_assists field.
+func (r *playerGameResolver) PotentialAssists(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.PotentialAssists.Valid {
+		return int(obj.PotentialAssists.Int16), nil
+	}
+	return 0, nil
+}
+
 // AssistConversionRate is the resolver for the assist_conversion_rate field.
 func (r *playerGameResolver) AssistConversionRate(ctx context.Context, obj *model.PlayerGame) (float64, error) {
 	return float64(int(obj.AssistConversionRate.Float64)) / 100, nil
@@ -65,6 +89,14 @@ func (r *playerGameResolver) DefensiveReboundPercentage(ctx context.Context, obj
 	return obj.DefensiveReboundPercentage.Float64, nil
 }
 
+// DefensiveRebounds is the resolver for the defensive_rebounds field.
+func (r *playerGameResolver) DefensiveRebounds(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.DefensiveRebounds.Valid {
+		return int(obj.DefensiveRebounds.Int16), nil
+	}
+	return 0, nil
+}
+
 // EffectiveFieldGoalPercentage is the resolver for the effective_field_goal_percentage field.
 func (r *playerGameResolver) EffectiveFieldGoalPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
 	return obj.EffectiveFieldGoalPercentage.Float64, nil
@@ -75,6 +107,38 @@ func (r *playerGameResolver) FieldGoalPercentage(ctx context.Context, obj *model
 	return obj.FieldGoalPercentage.Float64, nil
 }
 
+// FieldGoalsAttempted is the resolver for the field_goals_attempted field.
+func (r *playerGameResolver) FieldGoalsAttempted(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.FieldGoalsAttempted.Valid {
+		return int(obj.FieldGoalsAttempted.Int16), nil
+	}
+	return 0, nil
+}
+
+// FieldGoalsMade is the resolver for the field_goals_made field.
+func (r *playerGameResolver) FieldGoalsMade(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.FieldGoalsMade.Valid {
+		return int(obj.FieldGoalsMade.Int16), nil
+	}
+	return 0, nil
+}
+
+// FreeThrowsAttempted is the resolver for the free_throws_attempted field.
+func (r *playerGameResolver) FreeThrowsAttempted(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.FreeThrowsAttempted.Valid {
+		return int(obj.FreeThrowsAttempted.Int16), nil
+	}
+	return 0, nil
+}
+
+// FreeThrowsMade is the resolver for the free_throws_made field.
+func (r *playerGameResolver) FreeThrowsMade(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.FreeThrowsMade.Valid {
+		return int(obj.FreeThrowsMade.Int16), nil
+	}
+	return 0, nil
+}
+
 // FreeThrowsPercentage is the resolver for the free_throws_percentage field.
 func (r *playerGameResolver) FreeThrowsPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
 	return obj.FreeThrowsPercentage.Float64, nil
@@ -82,7 +146,7 @@ func (r *playerGameResolver) FreeThrowsPercentage(ctx context.Context, obj *mode
 
 // HomeOrAway is the resolver for the home_or_away field.
 func (r *playerGameResolver) HomeOrAway(ctx context.Context, obj *model.PlayerGame) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	return string(obj.HomeOrAway), nil
 }
 
 // Outcome is the resolver for the outcome field.
@@ -100,6 +164,14 @@ func (r *playerGameResolver) Outcome(ctx context.Context, obj *model.PlayerGame)
 	}
 }
 
+// Margin is the resolver for the margin field.
+func (r *playerGameResolver) Margin(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.Margin.Valid {
+		return int(obj.Margin.Int16), nil
+	}
+	return 0, nil
+}
+
 // Minutes is the resolver for the minutes field.
 func (r *playerGameResolver) Minutes(ctx context.Context, obj *model.PlayerGame) (string, error) {
 	// convert minutes decimal to string
@@ -111,6 +183,14 @@ func (r *playerGameResolver) Minutes(ctx context.Context, obj *model.PlayerGame)
 // OffensiveReboundPercentage is the resolver for the offensive_rebound_percentage field.
 func (r *playerGameResolver) OffensiveReboundPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
 	return obj.OffensiveReboundPercentage.Float64, nil
+}
+
+// OffensiveRebounds is the resolver for the offensive_rebounds field.
+func (r *playerGameResolver) OffensiveRebounds(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.OffensiveRebounds.Valid {
+		return int(obj.OffensiveRebounds.Int16), nil
+	}
+	return 0, nil
 }
 
 // Opponent is the resolver for the opponent field.
@@ -143,6 +223,30 @@ func (r *playerGameResolver) TeamStats(ctx context.Context, obj *model.PlayerGam
 	panic(fmt.Errorf("(r *playerGameResolver) TeamStats not implemented"))
 }
 
+// PersonalFoulsDrawn is the resolver for the personal_fouls_drawn field.
+func (r *playerGameResolver) PersonalFoulsDrawn(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.PersonalFoulsDrawn.Valid {
+		return int(obj.PersonalFoulsDrawn.Int16), nil
+	}
+	return 0, nil
+}
+
+// PersonalFouls is the resolver for the personal_fouls field.
+func (r *playerGameResolver) PersonalFouls(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.PersonalFouls.Valid {
+		return int(obj.PersonalFouls.Int16), nil
+	}
+	return 0, nil
+}
+
+// Points is the resolver for the points field.
+func (r *playerGameResolver) Points(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.Points.Valid {
+		return int(obj.Points.Int16), nil
+	}
+	return 0, nil
+}
+
 // Player is the resolver for the player field.
 func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error) {
 	player, err := dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
@@ -162,9 +266,41 @@ func (r *playerGameResolver) ThreePointPercentage(ctx context.Context, obj *mode
 	return obj.ThreePointPercentage.Float64, nil
 }
 
+// ThreePointersAttempted is the resolver for the three_pointers_attempted field.
+func (r *playerGameResolver) ThreePointersAttempted(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.ThreePointersAttempted.Valid {
+		return int(obj.ThreePointersAttempted.Int16), nil
+	}
+	return 0, nil
+}
+
+// ThreePointersMade is the resolver for the three_pointers_made field.
+func (r *playerGameResolver) ThreePointersMade(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.ThreePointersMade.Valid {
+		return int(obj.ThreePointersMade.Int16), nil
+	}
+	return 0, nil
+}
+
+// Rebounds is the resolver for the rebounds field.
+func (r *playerGameResolver) Rebounds(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.Rebounds.Valid {
+		return int(obj.Rebounds.Int16), nil
+	}
+	return 0, nil
+}
+
 // TrueShootingPercentage is the resolver for the true_shooting_percentage field.
 func (r *playerGameResolver) TrueShootingPercentage(ctx context.Context, obj *model.PlayerGame) (float64, error) {
 	return obj.TrueShootingPercentage.Float64, nil
+}
+
+// Turnovers is the resolver for the turnovers field.
+func (r *playerGameResolver) Turnovers(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.Turnovers.Valid {
+		return int(obj.Turnovers.Int16), nil
+	}
+	return 0, nil
 }
 
 // Usage is the resolver for the usage field.
@@ -172,34 +308,50 @@ func (r *playerGameResolver) Usage(ctx context.Context, obj *model.PlayerGame) (
 	return obj.Usage.Float64, nil
 }
 
+// Blocks is the resolver for the blocks field.
+func (r *playerGameResolver) Blocks(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.Blocks.Valid {
+		return int(obj.Blocks.Int16), nil
+	}
+	return 0, nil
+}
+
+// Steals is the resolver for the steals field.
+func (r *playerGameResolver) Steals(ctx context.Context, obj *model.PlayerGame) (int, error) {
+	if obj.Steals.Valid {
+		return int(obj.Steals.Int16), nil
+	}
+	return 0, nil
+}
+
 // PointsRebounds is the resolver for the points_rebounds field.
 func (r *playerGameResolver) PointsRebounds(ctx context.Context, obj *model.PlayerGame) (int, error) {
-	return obj.Points + obj.Rebounds, nil
+	return int(obj.Points.Int16 + obj.Rebounds.Int16), nil
 }
 
 // PointsAssists is the resolver for the points_assists field.
 func (r *playerGameResolver) PointsAssists(ctx context.Context, obj *model.PlayerGame) (int, error) {
-	return obj.Points + obj.Assists, nil
+	return int(obj.Points.Int16 + obj.Assists.Int16), nil
 }
 
 // PointsReboundsAssists is the resolver for the points_rebounds_assists field.
 func (r *playerGameResolver) PointsReboundsAssists(ctx context.Context, obj *model.PlayerGame) (int, error) {
-	return obj.Points + obj.Rebounds + obj.Assists, nil
+	return int(obj.Points.Int16 + obj.Rebounds.Int16 + obj.Assists.Int16), nil
 }
 
 // ReboundsAssists is the resolver for the rebounds_assists field.
 func (r *playerGameResolver) ReboundsAssists(ctx context.Context, obj *model.PlayerGame) (int, error) {
-	return obj.Rebounds + obj.Assists, nil
+	return int(obj.Rebounds.Int16 + obj.Assists.Int16), nil
 }
 
 // BlocksSteals is the resolver for the blocks_steals field.
 func (r *playerGameResolver) BlocksSteals(ctx context.Context, obj *model.PlayerGame) (int, error) {
-	return obj.Blocks + obj.Steals, nil
+	return int(obj.Blocks.Int16 + obj.Steals.Int16), nil
 }
 
 // FantasyScore is the resolver for the fantasy_score field.
 func (r *playerGameResolver) FantasyScore(ctx context.Context, obj *model.PlayerGame) (float64, error) {
-	return float64(obj.Points) + float64(obj.Rebounds)*1.2 + float64(obj.Assists)*1.5 + float64(obj.Steals)*3.0 + float64(obj.Blocks)*3.0 - float64(obj.Turnovers), nil
+	return float64(obj.Points.Int16) + float64(obj.Rebounds.Int16)*1.2 + float64(obj.Assists.Int16)*1.5 + float64(obj.Steals.Int16)*3.0 + float64(obj.Blocks.Int16)*3.0 - float64(obj.Turnovers.Int16), nil
 }
 
 // Prediction is the resolver for the prediction field.
