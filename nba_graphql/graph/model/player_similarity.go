@@ -77,7 +77,6 @@ func (v *SimilarityVector) GetNearest(limit int, statsOfInterest []Stat) []Playe
 	sort.Slice(nearest, func(i, j int) bool {
 		return EuclideanDistance(nearest[i], statsOfInterest) < EuclideanDistance(nearest[j], statsOfInterest)
 	})
-
 	if len(v.Comparisons) <= limit {
 		return nearest
 	}

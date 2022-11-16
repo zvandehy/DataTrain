@@ -50,7 +50,6 @@ func ConnectDB(ctx context.Context, db string) (*MongoClient, error) {
 			return
 		}
 		instance = client
-
 	})
 	if connErr != nil {
 		return nil, connErr
