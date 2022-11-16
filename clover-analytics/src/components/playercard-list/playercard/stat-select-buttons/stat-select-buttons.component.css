@@ -1,0 +1,43 @@
+.stat-select {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  grid-area: stat-select;
+  gap: var(--grid-gap);
+  padding: var(--grid-gap);
+}
+
+.stat-select-btn {
+  border-radius: 0;
+  padding: 2px;
+  background-color: var(--color-black);
+  color: var(--color-white);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 60px;
+}
+
+.stat-select-btn > p {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.stat-select-btn:hover .hide {
+  display: block;
+}
+
+.stat-select-btn > div > p {
+  display: inline;
+  padding-left: 3px;
+}
+
+.span-3 {
+  grid-column: 1/4;
+}
+
+.stat-select-btn:hover,
+.selected {
+  background-color: var(--color-accent);
+}

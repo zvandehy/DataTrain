@@ -1,0 +1,82 @@
+#home-page {
+  display: grid;
+  grid-template-areas:
+    "query-filters list-filters"
+    "accuracy accuracy"
+    "summary summary"
+    "dist dist"
+    "max-dist max-dist"
+    "list list";
+  max-width: 100%;
+}
+
+#home-page th {
+  font-size: max(0.75rem, 1vw) !important;
+}
+
+h1,
+p {
+  text-align: center;
+}
+
+#season-select {
+  color: inherit;
+  background-color: inherit;
+}
+
+.filters-wrapper {
+  background-color: var(--color-grey);
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  padding: 0.75rem;
+  grid-area: query-filters;
+}
+#list-filters {
+  grid-area: list-filters;
+}
+#player-list {
+  grid-area: list;
+}
+
+.filters-wrapper {
+  align-items: center;
+}
+
+.filters-wrapper * {
+  border-radius: 0;
+  color: var(--color-black) !important;
+}
+.filters-wrapper > * {
+  margin-right: 0.5rem;
+}
+#checkboxes {
+  display: flex;
+  flex-direction: column;
+}
+.MuiCalendarPicker-root button {
+  color: var(--color-black);
+}
+
+#home-page > * {
+  max-width: 100%;
+}
+
+@media (max-width: 885px) {
+  #home-page {
+    display: flex;
+    flex-direction: column;
+  }
+  .filters-wrapper {
+    padding: 0.25rem;
+    flex-direction: column;
+    /* max-width: min-content; */
+  }
+  .filters-wrapper > * {
+    margin-right: 0;
+    margin-top: 0.05rem;
+  }
+  #checkboxes {
+    flex-direction: row;
+  }
+}

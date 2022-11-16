@@ -1,0 +1,200 @@
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: 0;
+}
+
+@font-face {
+  font-family: "Oswald-Reg";
+  src: local("Oswald-Regular"),
+    url("../fonts/Oswald-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Oswald-Light";
+  src: local("Oswald-Light"),
+    url("../fonts/Oswald-Light.ttf") format("truetype");
+}
+
+:root {
+  --color-black: #181714;
+  --color-grey: #c2cecd;
+  --color-primary: #395c6b;
+  --color-accent: #f59a4b;
+  --color-white: #f8ffff;
+  --color-warning: rgb(199, 69, 69);
+  --color-high: rgb(91, 255, 165);
+  --color-med: rgb(255, 253, 140);
+  --color-low: rgb(248, 113, 113);
+  --grid-gap: 1em;
+}
+.high {
+  color: var(--color-high) !important;
+}
+
+.med {
+  color: var(--color-med) !important;
+}
+
+.low {
+  color: var(--color-low) !important;
+}
+
+html,
+body,
+#root {
+  background-color: var(--color-black);
+  font-family: "Oswald-Light";
+  color: var(--color-white);
+}
+
+.datalist-items {
+  color: var(--color-black);
+}
+
+.datalist-input .datalist-items {
+  max-height: 200px;
+  overflow: scroll;
+}
+
+.players {
+  margin: 1rem 1%;
+}
+
+.players-list {
+  margin: 1rem;
+}
+
+.header {
+  text-align: end;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.titlecase {
+  text-transform: capitalize;
+}
+
+.tall {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.sorter {
+  display: flex;
+}
+
+.right {
+  text-align: right;
+}
+
+@media (max-width: 885px) {
+  .playercard {
+    grid-template-columns: 1fr 2fr !important;
+    grid-template-areas:
+      "player-context player-context"
+      "stat-select stat-select"
+      "prediction player-stats" !important;
+    padding: 0px !important;
+    gap: 0 0.25rem;
+  }
+
+  .player-photo {
+    width: 20vw !important;
+    max-height: 100% !important;
+  }
+
+  .player-info {
+    flex-grow: 1;
+  }
+
+  .player-name {
+    font-size: 6vw !important;
+    margin-right: 6px !important;
+  }
+
+  .player-matchup,
+  .player-matchup > span {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: min(2rem, 3.75vw);
+  }
+
+  .player-context {
+    flex-direction: row-reverse !important;
+    flex-wrap: wrap !important;
+  }
+
+  .prediction-icon {
+    margin-top: 0.5rem !important;
+  }
+
+  .prediction-icon svg {
+    margin: auto;
+    padding-top: 0.5rem;
+    font-size: 2em !important;
+  }
+
+  .arrow {
+    font-size: 2rem !important;
+  }
+
+  .events {
+    top: 2ch !important;
+    left: -25ch !important;
+  }
+
+  .playercard .player-stats {
+    margin-inline: 2vw !important;
+    width: inherit;
+  }
+
+  .stat-select {
+    gap: 0.25em !important;
+    padding: 0.25em !important;
+  }
+
+  .stat-select-btn .hide,
+  .stat-select-btn:hover .hide {
+    display: inline;
+    padding-left: 2px;
+  }
+
+  .teams-dropdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+@media (max-width: 555px) {
+  .player-page {
+    grid-template-columns: 1fr;
+  }
+  .player-page .player-stats {
+    gap: 0;
+  }
+
+  #profile-chart {
+    text-align: center;
+    margin: auto;
+    height: 150px !important;
+    width: 150px;
+  }
+}

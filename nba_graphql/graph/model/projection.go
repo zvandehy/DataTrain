@@ -8,29 +8,31 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Projection struct {
-	PlayerName   string         `json:"playername" bson:"playername"`
-	OpponentAbr  string         `json:"opponent" bson:"opponent"`
-	Propositions []*Proposition `json:"propositions" bson:"propositions"`
-	StartTime    string         `json:"startTime" bson:"startTime"`
-	Date         string         `json:"date" bson:"date"`
+	PlayerName  string         `json:"playername" bson:"playername"`
+	OpponentAbr string         `json:"opponent" bson:"opponent"` //TODO: Refactor to OpponentAbr
+	Props       []*Proposition `json:"propositions" bson:"propositions"`
+	StartTime   string         `json:"startTime" bson:"startTime"`
+	Date        string         `json:"date" bson:"date"`
+
+	Player   Player `json:"playerCache" bson:"playerCache"`
+	Opponent Team   `json:"opponentTeam" bson:"opponentTeam"`
 }
 
-type Proposition struct {
-	Sportsbook   string        `json:"sportsbook" bson:"sportsbook"`
-	Target       float64       `json:"target" bson:"target"`
-	Type         string        `json:"type" bson:"type"`
-	LastModified *time.Time    `json:"lastModified" bson:"lastModified"`
-	Predictions  []*Prediction `json:"predictions" bson:"predictions"`
+func (p *Projection) UnmarshalBSON(data []byte) error {
+	type Alias Projection
+	bson.Unmarshal(data, (*Alias)(p))
+	for i, prop := range p.Props {
+		// prop.ProjectionRef = p
+		p.Props[i] = prop
+	}
+	// p.PlayerMatrix = v.PlayerMatrix
+	return nil
 }
 
-type Prediction struct {
-	Model               string  `json:"model" bson:"model"`
-	OverUnderPrediction string  `json:"overUnderPrediction" bson:"overUnderPrediction"`
-	TotalPrediction     float64 `json:"totalPrediction" bson:"totalPrediction"`
-}
 type PrizePicks struct {
 	Data     []PrizePicksData     `json:"data" bson:"data"`
 	Included []PrizePicksIncluded `json:"included" bson:"included"`
@@ -85,25 +87,35 @@ type PrizePicksIncluded struct {
 }
 
 //ParsePrizePick creates a Projection and adds it to the projections slice or adds a Target to an existing projection
-func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projections []*Projection) ([]*Projection, error) {
+func ParsePrizePick(prop PrizePicksData, itemIDToNameMap map[string]string, projections []*Projection) ([]*Projection, error) {
 	var playerName string
-	var statType string
-	for _, p := range included {
-		if p.ID == prop.Relationships.Player.Data.ID {
-			playerName = p.Attributes.Name
-		}
-		if p.ID == prop.Relationships.StatType.Data.ID {
-			statType = p.Attributes.Name
-		}
-		if statType != "" && playerName != "" {
-			break
-		}
+	var statType Stat
+
+	// get playername and statType from id to name mapping
+	if val, ok := itemIDToNameMap[prop.Relationships.Player.Data.ID]; ok {
+		playerName = strings.TrimSpace(val)
+	} else {
+		return nil, errors.New("could not find player name")
 	}
+	if val, ok := itemIDToNameMap[prop.Relationships.StatType.Data.ID]; ok {
+		var err error
+		statType, err = NewStat(val)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("could not find stat type")
+	}
+
 	if playerName == "" {
-		return nil, fmt.Errorf("error retrieving prizepick player name")
+		err := fmt.Errorf("error retrieving prizepick player name")
+		logrus.Error(err)
+		return nil, err
 	}
 	if statType == "" {
-		return nil, fmt.Errorf("error retrieving prizepick stat type")
+		err := fmt.Errorf("error retrieving prizepick stat type for player %s | %+v", playerName, prop)
+		logrus.Error(err)
+		return nil, err
 	}
 
 	target, err := strconv.ParseFloat(prop.Attributes.Line_score, 64)
@@ -114,6 +126,7 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 	dateSlice := strings.SplitN(prop.Attributes.Start_time, "T", 2)
 	date := dateSlice[0]
 	now := time.Now()
+
 	// if player is already in list of projections, just add a proposition (for this prop type) to their projection
 	for i, projection := range projections {
 		if projection.PlayerName == playerName {
@@ -121,13 +134,13 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 				logrus.Warn("skipping promo prizepick")
 				continue
 			}
-			projections[i].Propositions = append(projections[i].Propositions, &Proposition{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now})
+			projections[i].Props = append(projections[i].Props, &Proposition{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now})
 			return projections, nil
 		}
 	}
 
 	// otherwise, create a new player projection with this proposition (prop type) in it
-	projections = append(projections, &Projection{PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Date: date, StartTime: prop.Attributes.Start_time, Propositions: []*Proposition{{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now}}})
+	projections = append(projections, &Projection{PlayerName: playerName, OpponentAbr: prop.Attributes.Description, Date: date, StartTime: prop.Attributes.Start_time, Props: []*Proposition{{Sportsbook: "PrizePicks", Target: target, Type: statType, LastModified: &now}}})
 	return projections, nil
 }
 
@@ -173,12 +186,15 @@ func ParseUnderdogProjection(json UnderdogFantasy, sport string) ([]*Projection,
 	now := time.Now()
 	var projections []*Projection
 	for _, player := range json.Players {
-		if strings.ToLower(player.Sport) != strings.ToLower(sport) {
+		if strings.EqualFold(player.Sport, sport) {
 			continue
 		}
 		playername := fmt.Sprintf("%s %s", player.FirstName, player.LastName)
 		playername = strings.TrimSpace(playername)
 		playername = strings.Replace(playername, "  ", " ", -1)
+		if val, ok := PlayerNames[playername]; ok {
+			playername = val
+		}
 		opponent, game, err := getOpponent(json.Games, player.TeamID)
 		if err != nil {
 			return nil, err
@@ -205,27 +221,26 @@ func ParseUnderdogProjection(json UnderdogFantasy, sport string) ([]*Projection,
 				if !ok {
 					category = overUnder.OverUnder.Appearance.Category
 				}
+				stat, err := NewStat(category)
+				if err != nil {
+					return nil, err
+				}
 				proposition := Proposition{
 					Sportsbook:   "UnderdogFantasy",
 					LastModified: &now,
 					Target:       target,
-					Type:         category,
+					Type:         stat,
 				}
 				propositions = append(propositions, &proposition)
 			}
 
 		}
-		logrus.Warnf("%s %s %s %s %v", playername, opponent, date, startTime, len(propositions))
-		for _, proposition := range propositions {
-			logrus.Warnf("%v", proposition)
-		}
-		logrus.Warn()
 		projections = append(projections, &Projection{
-			PlayerName:   playername,
-			OpponentAbr:  opponent,
-			StartTime:    start,
-			Date:         date,
-			Propositions: propositions,
+			PlayerName:  playername,
+			OpponentAbr: opponent,
+			StartTime:   start,
+			Date:        date,
+			Props:       propositions,
 		})
 	}
 	return projections, nil
@@ -261,7 +276,7 @@ func getAppearanceIDForPlayer(playerID string, appearances []UnderdogAppearance)
 			return appearance.AppearanceID, nil
 		}
 	}
-	return "", fmt.Errorf("Couldn't find appearance for playerID: %s", playerID)
+	return "", fmt.Errorf("Couldn't find appearance for playerID: '%s'", playerID)
 }
 
 func getOpponent(underdogGames []UnderdogGame, teamID string) (string, *UnderdogGame, error) {
@@ -273,17 +288,17 @@ func getOpponent(underdogGames []UnderdogGame, teamID string) (string, *Underdog
 			return strings.SplitN(game.Title, " @ ", 2)[0], &game, nil
 		}
 	}
-	return "", nil, fmt.Errorf("Couldn't find opponent for team %s", teamID)
+	return "", nil, fmt.Errorf("Couldn't find opponent for team: '%s'", teamID)
 }
 
 func GetBestProjection(projections []*Projection) *Projection {
 	maxTargets := 0
 	var bestProjections []*Projection
 	for _, projection := range projections {
-		if len(projection.Propositions) > maxTargets {
-			maxTargets = len(projection.Propositions)
+		if len(projection.Props) > maxTargets {
+			maxTargets = len(projection.Props)
 			bestProjections = []*Projection{projection}
-		} else if len(projection.Propositions) == maxTargets {
+		} else if len(projection.Props) == maxTargets {
 			bestProjections = append(bestProjections, projection)
 		}
 	}

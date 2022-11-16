@@ -1,0 +1,32 @@
+.player-page {
+  background-color: var(--color-primary);
+  color: var(--color-black);
+}
+
+.player-page > * {
+  grid-area: inherit;
+}
+
+.player-page .player-context {
+  grid-area: inherit;
+  flex-direction: row-reverse;
+  width: max-content;
+}
+
+.player-page .player-context .player-photo {
+  max-width: 250px;
+  max-height: 250px;
+}
+
+.player-page .player-name {
+  font-size: 4.5vw;
+  margin-right: 6px;
+}
+.player-page .player-position {
+  margin-left: 10px;
+}
+
+td,
+th {
+  padding: 0.5rem;
+}

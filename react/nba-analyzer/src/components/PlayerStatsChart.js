@@ -69,7 +69,6 @@ const PlayerStatsChart = (props) => {
           // },
           title: function (context) {
             const index = context[0].dataIndex;
-            console.log(context, index, games.length, games[index]);
             const game = games[index];
             return `${game.team.abbreviation} ${game.margin > 0 ? "+" : ""}${
               game.margin

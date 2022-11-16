@@ -1,0 +1,19 @@
+div.player-stats,
+div.player-stats > * {
+  background-color: inherit;
+  color: inherit;
+  box-shadow: none;
+}
+
+div.player-stats {
+  margin: auto;
+}
+
+.flex-cell {
+  display: flex !important;
+  flex-direction: column;
+}
+
+.player-stats {
+  font-size: 10%;
+}
