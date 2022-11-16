@@ -44,19 +44,31 @@ func (s *TeamSnapshots) AddSnapshot(startDate, endDate time.Time, teams []*Team)
 	(*s)[key] = *NewTeamSimilarityMatrix(averages)
 }
 
+<<<<<<< HEAD
 func (s *TeamSnapshots) GetSimilarTeams(teamID, limit int, startDate, endDate string, statsOfInterest []Stat) []Team {
+=======
+func (s *TeamSnapshots) GetSimilarTeams(teamID, limit int, startDate, endDate string, statsOfInterest []Stat) []*Team {
+>>>>>>> main
 	key := s.Key(startDate, endDate)
 	if snapshot, ok := (*s)[key]; ok {
 		similarTeams, err := snapshot.GetNearestTeams(teamID, limit, statsOfInterest)
 		if err != nil {
 			logrus.Errorf("error getting similar teams from matrix '%v': %v", key, err)
 			logrus.Errorf("%+v", *s)
+<<<<<<< HEAD
 			return []Team{}
+=======
+			return []*Team{}
+>>>>>>> main
 		}
 		return similarTeams
 	}
 	logrus.Errorf("snapshot '%v' not found in:\n\t%+v", key, *s)
+<<<<<<< HEAD
 	return []Team{}
+=======
+	return []*Team{}
+>>>>>>> main
 }
 
 type TeamSimilarityMatrix struct {
@@ -79,10 +91,13 @@ func (v *TeamSimilarityVector) GetNearest(limit int, statsOfInterest []Stat) []T
 	sort.Slice(nearest, func(i, j int) bool {
 		return TeamEuclideanDistance(nearest[i], statsOfInterest) < TeamEuclideanDistance(nearest[j], statsOfInterest)
 	})
+<<<<<<< HEAD
 	// fmt.Println("Distance to: ", v.Average.Team.Name)
 	// for _, diff := range nearest {
 	// 	fmt.Printf("%20.20s: (%v)\t[OppPts:%v\tOppRebs: %v\tOppAsts: %v\t]\n", diff.Team.Name, TeamEuclideanDistance(diff, statsOfInterest), diff.OppPoints, diff.OppRebounds, diff.OppAssists)
 	// }
+=======
+>>>>>>> main
 	if len(v.Comparisons) <= limit {
 		return nearest
 	}
@@ -112,8 +127,13 @@ func (m *TeamSimilarityMatrix) AddNormalizedTeams(teams []TeamAverage) {
 	statsOfInterest := TeamAverageStats()
 	stats := make([]StatOfInterest, len(statsOfInterest))
 	for i, input := range statsOfInterest {
+<<<<<<< HEAD
 		stat := NewStat(string(input))
 		if stat == "" {
+=======
+		stat, err := NewStat(string(input))
+		if err != nil {
+>>>>>>> main
 			logrus.Warning("Stat of interest not found: ", stat)
 			continue
 		}
@@ -166,10 +186,17 @@ func (m *TeamSimilarityMatrix) CompareAverages(in int, averageIn TeamAverage) ma
 	return comparisons
 }
 
+<<<<<<< HEAD
 func (m *TeamSimilarityMatrix) GetNearestTeams(toTeam int, limit int, statsOfInterest []Stat) (similarTeams []Team, err error) {
 	if vector, ok := m.Matrix[toTeam]; ok {
 		for _, team := range vector.GetNearest(limit, statsOfInterest) {
 			similarTeams = append(similarTeams, team.Team)
+=======
+func (m *TeamSimilarityMatrix) GetNearestTeams(toTeam int, limit int, statsOfInterest []Stat) (similarTeams []*Team, err error) {
+	if vector, ok := m.Matrix[toTeam]; ok {
+		for _, team := range vector.GetNearest(limit, statsOfInterest) {
+			similarTeams = append(similarTeams, &team.Team)
+>>>>>>> main
 		}
 		return similarTeams, nil
 	}

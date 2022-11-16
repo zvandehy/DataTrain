@@ -1,0 +1,105 @@
+input ModelInput {
+  model: String
+  gameBreakdowns: [GameBreakdownInput!]
+  similarPlayerInput: SimilarPlayerInput
+  similarTeamInput: SimilarTeamInput
+}
+
+input GameBreakdownInput {
+  name: String!
+  filter: GameFilter!
+  weight: Float!
+}
+
+input SimilarPlayerInput {
+  # TODO: Add a period
+  limit: Int!
+  statsOfInterest: [Stat!]
+  playerPoolFilter: PlayerFilter
+  weight: Float!
+}
+
+input SimilarTeamInput {
+  limit: Int!
+  statsOfInterest: [Stat!]
+  teamPoolFilter: [TeamFilter!]
+  period: Period!
+  weight: Float!
+}
+
+type Proposition {
+  target: Float!
+  type: Stat!
+  sportsbook: SportsbookOption!
+  lastModified: String!
+  outcome: PropOutcome!
+  actualResult: Float
+  # how close the proposition was to the actual outcome
+  accuracy: Float!
+  game: PlayerGame!
+  prediction(input: ModelInput!): PropPrediction!
+}
+
+enum PropOutcome {
+  OVER
+  UNDER
+  PUSH
+  PENDING
+}
+
+type PropPrediction {
+  estimation: Float!
+  estimationAccuracy: Float
+  cumulativeOver: Int!
+  cumulativeUnder: Int!
+  cumulativePush: Int!
+  cumulativeOverPct: Float!
+  cumulativeUnderPct: Float!
+  cumulativePushPct: Float!
+  wager: Wager!
+  wagerOutcome: WagerOutcome!
+  breakdowns: [PropBreakdown!]!
+}
+
+enum Wager {
+  OVER
+  UNDER
+}
+
+enum WagerOutcome {
+  HIT
+  MISS
+  PUSH
+  PENDING
+}
+
+type PropBreakdown {
+  name: String!
+  over: Int!
+  under: Int!
+  push: Int!
+  overPct: Float!
+  underPct: Float!
+  pushPct: Float!
+  derivedAverage: Float!
+  weight: Float!
+  pctChange: Float!
+  base: Float!
+  derivedGames: [PlayerGame!] #recommend to only query derivedGames when analysing a specific player/game
+}
+
+type GamePrediction {
+  estimation: AverageStats!
+  estimationAccuracy: AverageStats!
+  fragments: [GamePredictionFragment!]!
+}
+
+type GamePredictionFragment {
+  name: String!
+  derived: AverageStats!
+  derivedGames: [PlayerGame!]!
+  base: AverageStats!
+  pctChange: AverageStats!
+  weight: Float!
+  propositions(input: PropositionFilter): [Proposition!]!
+}

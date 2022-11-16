@@ -36,6 +36,8 @@ type AverageStats struct {
 	ReboundsAssists        float64 `json:"rebounds_assists"`
 	BlocksSteals           float64 `json:"blocks_steals"`
 	DoubleDouble           float64 `json:"double_double"`
+	Passes                 float64 `json:"passes"`
+	PotentialAssists       float64 `json:"potential_assists"`
 }
 
 type GameBreakdownInput struct {
@@ -44,20 +46,13 @@ type GameBreakdownInput struct {
 	Weight float64     `json:"weight"`
 }
 
-type ModelInput struct {
-	Model              *string               `json:"model"`
-	GameBreakdowns     []*GameBreakdownInput `json:"gameBreakdowns"`
-	SimilarPlayerInput *SimilarPlayerInput   `json:"similarPlayerInput"`
-	SimilarTeamInput   *SimilarTeamInput     `json:"similarTeamInput"`
+type GamePrediction struct {
+	Estimation         *AverageStats             `json:"estimation"`
+	EstimationAccuracy *AverageStats             `json:"estimationAccuracy"`
+	Fragments          []*GamePredictionFragment `json:"fragments"`
 }
 
-type PredictionBreakdown struct {
-	WeightedTotal      *AverageStats         `json:"weightedTotal"`
-	PredictionAccuracy *AverageStats         `json:"predictionAccuracy"`
-	Fragments          []*PredictionFragment `json:"fragments"`
-}
-
-type PredictionFragment struct {
+type GamePredictionFragment struct {
 	Name         string         `json:"name"`
 	Derived      *AverageStats  `json:"derived"`
 	DerivedGames []*PlayerGame  `json:"derivedGames"`
@@ -67,23 +62,51 @@ type PredictionFragment struct {
 	Propositions []*Proposition `json:"propositions"`
 }
 
-type ProjectionFilter struct {
-	Period            *Period            `json:"period"`
-	PropositionFilter *PropositionFilter `json:"propositionFilter"`
+type ModelInput struct {
+	Model              *string               `json:"model"`
+	GameBreakdowns     []*GameBreakdownInput `json:"gameBreakdowns"`
+	SimilarPlayerInput *SimilarPlayerInput   `json:"similarPlayerInput"`
+	SimilarTeamInput   *SimilarTeamInput     `json:"similarTeamInput"`
+}
+
+type PropBreakdown struct {
+	Name           string        `json:"name"`
+	Over           int           `json:"over"`
+	Under          int           `json:"under"`
+	Push           int           `json:"push"`
+	OverPct        float64       `json:"overPct"`
+	UnderPct       float64       `json:"underPct"`
+	PushPct        float64       `json:"pushPct"`
+	DerivedAverage float64       `json:"derivedAverage"`
+	Weight         float64       `json:"weight"`
+	PctChange      float64       `json:"pctChange"`
+	Base           float64       `json:"base"`
+	DerivedGames   []*PlayerGame `json:"derivedGames"`
+}
+
+type PropPrediction struct {
+	Estimation         float64          `json:"estimation"`
+	EstimationAccuracy *float64         `json:"estimationAccuracy"`
+	CumulativeOver     int              `json:"cumulativeOver"`
+	CumulativeUnder    int              `json:"cumulativeUnder"`
+	CumulativePush     int              `json:"cumulativePush"`
+	CumulativeOverPct  float64          `json:"cumulativeOverPct"`
+	CumulativeUnderPct float64          `json:"cumulativeUnderPct"`
+	CumulativePushPct  float64          `json:"cumulativePushPct"`
+	Wager              Wager            `json:"wager"`
+	WagerOutcome       WagerOutcome     `json:"wagerOutcome"`
+	Breakdowns         []*PropBreakdown `json:"breakdowns"`
 }
 
 type PropositionFilter struct {
 	Sportsbook      *SportsbookOption `json:"sportsbook"`
 	PropositionType *Stat             `json:"propositionType"`
-}
-
-type PropositionSummary struct {
-	NumOver  int     `json:"numOver"`
-	NumUnder int     `json:"numUnder"`
-	NumPush  int     `json:"numPush"`
-	PctOver  float64 `json:"pctOver"`
-	PctUnder float64 `json:"pctUnder"`
-	PctPush  float64 `json:"pctPush"`
+	StartDate       *string           `json:"startDate"`
+	EndDate         *string           `json:"endDate"`
+	PlayerID        *int              `json:"PlayerID"`
+	PlayerName      *string           `json:"PlayerName"`
+	TeamID          *int              `json:"TeamID"`
+	TeamName        *string           `json:"TeamName"`
 }
 
 type SimilarPlayerInput struct {
@@ -113,6 +136,49 @@ type TeamFilter struct {
 	Name         *string `json:"name"`
 	TeamID       *int    `json:"teamID"`
 	Abbreviation *string `json:"abbreviation"`
+}
+
+type GameOutcome string
+
+const (
+	GameOutcomeWin     GameOutcome = "WIN"
+	GameOutcomeLoss    GameOutcome = "LOSS"
+	GameOutcomePending GameOutcome = "PENDING"
+)
+
+var AllGameOutcome = []GameOutcome{
+	GameOutcomeWin,
+	GameOutcomeLoss,
+	GameOutcomePending,
+}
+
+func (e GameOutcome) IsValid() bool {
+	switch e {
+	case GameOutcomeWin, GameOutcomeLoss, GameOutcomePending:
+		return true
+	}
+	return false
+}
+
+func (e GameOutcome) String() string {
+	return string(e)
+}
+
+func (e *GameOutcome) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GameOutcome(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GameOutcome", str)
+	}
+	return nil
+}
+
+func (e GameOutcome) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type GameType string
@@ -246,90 +312,6 @@ func (e Operator) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type Outcome string
-
-const (
-	OutcomeWin     Outcome = "WIN"
-	OutcomeLoss    Outcome = "LOSS"
-	OutcomePending Outcome = "PENDING"
-)
-
-var AllOutcome = []Outcome{
-	OutcomeWin,
-	OutcomeLoss,
-	OutcomePending,
-}
-
-func (e Outcome) IsValid() bool {
-	switch e {
-	case OutcomeWin, OutcomeLoss, OutcomePending:
-		return true
-	}
-	return false
-}
-
-func (e Outcome) String() string {
-	return string(e)
-}
-
-func (e *Outcome) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = Outcome(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid Outcome", str)
-	}
-	return nil
-}
-
-func (e Outcome) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type Output string
-
-const (
-	OutputOver  Output = "OVER"
-	OutputUnder Output = "UNDER"
-)
-
-var AllOutput = []Output{
-	OutputOver,
-	OutputUnder,
-}
-
-func (e Output) IsValid() bool {
-	switch e {
-	case OutputOver, OutputUnder:
-		return true
-	}
-	return false
-}
-
-func (e Output) String() string {
-	return string(e)
-}
-
-func (e *Output) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = Output(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid Output", str)
-	}
-	return nil
-}
-
-func (e Output) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
 type Position string
 
 const (
@@ -378,6 +360,51 @@ func (e *Position) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Position) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type PropOutcome string
+
+const (
+	PropOutcomeOver    PropOutcome = "OVER"
+	PropOutcomeUnder   PropOutcome = "UNDER"
+	PropOutcomePush    PropOutcome = "PUSH"
+	PropOutcomePending PropOutcome = "PENDING"
+)
+
+var AllPropOutcome = []PropOutcome{
+	PropOutcomeOver,
+	PropOutcomeUnder,
+	PropOutcomePush,
+	PropOutcomePending,
+}
+
+func (e PropOutcome) IsValid() bool {
+	switch e {
+	case PropOutcomeOver, PropOutcomeUnder, PropOutcomePush, PropOutcomePending:
+		return true
+	}
+	return false
+}
+
+func (e PropOutcome) String() string {
+	return string(e)
+}
+
+func (e *PropOutcome) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PropOutcome(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PropOutcome", str)
+	}
+	return nil
+}
+
+func (e PropOutcome) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -464,5 +491,91 @@ func (e *StatMode) UnmarshalGQL(v interface{}) error {
 }
 
 func (e StatMode) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Wager string
+
+const (
+	WagerOver  Wager = "OVER"
+	WagerUnder Wager = "UNDER"
+)
+
+var AllWager = []Wager{
+	WagerOver,
+	WagerUnder,
+}
+
+func (e Wager) IsValid() bool {
+	switch e {
+	case WagerOver, WagerUnder:
+		return true
+	}
+	return false
+}
+
+func (e Wager) String() string {
+	return string(e)
+}
+
+func (e *Wager) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Wager(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Wager", str)
+	}
+	return nil
+}
+
+func (e Wager) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type WagerOutcome string
+
+const (
+	WagerOutcomeHit     WagerOutcome = "HIT"
+	WagerOutcomeMiss    WagerOutcome = "MISS"
+	WagerOutcomePush    WagerOutcome = "PUSH"
+	WagerOutcomePending WagerOutcome = "PENDING"
+)
+
+var AllWagerOutcome = []WagerOutcome{
+	WagerOutcomeHit,
+	WagerOutcomeMiss,
+	WagerOutcomePush,
+	WagerOutcomePending,
+}
+
+func (e WagerOutcome) IsValid() bool {
+	switch e {
+	case WagerOutcomeHit, WagerOutcomeMiss, WagerOutcomePush, WagerOutcomePending:
+		return true
+	}
+	return false
+}
+
+func (e WagerOutcome) String() string {
+	return string(e)
+}
+
+func (e *WagerOutcome) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = WagerOutcome(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid WagerOutcome", str)
+	}
+	return nil
+}
+
+func (e WagerOutcome) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

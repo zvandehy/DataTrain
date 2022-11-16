@@ -48,15 +48,15 @@ func (p *Period) MatchGame(game *PlayerGame) bool {
 			logrus.Error("Period.Match: invalid start date")
 			return false
 		}
-		date, err := time.Parse(util.DATE_FORMAT, game.Date)
-		if err != nil {
-			date, err = time.Parse(util.DATE_TIME_FORMAT, game.Date)
-			if err != nil {
-				logrus.Error("Period.Match: invalid game date")
-				return false
-			}
-		}
-		if date.Before(startDate) {
+		// date, err := time.Parse(util.DATE_FORMAT, game.Date)
+		// if err != nil {
+		// 	date, err = time.Parse(util.DATE_TIME_FORMAT, game.Date)
+		// 	if err != nil {
+		// 		logrus.Error("Period.Match: invalid game date")
+		// 		return false
+		// 	}
+		// }
+		if game.Date.Before(startDate) {
 			return false
 		}
 	}
@@ -66,15 +66,15 @@ func (p *Period) MatchGame(game *PlayerGame) bool {
 			logrus.Error("Period.Match: invalid end date")
 			return false
 		}
-		date, err := time.Parse(util.DATE_FORMAT, game.Date)
-		if err != nil {
-			date, err = time.Parse(util.DATE_TIME_FORMAT, game.Date)
-			if err != nil {
-				logrus.Error("Period.Match: invalid game date")
-				return false
-			}
-		}
-		if date.After(endDate) {
+		// date, err := time.Parse(util.DATE_FORMAT, game.Date)
+		// if err != nil {
+		// 	date, err = time.Parse(util.DATE_TIME_FORMAT, game.Date)
+		// 	if err != nil {
+		// 		logrus.Error("Period.Match: invalid game date")
+		// 		return false
+		// 	}
+		// }
+		if game.Date.After(endDate) {
 			return false
 		}
 	}

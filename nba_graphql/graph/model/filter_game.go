@@ -12,21 +12,23 @@ import (
 )
 
 type GameFilter struct {
-	TeamID          *int            `json:"teamID"`
-	OpponentID      *int            `json:"opponentID"`
-	OpponentMatch   *bool           `json:"opponentMatch"`
-	PlayerID        *int            `json:"playerID"`
-	GameID          *string         `json:"gameID"`
-	Seasons         *[]SeasonOption `json:"seasons"`
-	StartDate       *string         `json:"startDate"`
-	EndDate         *string         `json:"endDate"`
-	GameType        *GameType       `json:"gameType"`
-	GameTypeMatch   *bool           `json:"gameTypeMatch"`
-	HomeOrAway      *HomeOrAway     `json:"homeOrAway"`
-	HomeOrAwayMatch *bool           `json:"homeOrAwayMatch"`
-	StatFilters     *[]*StatFilter  `json:"statFilters"`
-	LastX           *int            `json:"lastX"`
-	Outcome         *Outcome        `json:"outcome"`
+	TeamID              *int            `json:"teamID"`
+	OpponentID          *int            `json:"opponentID"`
+	OpponentMatch       *bool           `json:"opponentMatch"`
+	PlayerID            *int            `json:"playerID"`
+	GameID              *string         `json:"gameID"`
+	Seasons             *[]SeasonOption `json:"seasons"`
+	SeasonMatch         *bool           `json:"seasonMatch"`
+	PreviousSeasonMatch *bool           `json:"previousSeasonMatch"`
+	StartDate           *string         `json:"startDate"`
+	EndDate             *string         `json:"endDate"`
+	GameType            *GameType       `json:"gameType"`
+	GameTypeMatch       *bool           `json:"gameTypeMatch"`
+	HomeOrAway          *HomeOrAway     `json:"homeOrAway"`
+	HomeOrAwayMatch     *bool           `json:"homeOrAwayMatch"`
+	StatFilters         *[]*StatFilter  `json:"statFilters"`
+	LastX               *int            `json:"lastX"`
+	Outcome             *GameOutcome    `json:"outcome"`
 }
 
 func (f GameFilter) String() string {
@@ -68,33 +70,33 @@ func (gameFilter *GameFilter) MatchPlayerGame(g *PlayerGame) bool {
 	if gameFilter.OpponentID != nil && *gameFilter.OpponentID != g.OpponentID {
 		return false
 	}
-	if gameFilter.HomeOrAway != nil && !strings.EqualFold(string(*gameFilter.HomeOrAway), g.HomeOrAway) {
+	if gameFilter.HomeOrAway != nil && !strings.EqualFold(string(*gameFilter.HomeOrAway), string(g.HomeOrAway)) {
 		return false
 	}
 	if gameFilter.Outcome != nil {
 		outcome := strings.ToLower(g.Outcome)
-		if *gameFilter.Outcome == OutcomeWin && outcome[0] != 'w' {
+		if *gameFilter.Outcome == GameOutcomeWin && outcome[0] != 'w' {
 			return false
 		}
-		if *gameFilter.Outcome == OutcomeLoss && outcome[0] != 'l' {
+		if *gameFilter.Outcome == GameOutcomeLoss && outcome[0] != 'l' {
 			return false
 		}
-		if *gameFilter.Outcome == OutcomePending && outcome[0] != 'p' {
+		if *gameFilter.Outcome == GameOutcomePending && outcome[0] != 'p' {
 			return false
 		}
 	}
-	date, err := time.Parse(util.DATE_FORMAT, g.Date)
-	if err != nil {
-		logrus.Error("Error parsing game date: ", err)
-		return false
-	}
+	// date, err := time.Parse(util.DATE_FORMAT, g.Date)
+	// if err != nil {
+	// 	logrus.Error("Error parsing game date: ", err)
+	// 	return false
+	// }
 	if gameFilter.StartDate != nil {
 		start, err := time.Parse(util.DATE_FORMAT, *gameFilter.StartDate)
 		if err != nil {
 			logrus.Error("Error parsing filter startDate: ", err)
 			return false
 		}
-		if start.After(date) {
+		if start.After(*g.Date) {
 			return false
 		}
 	}
@@ -105,7 +107,7 @@ func (gameFilter *GameFilter) MatchPlayerGame(g *PlayerGame) bool {
 			return false
 		}
 		// match the date only if the endfilter is after and not equal to the date
-		if end.Before(date) || end.Equal(date) {
+		if end.Before(*g.Date) || end.Equal(*g.Date) {
 			return false
 		}
 	}
@@ -193,13 +195,13 @@ func (f *GameFilter) MongoFilter() bson.M {
 		}
 	}
 	if f.Outcome != nil {
-		if *f.Outcome == OutcomeWin {
+		if *f.Outcome == GameOutcomeWin {
 			matchGame["win_or_loss"] = bson.M{"$regex": "win", "$options": "i"}
 		}
-		if *f.Outcome == OutcomeLoss {
+		if *f.Outcome == GameOutcomeLoss {
 			matchGame["win_or_loss"] = bson.M{"$regex": "loss", "$options": "i"}
 		}
-		if *f.Outcome == OutcomePending {
+		if *f.Outcome == GameOutcomePending {
 			matchGame["win_or_loss"] = bson.M{"$regex": "pending", "$options": "i"}
 		}
 	}

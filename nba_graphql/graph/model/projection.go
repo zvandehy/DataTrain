@@ -22,38 +22,17 @@ type Projection struct {
 	Opponent Team   `json:"opponentTeam" bson:"opponentTeam"`
 }
 
-func (p *Projection) Match(projectionFilter ProjectionFilter) bool {
-	if !projectionFilter.Period.MatchProjection(p) {
-		return false
-	}
-	// if projectionFilter.PropositionFilter != nil {
-	// 	for _, prop := range p.Props {
-	// 		if prop.Match(projectionFilter.PropositionFilter) {
-	// 			return true
-	// 		}
-	// 	}
-	// 	return false
-	// }
-	return true
-}
-
 func (p *Projection) UnmarshalBSON(data []byte) error {
 	type Alias Projection
 	bson.Unmarshal(data, (*Alias)(p))
 	for i, prop := range p.Props {
-		prop.ProjectionRef = p
+		// prop.ProjectionRef = p
 		p.Props[i] = prop
 	}
 	// p.PlayerMatrix = v.PlayerMatrix
 	return nil
 }
 
-type Prediction struct {
-	Model               string  `json:"model" bson:"model"`
-	OverUnderPrediction Output  `json:"overUnderPrediction" bson:"overUnderPrediction"`
-	Confidence          float64 `json:"confidence" bson:"confidence"`
-	Estimation          float64 `json:"estimation" bson:"estimation"`
-}
 type PrizePicks struct {
 	Data     []PrizePicksData     `json:"data" bson:"data"`
 	Included []PrizePicksIncluded `json:"included" bson:"included"`
@@ -108,25 +87,35 @@ type PrizePicksIncluded struct {
 }
 
 //ParsePrizePick creates a Projection and adds it to the projections slice or adds a Target to an existing projection
-func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projections []*Projection) ([]*Projection, error) {
+func ParsePrizePick(prop PrizePicksData, itemIDToNameMap map[string]string, projections []*Projection) ([]*Projection, error) {
 	var playerName string
 	var statType Stat
-	for _, p := range included {
-		if p.ID == prop.Relationships.Player.Data.ID {
-			playerName = p.Attributes.Name
-		}
-		if p.ID == prop.Relationships.StatType.Data.ID {
-			statType = NewStat(p.Attributes.Name)
-		}
-		if statType != "" && playerName != "" {
-			break
-		}
+
+	// get playername and statType from id to name mapping
+	if val, ok := itemIDToNameMap[prop.Relationships.Player.Data.ID]; ok {
+		playerName = strings.TrimSpace(val)
+	} else {
+		return nil, errors.New("could not find player name")
 	}
+	if val, ok := itemIDToNameMap[prop.Relationships.StatType.Data.ID]; ok {
+		var err error
+		statType, err = NewStat(val)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("could not find stat type")
+	}
+
 	if playerName == "" {
-		return nil, fmt.Errorf("error retrieving prizepick player name")
+		err := fmt.Errorf("error retrieving prizepick player name")
+		logrus.Error(err)
+		return nil, err
 	}
 	if statType == "" {
-		return nil, fmt.Errorf("error retrieving prizepick stat type")
+		err := fmt.Errorf("error retrieving prizepick stat type for player %s | %+v", playerName, prop)
+		logrus.Error(err)
+		return nil, err
 	}
 
 	target, err := strconv.ParseFloat(prop.Attributes.Line_score, 64)
@@ -137,6 +126,7 @@ func ParsePrizePick(prop PrizePicksData, included []PrizePicksIncluded, projecti
 	dateSlice := strings.SplitN(prop.Attributes.Start_time, "T", 2)
 	date := dateSlice[0]
 	now := time.Now()
+
 	// if player is already in list of projections, just add a proposition (for this prop type) to their projection
 	for i, projection := range projections {
 		if projection.PlayerName == playerName {
@@ -231,7 +221,10 @@ func ParseUnderdogProjection(json UnderdogFantasy, sport string) ([]*Projection,
 				if !ok {
 					category = overUnder.OverUnder.Appearance.Category
 				}
-				stat := NewStat(category)
+				stat, err := NewStat(category)
+				if err != nil {
+					return nil, err
+				}
 				proposition := Proposition{
 					Sportsbook:   "UnderdogFantasy",
 					LastModified: &now,

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"reflect"
 	"testing"
 
@@ -48,15 +49,15 @@ func TestPlayerFilter_FilterPlayerStats(t *testing.T) {
 	players := []*Player{
 		{
 			PlayerID:   1,
-			GamesCache: []*PlayerGame{{Points: 10, Minutes: "10:00"}, {Points: 20, Minutes: "20:00"}},
+			GamesCache: []*PlayerGame{{Points: sql.NullInt16{Int16: 10}, Minutes: 10}, {Points: sql.NullInt16{Int16: 20}, Minutes: 20}},
 		},
 		{
 			PlayerID:   2,
-			GamesCache: []*PlayerGame{{Points: 10, Minutes: "5:00"}, {Points: 10, Minutes: "5:00"}},
+			GamesCache: []*PlayerGame{{Points: sql.NullInt16{Int16: 10}, Minutes: 5}, {Points: sql.NullInt16{Int16: 10}, Minutes: 5}},
 		},
 		{
 			PlayerID:   3,
-			GamesCache: []*PlayerGame{{Points: 10, Minutes: "5:00"}, {Points: 20, Minutes: "10:00"}},
+			GamesCache: []*PlayerGame{{Points: sql.NullInt16{Int16: 10}, Minutes: 5}, {Points: sql.NullInt16{Int16: 20}, Minutes: 10}},
 		},
 	}
 	tests := []struct {

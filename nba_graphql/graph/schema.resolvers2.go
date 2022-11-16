@@ -302,13 +302,11 @@ package graph
 // 		return nil, err
 // 	}
 // 	playername := player.Name
-// 	fmt.Println(playername)
 // 	cur, err = r.Db.Collection("projections").Find(ctx, bson.M{"playername": playername, "date": obj.Date})
 // 	if err != nil {
 // 		logrus.Error(err)
 // 		return nil, err
 // 	}
-// 	fmt.Println(model.ProjectionFilter{PlayerID: &obj.PlayerID, StartDate: &obj.Date, EndDate: &obj.Date})
 // 	defer cur.Close(ctx)
 // 	var projections []*model.Projection
 // 	cur.All(ctx, &projections)
@@ -479,7 +477,6 @@ package graph
 
 // // Players is the resolver for the players field.
 // func (r *queryResolver) Players(ctx context.Context) ([]*model.Player, error) {
-// 	fmt.Println(r.Db.Name)
 // 	cur, err := r.Db.GetPlayers(ctx, []model.PlayerFilter{})
 // 	if err != nil {
 // 		return nil, err

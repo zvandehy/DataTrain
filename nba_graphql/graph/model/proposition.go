@@ -7,20 +7,38 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+type DBProposition struct {
+	PlayerID     int        `db:"playerID"`
+	GameID       string     `db:"gameID"`
+	OpponentID   int        `db:"opponentID"`
+	PlayerName   string     `db:"playerName"`
+	StatType     string     `db:"statType"`
+	Target       float64    `db:"target"`
+	Sportsbook   string     `db:"sportsbook"`
+	LastModified *time.Time `db:"lastModified"`
+	CreatedAt    *time.Time `db:"CreatedAt"`
+	UpdatedAt    *time.Time `db:"UpdatedAt"`
+}
+
 type Proposition struct {
-	Sportsbook    SportsbookOption    `json:"sportsbook" bson:"sportsbook"`
-	Target        float64             `json:"target" bson:"target"`
-	TypeRaw       string              `json:"type" bson:"type"`
-	Type          Stat                `json:"propType" bson:"propType"`
-	LastModified  *time.Time          `json:"lastModified" bson:"lastModified"`
-	ProjectionRef *Projection         `json:"projectionRef" bson:"projectionRef"`
-	Analysis      *PropositionSummary `json:"analysis" bson:"analysis"`
+	Sportsbook   SportsbookOption `db:"sportsbook" json:"sportsbook" bson:"sportsbook"`
+	Target       float64          `db:"target" json:"target" bson:"target"`
+	TypeRaw      string           `db:"statType" json:"type" bson:"type"`
+	Type         Stat             `json:"propType" bson:"propType"`
+	LastModified *time.Time       `json:"lastModified" bson:"lastModified"`
+	Outcome      PropOutcome      `json:"outcome" bson:"outcome"`
+	ActualResult *float64         `json:"actualResult" bson:"actualResult"`
+	Accuracy     float64          `json:"accuracy" bson:"accuracy"`
+	Game         *PlayerGame      `json:"game" bson:"game"`
 }
 
 func (p *Proposition) UnmarshalBSON(data []byte) error {
 	type Alias Proposition
 	bson.Unmarshal(data, (*Alias)(p))
-	t := NewStat(p.TypeRaw)
+	t, err := NewStat(p.TypeRaw)
+	if err != nil {
+		return err
+	}
 	p.Type = t
 	return nil
 }
@@ -28,7 +46,10 @@ func (p *Proposition) UnmarshalBSON(data []byte) error {
 func (p *Proposition) UnmarshalJSON(data []byte) error {
 	type Alias Proposition
 	json.Unmarshal(data, (*Alias)(p))
-	t := NewStat(p.TypeRaw)
+	t, err := NewStat(p.TypeRaw)
+	if err != nil {
+		return err
+	}
 	p.Type = t
 	return nil
 }

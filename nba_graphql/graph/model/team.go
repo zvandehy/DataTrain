@@ -3,6 +3,7 @@ package model
 import (
 	"math"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
@@ -10,19 +11,22 @@ import (
 )
 
 type Team struct {
-	Name         string      `json:"name" bson:"name"`
-	TeamID       int         `json:"teamID" bson:"teamID"`
-	Abbreviation string      `json:"abbreviation" bson:"abbreviation"`
-	Location     string      `json:"location" bson:"city"`
-	NumWins      int         `json:"numWins" bson:"numWins"`
-	NumLoss      int         `json:"numLoss" bson:"numLoss"`
-	League       string      `json:"league" bson:"league"`
-	GamesCache   []*TeamGame `json:"gamesCache" bson:"gamesCache"`
+	Name         string `db:"name" json:"name" bson:"name"`
+	TeamID       int    `db:"teamID" json:"teamID" bson:"teamID"`
+	Abbreviation string `db:"abbreviation" json:"abbreviation" bson:"abbreviation"`
+	Location     string `db:"city" json:"location" bson:"city"`
+	// todo: remove this
+	NumWins    int         `json:"numWins" bson:"numWins"`
+	NumLoss    int         `json:"numLoss" bson:"numLoss"`
+	League     string      `db:"league" json:"league" bson:"league"`
+	GamesCache []*TeamGame `json:"gamesCache" bson:"gamesCache"`
+	CreatedAt  *time.Time  `db:"CreatedAt" json:"CreatedAt" bson:"CreatedAt"`
+	UpdatedAt  *time.Time  `db:"UpdatedAt" json:"UpdatedAt" bson:"UpdatedAt"`
 }
 
-func (t Team) String() string {
-	return util.Print(t)
-}
+// func (t Team) String() string {
+// 	return util.Print(t)
+// }
 
 type TeamGame struct {
 	Assists                              int     `json:"assists" bson:"assists"`
@@ -45,11 +49,11 @@ type TeamGame struct {
 	TeamID                               int     `json:"teamID" bson:"teamID"`
 	OpponentID                           int     `json:"opponent" bson:"opponent"`
 	OpponentAssists                      int     `json:"opponent_assists" bson:"opponent_assists"`
-	OpponentEffectiveFieldGoalPercentage float64 `json:"opponent_effective_field_goal_percentage" bson:"opponent_effective_field_goal_percentage"`
-	OpponentFieldGoalsAttempted          int     `json:"opponent_field_goals_attempted" bson:"opponent_field_goals_attempted"`
-	OpponentFreeThrowsAttempted          int     `json:"opponent_free_throws_attempted" bson:"opponent_free_throws_attempted"`
-	OpponentPoints                       int     `json:"opponent_points" bson:"opponent_points"`
-	OpponentRebounds                     int     `json:"opponent_rebounds" bson:"opponent_rebounds"`
+	OpponentEffectiveFieldGoalPercentage float64 `json:"opponent_effective_field_goal_percentage" bson:"opponent_effective_field_goal_percentage"` //get from opponent's game
+	OpponentFieldGoalsAttempted          int     `json:"opponent_field_goals_attempted" bson:"opponent_field_goals_attempted"`                     //get from opponent's game
+	OpponentFreeThrowsAttempted          int     `json:"opponent_free_throws_attempted" bson:"opponent_free_throws_attempted"`                     //get from opponent's game
+	OpponentPoints                       int     `json:"opponent_points" bson:"opponent_points"`                                                   //get from opponent's game
+	OpponentRebounds                     int     `json:"opponent_rebounds" bson:"opponent_rebounds"`                                               //get from opponent's game
 	OpponentThreePointersAttempted       int     `json:"opponent_three_pointers_attempted" bson:"opponent_three_pointers_attempted"`
 	OpponentThreePointersMade            int     `json:"opponent_three_pointers_made" bson:"opponent_three_pointers_made"`
 	PlusMinusPerHundred                  float64 `json:"plus_minus_per_hundred" bson:"plus_minus_per_hundred"`
@@ -57,7 +61,7 @@ type TeamGame struct {
 	Playoffs                             bool    `json:"playoffs" bson:"playoffs"`
 	Possessions                          int     `json:"possessions" bson:"possessions"`
 	PersonalFouls                        int     `json:"personal_fouls" bson:"personal_fouls"`
-	PersonalFoulsDrawn                   int     `json:"personal_fouls_drawn" bson:"personal_fouls_drawn"`
+	PersonalFoulsDrawn                   int     `json:"personal_fouls_drawn" bson:"personal_fouls_drawn"` //get from opponent's game
 	Rebounds                             int     `json:"rebounds" bson:"rebounds"`
 	Season                               string  `json:"season" bson:"season"`
 	Steals                               int     `json:"steals" bson:"steals"`
@@ -133,7 +137,11 @@ func NewTeamAverage(games []*TeamGame, team *Team) TeamAverage {
 }
 
 func (t *TeamAverage) Score(stat Stat) float64 {
-	switch NewStat(string(stat)) {
+	s, err := NewStat(string(stat))
+	if err != nil {
+		return 0.0
+	}
+	switch s {
 	case Points:
 		return float64(t.Points)
 	case Assists:

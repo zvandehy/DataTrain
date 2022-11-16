@@ -3,10 +3,17 @@ package model
 import (
 	"fmt"
 	"math"
+<<<<<<< HEAD
 
 	"github.com/sirupsen/logrus"
 	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
 	"github.com/zvandehy/DataTrain/nba_graphql/util"
+=======
+	"time"
+
+	"github.com/sirupsen/logrus"
+	similarity "github.com/zvandehy/DataTrain/nba_graphql/math"
+>>>>>>> main
 )
 
 // If key is found, use the value.
@@ -17,7 +24,10 @@ var PlayerNames map[string]string = map[string]string{
 	"Olivia Nelson-Odada": "Olivia Nelson-Ododa",
 }
 
+// TODO: Change first_name and last_name to firstName and lastName
+
 type Player struct {
+<<<<<<< HEAD
 	FirstName   string   `json:"first_name" bson:"first_name"`
 	LastName    string   `json:"last_name" bson:"last_name"`
 	Name        string   `json:"name" bson:"name"`
@@ -114,6 +124,103 @@ func (p PlayerGame) String() string {
 	return util.Print(p)
 }
 
+=======
+	FirstName    string   `json:"first_name" bson:"first_name" db:"firstName"`
+	LastName     string   `json:"last_name" bson:"last_name" db:"lastName"`
+	Name         string   `json:"name" bson:"name" db:"name"`
+	PlayerID     int      `json:"playerID" bson:"playerID" db:"playerID"`
+	Seasons      []string `json:"seasons" bson:"seasons"` //todo db
+	Position     string   `json:"position" bson:"position" db:"position"`
+	CurrentTeam  string   `json:"currentTeam" bson:"teamABR" db:"teamABR"`
+	TeamID       int      `json:"teamID" bson:"teamID" db:"teamID"`
+	Height       string   `json:"height" bson:"height" db:"height"`
+	HeightInches int      `json:"heightInches" bson:"heightInches" db:"heightInches"`
+	Weight       int      `json:"weight" bson:"weight" db:"weight"`
+
+	CreatedAt *time.Time `json:"CreatedAt" bson:"CreatedAt" db:"CreatedAt"`
+	UpdatedAt *time.Time `json:"UpdatedAt" bson:"UpdatedAt" db:"UpdatedAt"`
+	// When retrieving a player, also retrieve all of the games they've played within the minimum start date and maximum end date.
+	GamesCache []*PlayerGame `json:"gamesCache" bson:"gamesCache"`
+	League     string        `json:"league" bson:"league" db:"league"`
+}
+
+// TODO: The Stat / PlayerAverage / AverageStats archicecture definitely has some code smells.
+
+func NewPlayerAverage(games []*PlayerGame, player *Player) PlayerAverage {
+	average := PlayerAverage{}
+	average.GamesPlayed = float64(len(games))
+	average.Player = *player
+	average.Height = float64(player.HeightInInches())
+	average.Weight = float64(player.Weight)
+
+	for _, game := range games {
+		average.Assists += float64(game.Assists.Int16)
+		average.Blocks += float64(game.Blocks.Int16)
+		average.DefensiveRebounds += float64(game.DefensiveRebounds.Int16)
+		average.FieldGoalsAttempted += float64(game.FieldGoalsAttempted.Int16)
+		average.FieldGoalsMade += float64(game.FieldGoalsMade.Int16)
+		average.FreeThrowsAttempted += float64(game.FreeThrowsAttempted.Int16)
+		average.FreeThrowsMade += float64(game.FreeThrowsMade.Int16)
+		average.Minutes += float64(game.Minutes)
+		average.OffensiveRebounds += float64(game.OffensiveRebounds.Int16)
+		average.PersonalFoulsDrawn += float64(game.PersonalFoulsDrawn.Int16)
+		average.PersonalFouls += float64(game.PersonalFouls.Int16)
+		average.Points += float64(game.Points.Int16)
+		average.Rebounds += float64(game.Rebounds.Int16)
+		average.Steals += float64(game.Steals.Int16)
+		average.ThreePointersAttempted += float64(game.ThreePointersAttempted.Int16)
+		average.ThreePointersMade += float64(game.ThreePointersMade.Int16)
+		average.Turnovers += float64(game.Turnovers.Int16)
+		average.FantasyScore += float64(game.Score(FantasyScore))
+		average.PointsAssists += float64(game.Score(PointsAssists))
+		average.PointsRebounds += float64(game.Score(PointsRebounds))
+		average.PointsReboundsAssists += float64(game.Score(PointsReboundsAssists))
+		average.ReboundsAssists += float64(game.Score(ReboundsAssists))
+		average.BlocksSteals += float64(game.Score(BlocksSteals))
+		average.DoubleDouble += float64(game.Score(DoubleDouble))
+	}
+
+	average.Assists /= float64(len(games))
+	average.Blocks /= float64(len(games))
+	average.DefensiveRebounds /= float64(len(games))
+	average.FieldGoalsAttempted /= float64(len(games))
+	average.FieldGoalsMade /= float64(len(games))
+	average.FreeThrowsAttempted /= float64(len(games))
+	average.FreeThrowsMade /= float64(len(games))
+	average.Minutes /= float64(len(games))
+	average.OffensiveRebounds /= float64(len(games))
+	average.PersonalFoulsDrawn /= float64(len(games))
+	average.PersonalFouls /= float64(len(games))
+	average.Points /= float64(len(games))
+	average.Rebounds /= float64(len(games))
+	average.Steals /= float64(len(games))
+	average.ThreePointersAttempted /= float64(len(games))
+	average.ThreePointersMade /= float64(len(games))
+	average.Turnovers /= float64(len(games))
+	average.FantasyScore /= float64(len(games))
+	average.PointsAssists /= float64(len(games))
+	average.PointsRebounds /= float64(len(games))
+	average.PointsReboundsAssists /= float64(len(games))
+	average.ReboundsAssists /= float64(len(games))
+	average.BlocksSteals /= float64(len(games))
+	average.DoubleDouble /= float64(len(games))
+
+	return average
+}
+
+func (p *Player) HeightInInches() int {
+	var feet, inches int
+	fmt.Sscanf(p.Height, "%d-%d", &feet, &inches)
+	return feet*12 + inches
+}
+
+// func (p Player) String() string {
+// 	return util.Print(p)
+// }
+
+// func (p PlayerGame) String() st.Int16
+
+>>>>>>> main
 // TODO: To add a new stat to player similarity, add it to all of: ... // TODO: look into this, see if there is a more maintainable way to do this
 type PlayerAverage struct {
 	AllMinutes             []string `json:"all_minutes" bson:"all_minutes"`
@@ -329,7 +436,15 @@ func EuclideanDistance(diff PlayerDiff, statsOfInterest []Stat) float64 {
 }
 
 func (p *PlayerAverage) Score(stat Stat) float64 {
+<<<<<<< HEAD
 	switch NewStat(string(stat)) {
+=======
+	s, err := NewStat(string(stat))
+	if err != nil {
+		return 0.0
+	}
+	switch s {
+>>>>>>> main
 	case Points:
 		return float64(p.Points)
 	case Assists:

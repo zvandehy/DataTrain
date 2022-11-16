@@ -11,7 +11,6 @@ type Player {
   games(input: GameFilter!): [PlayerGame!]!
   # average(input: GameFilter!): AverageStats!
   # injuries: [Injury!]
-  projections(input: ProjectionFilter!): [Projection!]!
   height: String!
   weight: Int!
   image: String!
@@ -22,6 +21,9 @@ type Player {
 type PlayerGame {
   assist_percentage: Float!
   assists: Int!
+  passes: Int!
+  potential_assists: Int!
+  assist_conversion_rate: Float!
   date: String!
   defensive_rebound_percentage: Float!
   defensive_rebounds: Int!
@@ -34,7 +36,7 @@ type PlayerGame {
   free_throws_percentage: Float!
   gameID: String!
   home_or_away: String!
-  outcome: Outcome!
+  outcome: GameOutcome!
   margin: Int!
   minutes: String!
   offensive_rebound_percentage: Float!
@@ -64,40 +66,9 @@ type PlayerGame {
   rebounds_assists: Int!
   blocks_steals: Int!
   fantasy_score: Float!
-  prediction(input: ModelInput!): PredictionBreakdown!
-}
 
-type PredictionBreakdown {
-  weightedTotal: AverageStats!
-  predictionAccuracy: AverageStats!
-  fragments: [PredictionFragment!]!
-}
-
-type PredictionFragment {
-  name: String!
-  derived: AverageStats!
-  derivedGames: [PlayerGame!]!
-  base: AverageStats!
-  pctChange: AverageStats!
-  weight: Float!
+  prediction(input: ModelInput!): GamePrediction!
   propositions(input: PropositionFilter): [Proposition!]!
-}
-
-type Proposition {
-  target: Float!
-  type: Stat!
-  sportsbook: SportsbookOption!
-  analysis: PropositionSummary
-  lastModified: String!
-}
-
-type PropositionSummary {
-  numOver: Int!
-  numUnder: Int!
-  numPush: Int!
-  pctOver: Float!
-  pctUnder: Float!
-  pctPush: Float!
 }
 
 type AverageStats {
@@ -128,5 +99,6 @@ type AverageStats {
   rebounds_assists: Float!
   blocks_steals: Float!
   double_double: Float!
-  # Player                 Player   `json:"player" bson:"player"`
+  passes: Float!
+  potential_assists: Float!
 }

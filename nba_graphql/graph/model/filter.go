@@ -8,10 +8,13 @@ func (f TeamFilter) String() string {
 	return util.Print(f)
 }
 
+<<<<<<< HEAD
 func (f ProjectionFilter) String() string {
 	return util.Print(f)
 }
 
+=======
+>>>>>>> main
 func (o *Operator) Evaluate(left, right float64) bool {
 	switch *o {
 	case OperatorEq:
