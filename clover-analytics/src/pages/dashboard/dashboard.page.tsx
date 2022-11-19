@@ -1,3 +1,4 @@
+import { Games } from "@material-ui/icons";
 import {
   Box,
   Button,
@@ -57,11 +58,14 @@ const DashboardPage = () => {
     return <div>No propositions found</div>;
   }
 
-  let teams: string[] = [];
+  let gameIDs: string[] = [];
 
   // each player's highest discrepancy proposition
   let mapTopProps: { [playerID: number]: Proposition } = {};
   propositions.forEach((prop) => {
+    if (!gameIDs.includes(prop.game.gameID)) {
+      gameIDs.push(prop.game.gameID);
+    }
     if (mapTopProps[prop.game?.player?.playerID] === undefined) {
       mapTopProps[prop.game?.player?.playerID] = prop;
     } else {
@@ -104,8 +108,8 @@ const DashboardPage = () => {
             <TotalPropsCard
               title={"All Props"}
               propositions={propositions}
-              nGames={teams.length / 2}
-              nPlayers={0}
+              nGames={gameIDs.length}
+              nPlayers={Object.keys(mapTopProps).length}
             />
           </Grid>
           <Grid
@@ -117,8 +121,8 @@ const DashboardPage = () => {
             <TotalPropsCard
               title={"Top Props"}
               propositions={topProps}
-              nGames={teams.length / 2}
-              nPlayers={0}
+              nGames={gameIDs.length}
+              nPlayers={Object.keys(mapTopProps).length}
             />
           </Grid>
           {/* <TotalPropsCard total={50} /> */}

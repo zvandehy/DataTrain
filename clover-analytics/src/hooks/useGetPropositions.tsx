@@ -11,6 +11,7 @@ export const USE_GET_PROPOSITIONS = gql`
       sportsbook
       game {
         date
+        gameID
         home_or_away
         opponent {
           abbreviation
