@@ -10,20 +10,24 @@ import { ShortenName } from "../../shared/functions/name.fn";
 import { COLORS } from "../../shared/styles/constants";
 import { Player } from "../../shared/interfaces/graphql/player.interface";
 import { GetStatAbbreviation } from "../../shared/interfaces/stat.interface";
+import {
+  GetPropPredictionDeviation,
+  Proposition,
+} from "../../shared/interfaces/graphql/proposition.interface";
 
 export interface FeaturedPropCardProps {
-  player: Player;
+  prop: Proposition;
   rank: number;
 }
 
 export const FeaturedPropCard: React.FC<FeaturedPropCardProps> = ({
-  player,
+  prop,
   rank,
 }: FeaturedPropCardProps) => {
   const theme = useTheme();
+  const player = prop.game.player;
   const playername = ShortenName(player.name, 15);
-  const game = player.games[0];
-  const prop = game.prediction.propositions[0];
+  const game = prop.game;
   return (
     <Card
       elevation={0}
@@ -31,11 +35,11 @@ export const FeaturedPropCard: React.FC<FeaturedPropCardProps> = ({
         border: "3px solid",
         borderRadius: 2,
         borderColor:
-          prop.predictionHit === "PENDING"
+          prop?.prediction?.wagerOutcome === "PENDING"
             ? theme.palette.divider
-            : prop.predictionHit === "MISS"
+            : prop?.prediction?.wagerOutcome === "MISS"
             ? COLORS.LOWER
-            : prop.predictionHit === "HIT"
+            : prop?.prediction?.wagerOutcome === "HIT"
             ? COLORS.HIGHER
             : COLORS.PUSH,
         boxShadow: "inherit",
@@ -108,8 +112,6 @@ export const FeaturedPropCard: React.FC<FeaturedPropCardProps> = ({
                   {game.opponent.abbreviation}
                 </Typography>
               </Grid>
-              {/* <Grid item alignSelf={"start"}>
-              </Grid> */}
               <Grid
                 item
                 // textAlign={"start"}
@@ -122,14 +124,20 @@ export const FeaturedPropCard: React.FC<FeaturedPropCardProps> = ({
                   alignItems={"center"}
                   columnGap={0.5}
                 >
-                  <OverUnderIcon size={16} overUnder={prop.prediction} />
-                  <OverUnderTypography size={16} overUnder={prop.prediction} />
+                  <OverUnderIcon
+                    size={16}
+                    overUnder={prop?.prediction?.wager}
+                  />
+                  <OverUnderTypography
+                    size={16}
+                    overUnder={prop?.prediction?.wager}
+                  />
                   <Typography
                     fontSize={16}
                     fontWeight={600}
                     textTransform={"uppercase"}
                   >
-                    {prop.target} {GetStatAbbreviation(prop.type)}
+                    {prop?.target} {GetStatAbbreviation(prop?.type ?? "")}
                   </Typography>
                 </Grid>
               </Grid>
@@ -159,17 +167,19 @@ export const FeaturedPropCard: React.FC<FeaturedPropCardProps> = ({
                 fontWeight={500}
                 textTransform={"uppercase"}
               >
-                {prop.estimation} {GetStatAbbreviation(prop.type)} (
-                {prop.predictionTargetDiffPCT}%)
+                {prop?.prediction?.estimation.toFixed(2)}{" "}
+                {GetStatAbbreviation(prop?.type ?? "")} (
+                {prop?.prediction?.estimation > prop?.target ? "+" : "-"}
+                {GetPropPredictionDeviation(prop)}%)
               </Typography>
               <Grid item alignSelf={"center"}>
-                {prop.predictionHit.toUpperCase() !== "PENDING" ? (
+                {prop?.prediction?.wagerOutcome !== "PENDING" ? (
                   <Grid container alignContent={"center"}>
                     <HitMissTypography
-                      outcome={prop.predictionHit.toUpperCase()}
-                      result={prop.actual}
+                      outcome={prop?.prediction?.wagerOutcome}
+                      result={prop?.actualResult}
                     />
-                    <HitMissIcon outcome={prop.predictionHit.toUpperCase()} />
+                    <HitMissIcon outcome={prop?.prediction?.wagerOutcome} />
                   </Grid>
                 ) : (
                   <Grid container alignSelf={"center"}>

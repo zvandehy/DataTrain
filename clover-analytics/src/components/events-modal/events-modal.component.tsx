@@ -1,22 +1,20 @@
-import { Projection } from "../../shared/interfaces/graphql/projection.interface";
 import EventItem from "./events-item/event-item.component";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPersonCircleExclamation as injury } from "@fortawesome/free-solid-svg-icons";
 import "./events-modal.component.css";
 
 interface EventsModalProps {
-  projection: Projection;
+  // projection: Projection;
 }
 
-const EventsModal: React.FC<EventsModalProps> = ({
-  projection,
-}: EventsModalProps) => {
+const EventsModal: React.FC<EventsModalProps> = ({}: // projection,
+EventsModalProps) => {
   return (
     <button className="events-icon">
       <FontAwesomeIcon icon={injury} />
       <table className="events">
         <tbody>
-          {projection.player.currentTeam.injuries?.map((injury, i) => {
+          {/* {projection.player.currentTeam.injuries?.map((injury, i) => {
             return (
               <EventItem
                 key={"team injury " + i}
@@ -33,7 +31,7 @@ const EventsModal: React.FC<EventsModalProps> = ({
                 injury={injury}
               />
             );
-          })}
+          })} */}
         </tbody>
       </table>
     </button>

@@ -1,4 +1,3 @@
-import { HitCriteria } from "./accuracy.interface";
 import {
   GameFilter,
   Period,
@@ -16,7 +15,7 @@ export interface CustomCalculation {
   homeAwayWeight?: number;
   opponentWeight?: number;
   playoffs?: Factor;
-  hitCriteria: HitCriteria;
+  // hitCriteria: HitCriteria;
 }
 
 export interface Factor {

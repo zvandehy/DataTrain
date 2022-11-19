@@ -5,6 +5,132 @@ type Query {
   propositions(input: PropositionFilter!): [Proposition!]!
 }
 
+input PropositionFilter {
+  sportsbook: SportsbookOption
+  propositionType: Stat # TODO: Limit to only stats that make sense
+  startDate: String
+  endDate: String
+  PlayerID: Int
+  PlayerName: String
+  TeamID: Int
+  TeamName: String
+}
+
+input PlayerFilter {
+  name: String
+  playerID: Int
+  seasons: [SeasonOption!]
+  positionStrict: Position
+  positionStrictMatch: Boolean
+  positionLoose: Position
+  positionLooseMatch: Boolean
+  teamABR: String
+  teamID: Int
+  startDate: String
+  endDate: String
+  statFilters: [StatFilter!]
+  withPropositions: PropositionFilter
+  withGames: GameFilter
+}
+
+input StatFilter {
+  period: Period
+  stat: Stat!
+  mode: StatMode!
+  operator: Operator!
+  value: Float!
+}
+
+input Period {
+  startDate: String
+  endDate: String
+  # TODO: support match season
+  matchSeason: Boolean
+  matchPreviousSeason: Boolean
+  seasons: [SeasonOption!]
+  limit: Int
+}
+
+input TeamFilter {
+  name: String
+  teamID: Int
+  abbreviation: String
+}
+
+input GameFilter {
+  teamID: Int
+  opponentID: Int
+  opponentMatch: Boolean
+  playerID: Int
+  gameID: String
+  # TODO: Replace seasons, dates, and gameType with Period
+  seasonMatch: Boolean
+  previousSeasonMatch: Boolean
+  seasons: [SeasonOption!]
+  startDate: String
+  endDate: String
+  lastX: Int
+  gameType: GameType
+  gameTypeMatch: Boolean
+  homeOrAway: HomeOrAway
+  homeOrAwayMatch: Boolean
+  statFilters: [StatFilter!]
+  outcome: GameOutcome
+}
+
+enum GameOutcome {
+  WIN
+  LOSS
+  PENDING
+}
+
+enum GameType {
+  REGULAR_SEASON
+  PLAYOFFS
+}
+
+enum HomeOrAway {
+  HOME
+  AWAY
+}
+
+enum StatMode {
+  PER_GAME
+  PER_36
+  PER_MINUTE
+  TOTAL
+}
+
+enum Operator {
+  GT
+  GTE
+  LT
+  LTE
+  EQ
+  NEQ
+}
+
+enum Position {
+  G
+  F
+  C
+  G_F
+  F_G
+  F_C
+  C_F
+}
+
+enum SportsbookOption {
+  PrizePicks
+  UnderdogFantasy
+}
+
+enum SeasonOption {
+  SEASON_2022_23
+  SEASON_2021_22
+  SEASON_2020_21
+}
+
 enum Stat {
   Points
   Assists
@@ -50,131 +176,4 @@ enum Stat {
   Passes
   PotentialAssists
   AssistConversionRate
-}
-
-input PropositionFilter {
-  sportsbook: SportsbookOption
-  propositionType: Stat # TODO: Limit to only stats that make sense
-  startDate: String
-  endDate: String
-  PlayerID: Int
-  PlayerName: String
-  TeamID: Int
-  TeamName: String
-}
-
-enum SportsbookOption {
-  PrizePicks
-  UnderdogFantasy
-}
-
-input PlayerFilter {
-  name: String
-  playerID: Int
-  seasons: [SeasonOption!]
-  positionStrict: Position
-  positionStrictMatch: Boolean
-  positionLoose: Position
-  positionLooseMatch: Boolean
-  teamABR: String
-  teamID: Int
-  startDate: String
-  endDate: String
-  statFilters: [StatFilter!]
-  withPropositions: PropositionFilter
-  withGames: GameFilter
-}
-
-enum SeasonOption {
-  SEASON_2022_23
-  SEASON_2021_22
-  SEASON_2020_21
-}
-
-input StatFilter {
-  period: Period
-  stat: Stat!
-  mode: StatMode!
-  operator: Operator!
-  value: Float!
-}
-
-input Period {
-  startDate: String
-  endDate: String
-  # TODO: support match season
-  matchSeason: Boolean
-  matchPreviousSeason: Boolean
-  seasons: [SeasonOption!]
-  limit: Int
-}
-
-enum StatMode {
-  PER_GAME
-  PER_36
-  PER_MINUTE
-  TOTAL
-}
-
-enum Operator {
-  GT
-  GTE
-  LT
-  LTE
-  EQ
-  NEQ
-}
-
-enum Position {
-  G
-  F
-  C
-  G_F
-  F_G
-  F_C
-  C_F
-}
-
-input TeamFilter {
-  name: String
-  teamID: Int
-  abbreviation: String
-}
-
-input GameFilter {
-  teamID: Int
-  opponentID: Int
-  opponentMatch: Boolean
-  playerID: Int
-  gameID: String
-  # TODO: Replace seasons, dates, and gameType with Period
-  # TODO: Implement Season/PreviousSeason Match, but could also just implement it in Period and add a period here
-  seasonMatch: Boolean
-  previousSeasonMatch: Boolean
-  seasons: [SeasonOption!]
-  startDate: String
-  endDate: String
-  lastX: Int
-  gameType: GameType
-  gameTypeMatch: Boolean
-  homeOrAway: HomeOrAway
-  homeOrAwayMatch: Boolean
-  statFilters: [StatFilter!]
-  outcome: GameOutcome
-}
-
-enum GameOutcome {
-  WIN
-  LOSS
-  PENDING
-}
-
-enum GameType {
-  REGULAR_SEASON
-  PLAYOFFS
-}
-
-enum HomeOrAway {
-  HOME
-  AWAY
 }

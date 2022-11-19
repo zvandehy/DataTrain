@@ -1,6 +1,3 @@
-import { useState } from "react";
-
-// material-ui
 import {
   Box,
   Button,
@@ -15,32 +12,38 @@ import {
   useTheme,
 } from "@mui/material";
 import moment from "moment";
+import { useState } from "react";
 import PrimarySearchAppBar from "../../ components/appbar/appbar.component";
 import { FeaturedPropCard } from "../../ components/cards/featured-prop-card.component";
+// import { FeaturedPropCard } from "../../ components/cards/featured-prop-card.component";
 import { TotalPropsCard } from "../../ components/cards/total-props-card.component.";
 import { ModelAccuracyByPctDiff } from "../../ components/charts/accuracy-by-percent-diff-chart.component";
 import { ModelAccuracyByStatType } from "../../ components/charts/accuracy-by-type-chart.component";
 import ModelAccuracyChart from "../../ components/charts/model-accuracy-chart-component";
-import PlayerRow from "../../ components/player-row/player-row.component";
-import { useGetProjections } from "../../hooks/useGetProjections";
+// import PlayerRow from "../../ components/player-row/player-row.component";
+import { useGetPropositions } from "../../hooks/useGetPropositions";
 import { DEFAULT_MODEL } from "../../shared/constants";
-import { PropositionA } from "../../shared/interfaces/graphql/game.interface";
+import { Player } from "../../shared/interfaces/graphql/player.interface";
+import {
+  ComparePropByPredictionDeviation,
+  Proposition,
+} from "../../shared/interfaces/graphql/proposition.interface";
 
 // ==============================|| DASHBOARD ||============================== //
 
 const DashboardPage = () => {
   const [slot, setSlot] = useState("week");
-  const [startDate, setStartDate] = useState("2022-10-25");
+  const [startDate, setStartDate] = useState("2022-11-18");
 
   const theme = useTheme();
 
   const {
     loading,
     error,
-    data: players,
-  } = useGetProjections({
+    data: propositions,
+  } = useGetPropositions({
     startDate: startDate,
-    endDate: moment(startDate).add(1, "days").format("YYYY-MM-DD"),
+    endDate: startDate,
     customModel: DEFAULT_MODEL,
   });
 
@@ -50,32 +53,30 @@ const DashboardPage = () => {
   if (error) {
     return <div>Error: {error.message}</div>;
   }
-  if (!players || players.length === 0) {
-    return <div>No players</div>;
+  if (!propositions || propositions.length === 0) {
+    return <div>No propositions found</div>;
   }
 
   let teams: string[] = [];
 
-  let allProps: PropositionA[] = [];
-  players.forEach((player) => {
-    player.games.forEach((game) => {
-      if (!teams.includes(game.opponent.abbreviation)) {
-        teams.push(game.opponent.abbreviation);
+  // each player's highest discrepancy proposition
+  let mapTopProps: { [playerID: number]: Proposition } = {};
+  propositions.forEach((prop) => {
+    if (mapTopProps[prop.game?.player?.playerID] === undefined) {
+      mapTopProps[prop.game?.player?.playerID] = prop;
+    } else {
+      if (
+        ComparePropByPredictionDeviation(
+          prop,
+          mapTopProps[prop.game?.player?.playerID]
+        ) > 0
+      ) {
+        mapTopProps[prop.game?.player?.playerID] = prop;
       }
-      game.prediction.propositions.forEach((prop) => {
-        allProps.push(prop);
-      });
-    });
+    }
   });
 
-  let topProps: PropositionA[] = [];
-  players.forEach((player) => {
-    player.games.forEach((game) => {
-      if (game.prediction.propositions.length > 0) {
-        topProps.push(game.prediction.propositions[0]);
-      }
-    });
-  });
+  const topProps: Proposition[] = Object.values(mapTopProps);
 
   return (
     <Box>
@@ -102,9 +103,9 @@ const DashboardPage = () => {
           >
             <TotalPropsCard
               title={"All Props"}
-              propositions={allProps}
+              propositions={propositions}
               nGames={teams.length / 2}
-              nPlayers={players.length}
+              nPlayers={0}
             />
           </Grid>
           <Grid
@@ -117,25 +118,30 @@ const DashboardPage = () => {
               title={"Top Props"}
               propositions={topProps}
               nGames={teams.length / 2}
-              nPlayers={players.length}
+              nPlayers={0}
             />
           </Grid>
           {/* <TotalPropsCard total={50} /> */}
         </Grid>
         <Grid container item xs={12} md={8}>
-          {players.slice(0, 8).map((player, i) => {
-            return (
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                sx={{ p: 1, margin: "auto" }}
-                key={player.playerID + "-" + i}
-              >
-                <FeaturedPropCard player={player} rank={i + 1} />
-              </Grid>
-            );
-          })}
+          {topProps
+            .sort((a, b) => {
+              return ComparePropByPredictionDeviation(b, a);
+            })
+            .slice(0, 8)
+            .map((prop, i) => {
+              return (
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  sx={{ p: 1, margin: "auto" }}
+                  key={prop.game.player.playerID + "-" + i}
+                >
+                  <FeaturedPropCard prop={prop} rank={i + 1} />
+                </Grid>
+              );
+            })}
         </Grid>
 
         {/* row 2 */}
@@ -185,15 +191,15 @@ const DashboardPage = () => {
           </Grid>
           <Card sx={{ mt: 2 }}>
             <Box sx={{ p: 3, pb: 0, minHeight: "300px" }}>
-              <ModelAccuracyByStatType propositions={allProps} />
+              <ModelAccuracyByStatType propositions={propositions} />
             </Box>
             <Box />
           </Card>
           <Card sx={{ mt: 2 }}>
             <Box sx={{ p: 3, pb: 0, minHeight: "300px" }}>
               <ModelAccuracyByPctDiff
-                propositions={allProps}
-                stepSize={5}
+                propositions={propositions}
+                stepSize={10}
                 steps={5}
               />
             </Box>
@@ -222,7 +228,7 @@ const DashboardPage = () => {
             <TableCell>Actual/Min</TableCell>
           </TableHead>
           <TableBody>
-            {players.map((player) => {
+            {/* {players.map((player) => {
               if (player.games === undefined || player.games.length === 0) {
                 console.warn("no games for player", player.name);
                 return null;
@@ -240,7 +246,7 @@ const DashboardPage = () => {
                 return null;
               }
               return <PlayerRow player={player} game={game} />;
-            })}
+            })} */}
           </TableBody>
         </Table>
       </Grid>

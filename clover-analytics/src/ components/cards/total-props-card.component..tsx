@@ -1,11 +1,11 @@
-import { Box, Grid, useTheme } from "@mui/material";
+import { Grid, useTheme } from "@mui/material";
 import React from "react";
 import { Card, CardContent, CardHeader, Typography } from "@mui/material";
 import { OverUnderPieChart } from "../charts/over-under-pie-chart.component";
-import { PropositionA } from "../../shared/interfaces/graphql/game.interface";
+import { Proposition } from "../../shared/interfaces/graphql/proposition.interface";
 
 export interface TotalPropsCardProps {
-  propositions: PropositionA[];
+  propositions: Proposition[];
   title: string;
   nGames: number;
   nPlayers: number;

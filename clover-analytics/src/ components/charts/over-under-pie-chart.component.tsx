@@ -1,14 +1,13 @@
 import React from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
-import { Box } from "@mui/material";
 import { COLORS } from "../../shared/styles/constants";
-import { PropositionA } from "../../shared/interfaces/graphql/game.interface";
+import { Proposition } from "../../shared/interfaces/graphql/proposition.interface";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export interface OverUnderPieChartProps {
-  propositions: PropositionA[];
+  propositions: Proposition[];
 }
 
 export const OverUnderPieChart: React.FC<OverUnderPieChartProps> = ({
@@ -20,11 +19,11 @@ export const OverUnderPieChart: React.FC<OverUnderPieChartProps> = ({
   let pending = 0;
   propositions.forEach((proposition) => {
     console.warn(proposition);
-    if (proposition.predictionHit === "HIT") {
+    if (proposition.prediction?.wagerOutcome === "HIT") {
       hits++;
-    } else if (proposition.predictionHit === "PUSH") {
+    } else if (proposition.prediction?.wagerOutcome === "PUSH") {
       pushes++;
-    } else if (proposition.predictionHit === "MISS") {
+    } else if (proposition.prediction?.wagerOutcome === "MISS") {
       misses++;
     } else {
       pending++;

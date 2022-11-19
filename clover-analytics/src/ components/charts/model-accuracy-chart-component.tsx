@@ -1,27 +1,23 @@
 import { Box } from "@mui/material";
 import {
   BarController,
-  ChartDataset,
-  ChartOptions,
-  LineController,
-} from "chart.js";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
   BarElement,
-  PointElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineController,
   LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
 } from "chart.js";
 import moment from "moment";
 // import moment from "moment";
 import React from "react";
 import { Bar } from "react-chartjs-2";
-import { useGetProjections } from "../../hooks/useGetProjections";
-import { ALL_STATS, DEFAULT_MODEL } from "../../shared/constants";
+import { useGetPropositions } from "../../hooks/useGetPropositions";
+import { DEFAULT_MODEL } from "../../shared/constants";
 import { COLORS } from "../../shared/styles/constants";
 // import { ALL_STATS } from "../../../shared/constants";
 // import { FilterGames } from "../../../shared/functions/filters.fn";
@@ -50,12 +46,12 @@ interface ModelAccuracyChartProps {
 const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
   endDate,
 }: ModelAccuracyChartProps) => {
-  const startDate = moment(endDate).subtract(3, "days").format("YYYY-MM-DD");
+  const startDate = moment(endDate).subtract(2, "days").format("YYYY-MM-DD");
   const {
     loading,
     error,
-    data: players,
-  } = useGetProjections({
+    data: propositions,
+  } = useGetPropositions({
     startDate: startDate,
     endDate: endDate,
     customModel: DEFAULT_MODEL,
@@ -67,11 +63,11 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
   if (error) {
     return <div>Error: {error.message}</div>;
   }
-  console.log("players", players.length);
+  console.log("props", propositions.length);
 
   let days = [];
   //days between startDate and endDate
-  for (let i = moment(startDate); i.isBefore(endDate); i.add(1, "days")) {
+  for (let i = moment(startDate); i.isSameOrBefore(endDate); i.add(1, "days")) {
     days.push(i.format("YYYY-MM-DD"));
   }
 
@@ -98,24 +94,20 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
   let totalPushes = 0;
   let totalPending = 0;
   let totalAccuracy = 0;
-  players.forEach((player) => {
-    player.games.forEach((game) => {
-      game.prediction.propositions.forEach((prop) => {
-        if (prop.predictionHit === "HIT") {
-          daysMap[game.date].hits++;
-          totalHits++;
-        } else if (prop.predictionHit === "MISS") {
-          daysMap[game.date].misses++;
-          totalMisses++;
-        } else if (prop.predictionHit === "PUSH") {
-          daysMap[game.date].pushes++;
-          totalPushes++;
-        } else if (prop.predictionHit === "PENDING") {
-          daysMap[game.date].pending++;
-          totalPending++;
-        }
-      });
-    });
+  propositions.forEach((prop) => {
+    if (prop.prediction?.wagerOutcome === "HIT") {
+      daysMap[prop.game.date].hits++;
+      totalHits++;
+    } else if (prop.prediction?.wagerOutcome === "MISS") {
+      daysMap[prop.game.date].misses++;
+      totalMisses++;
+    } else if (prop.prediction?.wagerOutcome === "PUSH") {
+      daysMap[prop.game.date].pushes++;
+      totalPushes++;
+    } else if (prop.prediction?.wagerOutcome === "PENDING") {
+      daysMap[prop.game.date].pending++;
+      totalPending++;
+    }
   });
 
   days.forEach((day) => {
@@ -125,35 +117,6 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
   });
 
   totalAccuracy = (totalHits / (totalHits + totalMisses)) * 100;
-
-  const options: ChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: "index",
-      intersect: false,
-    },
-    // stacked: true,
-    plugins: {
-      title: {
-        display: true,
-        text: `Model Accuracy between ${startDate} and ${endDate}`,
-        color: "#FFF",
-      },
-      subtitle: {
-        display: true,
-        text: `Total Accuracy: ${totalAccuracy.toFixed(
-          2
-        )}% (${totalHits} hits, ${totalMisses} misses)`,
-        color: "#FFF",
-      },
-      tooltip: {
-        enabled: true,
-        mode: "index",
-        caretPadding: 10,
-      },
-    },
-  };
 
   return (
     <Box id="chart-wrapper">
@@ -203,6 +166,11 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
                 label: "Pushed",
                 data: days.map((day) => daysMap[day].pushes),
                 backgroundColor: COLORS.PUSH,
+              },
+              {
+                label: "Pending",
+                data: days.map((day) => daysMap[day].pending),
+                backgroundColor: COLORS.PRIMARY,
               },
             ],
           }}

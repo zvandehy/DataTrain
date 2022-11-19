@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { ColorCompare, ColorPct } from "../../shared/functions/color.fn";
 import { CustomCalculation } from "../../shared/interfaces/custom-prediction.interface";
-import { Proposition } from "../../shared/interfaces/graphql/game.interface";
+import { Proposition } from "../../shared/interfaces/graphql/proposition.interface";
 import { SimilarCalculation } from "../../shared/interfaces/similarCalculation.interface";
 import { Minutes, Stat } from "../../shared/interfaces/stat.interface";
 import { StyledTableCell } from "../styled-table/styled-table-cell.component";
@@ -41,7 +41,8 @@ const SimilarTable: React.FC<SimilarTableProps> = ({
         <TableHead>
           <StyledTableRow>
             <StyledTableCell
-              colSpan={11 + (selectedProp.statType.relatedStats?.length ?? 0)}
+              // colSpan={11 + (selectedProp.statType.relatedStats?.length ?? 0)}
+              colSpan={11}
             >
               {header}
             </StyledTableCell>
@@ -58,19 +59,15 @@ const SimilarTable: React.FC<SimilarTableProps> = ({
               </IconButton>
             </StyledTableCell>
             <StyledTableCell>GAMES</StyledTableCell>
-            <StyledTableCell>
-              {selectedProp.statType.abbreviation}
-            </StyledTableCell>
-            <StyledTableCell>
-              {selectedProp.statType.abbreviation}/MIN
-            </StyledTableCell>
-            {selectedProp.statType.relatedStats?.map((related: Stat) => {
+            <StyledTableCell>{selectedProp.type}</StyledTableCell>
+            <StyledTableCell>{selectedProp.type}/MIN</StyledTableCell>
+            {/* {selectedProp.statType.relatedStats?.map((related: Stat) => {
               return (
                 <StyledTableCell key={related.label}>
                   {related.abbreviation}
                 </StyledTableCell>
               );
-            })}
+            })} */}
             <StyledTableCell>MINS</StyledTableCell>
             <StyledTableCell>DIFF</StyledTableCell>
             <StyledTableCell>O-U-P</StyledTableCell>
@@ -95,13 +92,13 @@ const SimilarTable: React.FC<SimilarTableProps> = ({
             <StyledTableCell>{`${sim.similarGames.length}`}</StyledTableCell>
             <StyledTableCell>{sim.similarAvg}</StyledTableCell>
             <StyledTableCell>{sim.similarAvgPerMin}</StyledTableCell>
-            {selectedProp.statType.relatedStats?.map((related: Stat) => {
+            {/* {selectedProp.statType.relatedStats?.map((related: Stat) => {
               return (
                 <StyledTableCell key={related.label + "score"}>
                   {related.average(sim.similarGames)}
                 </StyledTableCell>
               );
-            })}
+            })} */}
             <StyledTableCell>
               {Minutes.average(sim.similarGames)}
             </StyledTableCell>

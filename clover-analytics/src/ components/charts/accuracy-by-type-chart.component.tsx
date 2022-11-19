@@ -3,13 +3,13 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Bar } from "react-chartjs-2";
 
 import { COLORS } from "../../shared/styles/constants";
-import { PropositionA } from "../../shared/interfaces/graphql/game.interface";
 import { GetStatAbbreviation } from "../../shared/interfaces/stat.interface";
+import { Proposition } from "../../shared/interfaces/graphql/proposition.interface";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export interface ModelAccuracyByStatTypeProps {
-  propositions: PropositionA[];
+  propositions: Proposition[];
 }
 
 export const ModelAccuracyByStatType: React.FC<
@@ -33,16 +33,16 @@ export const ModelAccuracyByStatType: React.FC<
       pending: 0,
       total: 0,
     };
-    if (prop.predictionHit === "HIT") {
+    if (prop.prediction?.wagerOutcome === "HIT") {
       breakdown.hits++;
     }
-    if (prop.predictionHit === "MISS") {
+    if (prop.prediction?.wagerOutcome === "MISS") {
       breakdown.misses++;
     }
-    if (prop.predictionHit === "PUSH") {
+    if (prop.prediction?.wagerOutcome === "PUSH") {
       breakdown.pushes++;
     }
-    if (prop.predictionHit === "PENDING") {
+    if (prop.prediction?.wagerOutcome === "PENDING") {
       breakdown.pending++;
     }
     breakdown.total++;

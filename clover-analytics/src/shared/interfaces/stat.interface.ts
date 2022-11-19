@@ -1,4 +1,5 @@
-import { Game, Proposition } from "./graphql/game.interface";
+import { Game } from "./graphql/game.interface";
+import { Proposition } from "./graphql/proposition.interface";
 import { TeamGame } from "./graphql/teamgame.interface";
 import { ScoreType } from "./score-type.enum";
 

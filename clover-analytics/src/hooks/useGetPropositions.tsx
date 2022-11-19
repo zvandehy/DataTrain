@@ -1,0 +1,104 @@
+import { ApolloError, gql, useQuery } from "@apollo/client";
+import { ModelInput } from "../shared/interfaces/custom-prediction.interface";
+import { Proposition } from "../shared/interfaces/graphql/proposition.interface";
+
+export const USE_GET_PROPOSITIONS = gql`
+  query GetPropositions(
+    $startDate: String!
+    $endDate: String! # $customModel: ModelInput!
+  ) {
+    propositions(input: { startDate: $startDate, endDate: $endDate }) {
+      sportsbook
+      game {
+        date
+        home_or_away
+        opponent {
+          abbreviation
+          teamID
+          name
+        }
+        player {
+          name
+          playerID
+          image
+        }
+      }
+      type
+      target
+      outcome
+      actualResult
+      prediction(
+        # input: $customModel
+        input: {
+          model: "SEASON"
+          gameBreakdowns: [
+            { name: "2022-23", weight: 60, filter: { seasonMatch: true } }
+            {
+              name: "2021-22"
+              weight: 30
+              filter: { previousSeasonMatch: true }
+            }
+            {
+              name: "Opponent"
+              weight: 10
+              filter: { opponentMatch: true, seasonMatch: true }
+            }
+          ]
+        }
+      ) {
+        estimation
+        wager
+        wagerOutcome
+      }
+    }
+  }
+`;
+export interface QueryResult {
+  loading?: boolean;
+  error?: ApolloError;
+  data?: any;
+}
+
+export interface ProjectionQueryResult extends QueryResult {
+  data: Proposition[];
+}
+
+export const useGetPropositions = ({
+  startDate,
+  endDate,
+  customModel,
+}: {
+  startDate: string;
+  endDate: string;
+  customModel: ModelInput;
+}): ProjectionQueryResult => {
+  const { loading, error, data } = useQuery(USE_GET_PROPOSITIONS, {
+    variables: { startDate, endDate },
+  });
+  if (loading) {
+    return { loading, error, data: [] };
+  }
+  if (error) {
+    return { loading, error, data: [] };
+  }
+  if (data && data?.propositions) {
+    return {
+      loading: false,
+      error: undefined,
+      data: data.propositions,
+    };
+  }
+  return { loading, error, data: [] };
+};
+
+// function GetMaxPctDiff(player: Player) {
+//   let maxPctDiff = 0;
+//   player.games.forEach((game) => {
+//     game.prediction.propositions.forEach((prop) => {
+//       if (Math.abs(prop.predictionTargetDiffPCT) > Math.abs(maxPctDiff)) {
+//         maxPctDiff = Math.abs(prop.predictionTargetDiffPCT);
+//       }
+//     });
+//   });
+//   return maxPctDiff;
+// }

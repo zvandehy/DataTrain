@@ -55,7 +55,7 @@ export const HitMissTypography: React.FC<HitMissIconProps> = ({
       paddingRight={1}
       textTransform={"uppercase"}
     >
-      {outcome} {result !== undefined ? "(" + result + ")" : ""}
+      {outcome} {result !== undefined ? "(" + result.toFixed(2) + ")" : ""}
     </Typography>
   );
 };

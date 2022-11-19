@@ -3,12 +3,15 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Chart } from "react-chartjs-2";
 
 import { COLORS } from "../../shared/styles/constants";
-import { PropositionA } from "../../shared/interfaces/graphql/game.interface";
+import {
+  GetPropPredictionDeviation,
+  Proposition,
+} from "../../shared/interfaces/graphql/proposition.interface";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export interface ModelAccuracyByPctDiffProps {
-  propositions: PropositionA[];
+  propositions: Proposition[];
   stepSize?: number;
   steps?: number;
 }
@@ -47,20 +50,20 @@ export const ModelAccuracyByPctDiff: React.FC<ModelAccuracyByPctDiffProps> = ({
 
   ranges.forEach((x, i) => {
     const filtered = propositions.filter((prop) => {
-      return (
-        Math.abs(prop.predictionTargetDiffPCT) >= x.min &&
-        Math.abs(prop.predictionTargetDiffPCT) < x.max
-      );
+      const pctDiff = GetPropPredictionDeviation(prop);
+      return Math.abs(pctDiff) >= x.min && Math.abs(pctDiff) < x.max;
     });
-    const hits = filtered.filter((prop) => prop.predictionHit === "HIT").length;
+    const hits = filtered.filter(
+      (prop) => prop.prediction?.wagerOutcome === "HIT"
+    ).length;
     const misses = filtered.filter(
-      (prop) => prop.predictionHit === "MISS"
+      (prop) => prop.prediction?.wagerOutcome === "MISS"
     ).length;
     const pushes = filtered.filter(
-      (prop) => prop.predictionHit === "PUSH"
+      (prop) => prop.prediction?.wagerOutcome === "PUSH"
     ).length;
     const pending = filtered.filter(
-      (prop) => prop.predictionHit === "PENDING"
+      (prop) => prop.prediction?.wagerOutcome === "PENDING"
     ).length;
     let label = `${x.min}% to ${x.max}%`;
     if (x.min === -Infinity) {
