@@ -19,6 +19,7 @@ import { FeaturedPropCard } from "../../ components/cards/featured-prop-card.com
 import { TotalPropsCard } from "../../ components/cards/total-props-card.component.";
 import { ModelAccuracyByPctDiff } from "../../ components/charts/accuracy-by-percent-diff-chart.component";
 import { ModelAccuracyByStatType } from "../../ components/charts/accuracy-by-type-chart.component";
+import HistoricalCharts from "../../ components/charts/historical-charts/historical-charts-container.component";
 import ModelAccuracyChart from "../../ components/charts/model-accuracy-chart-component";
 import PlayerRow from "../../ components/player-row/player-row.component";
 // import PlayerRow from "../../ components/player-row/player-row.component";
@@ -33,7 +34,7 @@ import {
 // ==============================|| DASHBOARD ||============================== //
 
 const DashboardPage = () => {
-  const [slot, setSlot] = useState("week");
+  const [slot, setSlot] = useState<"month" | "week" | "day">("week");
   const [startDate, setStartDate] = useState(moment().format("YYYY-MM-DD"));
 
   const theme = useTheme();
@@ -152,70 +153,8 @@ const DashboardPage = () => {
             })}
         </Grid>
 
-        {/* row 2 */}
-        <Grid item xs={12} md={7} lg={8} mt={2}>
-          <Grid container alignItems="center" justifyContent="space-between">
-            <Grid item>
-              <Typography variant="h5">Model Accuracy</Typography>
-            </Grid>
-            <Grid item>
-              <Stack direction="row" alignItems="center" spacing={0}>
-                <Button
-                  size="small"
-                  onClick={() => setSlot("month")}
-                  color={slot === "month" ? "primary" : "secondary"}
-                  variant={slot === "month" ? "outlined" : "text"}
-                >
-                  Month
-                </Button>
-                <Button
-                  size="small"
-                  onClick={() => setSlot("week")}
-                  color={slot === "week" ? "primary" : "secondary"}
-                  variant={slot === "week" ? "outlined" : "text"}
-                >
-                  Week
-                </Button>
-              </Stack>
-            </Grid>
-          </Grid>
-          <Card sx={{ mt: 1.5 }}>
-            <Box sx={{ pt: 1, pr: 2 }}>
-              <Box slot={slot}>
-                <ModelAccuracyChart
-                  endDate={moment(startDate)
-                    .add(1, "days")
-                    .format("YYYY-MM-DD")}
-                />
-              </Box>
-            </Box>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={5} lg={4} mt={2}>
-          <Grid container alignItems="center" justifyContent="space-between">
-            <Grid item>
-              <Typography variant="h5">Stat Accuracy</Typography>
-            </Grid>
-          </Grid>
-          <Card sx={{ mt: 2 }}>
-            <Box sx={{ p: 3, pb: 0, minHeight: "300px" }}>
-              <ModelAccuracyByStatType propositions={propositions} />
-            </Box>
-            <Box />
-          </Card>
-          <Card sx={{ mt: 2 }}>
-            <Box sx={{ p: 3, pb: 0, minHeight: "300px" }}>
-              <ModelAccuracyByPctDiff
-                propositions={propositions}
-                stepSize={10}
-                steps={5}
-              />
-            </Box>
-            <Box />
-          </Card>
-        </Grid>
+        <HistoricalCharts endDate={startDate} />
       </Grid>
-
       {/* row 3 */}
       <Grid item xs={12} md={7} lg={8} paddingX={2}>
         <Table sx={{ backgroundColor: theme.palette.background.paper }}>

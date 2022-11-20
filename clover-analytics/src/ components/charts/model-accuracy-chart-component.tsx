@@ -15,9 +15,10 @@ import {
 import moment from "moment";
 // import moment from "moment";
 import React from "react";
-import { Bar } from "react-chartjs-2";
+import { Bar, Chart } from "react-chartjs-2";
 import { useGetPropositions } from "../../hooks/useGetPropositions";
 import { DEFAULT_MODEL } from "../../shared/constants";
+import { Proposition } from "../../shared/interfaces/graphql/proposition.interface";
 import { COLORS } from "../../shared/styles/constants";
 // import { ALL_STATS } from "../../../shared/constants";
 // import { FilterGames } from "../../../shared/functions/filters.fn";
@@ -40,29 +41,16 @@ ChartJS.register(
 );
 
 interface ModelAccuracyChartProps {
+  startDate: string;
   endDate: string;
+  propositions: Proposition[];
 }
 
 const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
   endDate,
+  startDate,
+  propositions,
 }: ModelAccuracyChartProps) => {
-  const startDate = moment(endDate).subtract(2, "days").format("YYYY-MM-DD");
-  const {
-    loading,
-    error,
-    data: propositions,
-  } = useGetPropositions({
-    startDate: startDate,
-    endDate: endDate,
-    customModel: DEFAULT_MODEL,
-  });
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
   console.log("props", propositions.length);
 
   let days = [];
@@ -121,7 +109,7 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
   return (
     <Box id="chart-wrapper">
       <Box id="chart" minHeight={"400px"} p={2}>
-        <Bar
+        <Chart
           datasetIdKey="id"
           // options={options}
           options={{
@@ -142,10 +130,50 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
                 )}% (${totalHits} hits, ${totalMisses} misses)`,
                 color: "#FFF",
               },
+              legend: {
+                display: true,
+                position: "top",
+                labels: {
+                  color: "#FFF",
+                },
+                title: {
+                  color: "#FFF",
+                },
+              },
               tooltip: {
                 enabled: true,
                 mode: "index",
                 caretPadding: 10,
+              },
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: "#FFF",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "# PROPS",
+                  color: "#FFF",
+                },
+                ticks: {
+                  color: "#FFF",
+                },
+              },
+              y2: {
+                position: "right",
+                min: 0,
+                max: 100,
+                ticks: {
+                  color: "white",
+                },
+                title: {
+                  display: true,
+                  text: "ACCURACY (%)",
+                  color: "white",
+                },
               },
             },
           }}
@@ -156,24 +184,56 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
                 label: "Hits",
                 data: days.map((day) => daysMap[day].hits),
                 backgroundColor: COLORS.HIGHER,
+                type: "bar",
               },
               {
                 label: "Misses",
                 data: days.map((day) => daysMap[day].misses),
                 backgroundColor: COLORS.LOWER,
+                type: "bar",
               },
               {
                 label: "Pushed",
                 data: days.map((day) => daysMap[day].pushes),
                 backgroundColor: COLORS.PUSH,
+                type: "bar",
               },
               {
                 label: "Pending",
                 data: days.map((day) => daysMap[day].pending),
+                backgroundColor: "gray",
+                type: "bar",
+              },
+              {
+                label: "Accuracy",
+                data: days.map((day) => daysMap[day].dayAccuracy),
                 backgroundColor: COLORS.PRIMARY,
+                pointBorderColor: (context: any) => {
+                  const index = context.dataIndex;
+                  const value = context.dataset.data[index];
+                  return value > 60
+                    ? COLORS.HIGHER_DARK
+                    : value > 50
+                    ? COLORS.PUSH_DARK
+                    : COLORS.LOWER_DARK;
+                },
+                pointBackgroundColor: (context: any) => {
+                  const index = context.dataIndex;
+                  const value = context.dataset.data[index];
+                  return value > 60
+                    ? COLORS.HIGHER_DARK
+                    : value > 50
+                    ? COLORS.PUSH_DARK
+                    : COLORS.LOWER_DARK;
+                },
+                borderColor: COLORS.PRIMARY,
+                order: -1,
+                type: "line",
+                yAxisID: "y2",
               },
             ],
           }}
+          type="bar"
           color={"#FFFFFF"}
         />
       </Box>
