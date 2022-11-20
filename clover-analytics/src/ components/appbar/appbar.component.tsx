@@ -1,6 +1,5 @@
 import SearchIcon from "@mui/icons-material/Search";
 import { Icon, IconButton } from "@mui/material";
-import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import InputBase from "@mui/material/InputBase";
@@ -9,9 +8,9 @@ import MenuItem from "@mui/material/MenuItem";
 import { alpha, styled } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import moment from "moment";
 import * as React from "react";
-import { Calendar } from "react-calendar";
 import { HomeButton } from "../home-button/homebutton.component";
 import { ModelButton } from "../styled-model-button/model-button.component";
 
@@ -101,6 +100,10 @@ export const PrimarySearchAppBar = ({ onDateSelect, date }: AppBarProps) => {
     </Menu>
   );
 
+  function handleClose() {
+    openCalendar(false);
+  }
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
@@ -118,6 +121,14 @@ export const PrimarySearchAppBar = ({ onDateSelect, date }: AppBarProps) => {
           </Search>
           <LocalizationProvider dateAdapter={AdapterMoment}>
             <DatePicker
+              PopperProps={{
+                style: {
+                  position: "absolute" as "absolute",
+                  top: "30%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                },
+              }}
               value={date}
               open={calendarOpen}
               onOpen={() => openCalendar(true)}
