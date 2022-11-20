@@ -258,73 +258,75 @@ func (c *SQLClient) SaveUpcomingGames(ctx context.Context, games []*model.Player
 	return len(games), nil
 }
 
-func (c *SQLClient) GetPlayerGames(ctx context.Context, input *model.GameFilter) (games []*model.PlayerGame, err error) {
+func (c *SQLClient) GetPlayerGames(ctx context.Context, inputs ...model.GameFilter) (games []*model.PlayerGame, err error) {
 	c.AddQuery()
 	start := time.Now()
-	where := []string{}
+	or := []string{}
 	args := []interface{}{}
-	if input.PlayerID != nil {
-		where = append(where, "playerID = ?")
-		args = append(args, *input.PlayerID)
-	}
-	if input.GameID != nil {
-		where = append(where, "gameID = ?")
-		args = append(args, *input.GameID)
-	}
-	if input.TeamID != nil {
-		where = append(where, "teamID = ?")
-		args = append(args, *input.TeamID)
-	}
-	if input.OpponentID != nil {
-		where = append(where, "opponentID = ?")
-		args = append(args, *input.OpponentID)
-	}
-	// Seasons         *[]SeasonOption `json:"seasons"` /TODO: VERIFY THAT THIS WORKS
-	if input.Seasons != nil {
-		qs := strings.Repeat("?,", len(*input.Seasons))
-		where = append(where, fmt.Sprintf("season IN (%s)", qs[:len(qs)-1]))
-		for _, season := range *input.Seasons {
-			args = append(args, season)
+	for _, input := range inputs {
+		where := []string{}
+		if input.PlayerID != nil {
+			where = append(where, "playerID = ?")
+			args = append(args, *input.PlayerID)
 		}
-	}
-	if input.StartDate != nil && input.EndDate != nil {
-		if *input.StartDate == *input.EndDate {
-			where = append(where, "date >= ? AND date < ?")
-			// start of day
-			date, err := time.Parse(util.DATE_FORMAT, *input.StartDate)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse date: %w", err)
+		if input.GameID != nil {
+			where = append(where, "gameID = ?")
+			args = append(args, *input.GameID)
+		}
+		if input.TeamID != nil {
+			where = append(where, "teamID = ?")
+			args = append(args, *input.TeamID)
+		}
+		if input.OpponentID != nil {
+			where = append(where, "opponentID = ?")
+			args = append(args, *input.OpponentID)
+		}
+		// Seasons         *[]SeasonOption `json:"seasons"` /TODO: VERIFY THAT THIS WORKS
+		if input.Seasons != nil {
+			qs := strings.Repeat("?,", len(*input.Seasons))
+			where = append(where, fmt.Sprintf("season IN (%s)", qs[:len(qs)-1]))
+			for _, season := range *input.Seasons {
+				args = append(args, season)
 			}
-			end := date.Add(24 * time.Hour)
-			args = append(args, date, end)
-		} else {
-			where = append(where, "date BETWEEN ? AND ?")
-			args = append(args, *input.StartDate, *input.EndDate)
+		}
+		if input.StartDate != nil && input.EndDate != nil {
+			if *input.StartDate == *input.EndDate {
+				where = append(where, "date >= ? AND date < ?")
+				// start of day
+				date, err := time.Parse(util.DATE_FORMAT, *input.StartDate)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse date: %w", err)
+				}
+				end := date.Add(24 * time.Hour)
+				args = append(args, date, end)
+			} else {
+				where = append(where, "date BETWEEN ? AND ?")
+				args = append(args, *input.StartDate, *input.EndDate)
+			}
+		}
+		if input.StartDate != nil && input.EndDate == nil {
+			where = append(where, "date >= ?")
+			args = append(args, *input.StartDate)
+		}
+		if input.StartDate == nil && input.EndDate != nil {
+			where = append(where, "date <= ?")
+			args = append(args, *input.EndDate)
+		}
+
+		if input.HomeOrAway != nil {
+			where = append(where, "homeAway = ?")
+			args = append(args, *input.HomeOrAway)
+		}
+		if input.Outcome != nil {
+			where = append(where, "outcome = ?")
+			args = append(args, *input.Outcome)
+		}
+
+		if len(where) > 0 {
+			or = append(or, fmt.Sprintf("(%s)", strings.Join(where, " AND ")))
 		}
 	}
-	if input.StartDate != nil && input.EndDate == nil {
-		where = append(where, "date >= ?")
-		args = append(args, *input.StartDate)
-	}
-	if input.StartDate == nil && input.EndDate != nil {
-		where = append(where, "date <= ?")
-		args = append(args, *input.EndDate)
-	}
-
-	if input.HomeOrAway != nil {
-		where = append(where, "homeAway = ?")
-		args = append(args, *input.HomeOrAway)
-	}
-	if input.Outcome != nil {
-		where = append(where, "outcome = ?")
-		args = append(args, *input.Outcome)
-	}
-
-	limit := ""
-	if input.LastX != nil && *input.LastX > 0 {
-		limit = fmt.Sprintf(" LIMIT %d", input.LastX)
-	}
-	query := fmt.Sprintf("SELECT * FROM playergames WHERE %s ORDER BY date%s", strings.Join(where, " AND "), limit)
+	query := fmt.Sprintf("SELECT * FROM playergames WHERE %s ORDER BY date", strings.Join(or, " OR "))
 	err = c.SelectContext(ctx, &games, query, args...)
 	if err != nil {
 		logrus.Warnf("failed to get playergames using query: %v | %+v", query, args)
@@ -333,7 +335,7 @@ func (c *SQLClient) GetPlayerGames(ctx context.Context, input *model.GameFilter)
 	if len(games) == 0 {
 		logrus.Warnf("received 0 playergames using query: %v | %+v", query, args)
 	}
-	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Player Games: %v", len(games), input), start))
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Player Games: %v", len(games), inputs), start))
 	return games, nil
 }
 

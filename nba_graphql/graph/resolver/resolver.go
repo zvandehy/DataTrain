@@ -6,6 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
+	"github.com/zvandehy/DataTrain/nba_graphql/dataloader"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 	"github.com/zvandehy/DataTrain/nba_graphql/util"
 )
@@ -42,7 +43,8 @@ func (r *Resolver) GetBase(ctx context.Context, inputs []*model.GameBreakdownInp
 			break
 		}
 	}
-	games, err := r.GetPlayerGames(ctx, &filter)
+	games, err := dataloader.For(ctx).PlayerGameByFilter.Load(filter)
+	// games, err := r.GetPlayerGames(ctx, &filter)
 	if err != nil {
 		logrus.Errorf("Error getting base player games: %v", err)
 		return []*model.PlayerGame{}

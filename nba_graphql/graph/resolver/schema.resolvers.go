@@ -35,7 +35,7 @@ func (r *queryResolver) Teams(ctx context.Context, input model.TeamFilter) ([]*m
 
 // Games is the resolver for the games field.
 func (r *queryResolver) Games(ctx context.Context, input model.GameFilter) ([]*model.PlayerGame, error) {
-	games, err := r.GetPlayerGames(ctx, &input)
+	games, err := r.GetPlayerGames(ctx, input)
 	if err != nil || len(games) == 0 {
 		logrus.Error(err)
 		return []*model.PlayerGame{}, err

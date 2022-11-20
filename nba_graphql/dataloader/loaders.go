@@ -23,7 +23,7 @@ type Loaders struct {
 	TeamByID   TeamLoaderID
 	TeamByAbr  TeamLoaderABR
 	// PlayerByFilter           PlayerLoader
-	// PlayerGameByFilter       PlayerGameLoader
+	PlayerGameByFilter PlayerGameLoader
 	// TeamGameByPlayerGame     TeamGameLoader
 	// OpponentGameByPlayerGame TeamGameLoader
 }
@@ -66,13 +66,13 @@ func Middleware(conn database.BasketballRepository, next http.Handler) http.Hand
 			// 		Fetch:    fetchOpponentGameByPlayerGame,
 			// 	},
 			// ),
-			// PlayerGameByFilter: *NewPlayerGameLoader(
-			// 	PlayerGameLoaderConfig{
-			// 		MaxBatch: maxBatch * 10,
-			// 		Wait:     waitTime,
-			// 		Fetch:    fetchPlayerGamesByFilter,
-			// 	},
-			// ),
+			PlayerGameByFilter: *NewPlayerGameLoader(
+				PlayerGameLoaderConfig{
+					MaxBatch: maxBatch * 10,
+					Wait:     waitTime,
+					Fetch:    fetchPlayerGamesByFilter(conn, r.Context()),
+				},
+			),
 		})
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
@@ -273,8 +273,43 @@ func fetchOpponentGameByPlayerGame(keys []model.PlayerGame) ([]*model.TeamGame, 
 	// 	return teamGames, errs
 }
 
-func fetchPlayerGamesByFilter(keys []model.GameFilter) ([][]*model.PlayerGame, []error) {
-	panic("fetch playergamesbyfilter not implemented")
+func checkFiltersForSameSeason(filters []model.GameFilter) bool {
+	expect := *filters[0].Seasons
+	for _, filter := range filters {
+		if len(*filter.Seasons) != len(expect) {
+			return false
+		}
+		for i, season := range *filter.Seasons {
+			if season != expect[i] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func fetchPlayerGamesByFilter(db database.BasketballRepository, ctx context.Context) func(keys []model.GameFilter) ([][]*model.PlayerGame, []error) {
+	// panic("fetch playergamesbyfilter not implemented")
+	return func(keys []model.GameFilter) ([][]*model.PlayerGame, []error) {
+		if !checkFiltersForSameSeason(keys) {
+			return nil, []error{fmt.Errorf("filters must be for the same season")}
+		}
+		playerIDToGamesMap := make(map[int][]*model.PlayerGame)
+
+		games, err := db.GetPlayerGames(ctx, keys...)
+		if err != nil {
+			return nil, []error{err}
+		}
+		for _, game := range games {
+			playerIDToGamesMap[game.PlayerID] = append(playerIDToGamesMap[game.PlayerID], game)
+		}
+		playerGames := make([][]*model.PlayerGame, len(keys))
+		for i, filter := range keys {
+			playerGames[i] = playerIDToGamesMap[*filter.PlayerID]
+		}
+		return playerGames, nil
+	}
+
 	// 	games := make([][]*model.PlayerGame, len(keys))
 	// 	errs := make([]error, len(keys))
 	// 	gamesByPlayerID := make(map[int][]*model.PlayerGame, len(keys))

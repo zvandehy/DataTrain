@@ -40,7 +40,7 @@ type BasketballRepository interface {
 	GetSimilarPlayers(ctx context.Context, similarToPlayerID int, input *model.SimilarPlayerInput, endDate *time.Time) ([]*model.Player, error)
 	GetSimilarTeams(ctx context.Context, similarToTeamID int, input *model.SimilarTeamInput, endDate string) ([]*model.Team, error)
 	GetPropositionsByPlayerGame(ctx context.Context, game model.PlayerGame) ([]*model.Proposition, error)
-	GetPlayerGames(ctx context.Context, input *model.GameFilter) ([]*model.PlayerGame, error)
+	GetPlayerGames(ctx context.Context, inputs ...model.GameFilter) ([]*model.PlayerGame, error)
 }
 
 var cacheSchedule *model.Schedule
@@ -147,7 +147,7 @@ func Getprizepicks(nbaClient BasketballRepository) {
 	}
 	fmt.Printf("Saving %d upcoming games\n", len(games))
 	date := games[0].Date.Format(util.DATE_FORMAT)
-	foundGames, err := nbaClient.GetPlayerGames(context.Background(), &model.GameFilter{StartDate: &date, EndDate: &date})
+	foundGames, err := nbaClient.GetPlayerGames(context.Background(), model.GameFilter{StartDate: &date, EndDate: &date})
 	if err != nil {
 		logrus.Warn(err)
 	}
