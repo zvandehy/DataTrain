@@ -40,6 +40,12 @@ func (r *queryResolver) Games(ctx context.Context, input model.GameFilter) ([]*m
 		logrus.Error(err)
 		return []*model.PlayerGame{}, err
 	}
+	if input.LastX != nil && *input.LastX > 0 {
+		//todo: make sure games is sorted we are getting the most recent x games
+		if len(games) > *input.LastX {
+			games = games[len(games)-*input.LastX:]
+		}
+	}
 	return games, nil
 }
 
