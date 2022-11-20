@@ -20,9 +20,11 @@ import { TotalPropsCard } from "../../ components/cards/total-props-card.compone
 import { ModelAccuracyByPctDiff } from "../../ components/charts/accuracy-by-percent-diff-chart.component";
 import { ModelAccuracyByStatType } from "../../ components/charts/accuracy-by-type-chart.component";
 import ModelAccuracyChart from "../../ components/charts/model-accuracy-chart-component";
+import PlayerRow from "../../ components/player-row/player-row.component";
 // import PlayerRow from "../../ components/player-row/player-row.component";
 import { useGetPropositions } from "../../hooks/useGetPropositions";
 import { DEFAULT_MODEL } from "../../shared/constants";
+import { Player } from "../../shared/interfaces/graphql/player.interface";
 import {
   ComparePropByPredictionDeviation,
   Proposition,
@@ -59,26 +61,30 @@ const DashboardPage = () => {
   let gameIDs: string[] = [];
 
   // each player's highest discrepancy proposition
-  let mapTopProps: { [playerID: number]: Proposition } = {};
+  let playerPropositions: { [playerGameID: string]: Proposition[] } = {};
   propositions.forEach((prop) => {
     if (!gameIDs.includes(prop.game.gameID)) {
       gameIDs.push(prop.game.gameID);
     }
-    if (mapTopProps[prop.game?.player?.playerID] === undefined) {
-      mapTopProps[prop.game?.player?.playerID] = prop;
+    if (
+      !playerPropositions[prop.game.gameID + "" + prop.game.player.playerID]
+    ) {
+      playerPropositions[prop.game.gameID + "" + prop.game.player.playerID] = [
+        prop,
+      ];
     } else {
-      if (
-        ComparePropByPredictionDeviation(
-          prop,
-          mapTopProps[prop.game?.player?.playerID]
-        ) > 0
-      ) {
-        mapTopProps[prop.game?.player?.playerID] = prop;
-      }
+      playerPropositions[
+        prop.game.gameID + "" + prop.game.player.playerID
+      ].push(prop);
+      playerPropositions[
+        prop.game.gameID + "" + prop.game.player.playerID
+      ].sort((a, b) => ComparePropByPredictionDeviation(b, a));
     }
   });
 
-  const topProps: Proposition[] = Object.values(mapTopProps);
+  const topProps: Proposition[] = Object.entries(playerPropositions).map(
+    (entry) => entry[1][0]
+  );
 
   return (
     <Box>
@@ -107,7 +113,7 @@ const DashboardPage = () => {
               title={"All Props"}
               propositions={propositions}
               nGames={gameIDs.length}
-              nPlayers={Object.keys(mapTopProps).length}
+              nPlayers={Object.keys(playerPropositions).length}
             />
           </Grid>
           <Grid
@@ -120,7 +126,7 @@ const DashboardPage = () => {
               title={"Top Props"}
               propositions={topProps}
               nGames={gameIDs.length}
-              nPlayers={Object.keys(mapTopProps).length}
+              nPlayers={Object.keys(playerPropositions).length}
             />
           </Grid>
           {/* <TotalPropsCard total={50} /> */}
@@ -230,25 +236,14 @@ const DashboardPage = () => {
             <TableCell>Actual/Min</TableCell>
           </TableHead>
           <TableBody>
-            {/* {players.map((player) => {
-              if (player.games === undefined || player.games.length === 0) {
-                console.warn("no games for player", player.name);
-                return null;
-              }
-              const game = player.games[0];
-              if (
-                game.prediction.propositions === undefined ||
-                game.prediction.propositions.length === 0
-              ) {
-                console.warn(
-                  "no propositions for player",
-                  player,
-                  player.games
-                );
-                return null;
-              }
-              return <PlayerRow player={player} game={game} />;
-            })} */}
+            {Object.entries(playerPropositions)
+              .sort((entryA, entryB) =>
+                ComparePropByPredictionDeviation(entryB[1][0], entryA[1][0])
+              )
+              .map((entry) => {
+                const playerProps = entry[1];
+                return <PlayerRow propositions={playerProps} />;
+              })}
           </TableBody>
         </Table>
       </Grid>

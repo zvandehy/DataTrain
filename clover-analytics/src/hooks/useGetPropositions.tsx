@@ -17,11 +17,16 @@ export const USE_GET_PROPOSITIONS = gql`
           abbreviation
           teamID
           name
+          logoImage
         }
         player {
           name
           playerID
           image
+          team {
+            abbreviation
+            logoImage
+          }
         }
       }
       type

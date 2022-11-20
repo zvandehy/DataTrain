@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -129,6 +130,9 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		propPrediction.WagerOutcome = model.WagerOutcomePending
 	}
 
+	propPrediction.Estimation = math.Round(propPrediction.Estimation*100) / 100
+	roundedAccuracy := math.Round(*propPrediction.EstimationAccuracy*100) / 100.0
+	propPrediction.EstimationAccuracy = &roundedAccuracy
 	return &propPrediction, nil
 }
 
