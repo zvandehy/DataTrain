@@ -131,8 +131,9 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	}
 
 	propPrediction.Estimation = math.Round(propPrediction.Estimation*100) / 100
-	roundedAccuracy := math.Round(*propPrediction.EstimationAccuracy*100) / 100.0
-	propPrediction.EstimationAccuracy = &roundedAccuracy
+	if propPrediction.EstimationAccuracy != nil {
+		*propPrediction.EstimationAccuracy = math.Round(*propPrediction.EstimationAccuracy*100) / 100
+	}
 	return &propPrediction, nil
 }
 
