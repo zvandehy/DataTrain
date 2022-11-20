@@ -110,6 +110,10 @@ func (r *Resolver) GetGamelogBreakdowns(ctx context.Context, inputs []*model.Gam
 				derivedGames = append(derivedGames, game)
 			}
 		}
+		if input.Filter.LastX != nil && *input.Filter.LastX > 0 {
+			// todo: make sure games is sorted by date and we are taking the most recent x games
+			derivedGames = derivedGames[len(derivedGames)-*input.Filter.LastX:]
+		}
 
 		breakdown, err := CalculateGamelogBreakdown(input, derivedGames, baseAvg, *target, stat)
 		if err != nil {
