@@ -1,4 +1,6 @@
 import SearchIcon from "@mui/icons-material/Search";
+import { Icon, IconButton } from "@mui/material";
+import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import InputBase from "@mui/material/InputBase";
@@ -6,6 +8,8 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { alpha, styled } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import moment from "moment";
 import * as React from "react";
 import { Calendar } from "react-calendar";
 import { HomeButton } from "../home-button/homebutton.component";
@@ -51,8 +55,19 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-export default function PrimarySearchAppBar() {
+export interface AppBarProps {
+  onDateSelect: (date: string) => void;
+  date: string;
+}
+
+export const PrimarySearchAppBar = ({ onDateSelect, date }: AppBarProps) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [calendarOpen, setCalendarOpen] = React.useState(false);
+
+  const openCalendar = (open: boolean) => {
+    setCalendarOpen(open);
+    console.log("openCalendar", open);
+  };
 
   const isMenuOpen = Boolean(anchorEl);
 
@@ -101,6 +116,22 @@ export default function PrimarySearchAppBar() {
               sx={{ width: "100%" }}
             />
           </Search>
+          <LocalizationProvider dateAdapter={AdapterMoment}>
+            <DatePicker
+              value={date}
+              open={calendarOpen}
+              onOpen={() => openCalendar(true)}
+              onClose={() => openCalendar(false)}
+              onChange={(newValue) =>
+                onDateSelect(moment(newValue).format("YYYY-MM-DD") || "")
+              }
+              renderInput={(props) => (
+                <IconButton onClick={() => openCalendar(true)}>
+                  <Icon>today</Icon>
+                </IconButton>
+              )}
+            />
+          </LocalizationProvider>
           <Box sx={{ flexGrow: 5 }} />
           <Box sx={{ flexGrow: 1 }}>
             <ModelButton />
@@ -123,4 +154,4 @@ export default function PrimarySearchAppBar() {
       {renderMenu}
     </Box>
   );
-}
+};

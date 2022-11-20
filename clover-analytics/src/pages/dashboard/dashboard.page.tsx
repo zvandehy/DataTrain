@@ -1,4 +1,3 @@
-import { Games } from "@material-ui/icons";
 import {
   Box,
   Button,
@@ -14,7 +13,7 @@ import {
 } from "@mui/material";
 import moment from "moment";
 import { useState } from "react";
-import PrimarySearchAppBar from "../../ components/appbar/appbar.component";
+import { PrimarySearchAppBar } from "../../ components/appbar/appbar.component";
 import { FeaturedPropCard } from "../../ components/cards/featured-prop-card.component";
 // import { FeaturedPropCard } from "../../ components/cards/featured-prop-card.component";
 import { TotalPropsCard } from "../../ components/cards/total-props-card.component.";
@@ -24,7 +23,6 @@ import ModelAccuracyChart from "../../ components/charts/model-accuracy-chart-co
 // import PlayerRow from "../../ components/player-row/player-row.component";
 import { useGetPropositions } from "../../hooks/useGetPropositions";
 import { DEFAULT_MODEL } from "../../shared/constants";
-import { Player } from "../../shared/interfaces/graphql/player.interface";
 import {
   ComparePropByPredictionDeviation,
   Proposition,
@@ -34,7 +32,7 @@ import {
 
 const DashboardPage = () => {
   const [slot, setSlot] = useState("week");
-  const [startDate, setStartDate] = useState("2022-11-18");
+  const [startDate, setStartDate] = useState(moment().format("YYYY-MM-DD"));
 
   const theme = useTheme();
 
@@ -54,9 +52,9 @@ const DashboardPage = () => {
   if (error) {
     return <div>Error: {error.message}</div>;
   }
-  if (!propositions || propositions.length === 0) {
-    return <div>No propositions found</div>;
-  }
+  // if (!propositions || propositions.length === 0) {
+  //   return <div>No propositions found</div>;
+  // }
 
   let gameIDs: string[] = [];
 
@@ -84,7 +82,7 @@ const DashboardPage = () => {
 
   return (
     <Box>
-      <PrimarySearchAppBar />
+      <PrimarySearchAppBar date={startDate} onDateSelect={setStartDate} />
       <Grid container p={1} spacing={1}>
         {/* row 1 */}
         <Grid item xs={12} sx={{ mb: -2.25 }}>
@@ -94,7 +92,7 @@ const DashboardPage = () => {
             textTransform={"uppercase"}
             pl={2}
           >
-            Dashboard
+            Dashboard {moment(startDate).format("MM/DD/YYYY")}
           </Typography>
         </Grid>
         {/* row 2 */}
