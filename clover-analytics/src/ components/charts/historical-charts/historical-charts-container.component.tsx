@@ -19,8 +19,8 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
     slot === "day"
       ? endDate
       : slot === "week"
-      ? moment(endDate).subtract(7, "days").format("YYYY-MM-DD")
-      : moment(endDate).subtract(10, "days").format("YYYY-MM-DD"); // TODO: fly app runs out of memory
+      ? moment(endDate).subtract(3, "days").format("YYYY-MM-DD")
+      : moment(endDate).subtract(7, "days").format("YYYY-MM-DD"); // TODO: fly app runs out of memory
 
   const {
     loading,
@@ -53,7 +53,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                 color={slot === "month" ? "primary" : "secondary"}
                 variant={slot === "month" ? "outlined" : "text"}
               >
-                Month
+                Week
               </Button>
               <Button
                 size="small"
@@ -61,7 +61,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                 color={slot === "week" ? "primary" : "secondary"}
                 variant={slot === "week" ? "outlined" : "text"}
               >
-                Week
+                3 Days
               </Button>
               <Button
                 size="small"
