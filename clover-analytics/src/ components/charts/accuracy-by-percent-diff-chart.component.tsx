@@ -172,6 +172,24 @@ export const ModelAccuracyByPctDiff: React.FC<ModelAccuracyByPctDiffProps> = ({
             data: accuracy,
             type: "line",
             backgroundColor: COLORS.PRIMARY,
+            pointBorderColor: (context: any) => {
+              const index = context.dataIndex;
+              const value = context.dataset.data[index];
+              return value > 60
+                ? COLORS.HIGHER_DARK
+                : value > 50
+                ? COLORS.PUSH_DARK
+                : COLORS.LOWER_DARK;
+            },
+            pointBackgroundColor: (context: any) => {
+              const index = context.dataIndex;
+              const value = context.dataset.data[index];
+              return value > 60
+                ? COLORS.HIGHER_DARK
+                : value > 50
+                ? COLORS.PUSH_DARK
+                : COLORS.LOWER_DARK;
+            },
             borderColor: COLORS.PRIMARY,
             order: 0,
             yAxisID: "y2",
@@ -181,6 +199,7 @@ export const ModelAccuracyByPctDiff: React.FC<ModelAccuracyByPctDiffProps> = ({
       options={{
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
         plugins: {
           tooltip: {
             mode: "index",
