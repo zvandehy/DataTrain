@@ -160,7 +160,7 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	if propPrediction.EstimationAccuracy != nil {
 		*propPrediction.EstimationAccuracy = math.Round(*propPrediction.EstimationAccuracy*100) / 100
 	}
-	propPrediction.Significance = obj.StatDistribution.ZScore(propPrediction.Estimation)
+	propPrediction.Significance = math.Round((obj.StatDistribution.ZScore(propPrediction.Estimation)-obj.StatDistribution.ZScore(obj.Target))/obj.StatDistribution.ZScore(obj.Target)*100) / 100.0
 	return &propPrediction, nil
 }
 
