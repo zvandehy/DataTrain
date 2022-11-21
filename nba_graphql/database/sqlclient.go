@@ -485,9 +485,8 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 		}
 
 		// get stat distribution
-		var statDistribution *model.StatDistribution
-		var ok bool = false
-		if statDistribution, ok = c.statDistributions[stat]; !ok {
+		var statDistribution model.StatDistribution
+		if sd, ok := c.statDistributions[stat]; !ok {
 			statLookup, err := stat.SQL()
 			if err != nil {
 				logrus.Warnf("failed to get stat lookup: %v", stat)
@@ -499,7 +498,9 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 				continue
 			}
 			statDistribution.StatType = stat
-			c.statDistributions[stat] = statDistribution
+			c.statDistributions[stat] = &statDistribution
+		} else {
+			statDistribution = *sd
 		}
 
 		proposition := &model.Proposition{
@@ -510,7 +511,7 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 			LastModified:     rawResult.LastModified,
 			Type:             stat,
 			Outcome:          model.PropOutcomePending,
-			StatDistribution: statDistribution,
+			StatDistribution: &statDistribution,
 		}
 		if proposition.Game != nil && proposition.Game.Outcome != model.GameOutcomePending.String() {
 			score := proposition.Game.Score(stat)
