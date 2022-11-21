@@ -495,7 +495,7 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 			}
 			err = c.Select(&statDistribution, fmt.Sprintf("SELECT stddev(%[1]s) as stdDev, avg(%[1]s) as mean FROM playergames WHERE minutes > 10", statLookup))
 			if err != nil {
-				logrus.Warnf("failed to get stat distribution for %v (as %s) | %w", stat, statLookup, err)
+				logrus.Errorf("failed to get stat distribution for %v (as %s) | %w", stat, statLookup, err)
 				continue
 			}
 			statDistribution.StatType = stat
