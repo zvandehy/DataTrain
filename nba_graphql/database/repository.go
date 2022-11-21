@@ -32,7 +32,8 @@ type BasketballRepository interface {
 	AddQuery()
 	GetPlayers(ctx context.Context, withGames bool, playerFilters ...*model.PlayerFilter) ([]*model.Player, error)
 	GetPropositions(ctx context.Context, propositionFilter *model.PropositionFilter) ([]*model.Proposition, error)
-	SavePropositions(ctx context.Context, propositions []*model.DBProposition) (int, error)
+	SavePropositions(ctx context.Context, propositions []*model.Proposition) (int, error)
+	SaveDBPropositions(ctx context.Context, propositions []*model.DBProposition) (int, error)
 	SaveUpcomingGames(ctx context.Context, games []*model.PlayerGame) (int, error)
 	// GetTeamsByID(ctx context.Context, teamIDs []int) ([]*model.Team, error)
 	// GetTeamsByAbr(ctx context.Context, teamAbrs []string) ([]*model.Team, error)
@@ -126,7 +127,7 @@ func Getprizepicks(nbaClient BasketballRepository) {
 		fmt.Println(len(propositions), p.PlayerName, p.Target, p.StatType)
 		if len(propositions) >= 50 {
 			//upsert
-			x, err := nbaClient.SavePropositions(context.Background(), propositions)
+			x, err := nbaClient.SaveDBPropositions(context.Background(), propositions)
 			if err != nil {
 				if err != nil {
 					logrus.Warn(err)
@@ -139,7 +140,7 @@ func Getprizepicks(nbaClient BasketballRepository) {
 
 	fmt.Println("REMAINING TO IMPORT: ", len(propositions))
 	//upsert
-	_, err = nbaClient.SavePropositions(context.Background(), propositions)
+	_, err = nbaClient.SaveDBPropositions(context.Background(), propositions)
 	if err != nil {
 		if err != nil {
 			logrus.Warn(err)

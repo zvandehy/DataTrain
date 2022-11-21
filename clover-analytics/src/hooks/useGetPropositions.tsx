@@ -38,17 +38,13 @@ export const USE_GET_PROPOSITIONS = gql`
         input: {
           model: "SEASON"
           gameBreakdowns: [
-            { name: "2022-23", weight: 60, filter: { seasonMatch: true } }
+            { name: "2022-23", weight: 50, filter: { seasonMatch: true } }
             {
               name: "2021-22"
               weight: 30
               filter: { previousSeasonMatch: true }
             }
-            {
-              name: "Opponent"
-              weight: 10
-              filter: { opponentMatch: true, seasonMatch: true }
-            }
+            { name: "Opponent", weight: 20, filter: { opponentMatch: true } }
           ]
         }
       ) {
