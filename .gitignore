@@ -1,5 +1,5 @@
-./prizepicks
-./prizepicks/*
+prizepicks/*
+prizepicks
 
 app.env
 .DS_Store
@@ -110,4 +110,3 @@ dist
 
 # TernJS port file
 .tern-port
-prizepicks/projections_11-06-22-12pm.json
