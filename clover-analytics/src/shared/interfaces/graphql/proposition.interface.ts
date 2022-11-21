@@ -18,6 +18,7 @@ export interface PropPrediction {
   model: string;
   estimation: number;
   estimationAccuracy?: number;
+  significance: number;
   cumulativeOver: number;
   cumulativeUnder: number;
   cumulativePush: number;
@@ -37,11 +38,12 @@ export function ComparePropByPredictionDeviation(
 }
 
 export function GetPropPredictionDeviation(prop: Proposition): number {
-  return (
-    +(
-      abs((prop.prediction.estimation - prop.target) / prop.target) * 100
-    ).toFixed(2) || 0
-  );
+  return +prop.prediction?.significance.toFixed(2);
+  // return (
+  //   +(
+  //     abs((prop.prediction.estimation - prop.target) / prop.target) * 100
+  //   ).toFixed(2) || 0
+  // );
 }
 
 export interface PropBreakdown {

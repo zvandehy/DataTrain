@@ -53,6 +53,7 @@ export const USE_GET_PROPOSITIONS = gql`
         }
       ) {
         estimation
+        significance
         wager
         wagerOutcome
       }

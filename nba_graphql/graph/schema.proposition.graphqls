@@ -50,6 +50,7 @@ enum PropOutcome {
 type PropPrediction {
   estimation: Float!
   estimationAccuracy: Float
+  significance: Float!
   cumulativeOver: Int!
   cumulativeUnder: Int!
   cumulativePush: Int!

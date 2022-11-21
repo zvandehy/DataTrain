@@ -9,7 +9,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 )
@@ -27,6 +26,7 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	propPrediction := model.PropPrediction{
 		Estimation:         0.0,
 		EstimationAccuracy: nil,
+		Significance:       0.0,
 		CumulativeOver:     0,
 		CumulativeUnder:    0,
 		CumulativePush:     0,
@@ -67,7 +67,32 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	}
 
 	if distribute > 0 {
-		logrus.Errorf("Distributing extra weight not implemented: %d", distribute)
+		countValidBreakdowns := 0
+		for _, breakdown := range gamelogBreakdowns {
+			if breakdown.Weight > 0 {
+				countValidBreakdowns++
+			}
+		}
+		for _, breakdown := range similarplayerbreakdowns {
+			if breakdown.Weight > 0 {
+				countValidBreakdowns++
+			}
+		}
+		if countValidBreakdowns == 0 {
+			return nil, fmt.Errorf("No valid breakdowns")
+		}
+		distributePerBreakdown := distribute / float64(countValidBreakdowns)
+		for i, breakdown := range gamelogBreakdowns {
+			if breakdown.Weight > 0 {
+				gamelogBreakdowns[i].Weight += distributePerBreakdown
+			}
+		}
+		for i, breakdown := range similarplayerbreakdowns {
+			if breakdown.Weight > 0 {
+				similarplayerbreakdowns[i].Weight += distributePerBreakdown
+			}
+		}
+		// todo: similar team distribution
 	}
 
 	estimationWithoutSimilarPlayers := 0.0
@@ -85,6 +110,7 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		propPrediction.Breakdowns = append(propPrediction.Breakdowns, breakdown)
 	}
 	//TODO: similar teams
+
 	for _, breakdown := range similarplayerbreakdowns {
 		propPrediction.CumulativeOver += breakdown.Over * int(breakdown.Weight)
 		propPrediction.CumulativeUnder += breakdown.Under * int(breakdown.Weight)
@@ -134,6 +160,7 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	if propPrediction.EstimationAccuracy != nil {
 		*propPrediction.EstimationAccuracy = math.Round(*propPrediction.EstimationAccuracy*100) / 100
 	}
+	propPrediction.Significance = obj.StatDistribution.ZScore(propPrediction.Estimation)
 	return &propPrediction, nil
 }
 

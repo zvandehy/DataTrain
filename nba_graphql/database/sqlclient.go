@@ -19,6 +19,7 @@ type SQLClient struct {
 	League  string
 	Queries int
 	*sqlx.DB
+	statDistributions map[model.Stat]*model.StatDistribution
 	// PlayerSimilarity model.PlayerSnapshots
 	// TeamSimilarity   model.TeamSnapshots
 	// PlayerCache      map[string][]*model.Player
@@ -31,9 +32,10 @@ func NewSQLClient(league string) (*SQLClient, error) {
 		return nil, err
 	}
 	return &SQLClient{
-		League:  league,
-		DB:      db,
-		Queries: 0,
+		League:            league,
+		DB:                db,
+		Queries:           0,
+		statDistributions: make(map[model.Stat]*model.StatDistribution, 0),
 	}, nil
 }
 
@@ -65,10 +67,22 @@ func (c *SQLClient) AddQuery() {
 	c.Queries++
 }
 
-func (c *SQLClient) SavePropositions(ctx context.Context, propositions []*model.DBProposition) (int, error) {
+func (c *SQLClient) SaveDBPropositions(ctx context.Context, propositions []*model.DBProposition) (int, error) {
 	tx := c.MustBegin()
 	for _, proposition := range propositions {
 		tx.MustExec("REPLACE INTO propositions (playerID, gameID, playername, opponentID, lastModified, sportsbook, statType, target) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", proposition.PlayerID, proposition.GameID, proposition.PlayerName, proposition.OpponentID, proposition.LastModified, proposition.Sportsbook, proposition.StatType, proposition.Target)
+	}
+	err := tx.Commit()
+	if err != nil {
+		return 0, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+	return len(propositions), nil
+}
+
+func (c *SQLClient) SavePropositions(ctx context.Context, propositions []*model.Proposition) (int, error) {
+	tx := c.MustBegin()
+	for _, proposition := range propositions {
+		tx.MustExec("REPLACE INTO propositions (playerID, gameID, playername, opponentID, lastModified, sportsbook, statType, target) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", proposition.PlayerID, proposition.GameID, proposition.PlayerName, proposition.OpponentID, proposition.LastModified, proposition.Sportsbook, proposition.TypeRaw, proposition.Target)
 	}
 	err := tx.Commit()
 	if err != nil {
@@ -212,12 +226,20 @@ func (c *SQLClient) GetPlayers(ctx context.Context, withGames bool, playerFilter
 				}
 			}
 		}
-		logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players with games: %v", len(players), playerFilters), start))
+		if len(playerFilters) < 5 {
+			logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players with games: %v", len(players), playerFilters), start))
+		} else {
+			logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players with games from %d inputs", len(games), len(playerFilters)), start))
+		}
 		return players, nil
 	} else if cachedPlayers {
 		return players, nil
 	}
-	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players: %v", len(players), playerFilters), start))
+	if len(playerFilters) < 5 {
+		logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players: %v", len(players), playerFilters), start))
+	} else {
+		logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Players from %d inputs", len(players), len(playerFilters)), start))
+	}
 	return players, nil
 }
 
@@ -335,7 +357,11 @@ func (c *SQLClient) GetPlayerGames(ctx context.Context, inputs ...model.GameFilt
 	if len(games) == 0 {
 		logrus.Warnf("received 0 playergames using query: %v | %+v", query, args)
 	}
-	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Player Games: %v", len(games), inputs), start))
+	if len(inputs) < 5 {
+		logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Player Games: %v", len(games), inputs), start))
+	} else {
+		logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Player Games from %d inputs", len(games), len(inputs)), start))
+	}
 	return games, nil
 }
 
@@ -457,14 +483,34 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 			logrus.Warnf("failed to get stat type: %v", rawResult.Type)
 			continue
 		}
+
+		// get stat distribution
+		var statDistribution *model.StatDistribution
+		var ok bool = false
+		if statDistribution, ok = c.statDistributions[stat]; !ok {
+			statLookup, err := stat.SQL()
+			if err != nil {
+				logrus.Warnf("failed to get stat lookup: %v", stat)
+				continue
+			}
+			err = c.Select(&statDistribution, fmt.Sprintf("SELECT stddev(%[1]s) as stdDev, avg(%[1]s) as mean FROM playergames WHERE minutes > 10", statLookup))
+			if err != nil {
+				logrus.Warnf("failed to get stat distribution for %v", stat)
+				continue
+			}
+			statDistribution.StatType = stat
+			c.statDistributions[stat] = statDistribution
+		}
+
 		proposition := &model.Proposition{
-			Game:         rawResult.PlayerGame,
-			TypeRaw:      rawResult.Type,
-			Target:       rawResult.Target,
-			Sportsbook:   rawResult.Sportsbook,
-			LastModified: rawResult.LastModified,
-			Type:         stat,
-			Outcome:      model.PropOutcomePending,
+			Game:             rawResult.PlayerGame,
+			TypeRaw:          rawResult.Type,
+			Target:           rawResult.Target,
+			Sportsbook:       rawResult.Sportsbook,
+			LastModified:     rawResult.LastModified,
+			Type:             stat,
+			Outcome:          model.PropOutcomePending,
+			StatDistribution: statDistribution,
 		}
 		if proposition.Game != nil && proposition.Game.Outcome != model.GameOutcomePending.String() {
 			score := proposition.Game.Score(stat)

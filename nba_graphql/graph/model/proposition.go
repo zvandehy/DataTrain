@@ -21,15 +21,30 @@ type DBProposition struct {
 }
 
 type Proposition struct {
-	Sportsbook   SportsbookOption `db:"sportsbook" json:"sportsbook" bson:"sportsbook"`
-	Target       float64          `db:"target" json:"target" bson:"target"`
-	TypeRaw      string           `db:"statType" json:"type" bson:"type"`
-	Type         Stat             `json:"propType" bson:"propType"`
-	LastModified *time.Time       `json:"lastModified" bson:"lastModified"`
-	Outcome      PropOutcome      `json:"outcome" bson:"outcome"`
-	ActualResult *float64         `json:"actualResult" bson:"actualResult"`
-	Accuracy     float64          `json:"accuracy" bson:"accuracy"`
-	Game         *PlayerGame      `json:"game" bson:"game"`
+	PlayerID         int               `db:"playerID"`
+	GameID           string            `db:"gameID"`
+	OpponentID       int               `db:"opponentID"`
+	PlayerName       string            `db:"playerName"`
+	Sportsbook       SportsbookOption  `db:"sportsbook" json:"sportsbook" bson:"sportsbook"`
+	Target           float64           `db:"target" json:"target" bson:"target"`
+	TypeRaw          string            `db:"statType" json:"type" bson:"type"`
+	Type             Stat              `json:"propType" bson:"propType"`
+	LastModified     *time.Time        `json:"lastModified" bson:"lastModified"`
+	Outcome          PropOutcome       `json:"outcome" bson:"outcome"`
+	ActualResult     *float64          `json:"actualResult" bson:"actualResult"`
+	Accuracy         float64           `json:"accuracy" bson:"accuracy"`
+	Game             *PlayerGame       `json:"game" bson:"game"`
+	StatDistribution *StatDistribution `json:"statDistribution" bson:"statDistribution"`
+}
+
+type StatDistribution struct {
+	StatType Stat    `json:"statType" bson:"statType"`
+	Mean     float64 `db:"mean" json:"mean" bson:"mean"`
+	StdDev   float64 `db:"stdDev" json:"stdDev" bson:"stdDev"`
+}
+
+func (d *StatDistribution) ZScore(value float64) float64 {
+	return (value - d.Mean) / d.StdDev
 }
 
 func (p *Proposition) UnmarshalBSON(data []byte) error {

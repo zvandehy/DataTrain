@@ -286,6 +286,85 @@ func NewStat(stat string) (Stat, error) {
 	}
 }
 
+func (s Stat) SQL() (string, error) {
+	switch s {
+	case Points:
+		return "points", nil
+	case Assists:
+		return "assists", nil
+	case Rebounds:
+		return "rebounds", nil
+	case Steals:
+		return "steals", nil
+	case Blocks:
+		return "blocks", nil
+	case ThreePointersMade:
+		return "threePointersMade", nil
+	case ThreePointersAttempted:
+		return "threePointersAttempted", nil
+	case ThreePointPercentage:
+		return "", fmt.Errorf("ThreePointPercentage is not a valid SQL stat")
+	case FreeThrowsMade:
+		return "freeThrowsMade", nil
+	case FreeThrowsAttempted:
+		return "freeThrowsAttempted", nil
+	case FreeThrowsPercentage:
+		return "", fmt.Errorf("FreeThrowsPercentage is not a valid SQL stat")
+	case FieldGoalsMade:
+		return "fieldGoalsMade", nil
+	case FieldGoalsAttempted:
+		return "fieldGoalsAttempted", nil
+	case FieldGoalPercentage:
+		return "", fmt.Errorf("FieldGoalPercentage is not a valid SQL stat")
+	case EffectiveFieldGoalPercentage:
+		return "", fmt.Errorf("EffectiveFieldGoalPercentage is not a valid SQL stat")
+	case TrueShootingPercentage:
+		return "", fmt.Errorf("TrueShootingPercentage is not a valid SQL stat")
+	case Minutes:
+		return "minutes", nil
+	case OffensiveRebounds:
+		return "offensiveRebounds", nil
+	case DefensiveRebounds:
+		return "defensiveRebounds", nil
+	case AssistPercentage:
+		return "", fmt.Errorf("AssistPercentage is not a valid SQL stat")
+	case OffensiveReboundPercentage:
+		return "", fmt.Errorf("OffensiveReboundPercentage is not a valid SQL stat")
+	case DefensiveReboundPercentage:
+		return "", fmt.Errorf("DefensiveReboundPercentage is not a valid SQL stat")
+	case Usage:
+		return "", fmt.Errorf("Usage is not a valid SQL stat")
+	case Turnovers:
+		return "turnovers", nil
+	case GamesPlayed:
+		return "", fmt.Errorf("GamesPlayed is not a valid SQL stat")
+	case PersonalFouls:
+		return "personalFouls", nil
+	case PersonalFoulsDrawn:
+		return "personalFoulsDrawn", nil
+	case PointsReboundsAssists:
+		return "points+rebounds+assists", nil
+	case PointsRebounds:
+		return "points+rebounds", nil
+	case PointsAssists:
+		return "points+assists", nil
+	case ReboundsAssists:
+		return "rebounds+assists", nil
+	case BlocksSteals:
+		return "blocks+steals", nil
+	case FantasyScore:
+		return "points+rebounds*1.2+assists*1.5+steals*3+blocks*3-turnovers", nil
+	case Height:
+		return "", fmt.Errorf("Height is not a valid SQL stat")
+	case Weight:
+		return "", fmt.Errorf("Weight is not a valid SQL stat")
+	case DoubleDouble:
+		return "", fmt.Errorf("DoubleDouble is not a valid SQL stat")
+	default:
+		return "", fmt.Errorf("%s is not a valid SQL stat", s)
+	}
+}
+
 func (s *Stat) UnmarshalJSON(data []byte) error {
 	v, err := NewStat(string(data[:]))
 	if err != nil {

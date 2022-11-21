@@ -87,6 +87,7 @@ type PropBreakdown struct {
 type PropPrediction struct {
 	Estimation         float64          `json:"estimation"`
 	EstimationAccuracy *float64         `json:"estimationAccuracy"`
+	Significance       float64          `json:"significance"`
 	CumulativeOver     int              `json:"cumulativeOver"`
 	CumulativeUnder    int              `json:"cumulativeUnder"`
 	CumulativePush     int              `json:"cumulativePush"`

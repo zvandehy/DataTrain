@@ -20,7 +20,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
       ? endDate
       : slot === "week"
       ? moment(endDate).subtract(7, "days").format("YYYY-MM-DD")
-      : moment(endDate).subtract(1, "month").format("YYYY-MM-DD");
+      : moment(endDate).subtract(10, "days").format("YYYY-MM-DD"); // TODO: fly app runs out of memory
 
   const {
     loading,

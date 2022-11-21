@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -17,7 +16,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
-	"github.com/zvandehy/DataTrain/nba_graphql/util"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // need list of games for a specific player
@@ -83,10 +82,17 @@ type Row struct {
 }
 
 var altNames map[string]string = map[string]string{
-	"Nicolas Claxton": "Nic Claxton",
-	"OG Anunoby":      "O.G. Anunoby",
-	"Marcus Morris":   "Marcus Morris Sr.",
-	"Nah'Shon Hyland": "Bones Hyland",
+	"Nicolas Claxton":              "Nic Claxton",
+	"OG Anunoby":                   "O.G. Anunoby",
+	"Marcus Morris":                "Marcus Morris Sr.",
+	"Nah'Shon Hyland":              "Bones Hyland",
+	"Kevin \"Slim Reaper\" Durant": "Kevin Durant",
+	"The Greek Freak":              "Giannis Antetokounmpo",
+	"Greek Freak":                  "Giannis Antetokounmpo",
+	"Ja Morantula":                 "Ja Morant",
+	"James \"The Beard\" Harden":   "James Harden",
+	"Ice Trae Young":               "Trae Young",
+	"Ice Trae":                     "Trae Young",
 }
 
 func getPlayerName(prop model.PrizePicksData, itemIDToNameMap map[string]string) (string, error) {
@@ -329,117 +335,143 @@ func main() {
 	}
 	fmt.Println("Successfully connected to PlanetScale!")
 
-	players, err := db.GetPlayers(context.Background(), false)
+	mongodb, err := database.ConnectDB(context.Background(), "nba")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Successfully retrieved %d players!\n", len(players))
 
-	// getgames(db)
-	// get random player from players
-
-	// get random int between 0 and len(players)
-	// rand.Seed(time.Now().UnixNano())
-	// randPlayer := players[rand.Intn(len(players))]
-	// // player := players[24]
-	// fmt.Println(randPlayer.Name)
-	// sim, err := db.GetSimilarPlayers(
-	// 	context.Background(),
-	// 	randPlayer.PlayerID,
-	// 	&model.SimilarPlayerInput{Limit: 100},
-	// 	"",
-	// )
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// for _, simPlayer := range sim {
-	// 	fmt.Println(simPlayer.Name, simPlayer.CurrentTeam, len(simPlayer.GamesCache))
-	// }
-
-	// getprizepicks(db)
-
-	// mongodb, err := database.ConnectDB(context.Background(), "nba")
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// cur, err := mongodb.Collection("projections").Find(context.Background(), bson.M{})
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer cur.Close(context.Background())
+	cur, err := mongodb.Collection("projections").Find(context.Background(), bson.M{"propositions.propType": bson.M{"$exists": 1}})
+	if err != nil {
+		panic(err)
+	}
+	defer cur.Close(context.Background())
 
 	// countskipstarttime := 0
-	// countskipproposiitons := 0
+	countskipproposiitons := 0
+	propositions := make([]*model.Proposition, 0)
+	gameInputs := []model.GameFilter{}
+	playerInputs := []*model.PlayerFilter{}
+	for cur.Next(context.Background()) {
 
-	// for cur.Next(context.Background()) {
-	// 	propositions := make([]*model.DBProposition, 0)
-	// 	var projection struct {
-	// 		Date         string `bson:"date"`
-	// 		PlayerName   string `bson:"playername"`
-	// 		OpponentAbr  string `bson:"opponent"`
-	// 		Propositions []struct {
-	// 			Sportsbook     string     `bson:"sportsbook"`
-	// 			Target         float64    `bson:"target"`
-	// 			Type           string     `bson:"type"`
-	// 			LastModifiedAt *time.Time `bson:"lastModified"`
-	// 		} `bson:"propositions"`
-	// 		StartTime *time.Time `bson:"startTime"`
-	// 	}
-	// 	err := cur.Decode(&projection)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
+		var projection struct {
+			Date         string `bson:"date"`
+			PlayerName   string `bson:"playername"`
+			OpponentAbr  string `bson:"opponent"`
+			Propositions []struct {
+				Sportsbook     string     `bson:"sportsbook"`
+				Target         float64    `bson:"target"`
+				Type           string     `bson:"propType"`
+				LastModifiedAt *time.Time `bson:"lastModified"`
+			} `bson:"propositions"`
+			StartTime *time.Time `bson:"startTime"`
+		}
+		err := cur.Decode(&projection)
+		if err != nil {
+			panic(err)
+		}
+		if projection.Propositions == nil || len(projection.Propositions) == 0 {
+			countskipproposiitons++
+			continue
+		}
 
-	// 	if projection.StartTime == nil {
-	// 		countskipstarttime++
-	// 		continue
-	// 	}
+		for _, proposition := range projection.Propositions {
+			// if projection.PlayerName contains "starters"
+			if strings.Contains(strings.ToLower(projection.PlayerName), "starters") {
+				fmt.Println("skipping starters prop")
+				continue
+			}
+			projection.PlayerName = strings.TrimSpace(projection.PlayerName)
+			name, ok := altNames[projection.PlayerName]
+			if !ok {
+				name = projection.PlayerName
+			} else {
+				projection.PlayerName = name
+			}
+			propositions = append(propositions, &model.Proposition{
+				PlayerID:     0,
+				GameID:       "",
+				OpponentID:   0,
+				PlayerName:   projection.PlayerName,
+				TypeRaw:      proposition.Type,
+				Target:       proposition.Target,
+				Sportsbook:   model.SportsbookOption(proposition.Sportsbook),
+				LastModified: proposition.LastModifiedAt,
+			})
 
-	// 	if projection.Propositions == nil || len(projection.Propositions) == 0 || (projection.Propositions != nil && len(projection.Propositions) > 0 && projection.Propositions[0].Type == "") {
-	// 		countskipproposiitons++
-	// 		continue
-	// 	}
+			gameInputs = append(gameInputs, model.GameFilter{
+				StartDate: &projection.Date,
+				EndDate:   &projection.Date,
+			})
+			playerInputs = append(playerInputs, &model.PlayerFilter{
+				Name: &name,
+			})
+		}
+	}
 
-	// 	opponentID, err := getTeamID(db, projection.OpponentAbr)
-	// 	if err != nil {
-	// 		panic(fmt.Errorf("error getting opponent id from %s: %w", projection.OpponentAbr, err))
-	// 	}
-	// 	playerID, err := getPlayerID(db, projection.PlayerName)
-	// 	if err != nil {
-	// 		panic(fmt.Errorf("error getting player id from %s: %w", projection.PlayerName, err))
-	// 	}
-	// 	filter := &model.GameFilter{PlayerID: &playerID, StartDate: &projection.Date, EndDate: &projection.Date}
-	// 	games, err := db.GetPlayerGames(context.Background(), filter)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	if len(games) == 0 {
-	// 		logrus.WithFields(logrus.Fields{"filter": filter, "playername": projection.PlayerName}).Warnf("could not find game for %s on %s", projection.PlayerName, projection.Date)
-	// 		continue
-	// 	}
-	// 	gameID := games[0].GameID
-	// 	for _, proposition := range projection.Propositions {
-	// 		prop := model.DBProposition{
-	// 			PlayerName:   projection.PlayerName,
-	// 			Date:         projection.StartTime,
-	// 			OpponentID:   opponentID,
-	// 			PlayerID:     playerID,
-	// 			GameID:       gameID,
-	// 			StatType:     proposition.Type,
-	// 			Target:       proposition.Target,
-	// 			Sportsbook:   proposition.Sportsbook,
-	// 			LastModified: proposition.LastModifiedAt,
-	// 		}
-	// 		propositions = append(propositions, &prop)
-	// 	}
+	fmt.Println(len(propositions), " received from mongo")
 
-	// 	n, err := db.SavePropositions(context.Background(), propositions)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	fmt.Printf("saved %d propositions\n", n)
-	// }
+	games, err := db.GetPlayerGames(context.Background(), gameInputs...)
+	if err != nil {
+		panic(err)
+	}
+	players, err := db.GetPlayers(context.Background(), false, playerInputs...)
+	if err != nil {
+		panic(err)
+	}
+
+	parsedProps := make([]*model.Proposition, 0)
+	for i, proposition := range propositions {
+		player, err := findPlayer(players, proposition.PlayerName)
+		if err != nil {
+			fmt.Printf("%v skipping %s on %s\n", err, proposition.PlayerName, *gameInputs[i].EndDate)
+			continue
+		}
+		proposition.PlayerID = player.PlayerID
+
+		game, err := findGame(games, proposition.PlayerID, *gameInputs[i].EndDate)
+		if err != nil {
+			fmt.Printf("%v skipping %s on %s\n", err, proposition.PlayerName, *gameInputs[i].EndDate)
+			continue
+		} else {
+			proposition.GameID = game.GameID
+			proposition.OpponentID = game.OpponentID
+		}
+		parsedProps = append(parsedProps, proposition)
+	}
+	fmt.Println("FOUND PROPS ", len(parsedProps))
+	saveProps := make([]*model.Proposition, 50)
+	for i, proposition := range parsedProps {
+		saveProps[i%50] = proposition
+		if i%50 == 49 {
+			x, err := db.SavePropositions(context.Background(), saveProps)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println("saved ", x)
+			saveProps = make([]*model.Proposition, 50)
+			i = -1
+		}
+	}
+}
+
+func findGame(games []*model.PlayerGame, playerID int, date string) (model.PlayerGame, error) {
+	for _, game := range games {
+		gameDate := game.Date.Format("2006-01-02")
+		if game.PlayerID == playerID && gameDate == date {
+			return *game, nil
+		}
+	}
+	return model.PlayerGame{}, errors.New("game not found")
+}
+
+func findPlayer(players []*model.Player, name string) (model.Player, error) {
+	for _, player := range players {
+		if player.Name == name {
+			return *player, nil
+		}
+	}
+
+	return model.Player{}, fmt.Errorf("player not found: %v", name)
 }
 
 func getgames(db *database.SQLClient) {
@@ -562,78 +594,4 @@ func getSchedule() *model.Schedule {
 		panic(err)
 	}
 	return &schedule
-}
-
-func Getprizepicks(nbaClient database.BasketballRepository) {
-	// TODO: THIS IS SLOWWWW
-	leagueID := 7
-	if strings.ToLower(nbaClient.GetLeague()) == "wnba" {
-		leagueID = 3
-	}
-	start := time.Now()
-	var propositions []*model.DBProposition
-	url := fmt.Sprintf("https://partner-api.prizepicks.com/projections?single_stat=True&per_page=1000&league_id=%d", leagueID)
-	res, err := http.Get(url)
-	if err != nil {
-		logrus.Warnf("couldn't retrieve prizepicks projections for today: %v", err)
-		return
-	}
-	bytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		logrus.Warnf("couldn't read prizepicks projections for today: %v", err)
-		return
-	}
-	// TODO: not the most elegant parsing, but it works
-	var prizepicks model.PrizePicks
-	if err := json.Unmarshal(bytes, &prizepicks); err != nil {
-		logrus.Warnf("couldn't decode prizepicks projections for today: %v", err)
-		return
-	}
-	var idToName map[string]string = make(map[string]string)
-	for _, inc := range prizepicks.Included {
-		idToName[inc.ID] = inc.Attributes.Name
-	}
-	schedule := getSchedule()
-	for _, prop := range prizepicks.Data {
-		if prop.Attributes.Is_promo {
-			logrus.Warn("skipping promo")
-			continue
-		}
-		p, err := ParsePrizePickProposition(nbaClient, *schedule, prop, idToName)
-		if err != nil {
-			logrus.WithFields(logrus.Fields{"error": err, "prop": prop}).Warn("couldn't parse prizepicks proposition")
-			continue
-		}
-		propositions = append(propositions, p)
-		fmt.Println(len(propositions), p.PlayerName, p.Target, p.StatType)
-		if len(propositions) >= 20 {
-			//upsert
-			x, err := nbaClient.SavePropositions(context.Background(), propositions)
-			if err != nil {
-				if err != nil {
-					logrus.Warn(err)
-				}
-			}
-			fmt.Println("Uploaded ", x, " propositions")
-			propositions = []*model.DBProposition{}
-		}
-	}
-
-	fmt.Println("REMAINING TO IMPORT: ", len(propositions))
-	//upsert
-	countprops, err := nbaClient.SavePropositions(context.Background(), propositions)
-	if err != nil {
-		if err != nil {
-			logrus.Warn(err)
-		}
-	}
-	fmt.Println("Imported ", countprops, " propositions")
-	games := []*model.PlayerGame{} //TODO: get games
-	countgames, err := nbaClient.SaveUpcomingGames(context.Background(), games)
-	if err != nil {
-		if err != nil {
-			logrus.Warn(err)
-		}
-	}
-	logrus.Printf(util.TimeLog(fmt.Sprintf("Retrieved %s propositions from PrizePicks and inserted %d games", nbaClient.GetLeague(), countgames), start))
 }

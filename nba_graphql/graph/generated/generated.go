@@ -189,6 +189,7 @@ type ComplexityRoot struct {
 		CumulativeUnderPct func(childComplexity int) int
 		Estimation         func(childComplexity int) int
 		EstimationAccuracy func(childComplexity int) int
+		Significance       func(childComplexity int) int
 		Wager              func(childComplexity int) int
 		WagerOutcome       func(childComplexity int) int
 	}
@@ -1223,6 +1224,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PropPrediction.EstimationAccuracy(childComplexity), true
 
+	case "PropPrediction.significance":
+		if e.complexity.PropPrediction.Significance == nil {
+			break
+		}
+
+		return e.complexity.PropPrediction.Significance(childComplexity), true
+
 	case "PropPrediction.wager":
 		if e.complexity.PropPrediction.Wager == nil {
 			break
@@ -1773,6 +1781,132 @@ var sources = []*ast.Source{
   propositions(input: PropositionFilter!): [Proposition!]!
 }
 
+input PropositionFilter {
+  sportsbook: SportsbookOption
+  propositionType: Stat # TODO: Limit to only stats that make sense
+  startDate: String
+  endDate: String
+  PlayerID: Int
+  PlayerName: String
+  TeamID: Int
+  TeamName: String
+}
+
+input PlayerFilter {
+  name: String
+  playerID: Int
+  seasons: [SeasonOption!]
+  positionStrict: Position
+  positionStrictMatch: Boolean
+  positionLoose: Position
+  positionLooseMatch: Boolean
+  teamABR: String
+  teamID: Int
+  startDate: String
+  endDate: String
+  statFilters: [StatFilter!]
+  withPropositions: PropositionFilter
+  withGames: GameFilter
+}
+
+input StatFilter {
+  period: Period
+  stat: Stat!
+  mode: StatMode!
+  operator: Operator!
+  value: Float!
+}
+
+input Period {
+  startDate: String
+  endDate: String
+  # TODO: support match season
+  matchSeason: Boolean
+  matchPreviousSeason: Boolean
+  seasons: [SeasonOption!]
+  limit: Int
+}
+
+input TeamFilter {
+  name: String
+  teamID: Int
+  abbreviation: String
+}
+
+input GameFilter {
+  teamID: Int
+  opponentID: Int
+  opponentMatch: Boolean
+  playerID: Int
+  gameID: String
+  # TODO: Replace seasons, dates, and gameType with Period
+  seasonMatch: Boolean
+  previousSeasonMatch: Boolean
+  seasons: [SeasonOption!]
+  startDate: String
+  endDate: String
+  lastX: Int
+  gameType: GameType
+  gameTypeMatch: Boolean
+  homeOrAway: HomeOrAway
+  homeOrAwayMatch: Boolean
+  statFilters: [StatFilter!]
+  outcome: GameOutcome
+}
+
+enum GameOutcome {
+  WIN
+  LOSS
+  PENDING
+}
+
+enum GameType {
+  REGULAR_SEASON
+  PLAYOFFS
+}
+
+enum HomeOrAway {
+  HOME
+  AWAY
+}
+
+enum StatMode {
+  PER_GAME
+  PER_36
+  PER_MINUTE
+  TOTAL
+}
+
+enum Operator {
+  GT
+  GTE
+  LT
+  LTE
+  EQ
+  NEQ
+}
+
+enum Position {
+  G
+  F
+  C
+  G_F
+  F_G
+  F_C
+  C_F
+}
+
+enum SportsbookOption {
+  PrizePicks
+  UnderdogFantasy
+}
+
+enum SeasonOption {
+  SEASON_2022_23
+  SEASON_2021_22
+  SEASON_2020_21
+}
+
 enum Stat {
   Points
   Assists
@@ -1818,133 +1952,6 @@ enum Stat {
   Passes
   PotentialAssists
   AssistConversionRate
-}
-
-input PropositionFilter {
-  sportsbook: SportsbookOption
-  propositionType: Stat # TODO: Limit to only stats that make sense
-  startDate: String
-  endDate: String
-  PlayerID: Int
-  PlayerName: String
-  TeamID: Int
-  TeamName: String
-}
-
-enum SportsbookOption {
-  PrizePicks
-  UnderdogFantasy
-}
-
-input PlayerFilter {
-  name: String
-  playerID: Int
-  seasons: [SeasonOption!]
-  positionStrict: Position
-  positionStrictMatch: Boolean
-  positionLoose: Position
-  positionLooseMatch: Boolean
-  teamABR: String
-  teamID: Int
-  startDate: String
-  endDate: String
-  statFilters: [StatFilter!]
-  withPropositions: PropositionFilter
-  withGames: GameFilter
-}
-
-enum SeasonOption {
-  SEASON_2022_23
-  SEASON_2021_22
-  SEASON_2020_21
-}
-
-input StatFilter {
-  period: Period
-  stat: Stat!
-  mode: StatMode!
-  operator: Operator!
-  value: Float!
-}
-
-input Period {
-  startDate: String
-  endDate: String
-  # TODO: support match season
-  matchSeason: Boolean
-  matchPreviousSeason: Boolean
-  seasons: [SeasonOption!]
-  limit: Int
-}
-
-enum StatMode {
-  PER_GAME
-  PER_36
-  PER_MINUTE
-  TOTAL
-}
-
-enum Operator {
-  GT
-  GTE
-  LT
-  LTE
-  EQ
-  NEQ
-}
-
-enum Position {
-  G
-  F
-  C
-  G_F
-  F_G
-  F_C
-  C_F
-}
-
-input TeamFilter {
-  name: String
-  teamID: Int
-  abbreviation: String
-}
-
-input GameFilter {
-  teamID: Int
-  opponentID: Int
-  opponentMatch: Boolean
-  playerID: Int
-  gameID: String
-  # TODO: Replace seasons, dates, and gameType with Period
-  # TODO: Implement Season/PreviousSeason Match, but could also just implement it in Period and add a period here
-  seasonMatch: Boolean
-  previousSeasonMatch: Boolean
-  seasons: [SeasonOption!]
-  startDate: String
-  endDate: String
-  lastX: Int
-  gameType: GameType
-  gameTypeMatch: Boolean
-  homeOrAway: HomeOrAway
-  homeOrAwayMatch: Boolean
-  statFilters: [StatFilter!]
-  outcome: GameOutcome
-}
-
-enum GameOutcome {
-  WIN
-  LOSS
-  PENDING
-}
-
-enum GameType {
-  REGULAR_SEASON
-  PLAYOFFS
-}
-
-enum HomeOrAway {
-  HOME
-  AWAY
 }
 `, BuiltIn: false},
 	{Name: "../schema.player.graphqls", Input: `# TODO: Add average(input: filter{period, mode, limit/filter?})
@@ -2104,6 +2111,7 @@ enum PropOutcome {
 type PropPrediction {
   estimation: Float!
   estimationAccuracy: Float
+  significance: Float!
   cumulativeOver: Int!
   cumulativeUnder: Int!
   cumulativePush: Int!
@@ -8625,6 +8633,50 @@ func (ec *executionContext) fieldContext_PropPrediction_estimationAccuracy(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _PropPrediction_significance(ctx context.Context, field graphql.CollectedField, obj *model.PropPrediction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropPrediction_significance(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Significance, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropPrediction_significance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropPrediction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PropPrediction_cumulativeOver(ctx context.Context, field graphql.CollectedField, obj *model.PropPrediction) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PropPrediction_cumulativeOver(ctx, field)
 	if err != nil {
@@ -9539,6 +9591,8 @@ func (ec *executionContext) fieldContext_Proposition_prediction(ctx context.Cont
 				return ec.fieldContext_PropPrediction_estimation(ctx, field)
 			case "estimationAccuracy":
 				return ec.fieldContext_PropPrediction_estimationAccuracy(ctx, field)
+			case "significance":
+				return ec.fieldContext_PropPrediction_significance(ctx, field)
 			case "cumulativeOver":
 				return ec.fieldContext_PropPrediction_cumulativeOver(ctx, field)
 			case "cumulativeUnder":
@@ -16422,6 +16476,13 @@ func (ec *executionContext) _PropPrediction(ctx context.Context, sel ast.Selecti
 
 			out.Values[i] = ec._PropPrediction_estimationAccuracy(ctx, field, obj)
 
+		case "significance":
+
+			out.Values[i] = ec._PropPrediction_significance(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "cumulativeOver":
 
 			out.Values[i] = ec._PropPrediction_cumulativeOver(ctx, field, obj)
