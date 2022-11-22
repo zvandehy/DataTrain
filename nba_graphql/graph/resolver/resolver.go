@@ -295,7 +295,6 @@ func PoolVariance(datasets [][]float64) float64 {
 		varianceOfMeans += math.Pow(means[i]-pooledMean, 2) * float64(weights[i])
 	}
 	varianceOfMeans /= float64(n)
-	fmt.Println(meanOfVariances, varianceOfMeans, meanOfVariances+varianceOfMeans)
 	return math.Round((meanOfVariances+varianceOfMeans)*100) / 100.0
 
 }

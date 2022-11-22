@@ -190,10 +190,10 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 			log.Fatal("NaN variance", len(varianceDatasets))
 		}
 	}
-	pooledStdDev := math.Sqrt(PoolVariance(varianceDatasets))
+	pooledStdDev := math.Round(math.Sqrt(PoolVariance(varianceDatasets))*100) / 100.0
 	propPrediction.StdDev = pooledStdDev
 	significance, wager := model.PValue(propPrediction.Estimation, pooledStdDev, obj.Target)
-	propPrediction.Significance = significance
+	propPrediction.Significance = math.Round((significance*100)*100) / 100
 	propPrediction.Wager = wager
 	return &propPrediction, nil
 }
