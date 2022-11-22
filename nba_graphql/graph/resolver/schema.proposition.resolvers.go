@@ -6,9 +6,11 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"log"
 	"math"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/generated"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 )
@@ -36,12 +38,14 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		Wager:              model.WagerOver,
 		WagerOutcome:       model.WagerOutcomePending,
 		Breakdowns:         []*model.PropBreakdown{},
+		StdDev:             0.0,
 	}
 	gamelogBreakdowns := r.GetGamelogBreakdowns(ctx, input.GameBreakdowns, obj.Game, &obj.Target, obj.Type)
 	similarplayerbreakdowns := []*model.PropBreakdown{}
 	if input.SimilarPlayerInput != nil {
 		similarplayerbreakdowns = r.GetSimilarPlayerBreakdowns(ctx, input.SimilarPlayerInput, obj.Game, obj.Type)
 	}
+	varianceDatasets := [][]float64{}
 
 	gamelogCumulativeWeight := 0.0
 	for _, breakdown := range gamelogBreakdowns {
@@ -108,6 +112,13 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		estimationWithoutSimilarPlayers += ((breakdown.Weight / 100.0) + distributeWeightWithoutSimilarPlayers) * breakdown.DerivedAverage
 
 		propPrediction.Breakdowns = append(propPrediction.Breakdowns, breakdown)
+		if len(breakdown.DerivedGames) > 0 {
+			dataset := []float64{}
+			for _, game := range breakdown.DerivedGames {
+				dataset = append(dataset, game.Score(obj.Type))
+			}
+			varianceDatasets = append(varianceDatasets, dataset)
+		}
 	}
 	//TODO: similar teams
 
@@ -116,17 +127,23 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		propPrediction.CumulativeUnder += breakdown.Under * int(breakdown.Weight)
 		propPrediction.CumulativePush += breakdown.Push * int(breakdown.Weight)
 		propPrediction.Estimation = estimationWithoutSimilarPlayers + ((breakdown.PctChange/100.0)*estimationWithoutSimilarPlayers)*(breakdown.Weight/100.0)
+
+		// dataset := []float64{}
+		// for _, game := range breakdown.DerivedGames {
+		// 	dataset = append(dataset, game.Score(obj.Type))
+		// }
+		// varianceDatasets = append(varianceDatasets, dataset)
 	}
 
 	propPrediction.CumulativeOverPct = float64(propPrediction.CumulativeOver) / float64(propPrediction.CumulativeOver+propPrediction.CumulativeUnder+propPrediction.CumulativePush)
 	propPrediction.CumulativeUnderPct = float64(propPrediction.CumulativeUnder) / float64(propPrediction.CumulativeOver+propPrediction.CumulativeUnder+propPrediction.CumulativePush)
 	propPrediction.CumulativePushPct = float64(propPrediction.CumulativePush) / float64(propPrediction.CumulativeOver+propPrediction.CumulativeUnder+propPrediction.CumulativePush)
 
-	if propPrediction.Estimation > obj.Target {
-		propPrediction.Wager = model.WagerOver
-	} else {
-		propPrediction.Wager = model.WagerUnder
-	}
+	// if propPrediction.Estimation > obj.Target {
+	// 	propPrediction.Wager = model.WagerOver
+	// } else {
+	// 	propPrediction.Wager = model.WagerUnder
+	// }
 
 	if obj.ActualResult != nil {
 		if *obj.ActualResult > obj.Target {
@@ -160,7 +177,24 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	if propPrediction.EstimationAccuracy != nil {
 		*propPrediction.EstimationAccuracy = math.Round(*propPrediction.EstimationAccuracy*100) / 100
 	}
-	propPrediction.Significance = math.Round((obj.StatDistribution.ZScore(propPrediction.Estimation)-obj.StatDistribution.ZScore(obj.Target))/obj.StatDistribution.ZScore(obj.Target)*100) / 100.0
+	if len(varianceDatasets) == 0 {
+		logrus.Error("No variance datasets")
+	} else {
+		logrus.Warn("Pooled variance is: ", PoolVariance(varianceDatasets))
+		if math.IsNaN(PoolVariance(varianceDatasets)) {
+			for _, dataset := range varianceDatasets {
+				logrus.Warn("Dataset length: ", len(dataset))
+				logrus.Warn("Variance is: ", Variance(dataset))
+				logrus.Warn("Mean is:", Mean(dataset))
+			}
+			log.Fatal("NaN variance", len(varianceDatasets))
+		}
+	}
+	pooledStdDev := math.Sqrt(PoolVariance(varianceDatasets))
+	propPrediction.StdDev = pooledStdDev
+	significance, wager := model.PValue(propPrediction.Estimation, pooledStdDev, obj.Target)
+	propPrediction.Significance = significance
+	propPrediction.Wager = wager
 	return &propPrediction, nil
 }
 

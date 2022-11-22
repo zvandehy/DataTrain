@@ -251,7 +251,7 @@ func (r *playerGameResolver) Points(ctx context.Context, obj *model.PlayerGame) 
 func (r *playerGameResolver) Player(ctx context.Context, obj *model.PlayerGame) (*model.Player, error) {
 	player, err := dataloader.For(ctx).PlayerByID.Load(obj.PlayerID)
 	if err != nil {
-		logrus.Errorf("Error loading player '%v' from: %v | %w", obj.PlayerID, obj, err)
+		logrus.Errorf("Error loading player '%v' from: %v | %v", obj.PlayerID, obj, err)
 		return nil, err
 	}
 	if player == nil {

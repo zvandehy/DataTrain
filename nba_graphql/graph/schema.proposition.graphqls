@@ -60,6 +60,7 @@ type PropPrediction {
   wager: Wager!
   wagerOutcome: WagerOutcome!
   breakdowns: [PropBreakdown!]!
+  stdDev: Float!
 }
 
 enum Wager {
@@ -87,6 +88,7 @@ type PropBreakdown {
   pctChange: Float!
   base: Float!
   derivedGames: [PlayerGame!] #recommend to only query derivedGames when analysing a specific player/game
+  stdDev: Float!
 }
 
 type GamePrediction {

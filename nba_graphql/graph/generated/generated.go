@@ -174,6 +174,7 @@ type ComplexityRoot struct {
 		PctChange      func(childComplexity int) int
 		Push           func(childComplexity int) int
 		PushPct        func(childComplexity int) int
+		StdDev         func(childComplexity int) int
 		Under          func(childComplexity int) int
 		UnderPct       func(childComplexity int) int
 		Weight         func(childComplexity int) int
@@ -190,6 +191,7 @@ type ComplexityRoot struct {
 		Estimation         func(childComplexity int) int
 		EstimationAccuracy func(childComplexity int) int
 		Significance       func(childComplexity int) int
+		StdDev             func(childComplexity int) int
 		Wager              func(childComplexity int) int
 		WagerOutcome       func(childComplexity int) int
 	}
@@ -1140,6 +1142,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PropBreakdown.PushPct(childComplexity), true
 
+	case "PropBreakdown.stdDev":
+		if e.complexity.PropBreakdown.StdDev == nil {
+			break
+		}
+
+		return e.complexity.PropBreakdown.StdDev(childComplexity), true
+
 	case "PropBreakdown.under":
 		if e.complexity.PropBreakdown.Under == nil {
 			break
@@ -1230,6 +1239,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PropPrediction.Significance(childComplexity), true
+
+	case "PropPrediction.stdDev":
+		if e.complexity.PropPrediction.StdDev == nil {
+			break
+		}
+
+		return e.complexity.PropPrediction.StdDev(childComplexity), true
 
 	case "PropPrediction.wager":
 		if e.complexity.PropPrediction.Wager == nil {
@@ -2121,6 +2137,7 @@ type PropPrediction {
   wager: Wager!
   wagerOutcome: WagerOutcome!
   breakdowns: [PropBreakdown!]!
+  stdDev: Float!
 }
 
 enum Wager {
@@ -2148,6 +2165,7 @@ type PropBreakdown {
   pctChange: Float!
   base: Float!
   derivedGames: [PlayerGame!] #recommend to only query derivedGames when analysing a specific player/game
+  stdDev: Float!
 }
 
 type GamePrediction {
@@ -8548,6 +8566,50 @@ func (ec *executionContext) fieldContext_PropBreakdown_derivedGames(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _PropBreakdown_stdDev(ctx context.Context, field graphql.CollectedField, obj *model.PropBreakdown) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropBreakdown_stdDev(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StdDev, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropBreakdown_stdDev(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PropPrediction_estimation(ctx context.Context, field graphql.CollectedField, obj *model.PropPrediction) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PropPrediction_estimation(ctx, field)
 	if err != nil {
@@ -9092,8 +9154,54 @@ func (ec *executionContext) fieldContext_PropPrediction_breakdowns(ctx context.C
 				return ec.fieldContext_PropBreakdown_base(ctx, field)
 			case "derivedGames":
 				return ec.fieldContext_PropBreakdown_derivedGames(ctx, field)
+			case "stdDev":
+				return ec.fieldContext_PropBreakdown_stdDev(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PropBreakdown", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PropPrediction_stdDev(ctx context.Context, field graphql.CollectedField, obj *model.PropPrediction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropPrediction_stdDev(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StdDev, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropPrediction_stdDev(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropPrediction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9611,6 +9719,8 @@ func (ec *executionContext) fieldContext_Proposition_prediction(ctx context.Cont
 				return ec.fieldContext_PropPrediction_wagerOutcome(ctx, field)
 			case "breakdowns":
 				return ec.fieldContext_PropPrediction_breakdowns(ctx, field)
+			case "stdDev":
+				return ec.fieldContext_PropPrediction_stdDev(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PropPrediction", field.Name)
 		},
@@ -16444,6 +16554,13 @@ func (ec *executionContext) _PropBreakdown(ctx context.Context, sel ast.Selectio
 
 			out.Values[i] = ec._PropBreakdown_derivedGames(ctx, field, obj)
 
+		case "stdDev":
+
+			out.Values[i] = ec._PropBreakdown_stdDev(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16542,6 +16659,13 @@ func (ec *executionContext) _PropPrediction(ctx context.Context, sel ast.Selecti
 		case "breakdowns":
 
 			out.Values[i] = ec._PropPrediction_breakdowns(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "stdDev":
+
+			out.Values[i] = ec._PropPrediction_stdDev(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

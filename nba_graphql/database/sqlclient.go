@@ -19,7 +19,6 @@ type SQLClient struct {
 	League  string
 	Queries int
 	*sqlx.DB
-	statDistributions map[model.Stat]*model.StatDistribution
 	// PlayerSimilarity model.PlayerSnapshots
 	// TeamSimilarity   model.TeamSnapshots
 	// PlayerCache      map[string][]*model.Player
@@ -32,10 +31,9 @@ func NewSQLClient(league string) (*SQLClient, error) {
 		return nil, err
 	}
 	return &SQLClient{
-		League:            league,
-		DB:                db,
-		Queries:           0,
-		statDistributions: make(map[model.Stat]*model.StatDistribution, 0),
+		League:  league,
+		DB:      db,
+		Queries: 0,
 	}, nil
 }
 
@@ -484,34 +482,14 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 			continue
 		}
 
-		// get stat distribution
-		var statDistribution model.StatDistribution
-		if sd, ok := c.statDistributions[stat]; !ok {
-			statLookup, err := stat.SQL()
-			if err != nil {
-				logrus.Warnf("failed to get stat lookup: %v", stat)
-				continue
-			}
-			err = c.Get(&statDistribution, fmt.Sprintf("SELECT stddev(%[1]s) as stdDev, avg(%[1]s) as mean FROM playergames WHERE minutes > 10", statLookup))
-			if err != nil {
-				logrus.Errorf("failed to get stat distribution for %v (as %s) | %w", stat, statLookup, err)
-				continue
-			}
-			statDistribution.StatType = stat
-			c.statDistributions[stat] = &statDistribution
-		} else {
-			statDistribution = *sd
-		}
-
 		proposition := &model.Proposition{
-			Game:             rawResult.PlayerGame,
-			TypeRaw:          rawResult.Type,
-			Target:           rawResult.Target,
-			Sportsbook:       rawResult.Sportsbook,
-			LastModified:     rawResult.LastModified,
-			Type:             stat,
-			Outcome:          model.PropOutcomePending,
-			StatDistribution: &statDistribution,
+			Game:         rawResult.PlayerGame,
+			TypeRaw:      rawResult.Type,
+			Target:       rawResult.Target,
+			Sportsbook:   rawResult.Sportsbook,
+			LastModified: rawResult.LastModified,
+			Type:         stat,
+			Outcome:      model.PropOutcomePending,
 		}
 		if proposition.Game != nil && proposition.Game.Outcome != model.GameOutcomePending.String() {
 			score := proposition.Game.Score(stat)

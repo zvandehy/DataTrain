@@ -82,6 +82,7 @@ type PropBreakdown struct {
 	PctChange      float64       `json:"pctChange"`
 	Base           float64       `json:"base"`
 	DerivedGames   []*PlayerGame `json:"derivedGames"`
+	StdDev         float64       `json:"stdDev"`
 }
 
 type PropPrediction struct {
@@ -97,6 +98,7 @@ type PropPrediction struct {
 	Wager              Wager            `json:"wager"`
 	WagerOutcome       WagerOutcome     `json:"wagerOutcome"`
 	Breakdowns         []*PropBreakdown `json:"breakdowns"`
+	StdDev             float64          `json:"stdDev"`
 }
 
 type PropositionFilter struct {

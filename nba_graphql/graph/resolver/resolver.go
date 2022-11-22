@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
@@ -236,6 +237,7 @@ func CalculateGamelogBreakdown(input *model.GameBreakdownInput, derivedGames []*
 		DerivedGames:   derivedGames,
 		PctChange:      0.0,
 		Base:           baseAvg,
+		StdDev:         0.0,
 	}
 	if len(derivedGames) == 0 {
 		return &breakdown, nil
@@ -261,6 +263,75 @@ func CalculateGamelogBreakdown(input *model.GameBreakdownInput, derivedGames []*
 	breakdown.UnderPct = float64(breakdown.Under) / float64(count)
 	breakdown.PushPct = float64(breakdown.Push) / float64(count)
 	breakdown.DerivedAverage = sum / float64(count)
+	breakdown.StdDev = StandardDeviation(derivedGames, breakdown.DerivedAverage, stat)
 	breakdown.PctChange = (breakdown.DerivedAverage - baseAvg) / baseAvg
 	return &breakdown, nil
+}
+
+func StandardDeviation(games []*model.PlayerGame, mean float64, stat model.Stat) float64 {
+	sum := 0.0
+	for _, game := range games {
+		sum += math.Pow(game.Score(stat)-mean, 2)
+	}
+	return math.Sqrt(sum / float64(len(games)))
+}
+
+// TODO: Weigh the variance by the assigned weight
+func PoolVariance(datasets [][]float64) float64 {
+	sum := 0.0
+	means := []float64{}
+	weights := []int{}
+	n := 0
+	for _, dataset := range datasets {
+		sum += Variance(dataset) * float64(len(dataset))
+		means = append(means, Mean(dataset))
+		n += len(dataset)
+		weights = append(weights, len(dataset))
+	}
+	meanOfVariances := sum / float64(n)
+	varianceOfMeans := 0.0
+	pooledMean := Mean(datasets...)
+	for i := 0; i < len(means); i++ {
+		varianceOfMeans += math.Pow(means[i]-pooledMean, 2) * float64(weights[i])
+	}
+	varianceOfMeans /= float64(n)
+	fmt.Println(meanOfVariances, varianceOfMeans, meanOfVariances+varianceOfMeans)
+	return math.Round((meanOfVariances+varianceOfMeans)*100) / 100.0
+
+}
+
+func SumOfSquares(dataset []float64, weights ...int) float64 {
+	if len(weights) > 0 && len(dataset) != len(weights) {
+		logrus.Warnf("SumOfSquares: dataset and weights must be the same length")
+		return 0.0
+	}
+	mean := Mean(dataset)
+	sum := 0.0
+	if len(weights) > 0 {
+		for i, value := range dataset {
+			sum += math.Pow(value-mean, 2) * float64(weights[i])
+		}
+	} else {
+		for _, value := range dataset {
+			sum += math.Pow(value-mean, 2)
+		}
+	}
+	return sum
+}
+
+func Variance(dataset []float64) float64 {
+	sum := SumOfSquares(dataset)
+	return sum / float64(len(dataset))
+}
+
+func Mean(datasets ...[]float64) float64 {
+	sum := 0.0
+	total := 0
+	for _, dataset := range datasets {
+		total += len(dataset)
+		for _, x := range dataset {
+			sum += x
+		}
+	}
+	return sum / float64(total)
 }

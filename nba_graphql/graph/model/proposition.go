@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"gonum.org/v1/gonum/stat/distuv"
 )
 
 type DBProposition struct {
@@ -21,20 +22,19 @@ type DBProposition struct {
 }
 
 type Proposition struct {
-	PlayerID         int               `db:"playerID"`
-	GameID           string            `db:"gameID"`
-	OpponentID       int               `db:"opponentID"`
-	PlayerName       string            `db:"playerName"`
-	Sportsbook       SportsbookOption  `db:"sportsbook" json:"sportsbook" bson:"sportsbook"`
-	Target           float64           `db:"target" json:"target" bson:"target"`
-	TypeRaw          string            `db:"statType" json:"type" bson:"type"`
-	Type             Stat              `json:"propType" bson:"propType"`
-	LastModified     *time.Time        `json:"lastModified" bson:"lastModified"`
-	Outcome          PropOutcome       `json:"outcome" bson:"outcome"`
-	ActualResult     *float64          `json:"actualResult" bson:"actualResult"`
-	Accuracy         float64           `json:"accuracy" bson:"accuracy"`
-	Game             *PlayerGame       `json:"game" bson:"game"`
-	StatDistribution *StatDistribution `json:"statDistribution" bson:"statDistribution"`
+	PlayerID     int              `db:"playerID"`
+	GameID       string           `db:"gameID"`
+	OpponentID   int              `db:"opponentID"`
+	PlayerName   string           `db:"playerName"`
+	Sportsbook   SportsbookOption `db:"sportsbook" json:"sportsbook" bson:"sportsbook"`
+	Target       float64          `db:"target" json:"target" bson:"target"`
+	TypeRaw      string           `db:"statType" json:"type" bson:"type"`
+	Type         Stat             `json:"propType" bson:"propType"`
+	LastModified *time.Time       `json:"lastModified" bson:"lastModified"`
+	Outcome      PropOutcome      `json:"outcome" bson:"outcome"`
+	ActualResult *float64         `json:"actualResult" bson:"actualResult"`
+	Accuracy     float64          `json:"accuracy" bson:"accuracy"`
+	Game         *PlayerGame      `json:"game" bson:"game"`
 }
 
 type StatDistribution struct {
@@ -43,8 +43,13 @@ type StatDistribution struct {
 	StdDev   float64 `db:"stdDev" json:"stdDev" bson:"stdDev"`
 }
 
-func (d *StatDistribution) ZScore(value float64) float64 {
-	return (value - d.Mean) / d.StdDev
+func PValue(estimation float64, stddev float64, target float64) (float64, Wager) {
+	normal := distuv.Normal{Mu: estimation, Sigma: stddev, Src: nil}
+	p := normal.CDF(target)
+	if p > 0.5 {
+		return p, WagerUnder
+	}
+	return 1 - p, WagerOver
 }
 
 func (p *Proposition) UnmarshalBSON(data []byte) error {
