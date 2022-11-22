@@ -145,9 +145,7 @@ const PlayerRow: React.FC<PlayerRowProps> = ({
                   }}
                 >
                   <OverUnderIcon overUnder={prop.prediction.wager} />
-                  {(prop.prediction.estimation > prop.target ? "+" : "-") +
-                    GetPropPredictionDeviation(prop) +
-                    "%"}
+                  {prop.prediction.significance + "%"}
                 </TableCell>
                 <TableCell
                   sx={{

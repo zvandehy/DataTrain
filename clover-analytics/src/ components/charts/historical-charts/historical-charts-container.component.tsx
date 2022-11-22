@@ -105,8 +105,8 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
           <Box sx={{ p: 3, pb: 0, minHeight: "300px" }}>
             <ModelAccuracyByPctDiff
               propositions={propositions}
-              stepSize={0.5}
-              steps={10}
+              stepSize={10}
+              steps={9}
             />
           </Box>
           <Box />

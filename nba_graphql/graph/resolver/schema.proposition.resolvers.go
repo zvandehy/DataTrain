@@ -145,6 +145,29 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	// 	propPrediction.Wager = model.WagerUnder
 	// }
 
+	propPrediction.Estimation = math.Round(propPrediction.Estimation*100) / 100
+	if propPrediction.EstimationAccuracy != nil {
+		*propPrediction.EstimationAccuracy = math.Round(*propPrediction.EstimationAccuracy*100) / 100
+	}
+	if len(varianceDatasets) == 0 {
+		logrus.Error("No variance datasets")
+	} else {
+		logrus.Warn("Pooled variance is: ", PoolVariance(varianceDatasets))
+		if math.IsNaN(PoolVariance(varianceDatasets)) {
+			for _, dataset := range varianceDatasets {
+				logrus.Warn("Dataset length: ", len(dataset))
+				logrus.Warn("Variance is: ", Variance(dataset))
+				logrus.Warn("Mean is:", Mean(dataset))
+			}
+			log.Fatal("NaN variance", len(varianceDatasets))
+		}
+	}
+	pooledStdDev := math.Round(math.Sqrt(PoolVariance(varianceDatasets))*100) / 100.0
+	propPrediction.StdDev = pooledStdDev
+	significance, wager := model.PValue(propPrediction.Estimation, pooledStdDev, obj.Target)
+	propPrediction.Significance = math.Round((significance*100)*100) / 100
+	propPrediction.Wager = wager
+
 	if obj.ActualResult != nil {
 		if *obj.ActualResult > obj.Target {
 			if propPrediction.Wager == model.WagerOver {
@@ -172,29 +195,6 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	} else {
 		propPrediction.WagerOutcome = model.WagerOutcomePending
 	}
-
-	propPrediction.Estimation = math.Round(propPrediction.Estimation*100) / 100
-	if propPrediction.EstimationAccuracy != nil {
-		*propPrediction.EstimationAccuracy = math.Round(*propPrediction.EstimationAccuracy*100) / 100
-	}
-	if len(varianceDatasets) == 0 {
-		logrus.Error("No variance datasets")
-	} else {
-		logrus.Warn("Pooled variance is: ", PoolVariance(varianceDatasets))
-		if math.IsNaN(PoolVariance(varianceDatasets)) {
-			for _, dataset := range varianceDatasets {
-				logrus.Warn("Dataset length: ", len(dataset))
-				logrus.Warn("Variance is: ", Variance(dataset))
-				logrus.Warn("Mean is:", Mean(dataset))
-			}
-			log.Fatal("NaN variance", len(varianceDatasets))
-		}
-	}
-	pooledStdDev := math.Round(math.Sqrt(PoolVariance(varianceDatasets))*100) / 100.0
-	propPrediction.StdDev = pooledStdDev
-	significance, wager := model.PValue(propPrediction.Estimation, pooledStdDev, obj.Target)
-	propPrediction.Significance = math.Round((significance*100)*100) / 100
-	propPrediction.Wager = wager
 	return &propPrediction, nil
 }
 
