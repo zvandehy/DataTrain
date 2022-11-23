@@ -52,6 +52,10 @@ export const USE_GET_PROPOSITIONS = gql`
         significance
         wager
         wagerOutcome
+        stdDev
+        cumulativeOver
+        cumulativeUnder
+        cumulativePush
       }
     }
   }

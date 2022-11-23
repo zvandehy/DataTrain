@@ -19,6 +19,7 @@ export interface PropPrediction {
   estimation: number;
   estimationAccuracy?: number;
   significance: number;
+  stdDev: number;
   cumulativeOver: number;
   cumulativeUnder: number;
   cumulativePush: number;

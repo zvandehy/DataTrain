@@ -167,12 +167,12 @@ const DashboardPage = () => {
             <TableCell>Stat</TableCell>
             <TableCell>Target</TableCell>
             <TableCell>Prediction</TableCell>
-            <TableCell>% DIFF</TableCell>
-            <TableCell>Predicted Min</TableCell>
-            <TableCell>Predicted/Min</TableCell>
+            <TableCell>Significance</TableCell>
+            <TableCell>Std Dev</TableCell>
+            <TableCell>N</TableCell>
             <TableCell sx={{ borderLeft: "1px solid" }}>Outcome</TableCell>
-            <TableCell>Min</TableCell>
-            <TableCell>Actual/Min</TableCell>
+            {/* <TableCell>Min</TableCell>
+            <TableCell>Actual/Min</TableCell> */}
           </TableHead>
           <TableBody>
             {Object.entries(playerPropositions)

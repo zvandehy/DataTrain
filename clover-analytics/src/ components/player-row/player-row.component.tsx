@@ -152,14 +152,16 @@ const PlayerRow: React.FC<PlayerRowProps> = ({
                     borderBottom: `1px solid ${borderBottomColor}`,
                   }}
                 >
-                  {/* {ConvertMinutes(game.prediction.weightedTotal.minutes)} */}
+                  {prop.prediction.stdDev}
                 </TableCell>
                 <TableCell
                   sx={{
                     borderBottom: `1px solid ${borderBottomColor}`,
                   }}
                 >
-                  {/* {prop.estimationPerMin} */}
+                  {prop.prediction.cumulativeOver +
+                    prop.prediction.cumulativeUnder +
+                    prop.prediction.cumulativePush}
                 </TableCell>
                 <TableCell
                   sx={{
@@ -175,28 +177,6 @@ const PlayerRow: React.FC<PlayerRowProps> = ({
                   ) : (
                     "TBD"
                   )}
-                </TableCell>
-                <TableCell
-                  sx={{
-                    borderBottom: `1px solid ${borderBottomColor}`,
-                  }}
-                >
-                  {game.outcome !== "PENDING" ? game.minutes : "TBD"}
-                </TableCell>
-                <TableCell
-                  sx={{
-                    borderBottom: `1px solid ${borderBottomColor}`,
-                  }}
-                >
-                  {/* {game.outcome !== "PENDING"
-                    ? prop.actualPerMin
-                    : // +
-                      //   " (" +
-                      //   (prop.actualDiffPerMin > 0
-                      //     ? "+" + prop.actualDiffPerMinPCT
-                      //     : prop.actualDiffPerMinPCT) +
-                      //   "%)"
-                      "TBD"} */}
                 </TableCell>
               </>
             ) : (
