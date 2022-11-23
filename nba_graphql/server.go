@@ -66,13 +66,13 @@ func main() {
 	time.Sleep(time.Second * 5)
 
 	// call this function every Tick
-	// go func() {
-	// 	database.Getprizepicks(nbaClient)
-	// 	tick := time.Tick(10 * time.Minute)
-	// 	for range tick {
-	// 		database.Getprizepicks(nbaClient)
-	// 	}
-	// }()
+	go func() {
+		database.Getprizepicks(nbaClient)
+		tick := time.Tick(10 * time.Minute)
+		for range tick {
+			database.Getprizepicks(nbaClient)
+		}
+	}()
 
 	nbaServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver.NewResolver(nbaClient)}))
 	// wnbaServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver.NewResolver(wnbaClient)}))
