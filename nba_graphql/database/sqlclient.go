@@ -376,6 +376,10 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 		where = append(where, "teamID = ?")
 		args = append(args, *propositionFilter.TeamID)
 	}
+	if propositionFilter.PlayerName != nil {
+		where = append(where, "name = ?")
+		args = append(args, *propositionFilter.PlayerName)
+	}
 	// if propositionFilter.GameID != nil {
 	// 	where = append(where, "gameID = ?")
 	// 	args = append(args, *propositionFilter.GameID)
@@ -399,10 +403,17 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 	}
 	if propositionFilter.PropositionType != nil {
 		// TODO: fix this to get the correct type
-		where = append(where, "type = ?")
-		args = append(args, *propositionFilter.PropositionType)
+		statType, err := propositionFilter.PropositionType.SQL()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get sql type: %w", err)
+		}
+		where = append(where, "statType = ?")
+		args = append(args, statType)
 	}
 	query := "SELECT statType, target, sportsbook, lastModified, pg.* FROM propositions pr JOIN playergames pg USING (playerID, gameID)"
+	if propositionFilter.PlayerName != nil && *propositionFilter.PlayerName != "" {
+		query = fmt.Sprintf("%s JOIN players USING (playerID)", query)
+	}
 	if len(where) > 0 {
 		query = fmt.Sprintf("%s WHERE %s", query, strings.Join(where, " AND "))
 	}
