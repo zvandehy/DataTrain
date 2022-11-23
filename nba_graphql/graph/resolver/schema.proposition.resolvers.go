@@ -152,7 +152,6 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	if len(varianceDatasets) == 0 {
 		logrus.Error("No variance datasets")
 	} else {
-		logrus.Warn("Pooled variance is: ", PoolVariance(varianceDatasets))
 		if math.IsNaN(PoolVariance(varianceDatasets)) {
 			for _, dataset := range varianceDatasets {
 				logrus.Warn("Dataset length: ", len(dataset))

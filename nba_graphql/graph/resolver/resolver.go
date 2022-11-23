@@ -45,12 +45,17 @@ func (r *Resolver) GetBase(ctx context.Context, inputs []*model.GameBreakdownInp
 		}
 	}
 	games, err := dataloader.For(ctx).PlayerGameByFilter.Load(filter)
-	// games, err := r.GetPlayerGames(ctx, &filter)
+	gamesBeforeThisGame := []*model.PlayerGame{}
+	for _, g := range games {
+		if g.Date.Before(*game.Date) {
+			gamesBeforeThisGame = append(gamesBeforeThisGame, g)
+		}
+	}
 	if err != nil {
 		logrus.Errorf("Error getting base player games: %v", err)
 		return []*model.PlayerGame{}
 	}
-	return games
+	return gamesBeforeThisGame
 }
 
 func (r *Resolver) GetGamelogBreakdowns(ctx context.Context, inputs []*model.GameBreakdownInput, game *model.PlayerGame, target *float64, stat model.Stat) []*model.PropBreakdown {
