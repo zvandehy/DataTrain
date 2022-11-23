@@ -92,6 +92,7 @@ const App: React.FC = () => {
             <Route path="/wnba" element={<Home />} />
             <Route path="/nba" element={<Home />} /> */}
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Dashboard />} />
             {/* <Route
           exact
           path="/"
