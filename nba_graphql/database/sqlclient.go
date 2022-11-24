@@ -639,6 +639,9 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		ThreePointersAttempted float64 `db:"avgthreePointersAttempted"`
 		OffensiveRebounds      float64 `db:"avgoffensiveRebounds"`
 		DefensiveRebounds      float64 `db:"avgdefensiveRebounds"`
+		Steals                 float64 `db:"avgsteals"`
+		Blocks                 float64 `db:"avgblocks"`
+		Turnovers              float64 `db:"avgturnovers"`
 	}{}
 	err := c.Select(&playerDistances, query)
 	if err != nil {
