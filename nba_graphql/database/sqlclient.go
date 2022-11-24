@@ -589,7 +589,7 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 	c.AddQuery()
 	start := time.Now()
 	// stats := []string{"height", "points", "assists", "rebounds", "offensiveRebounds", "defensiveRebounds", "threePointersMade", "threePointersAttempted"}
-	stats := []string{"points", "assists", "weight", "heightInches", "fieldGoalsAttempted", "threePointersMade", "offensiveRebounds", "defensiveRebounds"}
+	stats := []string{"points", "assists", "heightInches", "fieldGoalsAttempted", "threePointersMade", "offensiveRebounds", "defensiveRebounds", "steals", "blocks", "turnovers"}
 	summation := make([]string, len(stats))
 	avg := make([]string, len(stats))
 	std := make([]string, len(stats))
@@ -620,7 +620,7 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		WHERE (%[8]s) ) AS from_league
 	JOIN players p USING (playerID) WHERE (%[8]s)
 	GROUP BY playerID, AVG_%[5]s, STD_%[5]s
-	HAVING avg(points)>0 AND games>10
+	HAVING avg(points)>0 AND games>30
 	ORDER BY DISTANCE ASC
 	LIMIT %[7]d;`, similarToPlayerID, strings.Join(summation, "+"), strings.Join(avg, ","), strings.Join(std, ","), strings.ToUpper(stats[0]), strings.Join(selector, ","), limit, gameFilter)
 	// logrus.Warn(query)
