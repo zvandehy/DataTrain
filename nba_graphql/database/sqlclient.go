@@ -649,11 +649,11 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		logrus.Warnf("failed to get similar players using query: %v", query)
 		return nil, fmt.Errorf("no similar players found")
 	}
-	logrus.Infof("Players most similar to %d based off of: %v", similarToPlayerID, stats)
-	logrus.Infof("(%2.2d) %20.20s: %s %s %s %s %s %s %s %s\n", 0, "Player Name (#games)", "DISTANCE", "POINTS", "WEIGHT", "HEIGHT", "ASSISTS", "REBOUNDS", "  FGA", "  3PM  ")
-	for i, pDistance := range playerDistances {
-		logrus.Infof("(%2.2d) %15.15s (%2.2d): %8.3f %6.2f %6.0f %6.0f %7.1f %8.1f %5.1f %6.2f\n", i, pDistance.Name, pDistance.NGames, pDistance.Distance, pDistance.Points, pDistance.Weight, pDistance.Height, pDistance.Assists, pDistance.Rebounds, pDistance.FieldGoalsAttempted, pDistance.ThreePointersMade)
-	}
+	// logrus.Infof("Players most similar to %d based off of: %v", similarToPlayerID, stats)
+	// logrus.Infof("(%2.2d) %20.20s: %s %s %s %s %s %s %s %s\n", 0, "Player Name (#games)", "DISTANCE", "POINTS", "WEIGHT", "HEIGHT", "ASSISTS", "REBOUNDS", "  FGA", "  3PM  ")
+	// for i, pDistance := range playerDistances {
+	// 	logrus.Infof("(%2.2d) %15.15s (%2.2d): %8.3f %6.2f %6.0f %6.0f %7.1f %8.1f %5.1f %6.2f\n", i, pDistance.Name, pDistance.NGames, pDistance.Distance, pDistance.Points, pDistance.Weight, pDistance.Height, pDistance.Assists, pDistance.Rebounds, pDistance.FieldGoalsAttempted, pDistance.ThreePointersMade)
+	// }
 	playerFilters := make([]*model.PlayerFilter, len(playerDistances))
 	// TODO: Allow similarity to be based off of this seasons, this and last season, or all time
 	seasons := []model.SeasonOption{}
