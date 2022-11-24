@@ -588,15 +588,14 @@ func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ..
 func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int, input *model.SimilarPlayerInput, endDate *time.Time) ([]*model.Player, error) {
 	c.AddQuery()
 	start := time.Now()
-	end := endDate.Format(util.DATE_FORMAT)
 	// stats := []string{"height", "points", "assists", "rebounds", "offensiveRebounds", "defensiveRebounds", "threePointersMade", "threePointersAttempted"}
-	stats := []string{"points", "assists", "weight", "heightInches", "rebounds", "fieldGoalsAttempted", "threePointersMade", "threePointersAttempted", "offensiveRebounds", "defensiveRebounds"}
+	stats := []string{"points", "assists", "weight", "heightInches", "fieldGoalsAttempted", "threePointersMade", "offensiveRebounds", "defensiveRebounds"}
 	summation := make([]string, len(stats))
 	avg := make([]string, len(stats))
 	std := make([]string, len(stats))
 	selector := make([]string, len(stats))
 	for i, stat := range stats {
-		summation[i] = fmt.Sprintf(`((avg(%[1]s)-AVG_%[2]s) / STD_%[2]s*(avg(%[1]s)-AVG_%[2]s) / STD_%[2]s)`, stat, strings.ToUpper(stat))
+		summation[i] = fmt.Sprintf(`(((avg(%[1]s)-AVG_%[2]s) / STD_%[2]s)*(avg(%[1]s)-AVG_%[2]s) / STD_%[2]s)`, stat, strings.ToUpper(stat))
 		selector[i] = fmt.Sprintf(`avg(%[1]s) AS avg%[1]s`, stat)
 		avg[i] = fmt.Sprintf(`avg(%[1]s) as AVG_%[2]s`, stat, strings.ToUpper(stat))
 		std[i] = fmt.Sprintf(`stddev(%[1]s) as STD_%[2]s`, stat, strings.ToUpper(stat))
@@ -606,7 +605,7 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		limit = input.Limit + 1
 	}
 	// TODO: Allow similarity to be based off of this seasons, this and last season, or all time
-	gameFilter := fmt.Sprintf("date < %s AND season = %s", end, "2022-23")
+	gameFilter := fmt.Sprintf("%s AND season = \"%s\"", SQLDateBefore(*endDate), "2022-23")
 	query := fmt.Sprintf(`
 	SELECT p.name, playerID, count(*) AS games, %[6]s,
 		SQRT(%[2]s) AS DISTANCE
@@ -642,9 +641,13 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		DefensiveRebounds      float64 `db:"avgdefensiveRebounds"`
 	}{}
 	err := c.Select(&playerDistances, query)
-	if err != nil || len(playerDistances) == 0 {
+	if err != nil {
 		logrus.Warnf("failed to get similar players using query: %v", query)
-		return nil, fmt.Errorf("failed to get similar players: %w", err)
+		return nil, fmt.Errorf("failed to get similar players: %+v", err)
+	}
+	if len(playerDistances) == 0 {
+		logrus.Warnf("failed to get similar players using query: %v", query)
+		return nil, fmt.Errorf("no similar players found")
 	}
 	logrus.Infof("Players most similar to %d based off of: %v", similarToPlayerID, stats)
 	logrus.Infof("(%2.2d) %20.20s: %s %s %s %s %s %s %s %s\n", 0, "Player Name (#games)", "DISTANCE", "POINTS", "WEIGHT", "HEIGHT", "ASSISTS", "REBOUNDS", "  FGA", "  3PM  ")
@@ -656,9 +659,12 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 	seasons := []model.SeasonOption{}
 	seasons = append(seasons, model.SEASON_2022_23)
 	for i := range playerDistances {
-		pFilter := *input.PlayerPoolFilter
+		pFilter := model.PlayerFilter{}
+		if input.PlayerPoolFilter != nil {
+			pFilter = *input.PlayerPoolFilter
+		}
 		pFilter.PlayerID = &playerDistances[i].Id
-		pFilter.EndDate = &end
+		pFilter.EndDate = &[]string{endDate.Format("2006-01-02")}[0]
 		pFilter.Seasons = &seasons
 		playerFilters[i] = &pFilter
 	}
@@ -680,6 +686,10 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 	})
 	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Similar Players: %s | %v", len(players), players[0].Name, input), start))
 	return players[1:], nil
+}
+
+func SQLDateBefore(date time.Time) string {
+	return fmt.Sprintf("date < Cast(\"%s\" as Date)", date.Format("2006-01-02"))
 }
 
 func (c *SQLClient) GetSimilarTeams(ctx context.Context, similarToTeamID int, input *model.SimilarTeamInput, endDate string) ([]*model.Team, error) {

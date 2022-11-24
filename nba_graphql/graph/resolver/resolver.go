@@ -68,7 +68,7 @@ func (r *Resolver) GetGamelogBreakdowns(ctx context.Context, inputs []*model.Gam
 	for _, game := range base {
 		baseTotal += game.Score(stat)
 	}
-	baseAvg := float64(baseTotal) / float64(len(base))
+	baseAvg := math.Round(float64(baseTotal)/float64(len(base))*100) / 100.0
 	if target == nil {
 		target = &baseAvg
 	}
@@ -162,6 +162,14 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 		return []*model.PropBreakdown{}
 	}
 
+	// remove similar players that are the same as the player we are looking at
+	for i := 0; i < len(similarPlayers); i++ {
+		if similarPlayers[i].PlayerID == game.PlayerID {
+			similarPlayers = append(similarPlayers[:i], similarPlayers[i+1:]...)
+			break
+		}
+	}
+
 	breakdowns := []*model.PropBreakdown{}
 	skipped := 0
 	for _, similarPlayer := range similarPlayers {
@@ -170,12 +178,12 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 		vsOpp := []*model.PlayerGame{}
 		derivedTotal := 0.0
 		baseTotal := 0.0
-		for _, game := range similarBase {
-			score := game.Score(stat)
+		for _, simGame := range similarBase {
+			score := simGame.Score(stat)
 			baseTotal += score
-			if game.OpponentID == game.OpponentID {
+			if simGame.OpponentID == game.OpponentID {
 				derivedTotal += score
-				vsOpp = append(vsOpp, game)
+				vsOpp = append(vsOpp, simGame)
 			}
 		}
 		baseAvg := baseTotal / float64(len(similarBase))
@@ -183,9 +191,9 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 			skipped++
 			continue
 		}
-		derivedAvg := derivedTotal / float64(len(similarBase))
+		derivedAvg := derivedTotal / float64(len(vsOpp))
 		diff := derivedAvg - baseAvg
-		diffPct := diff / baseAvg
+		diffPct := diff / baseAvg * 100
 		breakdown := &model.PropBreakdown{
 			Name:           fmt.Sprintf("%s vs %s", similarPlayer.Name, "Opponent"),
 			Over:           0,
@@ -194,9 +202,9 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 			OverPct:        0.0,
 			UnderPct:       0.0,
 			PushPct:        0.0,
-			Base:           baseAvg,
-			DerivedAverage: derivedAvg,
-			PctChange:      diffPct,
+			Base:           math.Round(baseAvg*100) / 100.0,
+			DerivedAverage: math.Round(derivedAvg*100) / 100.0,
+			PctChange:      math.Round(diffPct*100) / 100.0,
 			DerivedGames:   vsOpp,
 			Weight:         input.Weight,
 		}
@@ -265,12 +273,12 @@ func CalculateGamelogBreakdown(input *model.GameBreakdownInput, derivedGames []*
 		count++
 		sum += score
 	}
-	breakdown.OverPct = float64(breakdown.Over) / float64(count)
-	breakdown.UnderPct = float64(breakdown.Under) / float64(count)
-	breakdown.PushPct = float64(breakdown.Push) / float64(count)
-	breakdown.DerivedAverage = sum / float64(count)
+	breakdown.OverPct = math.Round(float64(breakdown.Over)/float64(count)*100) / 100.0
+	breakdown.UnderPct = math.Round(float64(breakdown.Under)/float64(count)*100) / 100.0
+	breakdown.PushPct = math.Round(float64(breakdown.Push)/float64(count)*100) / 100.0
+	breakdown.DerivedAverage = math.Round(sum/float64(count)*100) / 100.0
 	breakdown.StdDev = StandardDeviation(derivedGames, breakdown.DerivedAverage, stat)
-	breakdown.PctChange = (breakdown.DerivedAverage - baseAvg) / baseAvg
+	breakdown.PctChange = math.Round((breakdown.DerivedAverage-baseAvg)/baseAvg*10000) / 100.0
 	return &breakdown, nil
 }
 
