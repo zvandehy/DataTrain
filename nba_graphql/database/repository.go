@@ -137,7 +137,10 @@ func Getprizepicks(nbaClient BasketballRepository) {
 			propositions = []*model.DBProposition{}
 		}
 	}
-
+	if len(propositions) == 0 {
+		logrus.Info("No prizepicks propositions to upload")
+		return
+	}
 	fmt.Println("REMAINING TO IMPORT: ", len(propositions))
 	//upsert
 	_, err = nbaClient.SaveDBPropositions(context.Background(), propositions)
