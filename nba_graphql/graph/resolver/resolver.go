@@ -230,19 +230,20 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 
 func CalculateGamelogBreakdown(input *model.GameBreakdownInput, derivedGames []*model.PlayerGame, baseAvg float64, target float64, stat model.Stat) (*model.PropBreakdown, error) {
 	breakdown := model.PropBreakdown{
-		Name:           input.Name,
-		Over:           0,
-		Under:          0,
-		Push:           0,
-		OverPct:        0.0,
-		UnderPct:       0.0,
-		PushPct:        0.0,
-		DerivedAverage: 0.0,
-		Weight:         input.Weight, // TODO: Handle weight of gamelog breakdown with 0 games
-		DerivedGames:   derivedGames,
-		PctChange:      0.0,
-		Base:           baseAvg,
-		StdDev:         0.0,
+		Name:              input.Name,
+		Over:              0,
+		Under:             0,
+		Push:              0,
+		OverPct:           0.0,
+		UnderPct:          0.0,
+		PushPct:           0.0,
+		DerivedAverage:    0.0,
+		Weight:            input.Weight, // TODO: Handle weight of gamelog breakdown with 0 games
+		DerivedGames:      derivedGames,
+		DerivedGamesCount: len(derivedGames),
+		PctChange:         0.0,
+		Base:              baseAvg,
+		StdDev:            0.0,
 	}
 	if len(derivedGames) == 0 {
 		return &breakdown, nil

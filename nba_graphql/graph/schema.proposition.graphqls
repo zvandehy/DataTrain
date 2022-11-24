@@ -88,6 +88,7 @@ type PropBreakdown {
   pctChange: Float!
   base: Float!
   derivedGames: [PlayerGame!] #recommend to only query derivedGames when analysing a specific player/game
+  derivedGamesCount: Int!
   stdDev: Float!
 }
 

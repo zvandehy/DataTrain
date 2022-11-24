@@ -70,19 +70,20 @@ type ModelInput struct {
 }
 
 type PropBreakdown struct {
-	Name           string        `json:"name"`
-	Over           int           `json:"over"`
-	Under          int           `json:"under"`
-	Push           int           `json:"push"`
-	OverPct        float64       `json:"overPct"`
-	UnderPct       float64       `json:"underPct"`
-	PushPct        float64       `json:"pushPct"`
-	DerivedAverage float64       `json:"derivedAverage"`
-	Weight         float64       `json:"weight"`
-	PctChange      float64       `json:"pctChange"`
-	Base           float64       `json:"base"`
-	DerivedGames   []*PlayerGame `json:"derivedGames"`
-	StdDev         float64       `json:"stdDev"`
+	Name              string        `json:"name"`
+	Over              int           `json:"over"`
+	Under             int           `json:"under"`
+	Push              int           `json:"push"`
+	OverPct           float64       `json:"overPct"`
+	UnderPct          float64       `json:"underPct"`
+	PushPct           float64       `json:"pushPct"`
+	DerivedAverage    float64       `json:"derivedAverage"`
+	Weight            float64       `json:"weight"`
+	PctChange         float64       `json:"pctChange"`
+	Base              float64       `json:"base"`
+	DerivedGames      []*PlayerGame `json:"derivedGames"`
+	DerivedGamesCount int           `json:"derivedGamesCount"`
+	StdDev            float64       `json:"stdDev"`
 }
 
 type PropPrediction struct {

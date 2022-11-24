@@ -165,19 +165,20 @@ type ComplexityRoot struct {
 	}
 
 	PropBreakdown struct {
-		Base           func(childComplexity int) int
-		DerivedAverage func(childComplexity int) int
-		DerivedGames   func(childComplexity int) int
-		Name           func(childComplexity int) int
-		Over           func(childComplexity int) int
-		OverPct        func(childComplexity int) int
-		PctChange      func(childComplexity int) int
-		Push           func(childComplexity int) int
-		PushPct        func(childComplexity int) int
-		StdDev         func(childComplexity int) int
-		Under          func(childComplexity int) int
-		UnderPct       func(childComplexity int) int
-		Weight         func(childComplexity int) int
+		Base              func(childComplexity int) int
+		DerivedAverage    func(childComplexity int) int
+		DerivedGames      func(childComplexity int) int
+		DerivedGamesCount func(childComplexity int) int
+		Name              func(childComplexity int) int
+		Over              func(childComplexity int) int
+		OverPct           func(childComplexity int) int
+		PctChange         func(childComplexity int) int
+		Push              func(childComplexity int) int
+		PushPct           func(childComplexity int) int
+		StdDev            func(childComplexity int) int
+		Under             func(childComplexity int) int
+		UnderPct          func(childComplexity int) int
+		Weight            func(childComplexity int) int
 	}
 
 	PropPrediction struct {
@@ -1099,6 +1100,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PropBreakdown.DerivedGames(childComplexity), true
+
+	case "PropBreakdown.derivedGamesCount":
+		if e.complexity.PropBreakdown.DerivedGamesCount == nil {
+			break
+		}
+
+		return e.complexity.PropBreakdown.DerivedGamesCount(childComplexity), true
 
 	case "PropBreakdown.name":
 		if e.complexity.PropBreakdown.Name == nil {
@@ -2165,6 +2173,7 @@ type PropBreakdown {
   pctChange: Float!
   base: Float!
   derivedGames: [PlayerGame!] #recommend to only query derivedGames when analysing a specific player/game
+  derivedGamesCount: Int!
   stdDev: Float!
 }
 
@@ -8566,6 +8575,50 @@ func (ec *executionContext) fieldContext_PropBreakdown_derivedGames(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _PropBreakdown_derivedGamesCount(ctx context.Context, field graphql.CollectedField, obj *model.PropBreakdown) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropBreakdown_derivedGamesCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DerivedGamesCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropBreakdown_derivedGamesCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PropBreakdown_stdDev(ctx context.Context, field graphql.CollectedField, obj *model.PropBreakdown) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PropBreakdown_stdDev(ctx, field)
 	if err != nil {
@@ -9154,6 +9207,8 @@ func (ec *executionContext) fieldContext_PropPrediction_breakdowns(ctx context.C
 				return ec.fieldContext_PropBreakdown_base(ctx, field)
 			case "derivedGames":
 				return ec.fieldContext_PropBreakdown_derivedGames(ctx, field)
+			case "derivedGamesCount":
+				return ec.fieldContext_PropBreakdown_derivedGamesCount(ctx, field)
 			case "stdDev":
 				return ec.fieldContext_PropBreakdown_stdDev(ctx, field)
 			}
@@ -16554,6 +16609,13 @@ func (ec *executionContext) _PropBreakdown(ctx context.Context, sel ast.Selectio
 
 			out.Values[i] = ec._PropBreakdown_derivedGames(ctx, field, obj)
 
+		case "derivedGamesCount":
+
+			out.Values[i] = ec._PropBreakdown_derivedGamesCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "stdDev":
 
 			out.Values[i] = ec._PropBreakdown_stdDev(ctx, field, obj)
