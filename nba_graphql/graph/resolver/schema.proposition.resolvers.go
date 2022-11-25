@@ -126,7 +126,7 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		propPrediction.CumulativeOver += breakdown.Over
 		propPrediction.CumulativeUnder += breakdown.Under
 		propPrediction.CumulativePush += breakdown.Push
-		propPrediction.Estimation = estimationWithoutSimilarPlayers + ((breakdown.PctChange/100.0)*estimationWithoutSimilarPlayers)*(breakdown.Weight/100.0)
+		propPrediction.Estimation = estimationWithoutSimilarPlayers + ((breakdown.PctChange)*estimationWithoutSimilarPlayers)*(breakdown.Weight/100.0)
 		propPrediction.Breakdowns = append(propPrediction.Breakdowns, breakdown)
 		// dataset := []float64{}
 		// for _, game := range breakdown.DerivedGames {

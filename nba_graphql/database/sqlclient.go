@@ -589,7 +589,7 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 	c.AddQuery()
 	start := time.Now()
 	// stats := []string{"height", "points", "assists", "rebounds", "offensiveRebounds", "defensiveRebounds", "threePointersMade", "threePointersAttempted"}
-	stats := []string{"points", "assists", "heightInches", "fieldGoalsAttempted", "threePointersMade", "offensiveRebounds", "defensiveRebounds", "steals", "blocks", "turnovers"}
+	stats := []string{"points", "assists", "heightInches", "fieldGoalsAttempted", "threePointersMade", "rebounds", "passes", "steals", "blocks", "turnovers", "minutes"}
 	summation := make([]string, len(stats))
 	avg := make([]string, len(stats))
 	std := make([]string, len(stats))
@@ -620,7 +620,7 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		WHERE (%[8]s) ) AS from_league
 	JOIN players p USING (playerID) WHERE (%[8]s)
 	GROUP BY playerID, AVG_%[5]s, STD_%[5]s
-	HAVING avg(points)>0 AND games>30
+	HAVING avg(points)>0 AND avg(minutes)>15
 	ORDER BY DISTANCE ASC
 	LIMIT %[7]d;`, similarToPlayerID, strings.Join(summation, "+"), strings.Join(avg, ","), strings.Join(std, ","), strings.ToUpper(stats[0]), strings.Join(selector, ","), limit, gameFilter)
 	// logrus.Warn(query)
@@ -642,6 +642,8 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		Steals                 float64 `db:"avgsteals"`
 		Blocks                 float64 `db:"avgblocks"`
 		Turnovers              float64 `db:"avgturnovers"`
+		Minutes                float64 `db:"avgminutes"`
+		Passes                 float64 `db:"avgpasses"`
 	}{}
 	err := c.Select(&playerDistances, query)
 	if err != nil {
@@ -688,7 +690,7 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		return iDistance < jDistance
 	})
 	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Similar Players: %s | %v", len(players), players[0].Name, input), start))
-	return players[1:], nil
+	return players, nil
 }
 
 func SQLDateBefore(date time.Time) string {

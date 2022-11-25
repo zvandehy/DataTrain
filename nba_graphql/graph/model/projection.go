@@ -71,6 +71,11 @@ type PrizePicksData struct {
 				ID string `json:"id" bson:"id"`
 			} `json:"data" bson:"data"`
 		} `json:"new_player" bson:"new_player"`
+		League struct {
+			Data struct {
+				ID string `json:"id" bson:"id"`
+			} `json:"data" bson:"data"`
+		} `json:"league" bson:"league"`
 		StatType struct {
 			Data struct {
 				ID string `json:"id" bson:"id"`
