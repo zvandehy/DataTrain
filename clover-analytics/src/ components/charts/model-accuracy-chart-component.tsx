@@ -56,7 +56,13 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
   let days = [];
   //days between startDate and endDate
   for (let i = moment(startDate); i.isSameOrBefore(endDate); i.add(1, "days")) {
-    days.push(i.format("YYYY-MM-DD"));
+    if (
+      propositions.find(
+        (prop: Proposition) => prop.game.date === i.format("YYYY-MM-DD")
+      )
+    ) {
+      days.push(i.format("YYYY-MM-DD"));
+    }
   }
 
   let daysMap: {

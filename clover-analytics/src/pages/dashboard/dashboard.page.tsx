@@ -34,7 +34,7 @@ import {
 // ==============================|| DASHBOARD ||============================== //
 
 const DashboardPage = () => {
-  const [slot, setSlot] = useState<"month" | "week" | "day">("week");
+  const [slot, setSlot] = useState<"month" | "week" | "day">("day");
   const [startDate, setStartDate] = useState(moment().format("YYYY-MM-DD"));
 
   const theme = useTheme();

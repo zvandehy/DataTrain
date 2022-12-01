@@ -30,11 +30,13 @@ type Proposition struct {
 	Target       float64          `db:"target" json:"target" bson:"target"`
 	TypeRaw      string           `db:"statType" json:"type" bson:"type"`
 	Type         Stat             `json:"propType" bson:"propType"`
-	LastModified *time.Time       `json:"lastModified" bson:"lastModified"`
+	LastModified *time.Time       `json:"lastModified" bson:"lastModified" db:"lastModified"`
 	Outcome      PropOutcome      `json:"outcome" bson:"outcome"`
 	ActualResult *float64         `json:"actualResult" bson:"actualResult"`
 	Accuracy     float64          `json:"accuracy" bson:"accuracy"`
 	Game         *PlayerGame      `json:"game" bson:"game"`
+	CreatedAt    *time.Time       `json:"createdAt" bson:"createdAt" db:"CreatedAt"`
+	UpdatedAt    *time.Time       `json:"updatedAt" bson:"updatedAt" db:"UpdatedAt"`
 }
 
 type StatDistribution struct {

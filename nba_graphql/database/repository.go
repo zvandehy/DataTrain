@@ -19,10 +19,17 @@ import (
 )
 
 var altNames map[string]string = map[string]string{
-	"Nicolas Claxton": "Nic Claxton",
-	"OG Anunoby":      "O.G. Anunoby",
-	"Marcus Morris":   "Marcus Morris Sr.",
-	"Nah'Shon Hyland": "Bones Hyland",
+	"Nicolas Claxton":              "Nic Claxton",
+	"OG Anunoby":                   "O.G. Anunoby",
+	"Marcus Morris":                "Marcus Morris Sr.",
+	"Nah'Shon Hyland":              "Bones Hyland",
+	"Kevin \"Slim Reaper\" Durant": "Kevin Durant",
+	"The Greek Freak":              "Giannis Antetokounmpo",
+	"Greek Freak":                  "Giannis Antetokounmpo",
+	"Ja Morantula":                 "Ja Morant",
+	"James \"The Beard\" Harden":   "James Harden",
+	"Ice Trae Young":               "Trae Young",
+	"Ice Trae":                     "Trae Young",
 }
 
 type BasketballRepository interface {

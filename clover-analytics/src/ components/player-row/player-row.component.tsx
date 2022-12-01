@@ -10,16 +10,8 @@ import {
 } from "@mui/material";
 import moment from "moment";
 import { useState } from "react";
-import { Game } from "../../shared/interfaces/graphql/game.interface";
-import { Player } from "../../shared/interfaces/graphql/player.interface";
-import {
-  GetPropPredictionDeviation,
-  Proposition,
-} from "../../shared/interfaces/graphql/proposition.interface";
-import {
-  ConvertMinutes,
-  GetStatAbbreviation,
-} from "../../shared/interfaces/stat.interface";
+import { Proposition } from "../../shared/interfaces/graphql/proposition.interface";
+import { GetStatAbbreviation } from "../../shared/interfaces/stat.interface";
 import { COLORS } from "../../shared/styles/constants";
 import { HitMissIcon } from "../icons/hit-miss.icon";
 import { OverUnderIcon } from "../icons/overUnderIcon.component";

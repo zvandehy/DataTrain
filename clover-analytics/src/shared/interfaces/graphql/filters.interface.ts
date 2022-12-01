@@ -50,6 +50,8 @@ export interface GameFilter {
   playerID?: number;
   gameID?: string;
   seasons?: SeasonOption[];
+  previousSeasonMatch?: boolean;
+  seasonMatch?: boolean;
   startDate?: string;
   endDate?: string;
   lastX?: number;

@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
 	"github.com/zvandehy/DataTrain/nba_graphql/util"
@@ -425,7 +426,7 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 		Sportsbook   model.SportsbookOption `db:"sportsbook"`
 		LastModified *time.Time             `db:"lastModified"`
 		// PropDate     *time.Time             `db:"propdate"`
-		// playerName   string                 `db:"playerName"`
+		PlayerName string `db:"playerName"`
 		*model.PlayerGame
 	}
 	// 	playerID
@@ -499,6 +500,7 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 			Target:       rawResult.Target,
 			Sportsbook:   rawResult.Sportsbook,
 			LastModified: rawResult.LastModified,
+			PlayerName:   rawResult.PlayerName,
 			Type:         stat,
 			Outcome:      model.PropOutcomePending,
 		}
@@ -588,8 +590,8 @@ func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ..
 func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int, input *model.SimilarPlayerInput, endDate *time.Time) ([]*model.Player, error) {
 	c.AddQuery()
 	start := time.Now()
-	// stats := []string{"height", "points", "assists", "rebounds", "offensiveRebounds", "defensiveRebounds", "threePointersMade", "threePointersAttempted"}
-	stats := []string{"points", "assists", "heightInches", "fieldGoalsAttempted", "threePointersMade", "rebounds", "passes", "steals", "blocks", "turnovers", "minutes"}
+	// stats := []string{"points", "assists", "heightInches", "fieldGoalsAttempted", "threePointersMade", "rebounds", "passes", "steals", "blocks", "turnovers", "minutes"}
+	stats := []string{"points", "assists", "rebounds", "heightInches", "weight"}
 	summation := make([]string, len(stats))
 	avg := make([]string, len(stats))
 	std := make([]string, len(stats))
@@ -600,97 +602,96 @@ func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int
 		avg[i] = fmt.Sprintf(`avg(%[1]s) as AVG_%[2]s`, stat, strings.ToUpper(stat))
 		std[i] = fmt.Sprintf(`stddev(%[1]s) as STD_%[2]s`, stat, strings.ToUpper(stat))
 	}
-	limit := 6
-	if (*input).Limit != 0 {
-		limit = input.Limit + 1
+	// TODO: ADD duration condition
+
+	zscoreQueries := []string{}
+	for _, stat := range stats {
+		zscoreQueries = append(zscoreQueries, fmt.Sprintf("(avg(%[1]s)-AVG_%[1]s)/STDDEV_%[1]s AS ZSCORE_%[1]s", stat))
 	}
-	// TODO: Allow similarity to be based off of this seasons, this and last season, or all time
-	gameFilter := fmt.Sprintf("%s AND season = \"%s\"", SQLDateBefore(*endDate), "2022-23")
+
+	duration := "2022-23"
 	query := fmt.Sprintf(`
-	SELECT p.name, playerID, count(*) AS games, %[6]s,
-		SQRT(%[2]s) AS DISTANCE
+	SELECT name, playerID, count(*) AS games, 
+	%[4]s 
 	FROM playergames 
-		JOIN (SELECT 
-			%[3]s 
-		FROM playergames JOIN players USING (playerID) WHERE playerID=%[1]d
-		AND (%[8]s) ) AS from_player
-		JOIN (SELECT 
-			%[4]s 
-		FROM playergames JOIN players USING (playerID)
-		WHERE (%[8]s) ) AS from_league
-	JOIN players p USING (playerID) WHERE (%[8]s)
-	GROUP BY playerID, AVG_%[5]s, STD_%[5]s
-	HAVING avg(points)>0 AND avg(minutes)>15
-	ORDER BY DISTANCE ASC
-	LIMIT %[7]d;`, similarToPlayerID, strings.Join(summation, "+"), strings.Join(avg, ","), strings.Join(std, ","), strings.ToUpper(stats[0]), strings.Join(selector, ","), limit, gameFilter)
+	JOIN players USING (playerID) 
+	JOIN standardized ON standardized.date=Cast(%[2]s AS Date) AND standardized.duration=%[3]s 
+	WHERE playerID IN (SELECT playerID FROM playergames where season="2022-23" AND date<Cast(%[2]s AS Date) GROUP BY playerID HAVING avg(minutes)>10 OR playerID=%[1]d)
+	AND playergames.date<Cast(%[2]s AS Date) 
+	AND season=%[3]s 
+	GROUP BY playerID;`,
+		similarToPlayerID, fmt.Sprintf("\"%s\"", endDate.Format("2006-01-02")), fmt.Sprintf("\"%s\"", duration), strings.Join(zscoreQueries, ", "))
 	// logrus.Warn(query)
-	playerDistances := []struct {
-		Id                     int     `db:"playerID"`
-		Name                   string  `db:"name"`
-		NGames                 int     `db:"games"`
-		Distance               float64 `db:"DISTANCE"`
-		Points                 float64 `db:"avgpoints"`
-		Height                 float64 `db:"avgheightInches"`
-		Weight                 float64 `db:"avgweight"`
-		Assists                float64 `db:"avgassists"`
-		Rebounds               float64 `db:"avgrebounds"`
-		FieldGoalsAttempted    float64 `db:"avgfieldGoalsAttempted"`
-		ThreePointersMade      float64 `db:"avgthreePointersMade"`
-		ThreePointersAttempted float64 `db:"avgthreePointersAttempted"`
-		OffensiveRebounds      float64 `db:"avgoffensiveRebounds"`
-		DefensiveRebounds      float64 `db:"avgdefensiveRebounds"`
-		Steals                 float64 `db:"avgsteals"`
-		Blocks                 float64 `db:"avgblocks"`
-		Turnovers              float64 `db:"avgturnovers"`
-		Minutes                float64 `db:"avgminutes"`
-		Passes                 float64 `db:"avgpasses"`
-	}{}
-	err := c.Select(&playerDistances, query)
+	playerZScores := []model.StandardizedPlayerStats{}
+	err := c.Select(&playerZScores, query)
 	if err != nil {
-		logrus.Warnf("failed to get similar players using query: %v", query)
-		return nil, fmt.Errorf("failed to get similar players: %+v", err)
+		logrus.Warnf("failed to get player z scores using query: %v", query)
+		return nil, fmt.Errorf("failed to get player zscores: %+v", err)
 	}
-	if len(playerDistances) == 0 {
-		logrus.Warnf("failed to get similar players using query: %v", query)
+	if len(playerZScores) == 0 {
+		logrus.Warnf("received no player z scores using query: %v", query)
+		return nil, fmt.Errorf("no player zscores found")
+	}
+	mostSimilarIDs := FindMostSimilarPlayerIDs(similarToPlayerID, input.Limit, playerZScores)
+	if len(mostSimilarIDs) == 0 {
 		return nil, fmt.Errorf("no similar players found")
 	}
-	// logrus.Infof("Players most similar to %d based off of: %v", similarToPlayerID, stats)
-	// logrus.Infof("(%2.2d) %20.20s: %s %s %s %s %s %s %s %s\n", 0, "Player Name (#games)", "DISTANCE", "POINTS", "WEIGHT", "HEIGHT", "ASSISTS", "REBOUNDS", "  FGA", "  3PM  ")
-	// for i, pDistance := range playerDistances {
-	// 	logrus.Infof("(%2.2d) %15.15s (%2.2d): %8.3f %6.2f %6.0f %6.0f %7.1f %8.1f %5.1f %6.2f\n", i, pDistance.Name, pDistance.NGames, pDistance.Distance, pDistance.Points, pDistance.Weight, pDistance.Height, pDistance.Assists, pDistance.Rebounds, pDistance.FieldGoalsAttempted, pDistance.ThreePointersMade)
-	// }
-	playerFilters := make([]*model.PlayerFilter, len(playerDistances))
-	// TODO: Allow similarity to be based off of this seasons, this and last season, or all time
-	seasons := []model.SeasonOption{}
-	seasons = append(seasons, model.SEASON_2022_23)
-	for i := range playerDistances {
-		pFilter := model.PlayerFilter{}
-		if input.PlayerPoolFilter != nil {
-			pFilter = *input.PlayerPoolFilter
-		}
-		pFilter.PlayerID = &playerDistances[i].Id
-		pFilter.EndDate = &[]string{endDate.Format("2006-01-02")}[0]
-		pFilter.Seasons = &seasons
-		playerFilters[i] = &pFilter
-	}
+
+	// TODO: Allow similarity to be based off of this season, this and last season, or all time
+	playerFilters := SimilarPlayerFilters(model.SEASON_2022_23, endDate.Format("2006-01-02"), mostSimilarIDs)
 	players, err := c.GetPlayers(ctx, true, playerFilters...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get players from similar player ids: %w", err)
 	}
-	sort.Slice(players, func(i, j int) bool {
-		var iDistance, jDistance float64
-		for _, pDistance := range playerDistances {
-			if pDistance.Id == players[i].PlayerID {
-				iDistance = pDistance.Distance
-			}
-			if pDistance.Id == players[j].PlayerID {
-				jDistance = pDistance.Distance
-			}
-		}
-		return iDistance < jDistance
-	})
-	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Similar Players: %s | %v", len(players), players[0].Name, input), start))
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Similar Players: %v", len(players), input), start))
 	return players, nil
+}
+
+func FindMostSimilarPlayerIDs(similarToPlayerID, limit int, playerZScores []model.StandardizedPlayerStats) []int {
+	fromPlayerZScore, found := lo.Find(playerZScores, func(p model.StandardizedPlayerStats) bool {
+		return p.Id == similarToPlayerID
+	})
+	if !found {
+		logrus.Warnf("failed to find player %d in player z scores", similarToPlayerID)
+		return []int{}
+	}
+
+	sort.SliceStable(playerZScores, func(i, j int) bool {
+		a := playerZScores[i]
+		b := playerZScores[j]
+		return fromPlayerZScore.CosineSimilarityTo(a) > fromPlayerZScore.CosineSimilarityTo(b)
+	})
+
+	otherPlayers := lo.FilterMap(playerZScores, func(x model.StandardizedPlayerStats, _ int) (model.StandardizedPlayerStats, bool) {
+		return x, x.Id != similarToPlayerID
+	})
+	// fmt.Printf("Most Similar Players to %s\n", fromPlayerZScore.Name)
+	// fmt.Print("PlayerID\tPlayer Name\tSIM\tPTS\tAST\tREB\tWGT\tHGT\n")
+	// fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", fromPlayerZScore.Id, fromPlayerZScore.Name, 1.0, fromPlayerZScore.Points, fromPlayerZScore.Assists, fromPlayerZScore.Rebounds, fromPlayerZScore.Weight, fromPlayerZScore.HeightInches)
+	// for i, player := range otherPlayers {
+	// 	if i >= limit {
+	// 		break
+	// 	}
+	// 	fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", player.Id, player.Name, fromPlayerZScore.CosineSimilarityTo(player), player.Points, player.Assists, player.Rebounds, player.Weight, player.HeightInches)
+	// }
+
+	return lo.Map(otherPlayers, func(x model.StandardizedPlayerStats, _ int) int {
+		return x.Id
+	})[:limit]
+}
+
+func SimilarPlayerFilters(season model.SeasonOption, endDate string, playerIDs []int) []*model.PlayerFilter {
+	seasons := []model.SeasonOption{}
+	seasons = append(seasons, model.SEASON_2022_23)
+	playerFilters := make([]*model.PlayerFilter, len(playerIDs))
+	for i := range playerIDs {
+		pFilter := model.PlayerFilter{}
+		pFilter.PlayerID = &playerIDs[i]
+		pFilter.EndDate = &endDate
+		pFilter.Seasons = &seasons
+		playerFilters[i] = &pFilter
+	}
+	return playerFilters
 }
 
 func SQLDateBefore(date time.Time) string {
