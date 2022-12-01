@@ -411,7 +411,7 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 		where = append(where, "statType = ?")
 		args = append(args, statType)
 	}
-	query := "SELECT statType, target, sportsbook, lastModified, pg.* FROM propositions pr JOIN playergames pg USING (playerID, gameID)"
+	query := "SELECT playerName, statType, target, sportsbook, lastModified, pg.* FROM propositions pr JOIN playergames pg USING (playerID, gameID)"
 	if propositionFilter.PlayerName != nil && *propositionFilter.PlayerName != "" {
 		query = fmt.Sprintf("%s JOIN players USING (playerID)", query)
 	}

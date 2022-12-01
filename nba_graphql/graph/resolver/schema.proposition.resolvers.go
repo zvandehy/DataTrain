@@ -197,6 +197,9 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	} else {
 		propPrediction.WagerOutcome = model.WagerOutcomePending
 	}
+	if math.IsNaN(propPrediction.Estimation) || math.IsNaN(propPrediction.Significance) {
+		logrus.Errorf("Prop Prediction IsNaN: %v %v %v %v", obj.PlayerName, obj.Type, propPrediction.Estimation, propPrediction.Significance)
+	}
 	return &propPrediction, nil
 }
 

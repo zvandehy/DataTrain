@@ -255,7 +255,9 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 		breakdown.OverPct = float64(breakdown.Over) / float64(len(vsOpp))
 		breakdown.UnderPct = float64(breakdown.Under) / float64(len(vsOpp))
 		breakdown.PushPct = float64(breakdown.Push) / float64(len(vsOpp))
-		breakdowns = append(breakdowns, breakdown)
+		if !math.IsNaN(breakdown.Base + breakdown.DerivedAverage + breakdown.PctChange) {
+			breakdowns = append(breakdowns, breakdown)
+		}
 	}
 	if len(breakdowns) == 0 {
 		logrus.Warnf("No similar players have played the opponent: %d vs %d", game.PlayerID, game.OpponentID)

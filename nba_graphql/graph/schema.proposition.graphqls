@@ -14,7 +14,7 @@ input GameBreakdownInput {
 input SimilarPlayerInput {
   # TODO: Add a period
   limit: Int!
-  statsOfInterest: [Stat!]
+  statsOfInterest: [Stat!]!
   playerPoolFilter: PlayerFilter
   weight: Float!
 }
