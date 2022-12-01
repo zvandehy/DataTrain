@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"github.com/zvandehy/DataTrain/nba_graphql/database"
 	"github.com/zvandehy/DataTrain/nba_graphql/graph/model"
@@ -15,17 +16,19 @@ type LoadersKey string
 
 const loadersKey LoadersKey = "dataloaders"
 
-const waitTime = 150 * time.Millisecond
+const waitTime = 10 * time.Millisecond
 const maxBatch = 50
 
 type Loaders struct {
-	PlayerByID PlayerLoaderID
-	TeamByID   TeamLoaderID
-	TeamByAbr  TeamLoaderABR
+	PlayerByID          PlayerLoaderID
+	PlayerWithGamesByID PlayerLoaderID
+	TeamByID            TeamLoaderID
+	TeamByAbr           TeamLoaderABR
 	// PlayerByFilter           PlayerLoader
 	PlayerGameByFilter PlayerGameLoader
 	// TeamGameByPlayerGame     TeamGameLoader
 	// OpponentGameByPlayerGame TeamGameLoader
+	SimilarPlayerLoader SimilarPlayerLoader
 }
 
 func Middleware(conn database.BasketballRepository, next http.Handler) http.Handler {
@@ -35,7 +38,14 @@ func Middleware(conn database.BasketballRepository, next http.Handler) http.Hand
 				PlayerLoaderIDConfig{
 					MaxBatch: maxBatch,
 					Wait:     waitTime,
-					Fetch:    fetchPlayerByID(conn, r.Context()),
+					Fetch:    fetchPlayerByID(conn, r.Context(), false),
+				},
+			),
+			PlayerWithGamesByID: *NewPlayerLoaderID(
+				PlayerLoaderIDConfig{
+					MaxBatch: maxBatch,
+					Wait:     waitTime,
+					Fetch:    fetchPlayerByID(conn, r.Context(), true),
 				},
 			),
 			TeamByID: *NewTeamLoaderID(
@@ -50,6 +60,13 @@ func Middleware(conn database.BasketballRepository, next http.Handler) http.Hand
 					MaxBatch: maxBatch,
 					Wait:     waitTime,
 					Fetch:    fetchTeamByAbbreviation(conn, r.Context()),
+				},
+			),
+			SimilarPlayerLoader: *NewSimilarPlayerLoader(
+				SimilarPlayerLoaderConfig{
+					MaxBatch: maxBatch * 2,
+					Wait:     waitTime * 2,
+					Fetch:    fetchSimilarPlayerIDs(conn, r.Context()),
 				},
 			),
 			// TeamGameByPlayerGame: *NewTeamGameLoader(
@@ -109,6 +126,74 @@ func fetchPlayerByName(db database.BasketballRepository, ctx context.Context) fu
 	}
 }
 
+func similarPlayerInputKey(input model.SimilarPlayerInput) string {
+	poolKey := ""
+	if input.PlayerPoolFilter != nil {
+		poolKey = input.PlayerPoolFilter.Key()
+	}
+	return fmt.Sprintf("%v-%s", input.StatsOfInterest, poolKey)
+}
+
+func similarPlayerQueryKey(query model.SimilarPlayerQuery) string {
+	return fmt.Sprintf("%s-%s", query.EndDate.Format("2006-01-02"), similarPlayerInputKey(query.SimilarPlayerInput))
+}
+
+func fetchSimilarPlayerIDs(db database.BasketballRepository, ctx context.Context) func(similarPlayerQueries []*model.SimilarPlayerQuery) ([][]model.Player, []error) {
+	return func(similarPlayerQueries []*model.SimilarPlayerQuery) ([][]model.Player, []error) {
+		logrus.Warn("FETCHING STANDARDIZED STATS")
+		uniqueQueries := make(map[string][]model.SimilarPlayerQuery)
+		queryToSimilarPlayerIDs := make(map[string][]int)
+		for _, query := range similarPlayerQueries {
+			key := similarPlayerQueryKey(*query)
+			if _, ok := uniqueQueries[key]; !ok {
+				uniqueQueries[key] = []model.SimilarPlayerQuery{*query}
+				logrus.Warnf("add unique query: %s", key)
+			} else {
+				uniqueQueries[key] = append(uniqueQueries[key], *query)
+			}
+		}
+		for _, queries := range uniqueQueries {
+			playerZScores, err := db.GetStandardizedPlayerStats(ctx, queries[0], lo.Map(queries, func(query model.SimilarPlayerQuery, _ int) int {
+				return query.ToPlayerID
+			})...)
+			if err != nil {
+				return nil, []error{err}
+			}
+			for _, query := range queries {
+				mostSimilarIDs := database.FindMostSimilarPlayerIDs(query.ToPlayerID, query.SimilarPlayerInput.Limit, playerZScores)
+				if len(mostSimilarIDs) == 0 {
+					return nil, []error{fmt.Errorf("no similar players found")}
+				}
+				queryToSimilarPlayerIDs[fmt.Sprintf("%d-%d-%s", query.ToPlayerID, query.SimilarPlayerInput.Limit, similarPlayerQueryKey(query))] = mostSimilarIDs
+			}
+		}
+
+		// get all similar players
+		allSimilarPlayerIDs := []*model.PlayerFilter{}
+		for _, similarPlayerIDs := range queryToSimilarPlayerIDs {
+			allSimilarPlayerIDs = append(allSimilarPlayerIDs, lo.Map(similarPlayerIDs, func(id int, _ int) *model.PlayerFilter {
+				return &model.PlayerFilter{
+					PlayerID: &id,
+				}
+			})...)
+		}
+		allPlayers, err := db.GetPlayers(ctx, true, allSimilarPlayerIDs...)
+		if err != nil {
+			return nil, []error{err}
+		}
+		similarPlayers := make([][]model.Player, len(similarPlayerQueries))
+		for i, query := range similarPlayerQueries {
+			similarIDs := queryToSimilarPlayerIDs[fmt.Sprintf("%d-%d-%s", query.ToPlayerID, query.SimilarPlayerInput.Limit, similarPlayerQueryKey(*query))]
+			// fmt.Printf("%d ==> %v\n", query.ToPlayerID, similarIDs)
+			similarPlayers[i] = lo.FilterMap(allPlayers, func(player *model.Player, _ int) (model.Player, bool) {
+				return *player, lo.Contains(similarIDs, player.PlayerID)
+			})
+
+		}
+		return similarPlayers, nil
+	}
+}
+
 func wrapPlayerIDs(ids []int) []*model.PlayerFilter {
 	wrapped := make([]*model.PlayerFilter, len(ids))
 	for i := range ids {
@@ -117,10 +202,10 @@ func wrapPlayerIDs(ids []int) []*model.PlayerFilter {
 	return wrapped
 }
 
-func fetchPlayerByID(db database.BasketballRepository, ctx context.Context) func(playerIDs []int) ([]*model.Player, []error) {
+func fetchPlayerByID(db database.BasketballRepository, ctx context.Context, loadGames bool) func(playerIDs []int) ([]*model.Player, []error) {
 	return func(playerIDs []int) ([]*model.Player, []error) {
 		idToPlayerMap := make(map[int]*model.Player, len(playerIDs))
-		players, err := db.GetPlayers(ctx, false, wrapPlayerIDs(playerIDs)...)
+		players, err := db.GetPlayers(ctx, loadGames, wrapPlayerIDs(playerIDs)...)
 		if err != nil {
 			logrus.Errorf("error fetching players by id: %v", err)
 			return nil, []error{err}

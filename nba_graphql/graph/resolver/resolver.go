@@ -156,11 +156,42 @@ func (r *Resolver) GetGamelogBreakdowns(ctx context.Context, inputs []*model.Gam
 func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.SimilarPlayerInput, game *model.PlayerGame, stat model.Stat) []*model.PropBreakdown {
 
 	// TODO: Allow getting games for this season, this and last season, or all time
-	similarPlayers, err := r.GetSimilarPlayers(ctx, game.PlayerID, input, game.Date)
-	if err != nil || len(similarPlayers) == 0 {
+	// similarPlayers, err := r.GetSimilarPlayers(ctx, game.PlayerID, input, game.Date)
+	// if err != nil || len(similarPlayers) == 0 {
+	// 	logrus.Errorf("Error getting similar players: %v", err)
+	// 	return []*model.PropBreakdown{}
+	// }
+
+	similarPlayers, err := dataloader.For(ctx).SimilarPlayerLoader.Load(&model.SimilarPlayerQuery{
+		ToPlayerID:         game.PlayerID,
+		EndDate:            game.Date,
+		SimilarPlayerInput: *input,
+	})
+	if err != nil {
 		logrus.Errorf("Error getting similar players: %v", err)
 		return []*model.PropBreakdown{}
 	}
+	// filters := lo.Map(similarPlayerIDs, func(id int, _ int) *model.PlayerFilter {
+	// 	return &model.PlayerFilter{
+	// 		PlayerID: &id,
+	// 	}
+	// })
+	// similarPlayers, err := r.GetPlayers(ctx, true, filters...)
+	// if err != nil {
+	// 	logrus.Errorf("Error getting similar players: %v", err)
+	// 	return []*model.PropBreakdown{}
+	// }
+
+	// TODO: use dataloader. issue: Dataloader was only caching for each call to getSimilarPlayerBreakdowns.
+	// similarPlayers := []*model.Player{}
+	// for _, id := range similarPlayerIDs {
+	// 	player, err := dataloader.For(ctx).PlayerWithGamesByID.Load(id)
+	// 	if err != nil {
+	// 		logrus.Errorf("Error getting similar player: %v", err)
+	// 		continue
+	// 	}
+	// 	similarPlayers = append(similarPlayers, player)
+	// }
 
 	// remove similar players that are the same as the player we are looking at
 	for i := 0; i < len(similarPlayers); i++ {

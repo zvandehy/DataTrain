@@ -587,6 +587,53 @@ func (c *SQLClient) GetTeams(ctx context.Context, withGames bool, teamFilters ..
 	return teams, nil
 }
 
+func (c *SQLClient) GetStandardizedPlayerStats(ctx context.Context, similarPlayerQuery model.SimilarPlayerQuery, toPlayerIDs ...int) ([]model.StandardizedPlayerStats, error) {
+	c.AddQuery()
+	start := time.Now()
+	// stats := []string{"points", "assists", "heightInches", "fieldGoalsAttempted", "threePointersMade", "rebounds", "passes", "steals", "blocks", "turnovers", "minutes"}
+	stats := []string{"points", "assists", "rebounds", "heightInches", "weight"}
+	// TODO: ADD duration condition
+	zscoreQueries := []string{}
+	for _, stat := range stats {
+		zscoreQueries = append(zscoreQueries, fmt.Sprintf("(avg(%[1]s)-AVG_%[1]s)/STDDEV_%[1]s AS ZSCORE_%[1]s", stat))
+	}
+
+	similarToPlayerIDs := []string{}
+	for _, playerID := range toPlayerIDs {
+		similarToPlayerIDs = append(similarToPlayerIDs, fmt.Sprintf("%d", playerID))
+	}
+
+	// TODO: Add duration to similarPlayerQuery
+	duration := "2022-23"
+
+	//TODO: Add player pool filter to query
+	query := fmt.Sprintf(`
+	SELECT name, playerID, count(*) AS games, 
+	%[4]s 
+	FROM playergames 
+	JOIN players USING (playerID) 
+	JOIN standardized ON standardized.date=Cast(%[2]s AS Date) AND standardized.duration=%[3]s 
+	WHERE playerID IN (SELECT playerID FROM playergames where season="2022-23" AND date<Cast(%[2]s AS Date) GROUP BY playerID HAVING avg(minutes)>10 OR playerID IN (%[1]s))
+	AND playergames.date<Cast(%[2]s AS Date) 
+	AND season=%[3]s 
+	GROUP BY playerID;`,
+		strings.Join(similarToPlayerIDs, ", "), fmt.Sprintf("\"%s\"", similarPlayerQuery.EndDate.Format("2006-01-02")), fmt.Sprintf("\"%s\"", duration), strings.Join(zscoreQueries, ", "))
+	// logrus.Warn(query)
+	playerZScores := []model.StandardizedPlayerStats{}
+	err := c.Select(&playerZScores, query)
+	if err != nil {
+		logrus.Warnf("failed to get player z scores using query: %v", query)
+		return nil, fmt.Errorf("failed to get player zscores: %+v", err)
+	}
+	if len(playerZScores) == 0 {
+		logrus.Warnf("received no player z scores using query: %v", query)
+		return nil, fmt.Errorf("no player zscores found")
+	}
+
+	logrus.Info(util.TimeLog(fmt.Sprintf("Query (%d) Standardized Player Stats: %v | %d", len(playerZScores), similarPlayerQuery, len(toPlayerIDs)), start))
+	return playerZScores, nil
+}
+
 func (c *SQLClient) GetSimilarPlayers(ctx context.Context, similarToPlayerID int, input *model.SimilarPlayerInput, endDate *time.Time) ([]*model.Player, error) {
 	c.AddQuery()
 	start := time.Now()

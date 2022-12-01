@@ -49,6 +49,7 @@ type BasketballRepository interface {
 	GetSimilarTeams(ctx context.Context, similarToTeamID int, input *model.SimilarTeamInput, endDate string) ([]*model.Team, error)
 	GetPropositionsByPlayerGame(ctx context.Context, game model.PlayerGame) ([]*model.Proposition, error)
 	GetPlayerGames(ctx context.Context, inputs ...model.GameFilter) ([]*model.PlayerGame, error)
+	GetStandardizedPlayerStats(ctx context.Context, similarPlayerQuery model.SimilarPlayerQuery, toPlayerIDs ...int) ([]model.StandardizedPlayerStats, error)
 }
 
 var cacheSchedule *model.Schedule
