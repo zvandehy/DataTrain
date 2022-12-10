@@ -27,8 +27,8 @@ export interface Factor {
 export interface ModelInput {
   model: string;
   gameBreakdowns: GameBreakdownInput[];
-  similarPlayerInput: SimilarPlayerInput;
-  similarTeamInput: SimilarTeamInput;
+  similarPlayerInput?: SimilarPlayerInput;
+  similarTeamInput?: SimilarTeamInput;
 }
 
 export interface GameBreakdownInput {
