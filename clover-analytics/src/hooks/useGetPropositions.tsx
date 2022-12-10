@@ -1,11 +1,13 @@
-import { ApolloError, gql, useQuery } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
+import moment from "moment";
 import { ModelInput } from "../shared/interfaces/custom-prediction.interface";
 import { Proposition } from "../shared/interfaces/graphql/proposition.interface";
 
 export const USE_GET_PROPOSITIONS = gql`
   query GetPropositions(
     $startDate: String!
-    $endDate: String! # $customModel: ModelInput!
+    $endDate: String!
+    $customModel: ModelInput!
   ) {
     propositions(input: { startDate: $startDate, endDate: $endDate }) {
       sportsbook
@@ -33,24 +35,7 @@ export const USE_GET_PROPOSITIONS = gql`
       target
       outcome
       actualResult
-      prediction(
-        # input: $customModel
-        input: {
-          model: "SEASON"
-          gameBreakdowns: [
-            { name: "2022-23", weight: 25, filter: { seasonMatch: true } }
-            {
-              name: "2021-22"
-              weight: 25
-              filter: { previousSeasonMatch: true }
-            }
-            # { name: "Last 10 Games", weight: 25, filter: { lastX: 10 } }
-            { name: "Last 5 Games", weight: 20, filter: { lastX: 5 } }
-            { name: "Opponent", weight: 30, filter: { opponentMatch: true } }
-          ]
-          # similarPlayerInput: { weight: 20, limit: 15 }
-        }
-      ) {
+      prediction(input: $customModel) {
         estimation
         significance
         wager
@@ -63,52 +48,41 @@ export const USE_GET_PROPOSITIONS = gql`
     }
   }
 `;
-export interface QueryResult {
-  loading?: boolean;
-  error?: ApolloError;
-  data?: any;
-}
 
-export interface ProjectionQueryResult extends QueryResult {
-  data: Proposition[];
+export interface ProjectionQuery {
+  startDate: string;
+  endDate: string;
+  customModel: ModelInput;
 }
 
 export const useGetPropositions = ({
   startDate,
   endDate,
   customModel,
-}: {
-  startDate: string;
-  endDate: string;
-  customModel: ModelInput;
-}): ProjectionQueryResult => {
-  const { loading, error, data } = useQuery(USE_GET_PROPOSITIONS, {
-    variables: { startDate, endDate },
+}: ProjectionQuery) => {
+  const { loading, error, data, fetchMore } = useQuery(USE_GET_PROPOSITIONS, {
+    variables: { startDate, endDate, customModel },
   });
-  if (loading) {
-    return { loading, error, data: [] };
-  }
-  if (error) {
-    return { loading, error, data: [] };
-  }
-  if (data && data?.propositions) {
-    return {
-      loading: false,
-      error: undefined,
-      data: data.propositions,
-    };
-  }
-  return { loading, error, data: [] };
+  // const sortedPropositions: Proposition[] = data?.propositions.sort(
+  //   (a: Proposition, b: Proposition) => {
+  //     const aDate = moment(a.game.date);
+  //     const bDate = moment(b.game.date);
+  //     if (aDate.isBefore(bDate)) {
+  //       return -1;
+  //     }
+  //     if (aDate.isAfter(bDate)) {
+  //       return 1;
+  //     }
+  //     return 0;
+  //   }
+  // );
+  // console.log(startDate);
+  return {
+    loading,
+    error,
+    data: data?.propositions as Proposition[],
+    fetchMore,
+    minDate: startDate,
+    // maxDate: sortedPropositions?.[sortedPropositions.length - 1]?.game.date,
+  };
 };
-
-// function GetMaxPctDiff(player: Player) {
-//   let maxPctDiff = 0;
-//   player.games.forEach((game) => {
-//     game.prediction.propositions.forEach((prop) => {
-//       if (Math.abs(prop.predictionTargetDiffPCT) > Math.abs(maxPctDiff)) {
-//         maxPctDiff = Math.abs(prop.predictionTargetDiffPCT);
-//       }
-//     });
-//   });
-//   return maxPctDiff;
-// }

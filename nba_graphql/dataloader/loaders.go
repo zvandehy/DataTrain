@@ -185,10 +185,12 @@ func fetchSimilarPlayerIDs(db database.BasketballRepository, ctx context.Context
 		for i, query := range similarPlayerQueries {
 			similarIDs := queryToSimilarPlayerIDs[fmt.Sprintf("%d-%d-%s", query.ToPlayerID, query.SimilarPlayerInput.Limit, similarPlayerQueryKey(*query))]
 			// fmt.Printf("%d ==> %v\n", query.ToPlayerID, similarIDs)
-			similarPlayers[i] = lo.FilterMap(allPlayers, func(player *model.Player, _ int) (model.Player, bool) {
+			players := lo.FilterMap(allPlayers, func(player *model.Player, _ int) (model.Player, bool) {
 				return *player, lo.Contains(similarIDs, player.PlayerID)
 			})
-
+			similarPlayers[i] = lo.FindUniquesBy(players, func(player model.Player) int {
+				return player.PlayerID
+			})
 		}
 		return similarPlayers, nil
 	}

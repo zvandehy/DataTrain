@@ -15,9 +15,7 @@ import {
 import moment from "moment";
 // import moment from "moment";
 import React from "react";
-import { Bar, Chart } from "react-chartjs-2";
-import { useGetPropositions } from "../../hooks/useGetPropositions";
-import { DEFAULT_MODEL } from "../../shared/constants";
+import { Chart } from "react-chartjs-2";
 import { Proposition } from "../../shared/interfaces/graphql/proposition.interface";
 import { COLORS } from "../../shared/styles/constants";
 // import { ALL_STATS } from "../../../shared/constants";
@@ -41,21 +39,29 @@ ChartJS.register(
 );
 
 interface ModelAccuracyChartProps {
-  startDate: string;
-  endDate: string;
   propositions: Proposition[];
 }
 
 const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
-  endDate,
-  startDate,
   propositions,
 }: ModelAccuracyChartProps) => {
-  console.log("props", propositions.length);
-
   let days = [];
-  //days between startDate and endDate
-  for (let i = moment(startDate); i.isSameOrBefore(endDate); i.add(1, "days")) {
+
+  // get all days between the max and min dates in proposition
+  let startDate = moment(
+    propositions.reduce(
+      (min, p) => (p.game.date < min ? p.game.date : min),
+      propositions[0].game.date
+    )
+  );
+  let endDate = moment(
+    propositions.reduce(
+      (max, p) => (p.game.date > max ? p.game.date : max),
+      propositions[0].game.date
+    )
+  );
+
+  for (let i = startDate; i.isSameOrBefore(endDate); i.add(1, "days")) {
     if (
       propositions.find(
         (prop: Proposition) => prop.game.date === i.format("YYYY-MM-DD")
@@ -126,14 +132,11 @@ const ModelAccuracyChart: React.FC<ModelAccuracyChartProps> = ({
             plugins: {
               title: {
                 display: true,
-                text: `Model Accuracy between ${startDate} and ${endDate}`,
-                color: "#FFF",
-              },
-              subtitle: {
-                display: true,
-                text: `Total Accuracy: ${totalAccuracy.toFixed(
-                  2
-                )}% (${totalHits} hits, ${totalMisses} misses)`,
+                text: `Accuracy Timeline Between ${moment(startDate).format(
+                  "MMM DD "
+                )} and ${moment(endDate).format(
+                  "MMM DD"
+                )} (${totalAccuracy.toFixed(2)}%)`,
                 color: "#FFF",
               },
               legend: {

@@ -1,34 +1,41 @@
-import { Grid, Typography, Stack, Button, Card, Box } from "@mui/material";
+import {
+  Grid,
+  Typography,
+  Stack,
+  Button,
+  Card,
+  Box,
+  Select,
+  InputLabel,
+  MenuItem,
+} from "@mui/material";
 import moment from "moment";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useGetPropositions } from "../../../hooks/useGetPropositions";
 import { DEFAULT_MODEL } from "../../../shared/constants";
+import { TotalPropsCard } from "../../cards/total-props-card.component.";
 import { ModelAccuracyByPctDiff } from "../accuracy-by-percent-diff-chart.component";
 import { ModelAccuracyByStatType } from "../accuracy-by-type-chart.component";
 import ModelAccuracyChart from "../model-accuracy-chart-component";
 
 interface HistoricalChartsProps {
-  endDate: string;
+  initialDate: string;
 }
 
 const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
-  endDate,
+  initialDate,
 }: HistoricalChartsProps) => {
-  const [slot, setSlot] = useState<"month" | "week" | "day">("week");
-  const startDate =
-    slot === "day"
-      ? endDate
-      : slot === "week"
-      ? moment(endDate).subtract(3, "days").format("YYYY-MM-DD")
-      : moment(endDate).subtract(7, "days").format("YYYY-MM-DD"); // TODO: fly app runs out of memory
-
+  const dateRange = useRef({ startDate: initialDate, endDate: initialDate });
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [stat, setStat] = useState<string>("any");
   const {
     loading,
     error,
     data: propositions,
+    fetchMore,
   } = useGetPropositions({
-    startDate: startDate,
-    endDate: endDate,
+    startDate: initialDate,
+    endDate: initialDate,
     customModel: DEFAULT_MODEL,
   });
 
@@ -36,81 +43,158 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
     return <div>Loading...</div>;
   }
   if (error) {
-    return <div>Error: {error.message}</div>;
+    if (!propositions || !propositions.length) {
+      return <div>Error loading data</div>;
+    }
   }
+
+  // get unique stat types
+  const statTypes = propositions.reduce((acc: string[], prop) => {
+    if (!acc.includes(prop.type)) {
+      acc.push(prop.type);
+    }
+    return acc;
+  }, []);
+
+  const statOptions = [{ value: "any", label: "Any" }].concat(
+    ...statTypes.map((type) => ({
+      value: type,
+      label: type.toUpperCase().replaceAll("_", "+"),
+    }))
+  );
+
+  const filteredProps = propositions.filter((prop) => {
+    return prop.type === stat || stat === "any";
+  });
+
   return (
     <>
       <Grid item xs={12} md={7} lg={8} mt={2}>
-        <Grid container alignItems="center" justifyContent="space-between">
+        <Grid
+          container
+          alignItems="center"
+          justifyContent="space-between"
+          pb={1}
+        >
           <Grid item>
-            <Typography variant="h5">Overall Historical Accuracy</Typography>
+            <Typography variant="h5">
+              Model Accuracy Between{" "}
+              {moment(dateRange.current.startDate).format("MMM DD")} -{" "}
+              {moment(initialDate).format("MMM DD")}{" "}
+            </Typography>
           </Grid>
           <Grid item>
-            <Stack direction="row" alignItems="center" spacing={0}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Select
+                variant="outlined"
+                size="small"
+                labelId="select-stat"
+                id="stat-selector"
+                value={stat}
+                onChange={(event) => setStat(event.target.value as string)}
+              >
+                {statOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
               <Button
                 size="small"
-                onClick={() => setSlot("month")}
-                color={slot === "month" ? "primary" : "secondary"}
-                variant={slot === "month" ? "outlined" : "text"}
+                variant={"contained"}
+                onClick={() => {
+                  setLoadingMore(true);
+                  const newStartDate = moment(dateRange.current.startDate)
+                    .subtract(1, "day")
+                    .format("YYYY-MM-DD");
+                  const newEndDate = moment(dateRange.current.endDate)
+                    .subtract(1, "day")
+                    .format("YYYY-MM-DD");
+                  fetchMore({
+                    variables: {
+                      startDate: newStartDate,
+                      endDate: newEndDate,
+                    },
+                    updateQuery(prev, { fetchMoreResult }) {
+                      if (!fetchMoreResult || !fetchMoreResult?.propositions)
+                        return prev;
+                      return {
+                        ...prev,
+                        propositions: [
+                          ...prev?.propositions,
+                          ...fetchMoreResult.propositions,
+                        ],
+                      };
+                    },
+                  })
+                    .catch((err) => {
+                      console.log("Error Fetching More", err);
+                    })
+                    .finally(() => {
+                      setLoadingMore(false);
+                      dateRange.current.startDate = newStartDate;
+                      dateRange.current.endDate = newEndDate;
+                    });
+                }}
               >
-                Week
-              </Button>
-              <Button
-                size="small"
-                onClick={() => setSlot("week")}
-                color={slot === "week" ? "primary" : "secondary"}
-                variant={slot === "week" ? "outlined" : "text"}
-              >
-                3 Days
-              </Button>
-              <Button
-                size="small"
-                onClick={() => setSlot("day")}
-                color={slot === "day" ? "primary" : "secondary"}
-                variant={slot === "day" ? "outlined" : "text"}
-              >
-                Day
+                Load +1 Day
               </Button>
             </Stack>
           </Grid>
         </Grid>
-        <Card sx={{ mt: 1.5 }}>
-          <Box sx={{ pt: 1, pr: 2 }}>
-            <Box slot={slot}>
-              <ModelAccuracyChart
-                propositions={propositions}
-                startDate={startDate}
-                endDate={endDate}
-              />
-            </Box>
+        <Card>
+          <Box className={loadingMore ? "loading-data" : ""}>
+            <ModelAccuracyChart propositions={filteredProps} />
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12} md={5} lg={4} mt={2}>
-        <Grid container alignItems="center" justifyContent="space-between">
-          <Grid item>
-            <Typography variant="h5">Stat Accuracy</Typography>
-          </Grid>
+      <Grid item xs={12} md={5} lg={4} mt={"auto"}>
+        <Card>
+          <Box
+            sx={{ p: 3, pb: 0, minHeight: "400px" }}
+            className={loadingMore ? "loading-data" : ""}
+          >
+            <ModelAccuracyByStatType propositions={filteredProps} />
+          </Box>
+        </Card>
+      </Grid>
+      <Grid item container xs={12}>
+        <Grid item xs={12} md={5} lg={4} mt={2} pl={1} pr={1}>
+          <Card>
+            <Box
+              sx={{ p: 3, pb: 0, minHeight: "300px" }}
+              className={loadingMore ? "loading-data" : ""}
+            >
+              <TotalPropsCard
+                title={"All Props"}
+                propositions={filteredProps}
+              />
+            </Box>
+          </Card>
         </Grid>
-        <Card sx={{ mt: 2 }}>
-          <Box sx={{ p: 3, pb: 0, minHeight: "300px" }}>
-            <ModelAccuracyByStatType propositions={propositions} />
-          </Box>
-          <Box />
-        </Card>
-        <Typography variant="h5" mt={1}>
-          Significance Accuracy
-        </Typography>
-        <Card sx={{ mt: 2 }}>
-          <Box sx={{ p: 3, pb: 0, minHeight: "300px" }}>
-            <ModelAccuracyByPctDiff
-              propositions={propositions}
-              stepSize={10}
-              steps={9}
-            />
-          </Box>
-          <Box />
-        </Card>
+        <Grid item xs={12} md={5} lg={4} mt={2} pl={1} pr={1}>
+          <Card>
+            <Box
+              sx={{ p: 3, pb: 0, minHeight: "300px" }}
+              className={loadingMore ? "loading-data" : ""}
+            ></Box>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={5} lg={4} mt={2} pl={1} pr={1}>
+          <Card>
+            <Box
+              sx={{ p: 3, pb: 0, minHeight: "300px" }}
+              className={loadingMore ? "loading-data" : ""}
+            >
+              <ModelAccuracyByPctDiff
+                propositions={filteredProps}
+                stepSize={10}
+                steps={9}
+              />
+            </Box>
+            <Box />
+          </Card>
+        </Grid>
       </Grid>
     </>
   );

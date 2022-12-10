@@ -120,7 +120,7 @@ export const ModelAccuracyByStatType: React.FC<
           },
           title: {
             display: true,
-            text: "MODEL ACCURACY BY STAT TYPE",
+            text: "STAT TYPE ACCURACY (Sorted by Accuracy)",
             color: "white",
           },
           legend: {
@@ -168,7 +168,6 @@ export const ModelAccuracyByStatType: React.FC<
               drawBorder: true,
               //   color: "white",
               color(ctx, options) {
-                console.log(ctx);
                 if (ctx.index === 0 || ctx.tick === undefined) {
                   return "white";
                 }

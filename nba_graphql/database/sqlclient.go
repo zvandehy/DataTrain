@@ -592,6 +592,16 @@ func (c *SQLClient) GetStandardizedPlayerStats(ctx context.Context, similarPlaye
 	start := time.Now()
 	// stats := []string{"points", "assists", "heightInches", "fieldGoalsAttempted", "threePointersMade", "rebounds", "passes", "steals", "blocks", "turnovers", "minutes"}
 	stats := []string{"points", "assists", "rebounds", "heightInches", "weight"}
+	if similarPlayerQuery.SimilarPlayerInput.StatsOfInterest != nil {
+		stats = lo.FilterMap(similarPlayerQuery.SimilarPlayerInput.StatsOfInterest, func(s model.Stat, _ int) (string, bool) {
+			sql, err := s.SQL()
+			if err != nil {
+				logrus.Warnf("failed to get sql for stat: %v", s)
+				return "", false
+			}
+			return sql, true
+		})
+	}
 	// TODO: ADD duration condition
 	zscoreQueries := []string{}
 	for _, stat := range stats {
@@ -699,6 +709,7 @@ func FindMostSimilarPlayerIDs(similarToPlayerID, limit int, playerZScores []mode
 		return p.Id == similarToPlayerID
 	})
 	if !found {
+		// TODO: Add playerID to standardized and re-request
 		logrus.Warnf("failed to find player %d in player z scores", similarToPlayerID)
 		return []int{}
 	}
@@ -712,15 +723,15 @@ func FindMostSimilarPlayerIDs(similarToPlayerID, limit int, playerZScores []mode
 	otherPlayers := lo.FilterMap(playerZScores, func(x model.StandardizedPlayerStats, _ int) (model.StandardizedPlayerStats, bool) {
 		return x, x.Id != similarToPlayerID
 	})
-	// fmt.Printf("Most Similar Players to %s\n", fromPlayerZScore.Name)
-	// fmt.Print("PlayerID\tPlayer Name\tSIM\tPTS\tAST\tREB\tWGT\tHGT\n")
-	// fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", fromPlayerZScore.Id, fromPlayerZScore.Name, 1.0, fromPlayerZScore.Points, fromPlayerZScore.Assists, fromPlayerZScore.Rebounds, fromPlayerZScore.Weight, fromPlayerZScore.HeightInches)
-	// for i, player := range otherPlayers {
-	// 	if i >= limit {
-	// 		break
-	// 	}
-	// 	fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", player.Id, player.Name, fromPlayerZScore.CosineSimilarityTo(player), player.Points, player.Assists, player.Rebounds, player.Weight, player.HeightInches)
-	// }
+	fmt.Printf("Most Similar Players to %s\n", fromPlayerZScore.Name)
+	fmt.Print("PlayerID\tPlayer Name\tSIM\tPTS\tAST\tREB\tWGT\tHGT\tMIN\n")
+	fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", fromPlayerZScore.Id, fromPlayerZScore.Name, 1.0, fromPlayerZScore.Points, fromPlayerZScore.Assists, fromPlayerZScore.Rebounds, fromPlayerZScore.Weight, fromPlayerZScore.HeightInches, fromPlayerZScore.Minutes)
+	for i, player := range otherPlayers {
+		if i >= limit {
+			break
+		}
+		fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", player.Id, player.Name, fromPlayerZScore.CosineSimilarityTo(player), player.Points, player.Assists, player.Rebounds, player.Weight, player.HeightInches, player.Minutes)
+	}
 
 	return lo.Map(otherPlayers, func(x model.StandardizedPlayerStats, _ int) int {
 		return x.Id

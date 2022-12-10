@@ -78,49 +78,35 @@ export const DEFAULT_MODEL: ModelInput = {
       filter: {
         seasons: [SeasonOption.SEASON_2021_22],
       },
-      weight: 25,
+      weight: 10,
     },
     {
-      name: "2021-22 Matchup",
+      name: "Previous Matchups",
       filter: {
-        seasons: [SeasonOption.SEASON_2021_22],
         opponentMatch: true,
       },
-      weight: 20,
+      weight: 15,
     },
     {
-      name: "2022-23 Last 10",
+      name: "2022-23 Season",
       filter: {
         seasons: [SeasonOption.SEASON_2022_23],
-        lastX: 10,
       },
-      weight: 20,
+      weight: 45,
     },
   ],
   similarPlayerInput: {
-    limit: 10,
+    limit: 20,
     statsOfInterest: [
       "Points",
       "Rebounds",
       "Assists",
       "Steals",
       "Blocks",
-      "Turnovers",
       "ThreePointersMade",
+      "Minutes",
     ],
-    weight: 20,
-    playerPoolFilter: {
-      positionLooseMatch: true,
-      seasons: [SeasonOption.SEASON_2022_23, SeasonOption.SEASON_2021_22],
-    },
-  },
-  similarTeamInput: {
-    limit: 3,
-    statsOfInterest: ["OppPoints", "OppRebounds", "OppAssists"],
-    period: {
-      seasons: [SeasonOption.SEASON_2022_23, SeasonOption.SEASON_2021_22],
-    },
-    weight: 15,
+    weight: 30,
   },
 };
 

@@ -8,6 +8,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  TableRow,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -34,7 +35,6 @@ import {
 // ==============================|| DASHBOARD ||============================== //
 
 const DashboardPage = () => {
-  const [slot, setSlot] = useState<"month" | "week" | "day">("day");
   const [startDate, setStartDate] = useState(moment().format("YYYY-MM-DD"));
 
   const theme = useTheme();
@@ -103,7 +103,7 @@ const DashboardPage = () => {
           </Typography>
         </Grid>
         {/* row 2 */}
-        <Grid container xs={12} md={4} sx={{ m: "auto" }}>
+        <Grid container item xs={12} md={4} sx={{ m: "auto" }}>
           <Grid
             item
             xs={6}
@@ -111,10 +111,10 @@ const DashboardPage = () => {
             sx={{ p: 1, margin: "auto", "& > *": { mb: 1, mt: 1 } }}
           >
             <TotalPropsCard
-              title={"All Props"}
-              propositions={propositions}
-              nGames={gameIDs.length}
-              nPlayers={Object.keys(playerPropositions).length}
+              title={"All Props " + moment(startDate).format("MM/DD/YYYY")}
+              propositions={propositions.filter((p) =>
+                moment(p.game.date).isSame(startDate)
+              )}
             />
           </Grid>
           <Grid
@@ -124,16 +124,17 @@ const DashboardPage = () => {
             sx={{ p: 1, margin: "auto", "& > *": { mb: 1, mt: 1 } }}
           >
             <TotalPropsCard
-              title={"Top Props"}
-              propositions={topProps}
-              nGames={gameIDs.length}
-              nPlayers={Object.keys(playerPropositions).length}
+              title={"Top Props  " + moment(startDate).format("MM/DD/YYYY")}
+              propositions={topProps.filter((p) =>
+                moment(p.game.date).isSame(startDate)
+              )}
             />
           </Grid>
           {/* <TotalPropsCard total={50} /> */}
         </Grid>
         <Grid container item xs={12} md={8}>
           {topProps
+            .filter((p) => moment(p.game.date).isSame(startDate))
             .sort((a, b) => {
               return ComparePropByPredictionDeviation(b, a);
             })
@@ -153,35 +154,51 @@ const DashboardPage = () => {
             })}
         </Grid>
 
-        <HistoricalCharts endDate={startDate} />
+        <HistoricalCharts initialDate={startDate} />
       </Grid>
       {/* row 3 */}
-      <Grid item xs={12} md={7} lg={8} paddingX={2}>
+      <Grid
+        item
+        xs={12}
+        md={7}
+        lg={8}
+        paddingX={2}
+        style={{
+          overflowX: "scroll",
+        }}
+      >
         <Table sx={{ backgroundColor: theme.palette.background.paper }}>
           <TableHead>
-            <TableCell>Expand</TableCell>
-            <TableCell>Player</TableCell>
-            <TableCell>Team</TableCell>
-            <TableCell>Matchup</TableCell>
-            <TableCell sx={{ borderLeft: "1px solid" }}>Sportsbook</TableCell>
-            <TableCell>Stat</TableCell>
-            <TableCell>Target</TableCell>
-            <TableCell>Prediction</TableCell>
-            <TableCell>Significance</TableCell>
-            <TableCell>Std Dev</TableCell>
-            <TableCell>N</TableCell>
-            <TableCell sx={{ borderLeft: "1px solid" }}>Outcome</TableCell>
-            {/* <TableCell>Min</TableCell>
+            <TableRow>
+              <TableCell>Expand</TableCell>
+              <TableCell>Player</TableCell>
+              <TableCell>Team</TableCell>
+              <TableCell>Matchup</TableCell>
+              <TableCell sx={{ borderLeft: "1px solid" }}>Sportsbook</TableCell>
+              <TableCell>Stat</TableCell>
+              <TableCell>Target</TableCell>
+              <TableCell>Prediction</TableCell>
+              <TableCell>Significance</TableCell>
+              <TableCell>Std Dev</TableCell>
+              <TableCell>N</TableCell>
+              <TableCell sx={{ borderLeft: "1px solid" }}>Outcome</TableCell>
+              {/* <TableCell>Min</TableCell>
             <TableCell>Actual/Min</TableCell> */}
+            </TableRow>
           </TableHead>
           <TableBody>
             {Object.entries(playerPropositions)
+              .filter(
+                (entry) =>
+                  entry[1].filter((p) => moment(p.game.date).isSame(startDate))
+                    .length > 0
+              )
               .sort((entryA, entryB) =>
                 ComparePropByPredictionDeviation(entryB[1][0], entryA[1][0])
               )
               .map((entry) => {
                 const playerProps = entry[1];
-                return <PlayerRow propositions={playerProps} />;
+                return <PlayerRow key={entry[0]} propositions={playerProps} />;
               })}
           </TableBody>
         </Table>

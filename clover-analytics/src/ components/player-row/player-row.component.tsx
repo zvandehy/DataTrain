@@ -29,7 +29,6 @@ const PlayerRow: React.FC<PlayerRowProps> = ({
   const player = propositions[0].game.player;
   return (
     <>
-      {" "}
       {propositions.map((prop, i) => {
         const borderBottomColor = "white";
         //   (i === 0 && !expand) ||
@@ -38,7 +37,7 @@ const PlayerRow: React.FC<PlayerRowProps> = ({
         //     : "inherit";
         return (
           <TableRow
-            key={player.playerID + player.name}
+            key={player.playerID + player.name + prop.type + prop.target}
             sx={{
               "& *": { verticalAlign: "middle" },
               "&:hover": {

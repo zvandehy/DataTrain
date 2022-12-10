@@ -7,17 +7,23 @@ import { Proposition } from "../../shared/interfaces/graphql/proposition.interfa
 export interface TotalPropsCardProps {
   propositions: Proposition[];
   title: string;
-  nGames: number;
-  nPlayers: number;
 }
 
 export const TotalPropsCard: React.FC<TotalPropsCardProps> = ({
   propositions,
   title,
-  nGames,
-  nPlayers,
 }: TotalPropsCardProps) => {
   const theme = useTheme();
+  let gameIDs: string[] = [];
+  let playerIDs: number[] = [];
+  propositions.forEach((prop) => {
+    if (!gameIDs.includes(prop.game.gameID)) {
+      gameIDs.push(prop.game.gameID);
+    }
+    if (!playerIDs.includes(prop.game.player.playerID)) {
+      playerIDs.push(prop.game.player.playerID);
+    }
+  });
 
   return (
     <Card
@@ -58,7 +64,7 @@ export const TotalPropsCard: React.FC<TotalPropsCardProps> = ({
               noWrap={true}
               variant="subtitle2"
             >
-              {nGames} Games
+              {gameIDs.length} Games
             </Typography>
             <Typography
               sx={{
@@ -67,7 +73,7 @@ export const TotalPropsCard: React.FC<TotalPropsCardProps> = ({
               noWrap={true}
               variant="subtitle2"
             >
-              {nPlayers} Players
+              {playerIDs.length} Players
             </Typography>
             <Typography
               sx={{
@@ -79,7 +85,7 @@ export const TotalPropsCard: React.FC<TotalPropsCardProps> = ({
               {propositions.length} Props
             </Typography>
           </Grid>
-          <Grid xs={4} sx={{ margin: "auto" }}>
+          <Grid item xs={4} sx={{ margin: "auto" }}>
             <OverUnderPieChart propositions={propositions} />
           </Grid>
         </Grid>
