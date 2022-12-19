@@ -378,7 +378,7 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 		args = append(args, *propositionFilter.TeamID)
 	}
 	if propositionFilter.PlayerName != nil {
-		where = append(where, "name = ?")
+		where = append(where, "playerName = ?")
 		args = append(args, *propositionFilter.PlayerName)
 	}
 	// if propositionFilter.GameID != nil {
@@ -387,19 +387,19 @@ func (c *SQLClient) GetPropositions(ctx context.Context, propositionFilter *mode
 	// }
 	if propositionFilter.StartDate != nil && propositionFilter.EndDate != nil {
 		if *propositionFilter.StartDate == *propositionFilter.EndDate {
-			where = append(where, "date = ?")
+			where = append(where, "pg.date = Cast(? AS Date)")
 			args = append(args, *propositionFilter.StartDate)
 		} else {
-			where = append(where, "date BETWEEN ? AND ?")
+			where = append(where, "pg.date BETWEEN Cast(? AS Date) AND Cast(? AS Date)")
 			args = append(args, *propositionFilter.StartDate, *propositionFilter.EndDate)
 		}
 	}
 	if propositionFilter.StartDate != nil && propositionFilter.EndDate == nil {
-		where = append(where, "date >= ?")
+		where = append(where, "pg.date >= Cast(? AS Date)")
 		args = append(args, *propositionFilter.StartDate)
 	}
 	if propositionFilter.StartDate == nil && propositionFilter.EndDate != nil {
-		where = append(where, "date <= ?")
+		where = append(where, "pg.date <= Cast(? AS Date)")
 		args = append(args, *propositionFilter.EndDate)
 	}
 	if propositionFilter.PropositionType != nil {
@@ -723,15 +723,15 @@ func FindMostSimilarPlayerIDs(similarToPlayerID, limit int, playerZScores []mode
 	otherPlayers := lo.FilterMap(playerZScores, func(x model.StandardizedPlayerStats, _ int) (model.StandardizedPlayerStats, bool) {
 		return x, x.Id != similarToPlayerID
 	})
-	fmt.Printf("Most Similar Players to %s\n", fromPlayerZScore.Name)
-	fmt.Print("PlayerID\tPlayer Name\tSIM\tPTS\tAST\tREB\tWGT\tHGT\tMIN\n")
-	fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", fromPlayerZScore.Id, fromPlayerZScore.Name, 1.0, fromPlayerZScore.Points, fromPlayerZScore.Assists, fromPlayerZScore.Rebounds, fromPlayerZScore.Weight, fromPlayerZScore.HeightInches, fromPlayerZScore.Minutes)
-	for i, player := range otherPlayers {
-		if i >= limit {
-			break
-		}
-		fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", player.Id, player.Name, fromPlayerZScore.CosineSimilarityTo(player), player.Points, player.Assists, player.Rebounds, player.Weight, player.HeightInches, player.Minutes)
-	}
+	// fmt.Printf("Most Similar Players to %s\n", fromPlayerZScore.Name)
+	// fmt.Print("PlayerID\tPlayer Name\tSIM\tPTS\tAST\tREB\tWGT\tHGT\tMIN\n")
+	// fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", fromPlayerZScore.Id, fromPlayerZScore.Name, 1.0, fromPlayerZScore.Points, fromPlayerZScore.Assists, fromPlayerZScore.Rebounds, fromPlayerZScore.Weight, fromPlayerZScore.HeightInches, fromPlayerZScore.Minutes)
+	// for i, player := range otherPlayers {
+	// 	if i >= limit {
+	// 		break
+	// 	}
+	// 	fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", player.Id, player.Name, fromPlayerZScore.CosineSimilarityTo(player), player.Points, player.Assists, player.Rebounds, player.Weight, player.HeightInches, player.Minutes)
+	// }
 
 	return lo.Map(otherPlayers, func(x model.StandardizedPlayerStats, _ int) int {
 		return x.Id

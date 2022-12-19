@@ -131,25 +131,23 @@ func (r *Resolver) GetGamelogBreakdowns(ctx context.Context, inputs []*model.Gam
 		breakdowns = append(breakdowns, breakdown)
 	}
 	distribute := 0.0
-	skipped := 0.0
+	between := 0.0
 	for _, breakdown := range breakdowns {
 		if breakdown.Over+breakdown.Under+breakdown.Push == 0 {
 			distribute += breakdown.Weight
-			skipped++
 			breakdown.Weight = 0
+		} else {
+			between++
 		}
 	}
-	if skipped > 0 {
-		for _, breakdown := range breakdowns {
-			if breakdown.Weight == 0 {
+	if distribute > 0 {
+		for i := range breakdowns {
+			if breakdowns[i].Weight == 0 {
 				continue
 			}
-			breakdown.Weight += distribute / skipped
+			breakdowns[i].Weight += distribute / between
 		}
 	}
-	// for _, breakdown := range breakdowns {
-	// 	logrus.Warnf("%+v", *breakdown)
-	// }
 	return breakdowns
 }
 

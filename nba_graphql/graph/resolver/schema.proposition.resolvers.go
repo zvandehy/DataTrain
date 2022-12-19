@@ -41,49 +41,52 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		StdDev:             0.0,
 	}
 	gamelogBreakdowns := r.GetGamelogBreakdowns(ctx, input.GameBreakdowns, obj.Game, &obj.Target, obj.Type)
-	similarplayerbreakdowns := []*model.PropBreakdown{}
+	similarPlayerBreakdowns := []*model.PropBreakdown{}
 	if input.SimilarPlayerInput != nil {
-		similarplayerbreakdowns = r.GetSimilarPlayerBreakdowns(ctx, input.SimilarPlayerInput, obj.Game, obj.Type)
+		similarPlayerBreakdowns = r.GetSimilarPlayerBreakdowns(ctx, input.SimilarPlayerInput, obj.Game, obj.Type)
 	}
+	// similarTeamBreakdowns := r.GetSimilarTeamBreakdown(ctx, input.SimilarPlayerInput, &obj.Game, &obj.Target, obj.Type)
+	if input.SimilarTeamInput != nil {
+		return nil, fmt.Errorf("SimilarTeamInput not implemented")
+	}
+
 	varianceDatasets := [][]float64{}
 
 	gamelogCumulativeWeight := 0.0
 	for _, breakdown := range gamelogBreakdowns {
 		gamelogCumulativeWeight += breakdown.Weight
 	}
-	similarplayerCumulativeWeight := 0.0
-	for _, breakdown := range similarplayerbreakdowns {
-		similarplayerCumulativeWeight += breakdown.Weight
+	similarPlayerCumulativeWeight := 0.0
+	for _, breakdown := range similarPlayerBreakdowns {
+		similarPlayerCumulativeWeight += breakdown.Weight
 	}
-	distribute := 0.0
-	if gamelogCumulativeWeight == 0 {
-		for _, gameInput := range input.GameBreakdowns {
-			distribute += gameInput.Weight
+	similarTeamCumulativeWeight := 0.0
+	// for _, breakdown := range similarTeamBreakdowns {
+	// 	similarTeamCumulativeWeight += breakdown.Weight
+	// }
+
+	validGamelogBreakdowns := 0.0
+	for _, breakdown := range gamelogBreakdowns {
+		if breakdown.Weight > 0 && len(breakdown.DerivedGames) > 0 {
+			validGamelogBreakdowns++
 		}
 	}
-	if similarplayerCumulativeWeight == 0 && input.SimilarPlayerInput != nil {
-		distribute += input.SimilarPlayerInput.Weight
-	}
 
-	// similarTeambreakdown := r.GetSimilarTeamBreakdown(ctx, input.SimilarPlayerInput, &obj.Game, &obj.Target, obj.Type)
-	if input.SimilarTeamInput != nil {
-		return nil, fmt.Errorf("SimilarTeamInput not implemented")
-	}
-
+	distribute := 100.0 - gamelogCumulativeWeight - similarPlayerCumulativeWeight - similarTeamCumulativeWeight
 	if distribute > 0 {
-		countValidBreakdowns := 0
-		for _, breakdown := range gamelogBreakdowns {
-			if breakdown.Weight > 0 {
+		countValidBreakdowns := validGamelogBreakdowns
+		for _, breakdown := range similarPlayerBreakdowns {
+			if breakdown.Weight > 0 && len(breakdown.DerivedGames) > 0 {
 				countValidBreakdowns++
 			}
 		}
-		for _, breakdown := range similarplayerbreakdowns {
-			if breakdown.Weight > 0 {
-				countValidBreakdowns++
-			}
-		}
+		// for _, breakdown := range similarTeamBreakdowns {
+		// 	if breakdown.Weight > 0 && len(breakdown.DerivedGames) > 0{
+		// 		countValidBreakdowns++
+		// 	}
+		// }
 		if countValidBreakdowns == 0 {
-			return nil, fmt.Errorf("No valid breakdowns")
+			return nil, fmt.Errorf("no valid breakdowns")
 		}
 		distributePerBreakdown := distribute / float64(countValidBreakdowns)
 		for i, breakdown := range gamelogBreakdowns {
@@ -91,9 +94,9 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 				gamelogBreakdowns[i].Weight += distributePerBreakdown
 			}
 		}
-		for i, breakdown := range similarplayerbreakdowns {
+		for i, breakdown := range similarPlayerBreakdowns {
 			if breakdown.Weight > 0 {
-				similarplayerbreakdowns[i].Weight += distributePerBreakdown
+				similarPlayerBreakdowns[i].Weight += distributePerBreakdown
 			}
 		}
 		// todo: similar team distribution
@@ -102,15 +105,14 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	estimationWithoutSimilarPlayers := 0.0
 	distributeWeightWithoutSimilarPlayers := 0.0
 	if input.SimilarPlayerInput != nil {
-		distributeWeightWithoutSimilarPlayers = (input.SimilarPlayerInput.Weight / float64(len(gamelogBreakdowns))) / 100.0
+		distributeWeightWithoutSimilarPlayers = input.SimilarPlayerInput.Weight / validGamelogBreakdowns
 	}
 	for _, breakdown := range gamelogBreakdowns {
 		propPrediction.CumulativeOver += breakdown.Over
 		propPrediction.CumulativeUnder += breakdown.Under
 		propPrediction.CumulativePush += breakdown.Push
 		propPrediction.Estimation += (breakdown.Weight / 100.0) * breakdown.DerivedAverage
-		estimationWithoutSimilarPlayers += ((breakdown.Weight / 100.0) + distributeWeightWithoutSimilarPlayers) * breakdown.DerivedAverage
-
+		estimationWithoutSimilarPlayers += ((breakdown.Weight + distributeWeightWithoutSimilarPlayers) / 100.0) * breakdown.DerivedAverage
 		propPrediction.Breakdowns = append(propPrediction.Breakdowns, breakdown)
 		if len(breakdown.DerivedGames) > 0 {
 			dataset := []float64{}
@@ -121,22 +123,25 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		}
 	}
 	//TODO: similar teams
-	if len(similarplayerbreakdowns) > 0 {
-		totalPctChange := 0.0
-		propPrediction.Estimation = estimationWithoutSimilarPlayers
-		for _, breakdown := range similarplayerbreakdowns {
+	if len(similarPlayerBreakdowns) > 0 {
+		similarPlayerDerivedSum := 0.0
+		similarPlayerBaseSum := 0.0
+		for _, breakdown := range similarPlayerBreakdowns {
+			similarPlayerDerivedSum += breakdown.DerivedAverage
+			similarPlayerBaseSum += breakdown.Base
 			propPrediction.CumulativeOver += breakdown.Over
 			propPrediction.CumulativeUnder += breakdown.Under
 			propPrediction.CumulativePush += breakdown.Push
-			propPrediction.Estimation += ((breakdown.PctChange / 100.0) * estimationWithoutSimilarPlayers) * (breakdown.Weight / 100.0)
 			propPrediction.Breakdowns = append(propPrediction.Breakdowns, breakdown)
-			totalPctChange += breakdown.PctChange
 			// dataset := []float64{}
 			// for _, game := range breakdown.DerivedGames {
 			// 	dataset = append(dataset, game.Score(obj.Type))
 			// }
 			// varianceDatasets = append(varianceDatasets, dataset)
 		}
+		similarPlayerPctChange := (similarPlayerDerivedSum - similarPlayerBaseSum) / similarPlayerBaseSum
+		expectedDifference := estimationWithoutSimilarPlayers*similarPlayerPctChange + estimationWithoutSimilarPlayers
+		propPrediction.Estimation += expectedDifference * (input.SimilarPlayerInput.Weight / 100.0)
 	}
 	propPrediction.CumulativeOverPct = float64(propPrediction.CumulativeOver) / float64(propPrediction.CumulativeOver+propPrediction.CumulativeUnder+propPrediction.CumulativePush)
 	propPrediction.CumulativeUnderPct = float64(propPrediction.CumulativeUnder) / float64(propPrediction.CumulativeOver+propPrediction.CumulativeUnder+propPrediction.CumulativePush)
@@ -199,6 +204,8 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	}
 	if math.IsNaN(propPrediction.Estimation) || math.IsNaN(propPrediction.Significance) {
 		logrus.Errorf("Prop Prediction IsNaN: %v %v %v %v", obj.PlayerName, obj.Type, propPrediction.Estimation, propPrediction.Significance)
+		propPrediction.Estimation = 0
+		propPrediction.Significance = 0
 	}
 	return &propPrediction, nil
 }

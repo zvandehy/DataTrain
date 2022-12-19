@@ -2,13 +2,16 @@ import { gql, useQuery } from "@apollo/client";
 import { ModelInput } from "../shared/interfaces/custom-prediction.interface";
 import { Proposition } from "../shared/interfaces/graphql/proposition.interface";
 
-export const USE_GET_PROPOSITIONS = gql`
+export const USE_GET_PLAYER_PROPOSITIONS = gql`
   query GetPropositions(
+    $playerID: Int!
     $startDate: String!
     $endDate: String!
     $customModel: ModelInput!
   ) {
-    propositions(input: { startDate: $startDate, endDate: $endDate }) {
+    propositions(
+      input: { startDate: $startDate, endDate: $endDate, PlayerID: $playerID }
+    ) {
       sportsbook
       game {
         date
@@ -43,30 +46,51 @@ export const USE_GET_PROPOSITIONS = gql`
         cumulativeOver
         cumulativeUnder
         cumulativePush
+        breakdowns {
+          name
+          over
+          under
+          push
+          overPct
+          underPct
+          pushPct
+          derivedAverage
+          weight
+          stdDev
+          pctChange
+          base
+        }
       }
     }
   }
 `;
 
-export interface ProjectionQuery {
+export interface PlayerPropositionsQuery {
+  playerID: number;
   startDate: string;
   endDate: string;
   customModel: ModelInput;
 }
 
-export const useGetPropositions = ({
+export const useGetPlayerPropositions = ({
+  playerID,
   startDate,
   endDate,
   customModel,
-}: ProjectionQuery) => {
-  const { loading, error, data, fetchMore } = useQuery(USE_GET_PROPOSITIONS, {
-    variables: { startDate, endDate, customModel },
-  });
+}: PlayerPropositionsQuery) => {
+  const { loading, error, data, fetchMore } = useQuery(
+    USE_GET_PLAYER_PROPOSITIONS,
+    {
+      variables: { playerID, startDate, endDate, customModel },
+    }
+  );
   return {
     loading,
     error,
-    data: data?.propositions as Proposition[],
+    data: data?.propositions.sort(
+      (a: Proposition, b: Proposition) =>
+        a.prediction.significance - b.prediction.significance
+    ) as Proposition[],
     fetchMore,
-    minDate: startDate,
   };
 };

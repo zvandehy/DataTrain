@@ -10,17 +10,19 @@ import {
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-export interface ModelAccuracyByPctDiffProps {
+export interface ModelAccuracyBySignificanceProps {
   propositions: Proposition[];
   stepSize?: number;
   steps?: number;
 }
 
-export const ModelAccuracyByPctDiff: React.FC<ModelAccuracyByPctDiffProps> = ({
+export const ModelAccuracyBySignificance: React.FC<
+  ModelAccuracyBySignificanceProps
+> = ({
   propositions,
   stepSize = 3,
   steps = 5,
-}: ModelAccuracyByPctDiffProps) => {
+}: ModelAccuracyBySignificanceProps) => {
   const steppers = Array.from(
     { length: steps * 2 + 1 },
     (_, i) => (i - steps) * stepSize
@@ -50,8 +52,10 @@ export const ModelAccuracyByPctDiff: React.FC<ModelAccuracyByPctDiffProps> = ({
 
   ranges.forEach((x, i) => {
     const filtered = propositions.filter((prop) => {
-      const pctDiff = GetPropPredictionDeviation(prop);
-      return Math.abs(pctDiff) >= x.min && Math.abs(pctDiff) < x.max;
+      return (
+        Math.abs(prop.prediction.significance) >= x.min &&
+        Math.abs(prop.prediction.significance) < x.max
+      );
     });
     const hits = filtered.filter(
       (prop) => prop.prediction?.wagerOutcome === "HIT"
@@ -206,7 +210,7 @@ export const ModelAccuracyByPctDiff: React.FC<ModelAccuracyByPctDiffProps> = ({
           },
           title: {
             display: true,
-            text: "MODEL ACCURACY BY PERCENT CHANGE",
+            text: "MODEL ACCURACY BY P VALUE",
             color: "white",
           },
           legend: {
@@ -232,7 +236,7 @@ export const ModelAccuracyByPctDiff: React.FC<ModelAccuracyByPctDiffProps> = ({
             },
             title: {
               display: true,
-              text: "Distance from Proposition Target (%)",
+              text: "SIGNIFICANCE",
               color: "white",
             },
             labels: [...breakdowns.map((x) => `${x.tick}%`), "∞"],

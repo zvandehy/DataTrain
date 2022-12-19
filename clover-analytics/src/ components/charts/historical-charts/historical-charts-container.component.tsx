@@ -14,7 +14,8 @@ import { useRef, useState } from "react";
 import { useGetPropositions } from "../../../hooks/useGetPropositions";
 import { DEFAULT_MODEL } from "../../../shared/constants";
 import { TotalPropsCard } from "../../cards/total-props-card.component.";
-import { ModelAccuracyByPctDiff } from "../accuracy-by-percent-diff-chart.component";
+import { ModelAccuracyByDiff } from "../accuracy-by-diff-chart.component";
+import { ModelAccuracyBySignificance } from "../accuracy-by-significance.component copy";
 import { ModelAccuracyByStatType } from "../accuracy-by-type-chart.component";
 import ModelAccuracyChart from "../model-accuracy-chart-component";
 
@@ -159,15 +160,22 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
         </Card>
       </Grid>
       <Grid item container xs={12}>
+        <Grid item xs={12} md={5} lg={4} m={"auto"} pl={1} pr={1}>
+          <Box className={loadingMore ? "loading-data" : ""}>
+            <TotalPropsCard title={"All Props"} propositions={filteredProps} />
+          </Box>
+        </Grid>
         <Grid item xs={12} md={5} lg={4} mt={2} pl={1} pr={1}>
           <Card>
             <Box
               sx={{ p: 3, pb: 0, minHeight: "300px" }}
               className={loadingMore ? "loading-data" : ""}
             >
-              <TotalPropsCard
-                title={"All Props"}
+              <ModelAccuracyByDiff
                 propositions={filteredProps}
+                absolute={true}
+                stepSize={1}
+                steps={50}
               />
             </Box>
           </Card>
@@ -177,16 +185,8 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
             <Box
               sx={{ p: 3, pb: 0, minHeight: "300px" }}
               className={loadingMore ? "loading-data" : ""}
-            ></Box>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={5} lg={4} mt={2} pl={1} pr={1}>
-          <Card>
-            <Box
-              sx={{ p: 3, pb: 0, minHeight: "300px" }}
-              className={loadingMore ? "loading-data" : ""}
             >
-              <ModelAccuracyByPctDiff
+              <ModelAccuracyBySignificance
                 propositions={filteredProps}
                 stepSize={10}
                 steps={9}

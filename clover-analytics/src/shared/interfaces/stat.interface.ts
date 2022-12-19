@@ -114,19 +114,19 @@ export function GetStatAbbreviation(stat: string): string {
     case "blocks":
       return "BLK";
     case "blocks_steals":
-      return "BLK+STL";
+      return "B+S";
     case "turnovers":
       return "TOV";
     case "points_rebounds":
-      return "PTS+REB";
+      return "P+R";
     case "points_assists":
-      return "PTS+AST";
+      return "P+A";
     case "points_rebounds_assists":
-      return "PTS+REB+AST";
+      return "PRA";
     case "rebounds_assists":
-      return "REB+AST";
+      return "R+A";
     case "fantasy_score":
-      return "FANTASY";
+      return "FS";
     case "field_goals_made":
       return "FGM";
     case "field_goals_attempted":

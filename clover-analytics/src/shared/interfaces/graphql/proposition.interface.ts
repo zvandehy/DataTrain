@@ -48,17 +48,17 @@ export function GetPropPredictionDeviation(prop: Proposition): number {
 }
 
 export interface PropBreakdown {
-  name?: string;
-  over?: number;
-  under?: number;
-  push?: number;
-  overPct?: number;
-  underPct?: number;
-  pushPct?: number;
-  derivedAverage?: number;
-  weight?: number;
-  pctChange?: number;
-  base?: number;
+  name: string;
+  over: number;
+  under: number;
+  push: number;
+  overPct: number;
+  underPct: number;
+  pushPct: number;
+  derivedAverage: number;
+  weight: number;
+  pctChange: number;
+  base: number;
   derivedGames?: Game[];
 }
 

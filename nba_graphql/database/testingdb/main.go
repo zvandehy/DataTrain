@@ -47,7 +47,7 @@ func main() {
 	dates := []struct {
 		Date *time.Time `db:"date"`
 	}{}
-	err = db.DB.Select(&dates, "SELECT DISTINCT date FROM playergames WHERE season=\"2022-23\" AND date>Cast(\"2022-10-18\" AS Date) ORDER BY date;")
+	err = db.DB.Select(&dates, "SELECT DISTINCT date FROM playergames WHERE season=\"2022-23\" AND date>Cast(\"2022-12-12\" AS Date) ORDER BY date;")
 	if err != nil {
 		panic(err)
 	}
@@ -79,7 +79,7 @@ func UploadComparisons() {
 
 	stats := GetStats()
 	for _, date := range dates {
-		if date.Date.Before(time.Date(2022, 11, 29, 0, 0, 0, 0, time.UTC)) {
+		if date.Date.Before(time.Date(2022, 12, 15, 0, 0, 0, 0, time.UTC)) {
 			continue
 		}
 		res := db.DB.MustExec(InsertStandardizedSQL(stats, date.Date.Format("2006-01-02"), "2022-23", GetComparisonsForPropositionsSQL(stats, date.Date.Format("2006-01-02"), "2022-23")))

@@ -38,7 +38,7 @@ export const TotalPropsCard: React.FC<TotalPropsCardProps> = ({
         },
         "& pre": {
           m: 0,
-          p: "16px !important",
+          // p: "16px !important",
           fontFamily: theme.typography.fontFamily,
           fontSize: "0.75rem",
         },
@@ -54,7 +54,7 @@ export const TotalPropsCard: React.FC<TotalPropsCardProps> = ({
         // subheader={}
         // action={<OverUnderPieChart />}
       />
-      <CardContent sx={{}}>
+      <CardContent>
         <Grid container>
           <Grid item xs={5} sx={{ margin: "auto" }}>
             <Typography

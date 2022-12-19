@@ -355,9 +355,9 @@ func (s Stat) SQL() (string, error) {
 	case FantasyScore:
 		return "points+rebounds*1.2+assists*1.5+steals*3+blocks*3-turnovers", nil
 	case Height:
-		return "", fmt.Errorf("Height is not a valid SQL stat")
+		return "heightInches", nil
 	case Weight:
-		return "", fmt.Errorf("Weight is not a valid SQL stat")
+		return "weight", nil
 	case DoubleDouble:
 		return "", fmt.Errorf("DoubleDouble is not a valid SQL stat")
 	default:

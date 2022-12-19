@@ -76,27 +76,35 @@ export const DEFAULT_MODEL: ModelInput = {
     {
       name: "2021-22 Season",
       filter: {
-        seasons: [SeasonOption.SEASON_2021_22],
+        previousSeasonMatch: true,
       },
-      weight: 10,
+      weight: 8,
     },
     {
-      name: "Previous Matchups",
+      name: "Matchups This Seaon",
       filter: {
         opponentMatch: true,
+        seasonMatch: true,
       },
-      weight: 15,
+      weight: 5,
     },
     {
       name: "2022-23 Season",
       filter: {
-        seasons: [SeasonOption.SEASON_2022_23],
+        seasonMatch: true,
       },
-      weight: 45,
+      weight: 70,
+    },
+    {
+      name: "Last 10 Games",
+      filter: {
+        lastX: 10,
+      },
+      weight: 2,
     },
   ],
   similarPlayerInput: {
-    limit: 20,
+    limit: 10,
     statsOfInterest: [
       "Points",
       "Rebounds",
@@ -105,8 +113,10 @@ export const DEFAULT_MODEL: ModelInput = {
       "Blocks",
       "ThreePointersMade",
       "Minutes",
+      "Height",
+      "Weight",
     ],
-    weight: 30,
+    weight: 15,
   },
 };
 
