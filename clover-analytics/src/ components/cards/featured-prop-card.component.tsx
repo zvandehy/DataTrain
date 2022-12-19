@@ -18,11 +18,13 @@ import {
 export interface FeaturedPropCardProps {
   prop: Proposition;
   rank: number;
+  onClick: (prop: Proposition) => void;
 }
 
 export const FeaturedPropCard: React.FC<FeaturedPropCardProps> = ({
   prop,
   rank,
+  onClick,
 }: FeaturedPropCardProps) => {
   const theme = useTheme();
   const player = prop.game.player;
@@ -52,6 +54,9 @@ export const FeaturedPropCard: React.FC<FeaturedPropCardProps> = ({
           fontFamily: theme.typography.fontFamily,
           fontSize: "0.75rem",
         },
+      }}
+      onClick={() => {
+        onClick(prop);
       }}
     >
       <CardActionArea>
@@ -108,7 +113,7 @@ export const FeaturedPropCard: React.FC<FeaturedPropCardProps> = ({
                   alignSelf={"start"}
                   sx={{ fontWeight: 400, lineHeight: 0, ml: 0.5 }}
                 >
-                  {game.home_or_away === "home" ? "vs" : "@"}{" "}
+                  {game.home_or_away === "HOME" ? "vs" : "@"}{" "}
                   {game.opponent.abbreviation}
                 </Typography>
               </Grid>

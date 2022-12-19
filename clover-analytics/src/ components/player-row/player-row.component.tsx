@@ -18,10 +18,12 @@ import { OverUnderIcon } from "../icons/overUnderIcon.component";
 
 interface PlayerRowProps {
   propositions: Proposition[];
+  onClick: (prop: Proposition) => void;
 }
 
 const PlayerRow: React.FC<PlayerRowProps> = ({
   propositions,
+  onClick,
 }: PlayerRowProps) => {
   const theme = useTheme();
   const [expand, setExpand] = useState(false);
@@ -45,7 +47,7 @@ const PlayerRow: React.FC<PlayerRowProps> = ({
                 backgroundColor: theme.palette.grey[900],
               },
             }}
-            onClick={() => console.log("click", player.name)}
+            onClick={() => onClick(prop)}
           >
             {i === 0 ? (
               <>

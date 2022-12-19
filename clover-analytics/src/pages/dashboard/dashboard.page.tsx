@@ -1,9 +1,6 @@
 import {
   Box,
-  Button,
-  Card,
   Grid,
-  Stack,
   Table,
   TableBody,
   TableCell,
@@ -18,15 +15,13 @@ import { PrimarySearchAppBar } from "../../ components/appbar/appbar.component";
 import { FeaturedPropCard } from "../../ components/cards/featured-prop-card.component";
 // import { FeaturedPropCard } from "../../ components/cards/featured-prop-card.component";
 import { TotalPropsCard } from "../../ components/cards/total-props-card.component.";
-import { ModelAccuracyByPctDiff } from "../../ components/charts/accuracy-by-percent-diff-chart.component";
-import { ModelAccuracyByStatType } from "../../ components/charts/accuracy-by-type-chart.component";
 import HistoricalCharts from "../../ components/charts/historical-charts/historical-charts-container.component";
-import ModelAccuracyChart from "../../ components/charts/model-accuracy-chart-component";
+import FullScreenDialog from "../../ components/layouts/full-screen-dialog.component";
+import PlayerModal from "../../ components/player-modal/player-modal.component";
 import PlayerRow from "../../ components/player-row/player-row.component";
 // import PlayerRow from "../../ components/player-row/player-row.component";
 import { useGetPropositions } from "../../hooks/useGetPropositions";
 import { DEFAULT_MODEL } from "../../shared/constants";
-import { Player } from "../../shared/interfaces/graphql/player.interface";
 import {
   ComparePropByPredictionDeviation,
   Proposition,
@@ -36,6 +31,17 @@ import {
 
 const DashboardPage = () => {
   const [startDate, setStartDate] = useState(moment().format("YYYY-MM-DD"));
+  const [open, setOpen] = useState(false);
+  const [selectedProp, setSelectedProp] = useState<Proposition>();
+
+  const handleClickOpen = (prop: Proposition) => {
+    setSelectedProp(prop);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const theme = useTheme();
 
@@ -55,9 +61,6 @@ const DashboardPage = () => {
   if (error) {
     return <div>Error: {error.message}</div>;
   }
-  // if (!propositions || propositions.length === 0) {
-  //   return <div>No propositions found</div>;
-  // }
 
   let gameIDs: string[] = [];
 
@@ -90,6 +93,20 @@ const DashboardPage = () => {
   return (
     <Box>
       <PrimarySearchAppBar date={startDate} onDateSelect={setStartDate} />
+      <FullScreenDialog
+        open={open}
+        handleClose={handleClose}
+        title={`${selectedProp?.game.player.name} ${
+          selectedProp?.game.home_or_away?.toUpperCase() === "HOME" ? "vs" : "@"
+        } ${selectedProp?.game.opponent.name}`}
+      >
+        <PlayerModal
+          playerID={selectedProp?.game.player.playerID ?? 0}
+          triggeredProp={selectedProp}
+          customModel={DEFAULT_MODEL}
+          startDate={startDate}
+        />
+      </FullScreenDialog>
       <Grid container p={1} spacing={1}>
         {/* row 1 */}
         <Grid item xs={12} sx={{ mb: -2.25 }}>
@@ -148,7 +165,11 @@ const DashboardPage = () => {
                   sx={{ p: 1, margin: "auto" }}
                   key={prop.game.player.playerID + "-" + i}
                 >
-                  <FeaturedPropCard prop={prop} rank={i + 1} />
+                  <FeaturedPropCard
+                    onClick={handleClickOpen}
+                    prop={prop}
+                    rank={i + 1}
+                  />
                 </Grid>
               );
             })}
@@ -198,7 +219,13 @@ const DashboardPage = () => {
               )
               .map((entry) => {
                 const playerProps = entry[1];
-                return <PlayerRow key={entry[0]} propositions={playerProps} />;
+                return (
+                  <PlayerRow
+                    key={entry[0]}
+                    propositions={playerProps}
+                    onClick={handleClickOpen}
+                  />
+                );
               })}
           </TableBody>
         </Table>
