@@ -1,4 +1,5 @@
 import {
+  Grid,
   Tab,
   Table,
   TableBody,
@@ -14,6 +15,8 @@ import {
   PropBreakdown,
   Proposition,
 } from "../../shared/interfaces/graphql/proposition.interface";
+import ModelBreakdownChart from "../charts/model-breakdown-chart.component";
+import ModelBreakdownOverUnderChart from "../charts/model-breakdown-over-under-chart.component copy";
 
 interface PlayerModalProps {
   playerID: number;
@@ -137,6 +140,14 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
           />
         ))}
       </Tabs>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <ModelBreakdownChart proposition={selectedProp} />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <ModelBreakdownOverUnderChart proposition={selectedProp} />
+        </Grid>
+      </Grid>
       <Table>
         <TableHead>
           <TableRow>
