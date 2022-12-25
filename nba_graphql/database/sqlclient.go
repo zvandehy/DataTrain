@@ -723,14 +723,17 @@ func FindMostSimilarPlayerIDs(similarToPlayerID, limit int, playerZScores []mode
 	otherPlayers := lo.FilterMap(playerZScores, func(x model.StandardizedPlayerStats, _ int) (model.StandardizedPlayerStats, bool) {
 		return x, x.Id != similarToPlayerID
 	})
-	// fmt.Printf("Most Similar Players to %s\n", fromPlayerZScore.Name)
-	// fmt.Print("PlayerID\tPlayer Name\tSIM\tPTS\tAST\tREB\tWGT\tHGT\tMIN\n")
-	// fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", fromPlayerZScore.Id, fromPlayerZScore.Name, 1.0, fromPlayerZScore.Points, fromPlayerZScore.Assists, fromPlayerZScore.Rebounds, fromPlayerZScore.Weight, fromPlayerZScore.HeightInches, fromPlayerZScore.Minutes)
-	// for i, player := range otherPlayers {
-	// 	if i >= limit {
-	// 		break
+
+	// if similarToPlayerID == 1628420 {
+	// 	fmt.Printf("Most Similar Players to %s\n", fromPlayerZScore.Name)
+	// 	fmt.Print("PlayerID\tPlayer Name\tSIM\tPTS\tAST\tREB\tWGT\tHGT\tMIN\n")
+	// 	fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", fromPlayerZScore.Id, fromPlayerZScore.Name, 1.0, fromPlayerZScore.Points, fromPlayerZScore.Assists, fromPlayerZScore.Rebounds, fromPlayerZScore.Weight, fromPlayerZScore.HeightInches, fromPlayerZScore.Minutes)
+	// 	for i, player := range otherPlayers {
+	// 		if i >= limit {
+	// 			break
+	// 		}
+	// 		fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", player.Id, player.Name, fromPlayerZScore.CosineSimilarityTo(player), player.Points, player.Assists, player.Rebounds, player.Weight, player.HeightInches, player.Minutes)
 	// 	}
-	// 	fmt.Printf("%10.10d\t%15.15s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", player.Id, player.Name, fromPlayerZScore.CosineSimilarityTo(player), player.Points, player.Assists, player.Rebounds, player.Weight, player.HeightInches, player.Minutes)
 	// }
 
 	return lo.Map(otherPlayers, func(x model.StandardizedPlayerStats, _ int) int {

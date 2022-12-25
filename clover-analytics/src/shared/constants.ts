@@ -74,49 +74,73 @@ export const DEFAULT_MODEL: ModelInput = {
   model: "DEFAULT",
   gameBreakdowns: [
     {
-      name: "2021-22 Season",
+      name: "2021-22 Matchups",
       filter: {
         previousSeasonMatch: true,
+        opponentMatch: true,
       },
-      weight: 8,
+      weight: 5,
     },
     {
-      name: "Matchups This Seaon",
+      name: "Matchups This Season",
       filter: {
         opponentMatch: true,
         seasonMatch: true,
       },
-      weight: 5,
+      weight: 10,
+    },
+    {
+      name: "Home/Away",
+      filter: {
+        homeOrAwayMatch: true,
+      },
+      weight: 15,
     },
     {
       name: "2022-23 Season",
       filter: {
         seasonMatch: true,
       },
-      weight: 70,
+      weight: 45,
     },
+    // {
+    //   name: "Last 8 Games",
+    //   filter: {
+    //     lastX: 8,
+    //   },
+    //   weight: 10,
+    // },
     {
-      name: "Last 10 Games",
+      name: "Last 2 Games",
       filter: {
-        lastX: 10,
+        lastX: 2,
       },
-      weight: 2,
+      weight: 5,
     },
+    // {
+    //   name: "Last Game",
+    //   filter: {
+    //     lastX: 1,
+    //   },
+    //   weight: 1,
+    // },
   ],
   similarPlayerInput: {
     limit: 10,
     statsOfInterest: [
       "Points",
-      "Rebounds",
       "Assists",
-      "Steals",
       "Blocks",
+      "Steals",
+      "FreeThrowsMade",
       "ThreePointersMade",
+      "Rebounds",
+      "Turnovers",
       "Minutes",
       "Height",
       "Weight",
     ],
-    weight: 15,
+    weight: 20,
   },
 };
 

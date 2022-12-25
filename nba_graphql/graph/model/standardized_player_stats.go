@@ -122,5 +122,5 @@ func CosineSimilarity(a, b []float64) float64 {
 		magnitudeA += math.Pow(a[i], 2)
 		magnitudeB += math.Pow(b[i], 2)
 	}
-	return math.Round((dotProduct/(math.Sqrt(magnitudeA)*math.Sqrt(magnitudeB)))*100.0) / 100.0
+	return dotProduct / (math.Sqrt(magnitudeA) * math.Sqrt(magnitudeB))
 }

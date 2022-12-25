@@ -91,151 +91,166 @@ const DashboardPage = () => {
   );
 
   return (
-    <Box>
-      <PrimarySearchAppBar date={startDate} onDateSelect={setStartDate} />
-      <FullScreenDialog
-        open={open}
-        handleClose={handleClose}
-        title={`${selectedProp?.game.player.name} ${
-          selectedProp?.game.home_or_away?.toUpperCase() === "HOME" ? "vs" : "@"
-        } ${selectedProp?.game.opponent.name}`}
-      >
-        <PlayerModal
-          playerID={selectedProp?.game.player.playerID ?? 0}
-          triggeredProp={selectedProp}
-          customModel={DEFAULT_MODEL}
-          startDate={startDate}
-        />
-      </FullScreenDialog>
-      <Grid container p={1} spacing={1}>
-        {/* row 1 */}
-        <Grid item xs={12} sx={{ mb: -2.25 }}>
-          <Typography
-            variant="h5"
-            sx={{ fontWeight: "bold" }}
-            textTransform={"uppercase"}
-            pl={2}
+    <>
+      {propositions.length === 0 ? (
+        <Box>
+          <PrimarySearchAppBar date={startDate} onDateSelect={setStartDate} />
+        </Box>
+      ) : (
+        <Box>
+          <PrimarySearchAppBar date={startDate} onDateSelect={setStartDate} />
+          <FullScreenDialog
+            open={open}
+            handleClose={handleClose}
+            title={`${selectedProp?.game.player.name} ${
+              selectedProp?.game.home_or_away?.toUpperCase() === "HOME"
+                ? "vs"
+                : "@"
+            } ${selectedProp?.game.opponent.name}`}
           >
-            Dashboard {moment(startDate).format("MM/DD/YYYY")}
-          </Typography>
-        </Grid>
-        {/* row 2 */}
-        <Grid container item xs={12} md={4} sx={{ m: "auto" }}>
-          <Grid
-            item
-            xs={6}
-            md={12}
-            sx={{ p: 1, margin: "auto", "& > *": { mb: 1, mt: 1 } }}
-          >
-            <TotalPropsCard
-              title={"All Props " + moment(startDate).format("MM/DD/YYYY")}
-              propositions={propositions.filter((p) =>
-                moment(p.game.date).isSame(startDate)
-              )}
+            <PlayerModal
+              playerID={selectedProp?.game.player.playerID ?? 0}
+              triggeredProp={selectedProp}
+              customModel={DEFAULT_MODEL}
+              startDate={startDate}
             />
-          </Grid>
-          <Grid
-            item
-            xs={6}
-            md={12}
-            sx={{ p: 1, margin: "auto", "& > *": { mb: 1, mt: 1 } }}
-          >
-            <TotalPropsCard
-              title={"Top Props  " + moment(startDate).format("MM/DD/YYYY")}
-              propositions={topProps.filter((p) =>
-                moment(p.game.date).isSame(startDate)
-              )}
-            />
-          </Grid>
-          {/* <TotalPropsCard total={50} /> */}
-        </Grid>
-        <Grid container item xs={12} md={8}>
-          {topProps
-            .filter((p) => moment(p.game.date).isSame(startDate))
-            .sort((a, b) => {
-              return ComparePropByPredictionDeviation(b, a);
-            })
-            .slice(0, 8)
-            .map((prop, i) => {
-              return (
-                <Grid
-                  item
-                  xs={12}
-                  sm={6}
-                  sx={{ p: 1, margin: "auto" }}
-                  key={prop.game.player.playerID + "-" + i}
-                >
-                  <FeaturedPropCard
-                    onClick={handleClickOpen}
-                    prop={prop}
-                    rank={i + 1}
-                  />
-                </Grid>
-              );
-            })}
-        </Grid>
+          </FullScreenDialog>
+          <Grid container p={1} spacing={1}>
+            {/* row 1 */}
+            <Grid item xs={12} sx={{ mb: -2.25 }}>
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: "bold" }}
+                textTransform={"uppercase"}
+                pl={2}
+              >
+                Dashboard {moment(startDate).format("MM/DD/YYYY")}
+              </Typography>
+            </Grid>
+            {/* row 2 */}
+            <Grid container item xs={12} md={4} sx={{ m: "auto" }}>
+              <Grid
+                item
+                xs={6}
+                md={12}
+                sx={{ p: 1, margin: "auto", "& > *": { mb: 1, mt: 1 } }}
+              >
+                <TotalPropsCard
+                  title={"All Props " + moment(startDate).format("MM/DD/YYYY")}
+                  propositions={propositions.filter((p) =>
+                    moment(p.game.date).isSame(startDate)
+                  )}
+                />
+              </Grid>
+              <Grid
+                item
+                xs={6}
+                md={12}
+                sx={{ p: 1, margin: "auto", "& > *": { mb: 1, mt: 1 } }}
+              >
+                <TotalPropsCard
+                  title={"Top Props  " + moment(startDate).format("MM/DD/YYYY")}
+                  propositions={topProps.filter((p) =>
+                    moment(p.game.date).isSame(startDate)
+                  )}
+                />
+              </Grid>
+              {/* <TotalPropsCard total={50} /> */}
+            </Grid>
+            <Grid container item xs={12} md={8}>
+              {topProps
+                .filter((p) => moment(p.game.date).isSame(startDate))
+                .sort((a, b) => {
+                  return ComparePropByPredictionDeviation(b, a);
+                })
+                .slice(0, 8)
+                .map((prop, i) => {
+                  return (
+                    <Grid
+                      item
+                      xs={12}
+                      sm={6}
+                      sx={{ p: 1, margin: "auto" }}
+                      key={prop.game.player.playerID + "-" + i}
+                    >
+                      <FeaturedPropCard
+                        onClick={handleClickOpen}
+                        prop={prop}
+                        rank={i + 1}
+                      />
+                    </Grid>
+                  );
+                })}
+            </Grid>
 
-        <HistoricalCharts initialDate={startDate} />
-      </Grid>
-      {/* row 3 */}
-      <Grid
-        item
-        xs={12}
-        md={7}
-        lg={8}
-        paddingX={2}
-        style={{
-          overflowX: "scroll",
-        }}
-      >
-        <Table sx={{ backgroundColor: theme.palette.background.paper }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Expand</TableCell>
-              <TableCell>Player</TableCell>
-              <TableCell>Team</TableCell>
-              <TableCell>Matchup</TableCell>
-              <TableCell sx={{ borderLeft: "1px solid" }}>Sportsbook</TableCell>
-              <TableCell>Stat</TableCell>
-              <TableCell>Target</TableCell>
-              <TableCell>Prediction</TableCell>
-              <TableCell>Significance</TableCell>
-              <TableCell>Std Dev</TableCell>
-              <TableCell>N</TableCell>
-              <TableCell sx={{ borderLeft: "1px solid" }}>Outcome</TableCell>
-              {/* <TableCell>Min</TableCell>
+            <HistoricalCharts initialDate={startDate} />
+          </Grid>
+          {/* row 3 */}
+          <Grid
+            item
+            xs={12}
+            md={7}
+            lg={8}
+            paddingX={2}
+            style={{
+              overflowX: "scroll",
+            }}
+          >
+            <Table sx={{ backgroundColor: theme.palette.background.paper }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Expand</TableCell>
+                  <TableCell>Player</TableCell>
+                  <TableCell>Team</TableCell>
+                  <TableCell>Matchup</TableCell>
+                  <TableCell sx={{ borderLeft: "1px solid" }}>
+                    Sportsbook
+                  </TableCell>
+                  <TableCell>Stat</TableCell>
+                  <TableCell>Target</TableCell>
+                  <TableCell>Prediction</TableCell>
+                  <TableCell>Significance</TableCell>
+                  <TableCell>Std Dev</TableCell>
+                  <TableCell>N</TableCell>
+                  <TableCell sx={{ borderLeft: "1px solid" }}>
+                    Outcome
+                  </TableCell>
+                  {/* <TableCell>Min</TableCell>
             <TableCell>Actual/Min</TableCell> */}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Object.entries(playerPropositions)
-              .filter(
-                (entry) =>
-                  entry[1].filter((p) => moment(p.game.date).isSame(startDate))
-                    .length > 0
-              )
-              .sort((entryA, entryB) =>
-                ComparePropByPredictionDeviation(entryB[1][0], entryA[1][0])
-              )
-              .map((entry) => {
-                const playerProps = entry[1];
-                return (
-                  <PlayerRow
-                    key={entry[0]}
-                    propositions={playerProps}
-                    onClick={handleClickOpen}
-                  />
-                );
-              })}
-          </TableBody>
-        </Table>
-      </Grid>
-      <Grid item xs={12} bgcolor={"gray"} mt={1}>
-        <Typography textAlign={"center"} p={1}>
-          FOOTER
-        </Typography>
-      </Grid>
-    </Box>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Object.entries(playerPropositions)
+                  .filter(
+                    (entry) =>
+                      entry[1].filter((p) =>
+                        moment(p.game.date).isSame(startDate)
+                      ).length > 0
+                  )
+                  .sort((entryA, entryB) =>
+                    ComparePropByPredictionDeviation(entryB[1][0], entryA[1][0])
+                  )
+                  .map((entry) => {
+                    const playerProps = entry[1];
+                    return (
+                      <PlayerRow
+                        key={entry[0]}
+                        propositions={playerProps}
+                        onClick={handleClickOpen}
+                      />
+                    );
+                  })}
+              </TableBody>
+            </Table>
+          </Grid>
+          <Grid item xs={12} bgcolor={"gray"} mt={1}>
+            <Typography textAlign={"center"} p={1}>
+              FOOTER
+            </Typography>
+          </Grid>
+        </Box>
+      )}
+    </>
   );
 };
 
