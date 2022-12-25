@@ -41,7 +41,7 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		StdDev:             0.0,
 	}
 	gamelogBreakdowns := r.GetGamelogBreakdowns(ctx, input.GameBreakdowns, obj.Game, &obj.Target, obj.Type)
-	similarPlayerBreakdowns := []*model.PropBreakdown{}
+	similarPlayerBreakdowns := []model.PropBreakdown{}
 	if input.SimilarPlayerInput != nil {
 		similarPlayerBreakdowns = r.GetSimilarPlayerBreakdowns(ctx, input.SimilarPlayerInput, obj.Game, obj.Type)
 	}
@@ -111,7 +111,9 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 		propPrediction.CumulativeOver += breakdown.Over
 		propPrediction.CumulativeUnder += breakdown.Under
 		propPrediction.CumulativePush += breakdown.Push
-		propPrediction.Estimation += (breakdown.Weight / 100.0) * breakdown.DerivedAverage
+		contribution := (breakdown.Weight / 100.0) * breakdown.DerivedAverage
+		breakdown.Contribution = contribution
+		propPrediction.Estimation += contribution
 		estimationWithoutSimilarPlayers += ((breakdown.Weight + distributeWeightWithoutSimilarPlayers) / 100.0) * breakdown.DerivedAverage
 		propPrediction.Breakdowns = append(propPrediction.Breakdowns, breakdown)
 		if len(breakdown.DerivedGames) > 0 {
@@ -126,22 +128,49 @@ func (r *propositionResolver) Prediction(ctx context.Context, obj *model.Proposi
 	if len(similarPlayerBreakdowns) > 0 {
 		similarPlayerDerivedSum := 0.0
 		similarPlayerBaseSum := 0.0
+		similarPlayerBreakdown := &model.PropBreakdown{
+			Weight:       input.SimilarPlayerInput.Weight,
+			Name:         "Similar Players vs Opponent",
+			DerivedGames: []*model.PlayerGame{},
+		}
 		for _, breakdown := range similarPlayerBreakdowns {
 			similarPlayerDerivedSum += breakdown.DerivedAverage
 			similarPlayerBaseSum += breakdown.Base
 			propPrediction.CumulativeOver += breakdown.Over
 			propPrediction.CumulativeUnder += breakdown.Under
 			propPrediction.CumulativePush += breakdown.Push
-			propPrediction.Breakdowns = append(propPrediction.Breakdowns, breakdown)
+			similarPlayerBreakdown.Over += breakdown.Over
+			similarPlayerBreakdown.Under += breakdown.Under
+			similarPlayerBreakdown.Push += breakdown.Push
+			similarPlayerBreakdown.DerivedAverage += breakdown.DerivedAverage
+			similarPlayerBreakdown.DerivedGamesCount += breakdown.DerivedGamesCount
+			similarPlayerBreakdown.DerivedGames = append(similarPlayerBreakdown.DerivedGames, breakdown.DerivedGames...)
+			// propPrediction.Breakdowns = append(propPrediction.Breakdowns, breakdown)
 			// dataset := []float64{}
 			// for _, game := range breakdown.DerivedGames {
 			// 	dataset = append(dataset, game.Score(obj.Type))
 			// }
 			// varianceDatasets = append(varianceDatasets, dataset)
 		}
+		similarPlayerBreakdown.DerivedAverage = similarPlayerDerivedSum / float64(similarPlayerBreakdown.DerivedGamesCount)
+		similarPlayerBreakdown.Base = similarPlayerBaseSum / float64(similarPlayerBreakdown.DerivedGamesCount)
 		similarPlayerPctChange := (similarPlayerDerivedSum - similarPlayerBaseSum) / similarPlayerBaseSum
 		expectedDifference := estimationWithoutSimilarPlayers*similarPlayerPctChange + estimationWithoutSimilarPlayers
-		propPrediction.Estimation += expectedDifference * (input.SimilarPlayerInput.Weight / 100.0)
+		contribution := expectedDifference * (input.SimilarPlayerInput.Weight / 100.0)
+		similarPlayerBreakdown.Contribution = contribution
+		similarPlayerBreakdown.PctChange = similarPlayerPctChange * 100.0
+		similarPlayerBreakdown.OverPct = float64(similarPlayerBreakdown.Over) / float64(similarPlayerBreakdown.DerivedGamesCount)
+		similarPlayerBreakdown.UnderPct = float64(similarPlayerBreakdown.Under) / float64(similarPlayerBreakdown.DerivedGamesCount)
+		similarPlayerBreakdown.PushPct = float64(similarPlayerBreakdown.Push) / float64(similarPlayerBreakdown.DerivedGamesCount)
+		similarPlayerStdDev := 0.0
+		for _, game := range similarPlayerBreakdown.DerivedGames {
+			similarPlayerStdDev += math.Pow(game.Score(obj.Type)-similarPlayerBreakdown.DerivedAverage, 2)
+		}
+		similarPlayerStdDev = math.Sqrt(similarPlayerStdDev / float64(len(similarPlayerBreakdown.DerivedGames)))
+		similarPlayerBreakdown.StdDev = similarPlayerStdDev
+		similarPlayerBreakdown.DerivedAverage = similarPlayerDerivedSum / float64(len(similarPlayerBreakdowns))
+		propPrediction.Breakdowns = append(propPrediction.Breakdowns, similarPlayerBreakdown)
+		propPrediction.Estimation += contribution
 	}
 	propPrediction.CumulativeOverPct = float64(propPrediction.CumulativeOver) / float64(propPrediction.CumulativeOver+propPrediction.CumulativeUnder+propPrediction.CumulativePush)
 	propPrediction.CumulativeUnderPct = float64(propPrediction.CumulativeUnder) / float64(propPrediction.CumulativeOver+propPrediction.CumulativeUnder+propPrediction.CumulativePush)

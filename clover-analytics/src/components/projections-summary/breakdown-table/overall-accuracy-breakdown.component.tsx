@@ -48,12 +48,6 @@ import { Button, Table, TableBody, TableHead } from "@mui/material";
 //   // const [allProjections, setAllProjections] = useState(
 //   //   new Map<string, Projection[]>()
 //   // );
-//   // console.group("RENDER TABLE COMPONENT");
-//   // console.log(dateRange.start, dateRange.end);
-//   // console.log(customModel);
-//   // console.log(lookup);
-//   // console.log(hitCriteria);
-//   // console.groupEnd();
 
 //   // const { loading, error, data } = useGetProjections({
 //   //   customModel: customModel,
@@ -88,18 +82,11 @@ import { Button, Table, TableBody, TableHead } from "@mui/material";
 //   //     if (!ignore) {
 //   //       GetDay(date, customModel)
 //   //         .then((projections: Projection[]) => {
-//   //           console.group(`Got ${projections.length} from ${date}`);
 //   //           setAllProjections((prev) => {
-//   //             //   console.log("PREV: ", prev);
-//   //             //   console.log("NEW: ", projections);
-//   //             //   console.log("COMBINED: ", [...prev, ...projections]);
 //   //             prev.set(date, projections);
 //   //             return prev;
 //   //           });
-//   //           console.log(allProjections);
-//   //           console.groupEnd();
 //   //           // setTotalAccuracy(new Accuracy(allProjections));
-//   //           // console.log(dayAccuracies, allProjections, totalAccuracy);
 //   //         })
 //   //         .catch(() => {});
 //   //     }
@@ -122,47 +109,35 @@ import { Button, Table, TableBody, TableHead } from "@mui/material";
 //   //     const date = cur.format("YYYY-MM-DD");
 //   //     GetDay(date, customModel)
 //   //       .then((projections: Projection[]) => {
-//   //         // console.log("Got: ", date, projections);
 //   //         setDayAccuracies((prev) => {
 //   //           return prev.set(date, projections);
 //   //         });
 //   //         // setAllProjections((prev) => {
-//   //         //   console.log("PREV: ", prev);
-//   //         //   console.log("NEW: ", projections);
-//   //         //   console.log("COMBINED: ", [...prev, ...projections]);
 //   //         //   return [...prev, ...projections];
 //   //         // });
 //   //         // setTotalAccuracy(new Accuracy(allProjections));
 //   //       })
 //   //       .catch(() => {});
 //   //   }
-//   //   // console.log(dayAccuracies);
 //   // }, [customModel]);
 //   // // ADD SINGLE DAY
 //   // useMemo(() => {
 //   //   const date = dateRange.start;
-//   //   console.log("Get day and update total: ", date);
 //   //   GetDay(date, customModel)
 //   //     .then((projections: Projection[]) => {
-//   //       // console.log("Got: ", date, projections);
 //   //       setDayAccuracies((prev) => {
 //   //         return prev.set(date, projections);
 //   //       });
 //   //       // setAllProjections((prev) => {
-//   //       //   console.log("PREV: ", prev);
-//   //       //   console.log("NEW: ", projections);
-//   //       //   console.log("COMBINED: ", [...prev, ...projections]);
 //   //       //   return [...prev, ...projections];
 //   //       // });
 //   //       // setTotalAccuracy(new Accuracy(allProjections));
-//   //       // console.log(dayAccuracies, allProjections, totalAccuracy);
-//   //     })
-//   //     .catch(() => {});
+
+//   //     })//   //     .catch(() => {});
 //   // }, [dateRange.start]);
 //   // let p: Projection[] = Array.from(dayAccuracies.values()).flat();
-//   // console.log(dayAccuracies, p);
-//   // const totalAccuracy: Accuracy = new Accuracy();
-//   return (
+
+//   // const totalAccuracy: Accuracy = new Accuracy();//   return (
 //     <></>
 //     // <Table>
 //     //   <TableHead>
@@ -205,7 +180,6 @@ import { Button, Table, TableBody, TableHead } from "@mui/material";
 //     //     })
 //     //       .sort((itemA, itemB) => moment(itemB.date).diff(itemA.date))
 //     //       .map(({ accuracy, date }) => (
-//     //         // console.log(mapEntry[1], accuracy);
 //     //         <StyledTableRow key={date}>
 //     //           <StyledTableCell>{date}</StyledTableCell>
 //     //           <StyledTableCell
@@ -270,7 +244,6 @@ import { Button, Table, TableBody, TableHead } from "@mui/material";
 //   allProjections: Map<string, Projection[]>;
 //   hitCriteria: HitCriteria;
 // }> = ({ allProjections, hitCriteria }) => {
-//   console.log("Rendered All Summary");
 //   let combinedProjections: Projection[] = [];
 //   allProjections.forEach((dayProjections, date) => {
 //     combinedProjections.push(...dayProjections);
@@ -320,7 +293,6 @@ import { Button, Table, TableBody, TableHead } from "@mui/material";
 //   customModel: CustomCalculation,
 //   lookup?: string
 // ): Promise<Projection[]> {
-//   // console.log("Get summary for: ", date);
 //   // await new Promise((r) => setTimeout(r, 3000));
 //   // let projectionFilter: ProjectionFilter = {
 //   //   startDate: moment(date).format("YYYY-MM-DD"),
@@ -333,7 +305,6 @@ import { Button, Table, TableBody, TableHead } from "@mui/material";
 //   //   season: "2022-23",
 //   //   endDate: moment(date).format("YYYY-MM-DD"),
 //   // };
-//   // console.log("wait for response: ", date);
 //   // const response = await apolloClient.query({
 //   //   query: getQuery({ customModel }),
 //   //   variables: {
@@ -341,9 +312,7 @@ import { Button, Table, TableBody, TableHead } from "@mui/material";
 //   //     gameFilter: predictionFilter,
 //   //   },
 //   // });
-//   // console.log("got response for ", date, response);
 //   // if (response.data && !response.error) {
-//   //   // console.log("Calculate predictions for: ", response.data);
 //   //   const projections: Projection[] = response.data?.projections.map(
 //   //     (projection: Projection) => {
 //   //       let player = { ...projection.player };
@@ -373,7 +342,6 @@ import { Button, Table, TableBody, TableHead } from "@mui/material";
 //   //     return Match(projection, { lookup: lookup });
 //   //   });
 //   // }
-//   // // console.log("Got projections: ", filteredProjections);
 //   // return filteredProjections;
 //   // }
 

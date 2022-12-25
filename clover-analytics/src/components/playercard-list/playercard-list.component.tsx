@@ -99,7 +99,6 @@ import moment from "moment";
 //   // }, [customModel, statType]);
 
 //   // const calendarSummary = useMemo(() => {
-//   //   console.log("reload calendar summary");
 //   //   return (
 //   //     // <CalendarSummary
 //   //     //   accuracy={totalAccuracy}
@@ -114,7 +113,6 @@ import moment from "moment";
 //   // }, [totalAccuracy.allProps, dateRange.start]);
 
 //   // const totalTable = useMemo(() => {
-//   //   console.log("Reload table");
 //   //   return (
 //   //     <OverallAccuracyBreakdownTable
 //   //       customModel={customModel}

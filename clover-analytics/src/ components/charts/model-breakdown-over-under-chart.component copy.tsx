@@ -1,6 +1,5 @@
 import { Box } from "@mui/system";
 import { Chart } from "react-chartjs-2";
-import { useGetPropositions } from "../../hooks/useGetPropositions";
 import { Proposition } from "../../shared/interfaces/graphql/proposition.interface";
 import { COLORS } from "../../shared/styles/constants";
 
@@ -20,7 +19,6 @@ const ModelBreakdownOverUnderChart: React.FC<
   const unders = proposition?.prediction?.breakdowns?.map(
     (breakdown) => +breakdown.under.toFixed(2)
   );
-  console.log(overs, unders);
 
   return (
     <Box>
@@ -35,19 +33,8 @@ const ModelBreakdownOverUnderChart: React.FC<
               data: overs,
               type: "bar",
               backgroundColor: (context) => {
-                const index = context.dataIndex;
-                const value = context.dataset.data[index];
-                const weight =
-                  proposition?.prediction?.breakdowns?.find(
-                    (x) => x.name === labels?.[index]
-                  )?.weight ?? 0;
                 const color = COLORS.HIGHER;
-                // color opacity based on the weight
-                const intensity = +(
-                  50 +
-                  (+weight.toFixed() * (255 - 50)) / 100
-                ).toFixed();
-                console.log(intensity, intensity.toString(16));
+                const intensity = 200;
                 return color + intensity.toString(16);
               },
             },
@@ -56,19 +43,8 @@ const ModelBreakdownOverUnderChart: React.FC<
               data: unders,
               type: "bar",
               backgroundColor: (context) => {
-                const index = context.dataIndex;
-                const value = context.dataset.data[index];
-                const weight =
-                  proposition?.prediction?.breakdowns?.find(
-                    (x) => x.name === labels?.[index]
-                  )?.weight ?? 0;
                 const color = COLORS.LOWER;
-                // color opacity based on the weight
-                const intensity = +(
-                  50 +
-                  (+weight.toFixed() * (255 - 50)) / 100
-                ).toFixed();
-                console.log(intensity, intensity.toString(16));
+                const intensity = 200;
                 return color + intensity.toString(16);
               },
             },
@@ -83,7 +59,7 @@ const ModelBreakdownOverUnderChart: React.FC<
             },
             title: {
               display: true,
-              text: "Prediction Breakdown By Over/Under",
+              text: "Prediction Breakdown Over/Under",
               color: "white",
             },
             legend: {
@@ -108,9 +84,11 @@ const ModelBreakdownOverUnderChart: React.FC<
                 (label) =>
                   label +
                   " (" +
-                  proposition?.prediction?.breakdowns
-                    ?.find((x) => x.name === label)
-                    ?.weight.toFixed() +
+                  (
+                    (proposition?.prediction?.breakdowns?.find(
+                      (x) => x.name === label
+                    )?.overPct ?? 0) * 100
+                  ).toFixed() +
                   "%)"
               ),
               ticks: {

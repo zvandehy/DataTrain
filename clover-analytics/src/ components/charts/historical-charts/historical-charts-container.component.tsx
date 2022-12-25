@@ -129,7 +129,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                     },
                   })
                     .catch((err) => {
-                      console.log("Error Fetching More", err);
+                      console.error("Error Fetching More", err);
                     })
                     .finally(() => {
                       setLoadingMore(false);

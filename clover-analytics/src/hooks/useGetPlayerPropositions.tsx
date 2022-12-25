@@ -58,7 +58,22 @@ export const USE_GET_PLAYER_PROPOSITIONS = gql`
           weight
           stdDev
           pctChange
+          contribution
           base
+          derivedGames {
+            date
+            opponent {
+              abbreviation
+              teamID
+            }
+            player {
+              name
+              playerID
+            }
+            gameID
+            home_or_away
+            minutes
+          }
         }
       }
     }

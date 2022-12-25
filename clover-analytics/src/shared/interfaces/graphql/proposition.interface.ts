@@ -58,6 +58,7 @@ export interface PropBreakdown {
   derivedAverage: number;
   weight: number;
   pctChange: number;
+  contribution: number;
   base: number;
   derivedGames?: Game[];
 }

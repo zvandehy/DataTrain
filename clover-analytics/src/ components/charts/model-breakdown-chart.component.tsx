@@ -15,7 +15,19 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
     (breakdown) => breakdown.name
   );
   const targetComparisons = proposition?.prediction?.breakdowns?.map(
-    (breakdown) => +(breakdown.derivedAverage - proposition?.target).toFixed(2)
+    (breakdown) => {
+      if (breakdown.weight === 0) {
+        return 0;
+      }
+      if (breakdown.name.includes(" vs Opponent")) {
+        return +breakdown.pctChange.toFixed(2);
+      }
+      return +(
+        ((breakdown.derivedAverage - proposition?.target) /
+          proposition.target) *
+        100
+      ).toFixed(2);
+    }
   );
 
   return (
@@ -27,7 +39,7 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
           labels,
           datasets: [
             {
-              label: "Target Difference",
+              label: "% DIFF",
               data: targetComparisons,
               type: "bar",
               backgroundColor: (context) => {
@@ -43,7 +55,6 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
                   50 +
                   (+weight.toFixed() * (255 - 50)) / 100
                 ).toFixed();
-                console.log(intensity, intensity.toString(16));
                 return color + intensity.toString(16);
               },
             },
@@ -55,10 +66,28 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
           plugins: {
             tooltip: {
               mode: "index",
+              callbacks: {
+                label: (context) => {
+                  const index = context.dataIndex;
+                  const value = context.dataset.data[index];
+                  const average =
+                    proposition?.prediction?.breakdowns?.find(
+                      (x) => x.name === labels?.[index]
+                    )?.derivedAverage ?? 0;
+                  return (
+                    context.dataset.label +
+                    ": " +
+                    value +
+                    "% (AVG " +
+                    average +
+                    ")"
+                  );
+                },
+              },
             },
             title: {
               display: true,
-              text: "Prediction Breakdown By Distance From Target",
+              text: "Prediction Breakdown % Difference From Target",
               color: "white",
             },
             legend: {
@@ -85,6 +114,11 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
               labels: labels?.map(
                 (label) =>
                   label +
+                  " (" +
+                  proposition?.prediction?.breakdowns?.find(
+                    (x) => x.name === label
+                  )?.derivedGames?.length +
+                  ") " +
                   " (" +
                   proposition?.prediction?.breakdowns
                     ?.find((x) => x.name === label)

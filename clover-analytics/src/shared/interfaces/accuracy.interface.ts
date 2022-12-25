@@ -72,7 +72,6 @@ import moment from "moment";
 //   }
 
 //   add(projections: Projection[]) {
-//     // console.log("Calculate accuracy for: ", projections);
 //     projections.forEach((projection) => {
 //       if (!projection.result) return;
 //       // TODO: error handling / cleaning
@@ -106,7 +105,6 @@ import moment from "moment";
 //           }
 //         });
 //     });
-//     // console.log(this);
 //   }
 //   filter(filter: BreakdownFilter): Accuracy {
 //     let accuracy = new Accuracy();
@@ -137,7 +135,6 @@ import moment from "moment";
 //   result: Game
 // ): PredictionResult {
 //   const score = prop.statType.score(result);
-//   // console.log("Get results for: ", result.date);
 //   const date = moment(result.date).format("YYYY-MM-DD");
 //   if (score === prop.target) {
 //     return {

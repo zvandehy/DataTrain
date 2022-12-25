@@ -18,7 +18,6 @@ export const OverUnderPieChart: React.FC<OverUnderPieChartProps> = ({
   let misses = 0;
   let pending = 0;
   propositions.forEach((proposition) => {
-    console.warn(proposition);
     if (proposition.prediction?.wagerOutcome === "HIT") {
       hits++;
     } else if (proposition.prediction?.wagerOutcome === "PUSH") {

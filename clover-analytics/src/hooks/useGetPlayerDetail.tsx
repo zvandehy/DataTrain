@@ -252,7 +252,6 @@ import { gql, useQuery } from "@apollo/client";
 //   }
 //   let errorComponent;
 //   if (error) {
-//     console.error(JSON.stringify(error) + error.message);
 //     errorComponent = <Box>{JSON.stringify(error) + error.message}</Box>;
 //   }
 //   if (data && data?.player?.projections) {

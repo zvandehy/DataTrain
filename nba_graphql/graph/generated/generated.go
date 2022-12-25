@@ -166,6 +166,7 @@ type ComplexityRoot struct {
 
 	PropBreakdown struct {
 		Base              func(childComplexity int) int
+		Contribution      func(childComplexity int) int
 		DerivedAverage    func(childComplexity int) int
 		DerivedGames      func(childComplexity int) int
 		DerivedGamesCount func(childComplexity int) int
@@ -1086,6 +1087,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PropBreakdown.Base(childComplexity), true
+
+	case "PropBreakdown.contribution":
+		if e.complexity.PropBreakdown.Contribution == nil {
+			break
+		}
+
+		return e.complexity.PropBreakdown.Contribution(childComplexity), true
 
 	case "PropBreakdown.derivedAverage":
 		if e.complexity.PropBreakdown.DerivedAverage == nil {
@@ -2171,6 +2179,7 @@ type PropBreakdown {
   derivedAverage: Float!
   weight: Float!
   pctChange: Float!
+  contribution: Float!
   base: Float!
   derivedGames: [PlayerGame!] #recommend to only query derivedGames when analysing a specific player/game
   derivedGamesCount: Int!
@@ -8390,6 +8399,50 @@ func (ec *executionContext) fieldContext_PropBreakdown_pctChange(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _PropBreakdown_contribution(ctx context.Context, field graphql.CollectedField, obj *model.PropBreakdown) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropBreakdown_contribution(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Contribution, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropBreakdown_contribution(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PropBreakdown_base(ctx context.Context, field graphql.CollectedField, obj *model.PropBreakdown) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PropBreakdown_base(ctx, field)
 	if err != nil {
@@ -9203,6 +9256,8 @@ func (ec *executionContext) fieldContext_PropPrediction_breakdowns(ctx context.C
 				return ec.fieldContext_PropBreakdown_weight(ctx, field)
 			case "pctChange":
 				return ec.fieldContext_PropBreakdown_pctChange(ctx, field)
+			case "contribution":
+				return ec.fieldContext_PropBreakdown_contribution(ctx, field)
 			case "base":
 				return ec.fieldContext_PropBreakdown_base(ctx, field)
 			case "derivedGames":
@@ -16594,6 +16649,13 @@ func (ec *executionContext) _PropBreakdown(ctx context.Context, sel ast.Selectio
 		case "pctChange":
 
 			out.Values[i] = ec._PropBreakdown_pctChange(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "contribution":
+
+			out.Values[i] = ec._PropBreakdown_contribution(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

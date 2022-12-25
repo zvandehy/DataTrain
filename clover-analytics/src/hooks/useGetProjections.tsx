@@ -200,7 +200,6 @@ import { ApolloError, gql, useQuery } from "@apollo/client";
 //   if (data && data?.players) {
 //     let players: Player[] = [];
 //     data.players.forEach((player: Player) => {
-//       console.log(player.name);
 //       if (player.games.length > 0) {
 //         const newPlayer = player;
 //         let newGames: Game[] = [];
@@ -280,13 +279,6 @@ import { ApolloError, gql, useQuery } from "@apollo/client";
 //           ) {
 //             newGames.push(newGame);
 //           } else {
-//             console.log(
-//               game.date,
-//               game.outcome,
-//               moment(game.date).isBefore(),
-//               moment(game.date).isSameOrAfter(),
-//               game.outcome.toUpperCase() !== "PENDING"
-//             );
 //           }
 //         });
 //         newPlayer.games = newGames;

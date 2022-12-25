@@ -1,4 +1,5 @@
 import {
+  Box,
   Grid,
   Tab,
   Table,
@@ -7,7 +8,9 @@ import {
   TableHead,
   TableRow,
   Tabs,
+  Typography,
 } from "@mui/material";
+import { Stack } from "@mui/system";
 import { useEffect, useState } from "react";
 import { useGetPlayerPropositions } from "../../hooks/useGetPlayerPropositions";
 import { ModelInput } from "../../shared/interfaces/custom-prediction.interface";
@@ -15,8 +18,15 @@ import {
   PropBreakdown,
   Proposition,
 } from "../../shared/interfaces/graphql/proposition.interface";
+import { GetStatAbbreviation } from "../../shared/interfaces/stat.interface";
 import ModelBreakdownChart from "../charts/model-breakdown-chart.component";
 import ModelBreakdownOverUnderChart from "../charts/model-breakdown-over-under-chart.component copy";
+import PredictionContributionBar from "../charts/prediction-contribution-breakdown.component";
+import { HitMissIcon } from "../icons/hit-miss.icon";
+import {
+  OverUnderIcon,
+  OverUnderTypography,
+} from "../icons/overUnderIcon.component";
 
 interface PlayerModalProps {
   playerID: number;
@@ -75,6 +85,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
     derivedAverage: 0,
     weight: 0,
     pctChange: 0,
+    contribution: 0,
     base: 0,
   };
 
@@ -109,10 +120,6 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
     100;
   similarPlayerBreakdown.base =
     similarPlayerBreakdown.base / (similarPlayerBreakdowns?.length ?? 0);
-  console.log(
-    similarPlayerBreakdown.derivedAverage,
-    similarPlayerBreakdowns?.length
-  );
   similarPlayerBreakdown.derivedAverage =
     similarPlayerBreakdown.derivedAverage /
     (similarPlayerBreakdowns?.length ?? 0);
@@ -128,8 +135,49 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
   // with an expand for the derived games of the breakdowns
   return (
     <>
-      <Tabs value={selectedProp?.type ?? "points"} sx={{ overflowX: "scroll" }}>
-        {propositions.map((prop) => (
+      <Grid container spacing={2}>
+        <Tabs
+          value={selectedProp?.type ?? "points"}
+          sx={{ overflowX: "scroll" }}
+          variant="scrollable"
+        >
+          {propositions.map((prop) => (
+            <Tab
+              sx={{ pt: 2 }}
+              key={prop.type + prop.target}
+              value={prop.type}
+              label={
+                <Stack>
+                  <Box m={"auto"}>
+                    {GetStatAbbreviation(prop.type)} {prop.target}
+                  </Box>
+                  <Grid container>
+                    <OverUnderIcon
+                      size={16}
+                      overUnder={prop?.prediction?.wager}
+                    />
+                    <Typography
+                      textAlign={"center"}
+                      margin="auto"
+                      fontSize={"small"}
+                    >
+                      {prop?.prediction?.significance}%
+                    </Typography>
+                    {prop.prediction.wagerOutcome !== "PENDING" ? (
+                      <HitMissIcon outcome={prop?.prediction?.wagerOutcome} />
+                    ) : (
+                      <></>
+                    )}
+                  </Grid>
+                </Stack>
+              }
+              onClick={() => {
+                setSelectedProp(prop);
+              }}
+            />
+          ))}
+        </Tabs>
+        {/* {propositions.map((prop) => (
           <Tab
             key={prop.type}
             value={prop.type}
@@ -138,9 +186,12 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
               setSelectedProp(prop);
             }}
           />
-        ))}
-      </Tabs>
-      <Grid container spacing={2}>
+        ))} */}
+      </Grid>
+      <Grid container spacing={2} overflow={"scroll"}>
+        <Grid item xs={12}>
+          <PredictionContributionBar proposition={selectedProp} />
+        </Grid>
         <Grid item xs={12} md={6}>
           <ModelBreakdownChart proposition={selectedProp} />
         </Grid>

@@ -33,6 +33,7 @@ export const USE_GET_PROPOSITIONS = gql`
       type
       target
       outcome
+      lastModified
       actualResult
       prediction(input: $customModel) {
         estimation

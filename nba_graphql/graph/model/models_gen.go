@@ -80,6 +80,7 @@ type PropBreakdown struct {
 	DerivedAverage    float64       `json:"derivedAverage"`
 	Weight            float64       `json:"weight"`
 	PctChange         float64       `json:"pctChange"`
+	Contribution      float64       `json:"contribution"`
 	Base              float64       `json:"base"`
 	DerivedGames      []*PlayerGame `json:"derivedGames"`
 	DerivedGamesCount int           `json:"derivedGamesCount"`

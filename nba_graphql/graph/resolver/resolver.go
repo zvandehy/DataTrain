@@ -151,7 +151,7 @@ func (r *Resolver) GetGamelogBreakdowns(ctx context.Context, inputs []*model.Gam
 	return breakdowns
 }
 
-func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.SimilarPlayerInput, game *model.PlayerGame, stat model.Stat) []*model.PropBreakdown {
+func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.SimilarPlayerInput, game *model.PlayerGame, stat model.Stat) []model.PropBreakdown {
 
 	// TODO: Allow getting games for this season, this and last season, or all time
 	// similarPlayers, err := r.GetSimilarPlayers(ctx, game.PlayerID, input, game.Date)
@@ -167,7 +167,7 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 	})
 	if err != nil {
 		logrus.Errorf("Error getting similar players: %v", err)
-		return []*model.PropBreakdown{}
+		return []model.PropBreakdown{}
 	}
 	// filters := lo.Map(similarPlayerIDs, func(id int, _ int) *model.PlayerFilter {
 	// 	return &model.PlayerFilter{
@@ -199,7 +199,7 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 		}
 	}
 
-	breakdowns := []*model.PropBreakdown{}
+	breakdowns := []model.PropBreakdown{}
 	skipped := 0
 	for _, similarPlayer := range similarPlayers {
 		// similar players query returns the player with their base games for this game
@@ -210,7 +210,7 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 		for _, simGame := range similarBase {
 			score := simGame.Score(stat)
 			baseTotal += score
-			if simGame.OpponentID == game.OpponentID {
+			if simGame.OpponentID == game.OpponentID && simGame.Minutes > 0 {
 				derivedTotal += score
 				vsOpp = append(vsOpp, simGame)
 			}
@@ -223,19 +223,20 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 		derivedAvg := derivedTotal / float64(len(vsOpp))
 		diff := derivedAvg - baseAvg
 		diffPct := diff / baseAvg * 100
-		breakdown := &model.PropBreakdown{
-			Name:           fmt.Sprintf("%s vs %s", similarPlayer.Name, "Opponent"),
-			Over:           0,
-			Under:          0,
-			Push:           0,
-			OverPct:        0.0,
-			UnderPct:       0.0,
-			PushPct:        0.0,
-			Base:           math.Round(baseAvg*100) / 100.0,
-			DerivedAverage: math.Round(derivedAvg*100) / 100.0,
-			PctChange:      math.Round(diffPct*100) / 100.0,
-			DerivedGames:   vsOpp,
-			Weight:         input.Weight,
+		breakdown := model.PropBreakdown{
+			Name:              fmt.Sprintf("%s vs %s", similarPlayer.Name, "Opponent"),
+			Over:              0,
+			Under:             0,
+			Push:              0,
+			OverPct:           0.0,
+			UnderPct:          0.0,
+			PushPct:           0.0,
+			Base:              math.Round(baseAvg*100) / 100.0,
+			DerivedAverage:    math.Round(derivedAvg*100) / 100.0,
+			PctChange:         math.Round(diffPct*100) / 100.0,
+			DerivedGames:      vsOpp,
+			DerivedGamesCount: len(vsOpp),
+			Weight:            input.Weight,
 		}
 		// over/under for similar players determnined by if the player scored higher or lower than their base average
 		for _, game := range vsOpp {
@@ -258,8 +259,8 @@ func (r *Resolver) GetSimilarPlayerBreakdowns(ctx context.Context, input *model.
 		}
 	}
 	if len(breakdowns) == 0 {
-		logrus.Warnf("No similar players have played the opponent: %d vs %d", game.PlayerID, game.OpponentID)
-		return []*model.PropBreakdown{}
+		// logrus.Warnf("No similar players have played the opponent: %d vs %d", game.PlayerID, game.OpponentID)
+		return []model.PropBreakdown{}
 	}
 	for _, breakdown := range breakdowns {
 		breakdown.Weight = (input.Weight / float64(len(breakdowns)))

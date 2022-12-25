@@ -466,7 +466,7 @@ export const LookupStats: Record<string, Stat> = {
 export function GetStat(proposition: Proposition): Stat {
   let stat: Stat = LookupStats[proposition.type];
   if (!stat) {
-    console.warn("UNKNOWN type: ", proposition.type);
+    console.error("UNKNOWN type: ", proposition.type);
     return Unknown;
   }
   return stat;

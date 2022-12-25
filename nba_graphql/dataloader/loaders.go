@@ -188,9 +188,19 @@ func fetchSimilarPlayerIDs(db database.BasketballRepository, ctx context.Context
 			players := lo.FilterMap(allPlayers, func(player *model.Player, _ int) (model.Player, bool) {
 				return *player, lo.Contains(similarIDs, player.PlayerID)
 			})
-			similarPlayers[i] = lo.FindUniquesBy(players, func(player model.Player) int {
-				return player.PlayerID
-			})
+
+			for _, p := range players {
+				contains := false
+				for _, p2 := range similarPlayers[i] {
+					if p.PlayerID == p2.PlayerID {
+						contains = true
+						break
+					}
+				}
+				if !contains {
+					similarPlayers[i] = append(similarPlayers[i], p)
+				}
+			}
 		}
 		return similarPlayers, nil
 	}

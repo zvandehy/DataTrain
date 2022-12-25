@@ -25,7 +25,6 @@ import { Dialog, DialogTitle, Typography } from "@mui/material";
 //   let customModelForm = DEFAULT_MODEL;
 //   const dispatchLog = (action: any) => {
 //     // dispatch(action);
-//     console.log(action);
 //   };
 //   const handleClose = (event: any, reason: string) => {
 //     if (reason === "backdropClick") {
