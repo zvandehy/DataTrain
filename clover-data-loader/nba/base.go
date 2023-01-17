@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 
 	"github.com/sirupsen/logrus"
 )
@@ -19,6 +20,14 @@ func NBAQuery[T any](endpoint string, params map[string]string) (*NBAResponse[T]
 		Transport: &http.Transport{
 			DisableCompression: true,
 		}}
+	paramStr := "params {\n"
+	for k, v := range params {
+		if v != "" {
+			paramStr += fmt.Sprintf("    %v=%v\n", k, v)
+		}
+	}
+	paramStr += "}"
+	logrus.Infof("requesting %v %v", endpoint, paramStr)
 	req, err := http.NewRequest("GET", NBA_API_BASE_URL+endpoint, nil)
 	if err != nil {
 		logrus.Errorf("couldn't create request: %v", err)
@@ -40,8 +49,6 @@ func NBAQuery[T any](endpoint string, params map[string]string) (*NBAResponse[T]
 		q.Add(k, v)
 	}
 	req.URL.RawQuery = q.Encode()
-
-	fmt.Println(req.URL.String())
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -130,4 +137,19 @@ func (r *NBAResultSet[T]) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	return nil
+}
+
+func ParamMap[T any](p T) map[string]string {
+	params := map[string]string{}
+	val := reflect.ValueOf(p)
+	for i := 0; i < val.Type().NumField(); i++ {
+		field := val.Type().Field(i)
+		tag := field.Tag.Get("json")
+		if tag != "" {
+			// if val.Field(i).String() != "" {
+			params[tag] = val.Field(i).String()
+			// }
+		}
+	}
+	return params
 }

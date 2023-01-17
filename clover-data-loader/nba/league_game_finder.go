@@ -1,11 +1,9 @@
 package nba
 
-import "reflect"
-
 const LeagueGameFinderURL = "leaguegamefinder?"
 
-// LeagueGameFinderResults is a struct that contains all the fields for the LeagueGameFinderResults endpoint.
-type LeagueGameFinderResults struct {
+// LeagueGame is a struct that contains all the fields for the LeagueGame endpoint.
+type LeagueGame struct {
 	SeasonID         string  `json:"SEASON_ID"`
 	PlayerID         float64 `json:"PLAYER_ID"`
 	PlayerName       string  `json:"PLAYER_NAME"`
@@ -36,15 +34,44 @@ type LeagueGameFinderResults struct {
 	Tov              float64 `json:"TOV"`
 	Pf               float64 `json:"PF"`
 	PlusMinus        float64 `json:"PLUS_MINUS"`
+	Playoffs         bool
 }
 
-func NBAPlayerGameFinder(params *LeagueGameFinderParams) (*NBAResponse[LeagueGameFinderResults], error) {
-	if params == nil {
-		params = &LeagueGameFinderParams{}
+func NBAPlayerGameFinder(params LeagueGameFinderParams) (*NBAResponse[LeagueGame], error) {
+	return NBALeagueGameFinder(setPlayerParams(params))
+}
+
+func setPlayerParams(params LeagueGameFinderParams) LeagueGameFinderParams {
+	if params.SeasonType == "" {
+		params.SeasonType = "Regular Season"
 	}
 	params.LeagueID = NBA_LEAGUE_ID
 	params.PlayerOrTeam = "P"
-	return NBAQuery[LeagueGameFinderResults](LeagueGameFinderURL, params.ParamMap())
+	return params
+}
+
+func setTeamParams(params LeagueGameFinderParams) LeagueGameFinderParams {
+	if params.SeasonType == "" {
+		params.SeasonType = "Regular Season"
+	}
+	params.LeagueID = NBA_LEAGUE_ID
+	params.PlayerOrTeam = "T"
+	return params
+}
+
+func NBATeamGameFinder(params LeagueGameFinderParams) (*NBAResponse[LeagueGame], error) {
+	return NBALeagueGameFinder(setTeamParams(params))
+}
+
+func NBALeagueGameFinder(params LeagueGameFinderParams) (*NBAResponse[LeagueGame], error) {
+	resp, err := NBAQuery[LeagueGame](LeagueGameFinderURL, ParamMap(params))
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < len(resp.ResultSets[0].RowSet); i++ {
+		resp.ResultSets[0].RowSet[i].Playoffs = (params.SeasonType != "Regular Season")
+	}
+	return resp, nil
 }
 
 type LeagueGameFinderParams struct {
@@ -137,44 +164,6 @@ type LeagueGameFinderParams struct {
 	VsDivision      string `json:"VsDivision"`
 	VsTeamID        string `json:"VsTeamID"`
 	YearsExperience string `json:"YearsExperience"`
-}
-
-func (p *LeagueGameFinderParams) ParamMap() map[string]string {
-	params := map[string]string{}
-
-	// if p.LeagueID != "" {
-	// 	params["LeagueID"] = p.LeagueID
-	// } else {
-	// 	params["LeagueID"] = NBA_LEAGUE_ID
-	// }
-
-	// if p.PlayerOrTeam != "" {
-	// 	params["PlayerOrTeam"] = p.PlayerOrTeam
-	// } else {
-	// 	params["PlayerOrTeam"] = "P"
-	// }
-
-	// if p.DateFrom != "" {
-	// 	params["DateFrom"] = p.DateFrom
-	// }
-
-	// if p.DateTo != "" {
-	// 	params["DateTo"] = p.DateTo
-	// }
-
-	//for each param in the struct, add it to the map
-	val := reflect.ValueOf(*p)
-	for i := 0; i < val.Type().NumField(); i++ {
-		field := val.Type().Field(i)
-		tag := field.Tag.Get("json")
-		if tag != "" {
-			if val.Field(i).String() != "" {
-				params[tag] = val.Field(i).String()
-			}
-		}
-	}
-
-	return params
 }
 
 // https://github.com/swar/nba_api/blob/a5d90f5a8637f76bc8bdb60af94428ba04036f12/src/nba_api/stats/library/parameters.py#L1
