@@ -40,6 +40,8 @@ func main() {
 		}
 	}()
 
+	//TODO: Move Getting Sportsbook Data to this service
+
 	router := chi.NewRouter()
 	router.Get("/update", func(w http.ResponseWriter, r *http.Request) {
 		getAndUploadData(db)
