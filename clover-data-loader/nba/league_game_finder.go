@@ -2,8 +2,8 @@ package nba
 
 const LeagueGameFinderURL = "leaguegamefinder?"
 
-// LeagueGame is a struct that contains all the fields for the LeagueGame endpoint.
-type LeagueGame struct {
+// PlayerLeagueGame is a struct that contains all the fields for the PlayerLeagueGame endpoint.
+type PlayerLeagueGame struct {
 	SeasonID         string  `json:"SEASON_ID"`
 	PlayerID         float64 `json:"PLAYER_ID"`
 	PlayerName       string  `json:"PLAYER_NAME"`
@@ -37,8 +37,41 @@ type LeagueGame struct {
 	Playoffs         bool
 }
 
-func NBAPlayerGameFinder(params LeagueGameFinderParams) (*NBAResponse[LeagueGame], error) {
-	return NBALeagueGameFinder(setPlayerParams(params))
+type TeamLeagueGame struct {
+	// SEASON_ID TEAM_ID TEAM_ABBREVIATION TEAM_NAME GAME_ID GAME_DATE MATCHUP WL MIN PTS FGM FGA FG_PCT FG3M FG3A FG3_PCT FTM FTA FT_PCT OREB DREB REB AST STL BLK TOV PF PLUS_MINUS
+	SeasonID         string  `json:"SEASON_ID"`
+	TeamID           float64 `json:"TEAM_ID"`
+	TeamAbbreviation string  `json:"TEAM_ABBREVIATION"`
+	TeamName         string  `json:"TEAM_NAME"`
+	GameID           string  `json:"GAME_ID"`
+	GameDate         string  `json:"GAME_DATE"`
+	Matchup          string  `json:"MATCHUP"`
+	WL               string  `json:"WL"`
+	Min              float64 `json:"MIN"`
+	Pts              float64 `json:"PTS"`
+	Fgm              float64 `json:"FGM"`
+	Fga              float64 `json:"FGA"`
+	FgPct            float64 `json:"FG_PCT"`
+	Fg3M             float64 `json:"FG3M"`
+	Fg3A             float64 `json:"FG3A"`
+	Fg3Pct           float64 `json:"FG3_PCT"`
+	Ftm              float64 `json:"FTM"`
+	Fta              float64 `json:"FTA"`
+	FtPct            float64 `json:"FT_PCT"`
+	Oreb             float64 `json:"OREB"`
+	Dreb             float64 `json:"DREB"`
+	Reb              float64 `json:"REB"`
+	Ast              float64 `json:"AST"`
+	Stl              float64 `json:"STL"`
+	Blk              float64 `json:"BLK"`
+	Tov              float64 `json:"TOV"`
+	Pf               float64 `json:"PF"`
+	PlusMinus        float64 `json:"PLUS_MINUS"`
+	Playoffs         bool
+}
+
+func NBAPlayerGameFinder(params LeagueGameFinderParams) (*NBAResponse[PlayerLeagueGame], error) {
+	return NBAPlayerLeagueGameFinder(setPlayerParams(params))
 }
 
 func setPlayerParams(params LeagueGameFinderParams) LeagueGameFinderParams {
@@ -59,12 +92,20 @@ func setTeamParams(params LeagueGameFinderParams) LeagueGameFinderParams {
 	return params
 }
 
-func NBATeamGameFinder(params LeagueGameFinderParams) (*NBAResponse[LeagueGame], error) {
-	return NBALeagueGameFinder(setTeamParams(params))
+func NBATeamGameFinder(params LeagueGameFinderParams) (*NBAResponse[TeamLeagueGame], error) {
+	params = setTeamParams(params)
+	resp, err := NBAQuery[TeamLeagueGame](LeagueGameFinderURL, ParamMap(params))
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < len(resp.ResultSets[0].RowSet); i++ {
+		resp.ResultSets[0].RowSet[i].Playoffs = (params.SeasonType != "Regular Season")
+	}
+	return resp, nil
 }
 
-func NBALeagueGameFinder(params LeagueGameFinderParams) (*NBAResponse[LeagueGame], error) {
-	resp, err := NBAQuery[LeagueGame](LeagueGameFinderURL, ParamMap(params))
+func NBAPlayerLeagueGameFinder(params LeagueGameFinderParams) (*NBAResponse[PlayerLeagueGame], error) {
+	resp, err := NBAQuery[PlayerLeagueGame](LeagueGameFinderURL, ParamMap(params))
 	if err != nil {
 		return nil, err
 	}

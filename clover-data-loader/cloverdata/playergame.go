@@ -75,7 +75,7 @@ func TransformNBAPlayerGame(playerGameBucket PlayerGameBucket) *PlayerGame {
 }
 
 type PlayerGameBucket struct {
-	LeagueGame       nba.LeagueGame
+	LeagueGame       nba.PlayerLeagueGame
 	BoxScoreAdvanced nba.PlayerAdvancedGameLog
 	PassingStats     nba.PlayerPassingStats
 	MiscStats        nba.PlayerMiscGameLog
@@ -96,16 +96,6 @@ func (pg *PlayerGame) fillPlayerGameFromMiscStats(miscStats nba.PlayerMiscGameLo
 }
 
 func (pg *PlayerGame) fillPlayerGameFromTeamBoxScore(boxScore nba.TeamTraditionalGameLog) {
-	// x, err := strconv.Atoi(boxScore.PLUS_MINUS[1:])
-	// if err != nil {
-	// 	logrus.Error(err)
-	// 	pg.Margin = 0
-	// }
-	// if boxScore.WL == "W" {
-	// 	pg.Margin = x
-	// } else {
-	// 	pg.Margin = x * -1
-	// }
 	pg.Margin = int(boxScore.PLUS_MINUS)
 }
 
@@ -113,10 +103,14 @@ func (pg *PlayerGame) fillPlayerGameFromPassingStats(passingStats nba.PlayerPass
 	pg.Assists = int(passingStats.AST)
 	pg.PotentialAssists = int(passingStats.POTENTIAL_AST)
 	pg.Passes = int(passingStats.PASSES_MADE)
-	pg.AssistConversionRate = passingStats.AST / passingStats.POTENTIAL_AST
+	if passingStats.POTENTIAL_AST > 0 {
+		pg.AssistConversionRate = passingStats.AST / passingStats.POTENTIAL_AST
+	} else {
+		pg.AssistConversionRate = 0
+	}
 }
 
-func (pg *PlayerGame) fillPlayerGameFromLeagueGame(leagueGameFinderResults nba.LeagueGame) {
+func (pg *PlayerGame) fillPlayerGameFromLeagueGame(leagueGameFinderResults nba.PlayerLeagueGame) {
 	pg.Assists = int(leagueGameFinderResults.Ast)
 	pg.Blocks = int(leagueGameFinderResults.Blk)
 	pg.DefensiveRebounds = int(leagueGameFinderResults.Dreb)
@@ -147,7 +141,7 @@ func (pg *PlayerGame) fillPlayerGameFromLeagueGame(leagueGameFinderResults nba.L
 
 	date, err := time.Parse("2006-01-02", leagueGameFinderResults.GameDate)
 	if err != nil {
-		logrus.Fatalf("couldn't parse date: %v", err)
+		logrus.Errorf("couldn't parse date: %v", err)
 	}
 	pg.Date = &date
 }
@@ -155,19 +149,19 @@ func (pg *PlayerGame) fillPlayerGameFromLeagueGame(leagueGameFinderResults nba.L
 func SeasonIDToSeason(seasonID string) string {
 	season, err := strconv.Atoi(seasonID[1:])
 	if err != nil {
-		logrus.Fatalf("couldn't convert seasonID to int: %v", err)
+		logrus.Errorf("couldn't convert seasonID to int: %v", err)
 	}
 	return fmt.Sprintf("%s-%d", seasonID[1:], season+1)
 }
 
-func HomeOrAway(game nba.LeagueGame) string {
+func HomeOrAway(game nba.PlayerLeagueGame) string {
 	if strings.Contains(game.Matchup, "@") {
 		return "away"
 	}
 	return "home"
 }
 
-func GameOutcome(game nba.LeagueGame) string {
+func GameOutcome(game nba.PlayerLeagueGame) string {
 	if game.WL == "W" {
 		return "WIN"
 	}
@@ -177,6 +171,6 @@ func GameOutcome(game nba.LeagueGame) string {
 	return "PENDING"
 }
 
-func OpponentID(game nba.LeagueGame) int {
+func OpponentID(game nba.PlayerLeagueGame) int {
 	return int(nba.TeamAbbreviationToTeamID[game.Matchup[len(game.Matchup)-3:]])
 }
