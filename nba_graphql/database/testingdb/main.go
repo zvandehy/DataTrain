@@ -154,13 +154,13 @@ func GetStandardizeddForDate(stats []string, date string, duration string) strin
 	return fmt.Sprintf(`SELECT  Cast(%[1]s AS Date)     AS date
        ,%[2]s                      AS duration
        ,%[3]s
-FROM playergames
-JOIN players USING
-(playerID
-)
-WHERE date < Cast(%[1]s AS Date)
-AND season = %[2]s
-AND minutes > 10;`, fmt.Sprintf("\"%s\"", date), fmt.Sprintf("\"%s\"", duration), strings.Join(avgStdDevs, ", "))
+		FROM playergames
+		JOIN players USING
+		(playerID
+		)
+		WHERE date < Cast(%[1]s AS Date)
+		AND season = %[2]s
+		AND minutes > 10;`, fmt.Sprintf("\"%s\"", date), fmt.Sprintf("\"%s\"", duration), strings.Join(avgStdDevs, ", "))
 }
 
 func GetComparisonsForPlayersSQL(stats []string, date string, duration string, playerIDs ...int) string {

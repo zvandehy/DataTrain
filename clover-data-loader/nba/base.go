@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -55,7 +56,19 @@ func NBAQuery[T any](endpoint string, params map[string]string) (*NBAResponse[T]
 		return nil, fmt.Errorf("error retrieving NBA data: %v", err)
 	}
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("response status code: %v", resp.StatusCode)
+		count := 0
+		for count < 5 {
+			count++
+			logrus.Errorf("response status code: %v. Retrying in %d seconds...", resp.StatusCode, count*30)
+			time.Sleep(time.Duration(count*30) * time.Second)
+			resp, err = client.Do(req)
+			if err == nil && resp.StatusCode == 200 {
+				break
+			}
+		}
+		if err != nil || resp.StatusCode != 200 {
+			return nil, fmt.Errorf("response status code: %v", resp.StatusCode)
+		}
 	}
 
 	defer resp.Body.Close()
