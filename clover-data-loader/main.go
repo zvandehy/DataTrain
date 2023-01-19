@@ -180,6 +180,9 @@ func GetTeamGamesByDateRange(from, to time.Time) ([]cloverdata.TeamGame, error) 
 	time.Sleep(5 * time.Second)
 	teamLeagueGames := teamGameData.ResultSets[0].RowSet
 	for _, game := range teamLeagueGames {
+		if game.WL == "" {
+			continue
+		}
 		date, err := GetDate(game.GameDate)
 		if err != nil {
 			logrus.Errorf("couldn't parse team game date: %v", err)
@@ -197,6 +200,9 @@ func GetTeamGamesByDateRange(from, to time.Time) ([]cloverdata.TeamGame, error) 
 	time.Sleep(5 * time.Second)
 	advancedTeamGames := advancedTeamGameData.ResultSets[0].RowSet
 	for _, game := range advancedTeamGames {
+		if game.WL == "" {
+			continue
+		}
 		date, err := GetDate(game.GAME_DATE)
 		if err != nil {
 			logrus.Errorf("couldn't parse advanced team game date: %v", err)
@@ -252,6 +258,9 @@ func GetPlayerGamesByDateRange(from, to time.Time) ([]cloverdata.PlayerGame, err
 
 	playerLeagueGames := leagueGameData.ResultSets[0].RowSet
 	for _, game := range playerLeagueGames {
+		if game.WL == "" {
+			continue
+		}
 		date, err := GetDate(game.GameDate)
 		if err != nil {
 			logrus.Errorf("couldn't parse league game date: %v", err)
@@ -308,6 +317,9 @@ func GetPlayerGamesByDateRange(from, to time.Time) ([]cloverdata.PlayerGame, err
 	time.Sleep(5 * time.Second)
 	teamGames := teamGameData.ResultSets[0].RowSet
 	for _, game := range teamGames {
+		if game.WL == "" {
+			continue
+		}
 		date, err := GetDate(game.GAME_DATE)
 		if err != nil {
 			logrus.Errorf("couldn't parse (player) team game date: %v", err)
