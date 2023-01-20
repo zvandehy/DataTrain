@@ -1,61 +1,85 @@
-# CLOVER ANALYTICS
+# CLOVER ANALYTICS (Previously DataTrain)
+
 NBA Player Sportsbook Analyzer
+
+- Review Relevant NBA/WNBA Player History
+- Use similarity metrics to compare how players perform against similar teams or how similar players perform against the same opponent
+- Use weighted averages to create NBA player perfomance predictions
+- Compare customized predictions to DFS props
+- Review how the customized prediction model would have performed historically
 
 This tool aims to allow anyone to review available Player Props on DFS sites, create their own prediction models, and analyze the performance of these models. Sportsbooks have all of the edge: they have dedicated line makers, computing power, favorable betting lines, knowledge of the amount of money being placed on each bet, and they only show customers a limited set of relevant data to their player props. This tool attempts tp take some of that edge back by creating an easy way for users to get all of the data that they want about a player and their past performances. Users can create custom prediction models by simply selecting what data they believe is relevant to a prediction, and weights associated with the importannce of that data. The tool uses this custom model to automatically collect, analyze, and calculate a prediction. Then the user can review the prediction and how that model performs compared to actual results and sportsbook lines.
 
 # React
+
 Front End of Web App
 
 http://www.clover-analytics.com
 
 Requires React and local libraries
-- ```cd react/nba-analyzer```
-- ```npm i -g npm```
-- ```npm i -g react react-scripts typescript ajv``` 
-- ```npm i```
-- ```npm start```
+
+- `cd clover-analytics`
+- `npm i`
+- `npm start`
 
 # NBA_GraphQL
+
 Golang implementation of a GraphQL backend to aggregate data from DB or other API sources.
 
 https://clover-backend.fly.dev/nba
 
-Requires golang to be installed
-- ```cd nba_graphql```
-- ```go run server.go```
+Requires golang to be installed (https://go.dev/doc/install)
 
+- `cd nba_graphql`
+- `go run server.go`
 
 - use `go run runner/runner.go` to use the gql generator after updating the graphql schema
 
 # Python API
-Python (Notebook) with scripts for extracting data from NBA.com/stats and storing it in MongoDB
+
+- ### Recently deprecated and replaced with an automated data loader
+
+Python (Notebook) with scripts for extracting data from NBA.com/stats and storing it in MongoDB.
 
 Requires pymongo-srv, along with other basic libraries
 
+# Clover Data Loader
+
+- Makes NBA Stats API requests and stores the data in MySQL database
+- Automatically makes requests every 4 hours
+
+# CI/CD
+
+- Commits to `main` automatically trigger deployments to fly.io and netlifly
+- see .github/workflows/fly.yml and github actions
+
 # DEMO
+
 To run the program locally make sure that
+
 - data is up to date by running the python api
 - the graphql backend is running
 - the react app is running
 
-# Workflow Process
+# Workflow Process (For working in Senior Captsone Team at UNC Charlotte)
+
 1. On JIRA, locate the ticket number that you are working on. E.g. “NBA-35”
 2. Open a terminal to the DataTrain/ repository
 3. Make sure you are on the main branch and that the branch is up to date
-    1. ```git switch main```
-    2. ```git pull```
+   1. `git switch main`
+   2. `git pull`
 4. Create a new branch for this ticket
-    1. ```git checkout -b NBA-35```
+   1. `git checkout -b NBA-35`
 5. Make changes to the code for the ticket
 6. Stage these changes by either:
-    1. ```git add <filename>``` or ```git add .```
-    2. Clicking the “+” button next to the changed files on the source control tab
+   1. `git add <filename>` or `git add .`
+   2. Clicking the “+” button next to the changed files on the source control tab
 7. Commit these changes by either:
-    1. ```git commit -m “my commit message”```
-    2. Clicking the checkmark in the source control tab and typing in a commit message
+   1. `git commit -m “my commit message”`
+   2. Clicking the checkmark in the source control tab and typing in a commit message
 8. Push changes to the repository
-    1. ```git push```
-    2. NOTE: the first time you run ```git push``` on this branch, it may ask you to set the upstream branch because it does not yet exist on the GitHub repository. For example: ```git push --set-upstream origin NBA-35```
+   1. `git push`
+   2. NOTE: the first time you run `git push` on this branch, it may ask you to set the upstream branch because it does not yet exist on the GitHub repository. For example: `git push --set-upstream origin NBA-35`
 9. Repeat steps 5-8 as needed
 10. Go to https://github.com/zvandehy/DataTrain
     1. Also, notice that on JIRA your branch is automatically linked to your GitHub branch. This means that when looking at anyone’s ticket in PR, you can go directly from their ticket to the their branch / PR.
