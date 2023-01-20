@@ -151,7 +151,7 @@ func SeasonIDToSeason(seasonID string) string {
 	if err != nil {
 		logrus.Errorf("couldn't convert seasonID to int: %v", err)
 	}
-	return fmt.Sprintf("%s-%d", seasonID[1:], season+1)
+	return fmt.Sprintf("%s-%d", seasonID[1:], (season%100)+1)
 }
 
 func HomeOrAway(game nba.PlayerLeagueGame) string {
